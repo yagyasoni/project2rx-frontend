@@ -29,7 +29,7 @@ const BenefitsSection = () => {
               BatchRx automatically identifies and flags prescription discrepancies before they trigger costly PBM audits.
             </p>
             <p className="text-muted-foreground">
-              By proactively monitoring your pharmacy's data, BatchRx reduces compliance risks and prevents revenue loss—saving you thousands each month while improving operational accuracy.
+              By proactively monitoring your pharmacy&apos;s data, BatchRx reduces compliance risks and prevents revenue loss—saving you thousands each month while improving operational accuracy.
             </p>
           </motion.div>
 
