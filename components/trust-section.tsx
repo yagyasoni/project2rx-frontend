@@ -6,7 +6,7 @@ export default function TrustSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* CTA Card */}
-        <div
+        {/* <div
           className="
             relative overflow-hidden rounded-3xl
             bg-[#262626]
@@ -17,9 +17,9 @@ export default function TrustSection() {
             max-w-[90rem]
             mx-auto
           "
-        >
+        > */}
           {/* Decorative elements */}
-          <div className="absolute -left-16 -top-16 w-40 h-40 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full bg-[#676565] opacity-20" />
+          {/* <div className="absolute -left-16 -top-16 w-40 h-40 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full bg-[#676565] opacity-20" />
           <div className="absolute -right-10 -bottom-10 w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-full bg-[#8e8b8b] opacity-10" />
 
           <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 text-center md:text-left">
@@ -37,7 +37,7 @@ export default function TrustSection() {
               Get In Touch
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* Header */}
         <div className="text-center mb-12 sm:mb-16">

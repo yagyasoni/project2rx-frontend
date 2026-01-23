@@ -1,67 +1,59 @@
+import React from "react";
+import { Shield, CheckCircle } from "lucide-react";
+
+
 export default function BookNowSection() {
   return (
-    <section className="py-12 sm:py-16 lg:py-10 bg-white">
-      <div className="mx-auto max-w-[93rem] px-4 sm:px-6 lg:px-8">
-
-        <div
-          className="
-            relative overflow-hidden rounded-3xl
-            bg-[#262626]
-            px-5 sm:px-8 md:px-12
-            py-14 sm:py-18 md:py-24
-          "
-        >
-
-          {/* Decorative circles */}
-          <div className="absolute -left-8 -top-8 w-36 h-36 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full bg-[#404040] opacity-20" />
-
-          <div className="absolute -right-6 -bottom-6 w-48 h-48 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-full bg-[#404040] opacity-10" />
-
-          <div className="absolute right-4 top-[60%] w-24 h-24 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full bg-[#737373] opacity-10" />
-
-          {/* Content */}
-          <div className="relative text-center">
-
-            {/* Tag */}
-            <div className="mb-4 sm:mb-5 inline-block rounded-full bg-white/10 px-4 py-2">
-              <p className="text-xs sm:text-sm font-semibold tracking-wider text-white uppercase">
+    <section className="py-8 sm:py-8 bg-white">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
+        
+        {/* Main Compact Card */}
+        <div className="relative overflow-hidden rounded-[2rem] bg-[#0D0D0D] border border-[#262626] p-1 shadow-2xl">
+          
+          {/* Subtle Glow Effect */}
+          <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full bg-[#404040] opacity-20 blur-[60px]" />
+          
+          <div className="relative z-10 px-6 py-10 sm:px-12 sm:py-14 text-center">
+            
+            {/* Minimal Badge */}
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-[#262626] px-3 py-1 border border-[#404040]/50">
+              <p className="text-[10px] font-bold tracking-widest text-[#A6A6A6] uppercase">
                 Book Now
               </p>
             </div>
 
-            {/* Heading */}
-            <h2 className="text-[22px] sm:text-3xl md:text-5xl font-bold text-white mb-4 sm:mb-6 leading-snug">
-              Dedicated Support.
-              <br className="hidden sm:block" />
-              Every Client. Every Time.
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight">
+              Dedicated Support. <span className="text-[#737373]">Every Time.</span>
             </h2>
 
-            {/* Description */}
-            <p className="text-sm sm:text-base md:text-lg text-[#A6A6A6] mb-7 sm:mb-8 max-w-[92%] sm:max-w-xl md:max-w-2xl mx-auto leading-relaxed">
-              Get access to our expert team that&apos;s committed to your success.
-              We&apos;re here to support every step of your journey.
+            <p className="text-[#A6A6A6] text-sm sm:text-base max-w-lg mx-auto mb-8 leading-relaxed">
+              Expert support committed to your success. We handle the complexity so you can focus on the vision.
             </p>
 
-            {/* Button */}
-            <button
-              className="
-                rounded-full
-                bg-[#0D0D0D]
-                px-7 sm:px-8
-                py-3
-                text-sm sm:text-base
-                text-white
-                font-semibold
-                hover:bg-black
-                transition
-              "
-            >
+            {/* Primary Action */}
+            <button className="bg-white px-8 py-3 rounded-full text-[#0D0D0D] font-bold text-sm hover:bg-[#A6A6A6] transition-all duration-300 transform hover:scale-105 active:scale-95">
               Request Demo
             </button>
 
+            {/* Integrated "Small" Secondary Card */}
+            <div className="mt-10 pt-8 border-t border-[#262626]">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#262626]/40 rounded-2xl p-4 sm:p-5 border border-[#404040]/30">
+                <div className="text-center sm:text-left">
+                  <h3 className="text-white font-semibold text-sm">Ready to know more?</h3>
+                  <p className="text-[#737373] text-xs">Get in touch for a personalized tour.</p>
+                </div>
+
+                <button className="text-white text-xs font-bold border-b border-[#737373] hover:text-[#A6A6A6] hover:border-[#A6A6A6] transition-colors pb-1 px-1">
+                  Contact Us →
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
+
       </div>
     </section>
-  )
+  );
+
 }
