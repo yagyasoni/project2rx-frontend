@@ -39,7 +39,7 @@ export default function Sidebar({
     `w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200
      ${
        isActive(path)
-         ? 'bg-teal-700 text-white'
+         ? 'bg-gray-200/60 text-gray-700'
          : 'text-gray-700 hover:bg-gray-100'
      }`
 
@@ -54,10 +54,13 @@ export default function Sidebar({
         <div className="flex items-center justify-between">
           {sidebarOpen && (
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-teal-700 rounded flex items-center justify-center">
-                <div className="w-3 h-3 border-2 border-white rounded-sm" />
-              </div>
-              <span className="font-bold text-gray-900">BATCHRX</span>
+              {/* <div className="w-6 h-6 bg-[#A6A6A6] rounded flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 text-primary" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+              </div> */}
+              
+              <span className="font-bold text-gray-900">MedRx.co</span>
             </div>
           )}
 

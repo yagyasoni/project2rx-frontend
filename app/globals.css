@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
 @import "tailwindcss";
 
@@ -40,10 +40,10 @@
     /* Hero section dark teal */
     --hero-bg: 165 40% 22%;
     --hero-shape: 165 30% 32%;
-    
+
     /* Stats pink background */
     --stats-bg: 350 50% 95%;
-    
+
     /* Feature icon colors */
     --icon-green: 168 60% 40%;
     --icon-purple: 280 50% 65%;
@@ -64,14 +64,58 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  }
+
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 220 13% 18%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 18%;
+
+    --primary: 160 51% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 150 20% 96%;
+    --secondary-foreground: 220 13% 18%;
+
+    --muted: 150 10% 95%;
+    --muted-foreground: 220 10% 46%;
+
+    --accent: 150 20% 96%;
+    --accent-foreground: 220 13% 18%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 90%;
+    --input: 220 13% 90%;
+    --ring: 160 51% 40%;
+
+    --step-complete: 160 51% 40%;
+    --step-pending: 220 13% 75%;
+    --step-line: 160 35% 75%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 160 51% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 150 20% 96%;
+    --sidebar-accent-foreground: 220 13% 18%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 160 51% 40%;
   }
 }
 
 @layer components {
   .hero-gradient {
     background: linear-gradient(135deg, hsl(0, 0%, 0%) 0%, hsl(0, 0%, 20%) 100%);
-    
+
   }
 
   .stats-gradient {
@@ -136,9 +180,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -147,6 +193,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -156,6 +203,7 @@
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }
