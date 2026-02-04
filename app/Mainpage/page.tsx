@@ -56,12 +56,12 @@ export default function BatchRxDashboard() {
                   }`}
                 >
                   <div className="flex flex-col items-start space-y-4">
-                    <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <Layers className="w-10 h-10 text-gray-700" />
+                    <div className="w-20 h-20 bg-blue-300 rounded-lg flex items-center justify-center">
+                      <Layers className="size-8 text-black" />
                     </div>
 
                     <div className="text-start">
-                      <h3 className="text-xl font-semibold">INVENTORY</h3>
+                      <h3 className="text-xl text-gray-700 font-semibold">INVENTORY</h3>
                       <p className="text-lg opacity-90 text-gray-700 font-semibold">Report</p>
                     </div>
                   </div>

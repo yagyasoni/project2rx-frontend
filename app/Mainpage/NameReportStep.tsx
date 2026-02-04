@@ -28,7 +28,7 @@ const NameReportStep = ({
         </h2>
 
         <div className="space-y-6">
-          <div className="space-y-2">
+          <div className="space-y-4">
             <Label htmlFor="auditName" className="text-sm font-medium text-foreground">
               Inventory Audit Name <span className="text-destructive">*</span>
             </Label>

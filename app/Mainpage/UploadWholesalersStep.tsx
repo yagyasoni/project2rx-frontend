@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, MoreVertical, Plus, Eye } from "lucide-react";
+import { Upload, MoreVertical, Plus, Eye, Check } from "lucide-react";
 
 interface Wholesaler {
   id: string;
@@ -21,7 +21,6 @@ const defaultWholesalers: Wholesaler[] = [
   { id: "2", name: "CITYMED", file: null },
   { id: "3", name: "DRUGZONE", file: null },
   { id: "4", name: "EZRIRX", file: null },
-  // { id: "5", name: "KINRAY", file: null },
 ];
 
 const UploadWholesalersStep = ({
@@ -31,6 +30,14 @@ const UploadWholesalersStep = ({
   onAddSupplier,
   onViewAudit,
 }: UploadWholesalersStepProps) => {
+  const [edit, setEdit] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedInDrawer, setSelectedInDrawer] = useState<string[]>([]);
+
+  // Available options for the drawer
+  const availableSuppliers = ["MCKESSON", "CARDINAL", "AMERISOURCE", "HENRY SCHEIN"];
+
   const handleFileChange = (id: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     setWholesalers(
@@ -38,8 +45,25 @@ const UploadWholesalersStep = ({
     );
   };
 
+  const handleDelete = (id: string) => {
+    setWholesalers(wholesalers.filter((w) => w.id !== id));
+    setEdit(false);
+    setEditId(null);
+  };
+
+  const handleConfirmAddFromDrawer = () => {
+    const newItems = selectedInDrawer.map(name => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name,
+      file: null
+    }));
+    setWholesalers([...wholesalers, ...newItems]);
+    setSelectedInDrawer([]);
+    setIsDrawerOpen(false);
+  };
+
   return (
-    <div className="w-xl">
+    <div className="w-xl relative">
       <div className="bg-card rounded-lg border border-border p-8 shadow-sm">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-foreground">
@@ -54,7 +78,7 @@ const UploadWholesalersStep = ({
           {wholesalers.map((wholesaler) => (
             <div
               key={wholesaler.id}
-              className="flex items-center justify-between border border-border rounded-lg px-4 py-3"
+              className="relative flex items-center justify-between border border-border rounded-lg px-4 py-3"
             >
               <span className="font-medium text-foreground text-sm">
                 {wholesaler.name}
@@ -80,10 +104,25 @@ const UploadWholesalersStep = ({
                     {wholesaler.file.name}
                   </span>
                 )}
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                  setEdit(!edit || editId !== wholesaler.id);
+                  setEditId(wholesaler.id);
+                }}>
                   <MoreVertical className="w-4 h-4 text-muted-foreground" />
                 </Button>
               </div>
+
+              {/* DELETE POPUP - Background set to White */}
+              {edit && (editId === wholesaler.id) && (
+                <div className="absolute right-2 top-10 w-[max-content] bg-white border border-gray-200 rounded-lg shadow-xl z-50">
+                  <button 
+                    onClick={() => handleDelete(wholesaler.id)}
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors rounded-lg"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -92,7 +131,7 @@ const UploadWholesalersStep = ({
           <Button className="bg-gradient-to-r from-[#0D0D0D] to-[#404040] text-white transition" variant="outline" onClick={onSkip}>
             Skip
           </Button>
-          <Button className="cursor-pointer" variant="default" onClick={onAddSupplier}>
+          <Button className="cursor-pointer" variant="default" onClick={() => setIsDrawerOpen(true)}>
             <Plus className="w-4 h-4 mr-1" />
             Add Supplier
           </Button>
@@ -102,6 +141,44 @@ const UploadWholesalersStep = ({
           </Button>
         </div>
       </div>
+
+      {/* RIGHT SIDE DRAWER - Background set to White */}
+      {isDrawerOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setIsDrawerOpen(false)} />
+          <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-50 p-6 flex flex-col">
+            <h3 className="text-xl font-bold mb-4">Select Suppliers</h3>
+            <div className="flex-1 space-y-2 overflow-y-auto">
+              {availableSuppliers.map((name) => (
+                <div 
+                  key={name}
+                  onClick={() => {
+                    setSelectedInDrawer(prev => 
+                      prev.includes(name) ? prev.filter(i => i !== name) : [...prev, name]
+                    );
+                  }}
+                  className={`flex items-center justify-between p-3 border rounded-md cursor-pointer ${selectedInDrawer.includes(name) ? 'border-primary bg-primary/5' : 'border-gray-100'}`}
+                >
+                  <span className="text-sm font-medium">{name}</span>
+                  {selectedInDrawer.includes(name) && <Check className="w-4 h-4 text-primary" />}
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex gap-2">
+              <Button 
+                className="flex-1 bg-gradient-to-r from-[#0D0D0D] to-[#404040] text-white transition" 
+                variant="outline" 
+                onClick={() => setIsDrawerOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button className="flex-1" onClick={handleConfirmAddFromDrawer}>
+                Add Selected
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
