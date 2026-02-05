@@ -7,6 +7,7 @@ const config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
+  safelist: ['scrollbar-hide'],
   theme: {
     extend: {
       colors: {
