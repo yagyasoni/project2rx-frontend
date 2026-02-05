@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Upload } from "lucide-react";
+import Link from "next/link";
 
 interface UploadInventoryStepProps {
   inventoryFile: File | null;
@@ -92,6 +93,7 @@ const UploadInventoryStep = ({
           </div>
 
           <div className="flex justify-center pt-4">
+            {/* <Link href="/file-upload" className="px-8 bg-gradient-to-r from-[#0D0D0D] to-[#404040] text-white transition"> */}
             <Button
               onClick={onNext}
               disabled={!inventoryFile}
@@ -99,6 +101,7 @@ const UploadInventoryStep = ({
             >
               Next
             </Button>
+            {/* </Link> */}
           </div>
         </div>
       </div>

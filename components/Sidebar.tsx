@@ -388,7 +388,7 @@ export default function Sidebar({
             <div className="absolute left-full ml-2 bottom-0 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
               <div className="p-2">
                 {/* Account Header */}
-                <div className="px-3 py-2 mb-2">
+                {/* <div className="px-3 py-2 mb-2">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="text-sm font-semibold text-gray-900">MedRx.co</div>
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
@@ -397,7 +397,7 @@ export default function Sidebar({
                       </svg>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Settings */}
                 <Link

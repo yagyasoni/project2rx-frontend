@@ -51,9 +51,7 @@ export default function FileUploadPage() {
         'SECINSBINNO',
         'SECINSPAID',
         'BRAND',
-        'COLUMN_A',
-        'COLUMN_B',
-        'COLUMN_C',
+
     ];
 
     const fields: FieldMapping[] = [

@@ -521,8 +521,8 @@ export default function ReportsPage() {
             {/* Header */}
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
-                  <Layers className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center">
+                  <Layers className="w-6 h-6 text-gray-700" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -552,7 +552,7 @@ export default function ReportsPage() {
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 bg-gray-700 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                    <span className="w-6 h-6 bg-white text-gray-700 border-2 border-gray-500 rounded-full flex items-center justify-center text-xs font-bold">
                       {tab.count}
                     </span>
                     {tab.label}
@@ -600,7 +600,7 @@ export default function ReportsPage() {
                       </td>
                       <td className="px-4 py-4">
                         <span className={`text-sm font-medium ${
-                          report.status === 'Started' ? 'text-blue-600' : 'text-gray-700'
+                          report.status === 'Started' ? 'text-blue-600' : 'text-green-700'
                         }`}>
                           {report.status}
                         </span>
@@ -611,8 +611,8 @@ export default function ReportsPage() {
                         <span
                           className={`px-3 py-1 rounded-md text-xs font-semibold inline-block ${
                             report.type === 'PBM'
-                              ? 'bg-gray-100 text-gray-700 border border-gray-300'
-                              : 'bg-gray-900 text-white border border-gray-900'
+                              ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                              : 'bg-pink-100 text-pink-700 border border-pink-300'
                           }`}
                         >
                           {report.type}

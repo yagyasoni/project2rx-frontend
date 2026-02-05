@@ -22,6 +22,7 @@ const steps = [
 ];
 
 const AuditWizard = () => {
+
   const [currentStep, setCurrentStep] = useState(1);
   
   // Step 1 state
@@ -66,6 +67,8 @@ const AuditWizard = () => {
   };
 
   const handleStep3Next = () => {
+
+    
     setCurrentStep(4);
   };
 
@@ -164,3 +167,5 @@ const AuditWizard = () => {
 };
 
 export default AuditWizard;
+
+
