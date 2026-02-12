@@ -29,7 +29,10 @@ const NameReportStep = ({
 
         <div className="space-y-6">
           <div className="space-y-4">
-            <Label htmlFor="auditName" className="text-sm font-medium text-foreground">
+            <Label
+              htmlFor="auditName"
+              className="text-sm font-medium text-foreground"
+            >
               Inventory Audit Name <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -45,11 +48,16 @@ const NameReportStep = ({
             <Checkbox
               id="terms"
               checked={agreedToTerms}
-              onCheckedChange={(checked : boolean) => setAgreedToTerms(checked === true)}
+              onCheckedChange={(checked: boolean) =>
+                setAgreedToTerms(checked === true)
+              }
             />
             <Label htmlFor="terms" className="text-sm text-foreground">
               I agree to the Terms of Service.{" "}
-              <a href="#" className="text-foreground underline font-medium hover:text-primary">
+              <a
+                href="#"
+                className="text-foreground underline font-medium hover:text-primary"
+              >
                 Read more
               </a>
             </Label>

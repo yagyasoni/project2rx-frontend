@@ -59,7 +59,7 @@
 //               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
 //             </svg>
 //               </div> */}
-              
+
 //               <span className="font-bold text-gray-900">MedRx.co</span>
 //             </div>
 //           )}
@@ -145,11 +145,11 @@
 //   )
 // }
 
-'use client'
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
@@ -164,64 +164,69 @@ import {
   Settings,
   Phone,
   X,
-  ChevronDown
-} from 'lucide-react'
+  ChevronDown,
+} from "lucide-react";
 
 interface SidebarProps {
-  sidebarOpen: boolean
-  setSidebarOpen: (value: boolean) => void
-  activePanel: string | null
-  setActivePanel: (value: string | null) => void
+  sidebarOpen: boolean;
+  setSidebarOpen: (value: boolean) => void;
+  activePanel: string | null;
+  setActivePanel: (value: string | null) => void;
 }
 
 export default function Sidebar({
   sidebarOpen,
   setSidebarOpen,
   activePanel,
-  setActivePanel
+  setActivePanel,
 }: SidebarProps) {
-
-  const pathname = usePathname()
-  const [showSupportPopup, setShowSupportPopup] = useState(false)
-  const [showAccountDropdown, setShowAccountDropdown] = useState(false)
-  const supportRef = useRef<HTMLDivElement>(null)
-  const accountRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname();
+  const [showSupportPopup, setShowSupportPopup] = useState(false);
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const supportRef = useRef<HTMLDivElement>(null);
+  const accountRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (supportRef.current && !supportRef.current.contains(event.target as Node)) {
-        setShowSupportPopup(false)
+      if (
+        supportRef.current &&
+        !supportRef.current.contains(event.target as Node)
+      ) {
+        setShowSupportPopup(false);
       }
-      if (accountRef.current && !accountRef.current.contains(event.target as Node)) {
-        setShowAccountDropdown(false)
+      if (
+        accountRef.current &&
+        !accountRef.current.contains(event.target as Node)
+      ) {
+        setShowAccountDropdown(false);
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  const isActive = (path: string) => pathname === path
+  const isActive = (path: string) => pathname === path;
 
   const navClass = (path: string) =>
     `w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200
      ${
        isActive(path)
-         ? 'bg-gray-200/60 text-gray-700'
-         : 'text-gray-700 hover:bg-gray-100'
-     }`
+         ? "bg-gray-200/60 text-gray-700"
+         : "text-gray-700 hover:bg-gray-100"
+     }`;
 
   const handleLogout = () => {
     // Add your logout logic here
-    console.log('Logging out...')
+    console.log("Logging out...");
     // Example: router.push('/login')
-  }
+  };
 
   return (
     <aside
       className={`${
-        sidebarOpen ? 'w-64' : 'w-20'
+        sidebarOpen ? "w-64" : "w-20"
       } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col relative`}
     >
       {/* HEADER */}
@@ -229,7 +234,7 @@ export default function Sidebar({
         <div className="flex items-center justify-between">
           {sidebarOpen && (
             <div className="flex items-center gap-2">
-              <span className="font-bold text-gray-900">MedRx.co</span>
+              <span className="font-bold text-gray-900">AuditProRx</span>
             </div>
           )}
 
@@ -248,23 +253,22 @@ export default function Sidebar({
 
       {/* NAVIGATION */}
       <nav className="flex-1 p-4 space-y-2">
-
-        <Link href="/Mainpage" className={navClass('/Mainpage')}>
+        <Link href="/Mainpage" className={navClass("/Mainpage")}>
           <Layers className="w-5 h-5" />
           {sidebarOpen && <span>Start Audit</span>}
         </Link>
 
-        <Link href="/ReportsPage" className={navClass('/ReportsPage')}>
+        <Link href="/ReportsPage" className={navClass("/ReportsPage")}>
           <FileText className="w-5 h-5" />
           {sidebarOpen && <span>Reports</span>}
         </Link>
 
-        <Link href="/bin-search" className={navClass('/bin-search')}>
+        <Link href="/bin-search" className={navClass("/bin-search")}>
           <Search className="w-5 h-5" />
           {sidebarOpen && <span>Bin Search</span>}
         </Link>
 
-        <Link href="/tickets" className={navClass('/tickets')}>
+        <Link href="/tickets" className={navClass("/tickets")}>
           <Ticket className="w-5 h-5" />
           {sidebarOpen && (
             <div className="flex justify-between w-full">
@@ -276,22 +280,22 @@ export default function Sidebar({
           )}
         </Link>
 
-        <Link href="/how-to" className={navClass('/how-to')}>
+        <Link href="/how-to" className={navClass("/how-to")}>
           <HelpCircle className="w-5 h-5" />
           {sidebarOpen && <span>How To</span>}
         </Link>
-
       </nav>
 
       {/* BOTTOM */}
       <div className="border-t border-gray-200 p-4 space-y-2">
-
         {/* Customer Support with Popup */}
         <div className="relative" ref={supportRef}>
           <button
             onClick={() => setShowSupportPopup(!showSupportPopup)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
-              showSupportPopup ? 'bg-gray-200/60 text-gray-700' : 'text-gray-700 hover:bg-gray-100'
+              showSupportPopup
+                ? "bg-gray-200/60 text-gray-700"
+                : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             <LifeBuoy className="w-5 h-5" />
@@ -308,7 +312,9 @@ export default function Sidebar({
             <div className="absolute left-full ml-2 bottom-0 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">Contact Support</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    Contact Support
+                  </h3>
                   <button
                     onClick={() => setShowSupportPopup(false)}
                     className="text-gray-400 hover:text-gray-600"
@@ -325,8 +331,12 @@ export default function Sidebar({
                         <LifeBuoy className="w-5 h-5 text-green-700" />
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-900">Customer Support</div>
-                        <div className="text-sm text-gray-600">(917) 274-7648</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          Customer Support
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          (917) 274-7648
+                        </div>
                       </div>
                     </div>
                     <a
@@ -344,8 +354,12 @@ export default function Sidebar({
                         <User className="w-5 h-5 text-gray-600" />
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-900">XYZ</div>
-                        <div className="text-sm text-gray-600">(646) 8889881</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          XYZ
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          (646) 8889881
+                        </div>
                       </div>
                     </div>
                     <a
@@ -366,17 +380,21 @@ export default function Sidebar({
           <button
             onClick={() => setShowAccountDropdown(!showAccountDropdown)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 border-2 ${
-              showAccountDropdown 
-                ? 'bg-gray-50 border-gray-300 text-gray-900' 
-                : 'border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300'
+              showAccountDropdown
+                ? "bg-gray-50 border-gray-300 text-gray-900"
+                : "border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300"
             }`}
           >
             <User className="w-5 h-5" />
             {sidebarOpen && (
               <>
                 <div className="flex-1 text-left">
-                  <div className="text-sm font-semibold text-gray-900">Account Name</div>
-                  <div className="text-xs text-gray-500 truncate">MedRx.co...</div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    Account Name
+                  </div>
+                  <div className="text-xs text-gray-500 truncate">
+                    MedRx.co...
+                  </div>
                 </div>
                 <ChevronRight className="w-4 h-4" />
               </>
@@ -412,13 +430,23 @@ export default function Sidebar({
                 {/* Logout */}
                 <button
                   onClick={() => {
-                    setShowAccountDropdown(false)
-                    handleLogout()
+                    setShowAccountDropdown(false);
+                    handleLogout();
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
                   </svg>
                   <span>Logout</span>
                 </button>
@@ -435,8 +463,7 @@ export default function Sidebar({
           <RefreshCw className="w-5 h-5" />
           {sidebarOpen && <span>Hard Refresh</span>}
         </button>
-
       </div>
     </aside>
-  )
+  );
 }

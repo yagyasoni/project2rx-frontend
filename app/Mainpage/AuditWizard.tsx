@@ -4,7 +4,9 @@ import StepIndicator from "./StepIndicator";
 import NameReportStep from "./NameReportStep";
 import DateRangeStep from "./DateRangeStep";
 import UploadInventoryStep from "./UploadInventoryStep";
-import UploadWholesalersStep, { defaultWholesalers } from "./UploadWholesalersStep";
+import UploadWholesalersStep, {
+  defaultWholesalers,
+} from "./UploadWholesalersStep";
 import { Button } from "@/components/ui/button";
 // import { toast } from "@/components/ui/use-toast";
 
@@ -22,26 +24,32 @@ const steps = [
 ];
 
 const AuditWizard = () => {
-
   const [currentStep, setCurrentStep] = useState(1);
-  
+
   // Step 1 state
   const [auditName, setAuditName] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  
+
   // Step 2 state
-  const [inventoryStartDate, setInventoryStartDate] = useState<Date | undefined>();
+  const [inventoryStartDate, setInventoryStartDate] = useState<
+    Date | undefined
+  >();
   const [inventoryEndDate, setInventoryEndDate] = useState<Date | undefined>();
-  const [wholesalerStartDate, setWholesalerStartDate] = useState<Date | undefined>();
-  const [wholesalerEndDate, setWholesalerEndDate] = useState<Date | undefined>();
-  
+  const [wholesalerStartDate, setWholesalerStartDate] = useState<
+    Date | undefined
+  >();
+  const [wholesalerEndDate, setWholesalerEndDate] = useState<
+    Date | undefined
+  >();
+
   // Step 3 state
   const [inventoryFile, setInventoryFile] = useState<File | null>(null);
   const [excludeTransferred, setExcludeTransferred] = useState(false);
   const [excludeUnbilled, setExcludeUnbilled] = useState(false);
-  
+
   // Step 4 state
-  const [wholesalers, setWholesalers] = useState<Wholesaler[]>(defaultWholesalers);
+  const [wholesalers, setWholesalers] =
+    useState<Wholesaler[]>(defaultWholesalers);
 
   const handleClose = () => {
     // Reset wizard
@@ -67,8 +75,6 @@ const AuditWizard = () => {
   };
 
   const handleStep3Next = () => {
-
-    
     setCurrentStep(4);
   };
 
@@ -95,7 +101,7 @@ const AuditWizard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col">
       {/* Header with close button */}
       <div className="p-4">
         {/* <Button
@@ -167,5 +173,3 @@ const AuditWizard = () => {
 };
 
 export default AuditWizard;
-
-
