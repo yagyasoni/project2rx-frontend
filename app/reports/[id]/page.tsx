@@ -632,6 +632,166 @@ const inventoryData = [
     optumrx: 470,
     shortageOptumrx: -24,
   },
+
+  {
+    id: 19,
+    ndc: "00182-3341-07",
+    drugName: "PANTOPRAZOLE 40MG TAB",
+    rank: 19,
+    pkgSize: 90,
+    totalOrdered: 2300,
+    totalBilled: 2600,
+    totalShortage: -300,
+    highestShortage: -140,
+    cost: 0.29,
+    horizon: 600,
+    shortageHorizon: -31,
+    express: 780,
+    shortageExpress: -29,
+    cvsCaremark: 620,
+    shortageCvsCaremark: -24,
+    ssc: 320,
+    shortageSsc: -18,
+    njMedicaid: 880,
+    shortageNjMedicaid: -37,
+    pdmi: 0,
+    shortagePdmi: 0,
+    optumrx: 270,
+    shortageOptumrx: -13,
+  },
+
+  {
+    id: 20,
+    ndc: "00031-4587-22",
+    drugName: "OMEPRAZOLE 20MG CAP",
+    rank: 20,
+    pkgSize: 180,
+    totalOrdered: 4100,
+    totalBilled: 4500,
+    totalShortage: -400,
+    highestShortage: -190,
+    cost: 0.14,
+    horizon: 980,
+    shortageHorizon: -52,
+    express: 1150,
+    shortageExpress: -48,
+    cvsCaremark: 930,
+    shortageCvsCaremark: -39,
+    ssc: 480,
+    shortageSsc: -28,
+    njMedicaid: 1450,
+    shortageNjMedicaid: -58,
+    pdmi: 0,
+    shortagePdmi: 0,
+    optumrx: 470,
+    shortageOptumrx: -24,
+  },
+  {
+    id: 19,
+    ndc: "00182-3341-07",
+    drugName: "PANTOPRAZOLE 40MG TAB",
+    rank: 19,
+    pkgSize: 90,
+    totalOrdered: 2300,
+    totalBilled: 2600,
+    totalShortage: -300,
+    highestShortage: -140,
+    cost: 0.29,
+    horizon: 600,
+    shortageHorizon: -31,
+    express: 780,
+    shortageExpress: -29,
+    cvsCaremark: 620,
+    shortageCvsCaremark: -24,
+    ssc: 320,
+    shortageSsc: -18,
+    njMedicaid: 880,
+    shortageNjMedicaid: -37,
+    pdmi: 0,
+    shortagePdmi: 0,
+    optumrx: 270,
+    shortageOptumrx: -13,
+  },
+
+  {
+    id: 20,
+    ndc: "00031-4587-22",
+    drugName: "OMEPRAZOLE 20MG CAP",
+    rank: 20,
+    pkgSize: 180,
+    totalOrdered: 4100,
+    totalBilled: 4500,
+    totalShortage: -400,
+    highestShortage: -190,
+    cost: 0.14,
+    horizon: 980,
+    shortageHorizon: -52,
+    express: 1150,
+    shortageExpress: -48,
+    cvsCaremark: 930,
+    shortageCvsCaremark: -39,
+    ssc: 480,
+    shortageSsc: -28,
+    njMedicaid: 1450,
+    shortageNjMedicaid: -58,
+    pdmi: 0,
+    shortagePdmi: 0,
+    optumrx: 470,
+    shortageOptumrx: -24,
+  },
+  {
+    id: 19,
+    ndc: "00182-3341-07",
+    drugName: "PANTOPRAZOLE 40MG TAB",
+    rank: 19,
+    pkgSize: 90,
+    totalOrdered: 2300,
+    totalBilled: 2600,
+    totalShortage: -300,
+    highestShortage: -140,
+    cost: 0.29,
+    horizon: 600,
+    shortageHorizon: -31,
+    express: 780,
+    shortageExpress: -29,
+    cvsCaremark: 620,
+    shortageCvsCaremark: -24,
+    ssc: 320,
+    shortageSsc: -18,
+    njMedicaid: 880,
+    shortageNjMedicaid: -37,
+    pdmi: 0,
+    shortagePdmi: 0,
+    optumrx: 270,
+    shortageOptumrx: -13,
+  },
+
+  {
+    id: 20,
+    ndc: "00031-4587-22",
+    drugName: "OMEPRAZOLE 20MG CAP",
+    rank: 20,
+    pkgSize: 180,
+    totalOrdered: 4100,
+    totalBilled: 4500,
+    totalShortage: -400,
+    highestShortage: -190,
+    cost: 0.14,
+    horizon: 980,
+    shortageHorizon: -52,
+    express: 1150,
+    shortageExpress: -48,
+    cvsCaremark: 930,
+    shortageCvsCaremark: -39,
+    ssc: 480,
+    shortageSsc: -28,
+    njMedicaid: 1450,
+    shortageNjMedicaid: -58,
+    pdmi: 0,
+    shortagePdmi: 0,
+    optumrx: 470,
+    shortageOptumrx: -24,
+  },
 ];
 
 interface FilterChip {
@@ -670,6 +830,9 @@ export default function InventoryReportPage() {
   const [activeDrug, setActiveDrug] = useState<
     (typeof inventoryData)[number] | null
   >(null);
+
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
 
   const filterDropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -723,9 +886,25 @@ export default function InventoryReportPage() {
   };
 
   const togglePBMFilter = (pbm: string) => {
-    setPbmFilters((prev) =>
-      prev.includes(pbm) ? prev.filter((p) => p !== pbm) : [...prev, pbm],
-    );
+    setPbmFilters((prev) => {
+      const isOn = prev.includes(pbm);
+
+      // Toggle PBM filter list
+      const next = isOn ? prev.filter((p) => p !== pbm) : [...prev, pbm];
+
+      // Map PBM -> column keys
+      const baseKey = supplierToColumnKey[pbm];
+      if (baseKey) {
+        setColumnFilters((cols) => ({
+          ...cols,
+          [baseKey]: !isOn,
+          [`shortage${baseKey.charAt(0).toUpperCase()}${baseKey.slice(1)}`]:
+            !isOn,
+        }));
+      }
+
+      return next;
+    });
   };
 
   const handleSort = (
@@ -780,10 +959,23 @@ export default function InventoryReportPage() {
     return matchesSearch;
   });
 
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const totalRows = filteredData.length;
+
+  const [rowsPerPage, setRowsPerPage] = useState(inventoryData.length);
   const [currentPage, setCurrentPage] = useState(1);
 
+  useEffect(() => {
+    // If user hasn't manually chosen a smaller value, keep showing all rows
+    setRowsPerPage((prev) => {
+      if (prev >= totalRows) return totalRows; // stay in "All"
+      return prev;
+    });
+  }, [totalRows]);
+
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const rowOptions = [10, 20, 50, 100, totalRows].filter(
+    (v, i, arr) => v > 0 && arr.indexOf(v) === i,
+  );
   const paginatedData = filteredData.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage,
@@ -874,6 +1066,23 @@ export default function InventoryReportPage() {
     shortageOptumrx: "min-w-[140px]",
   };
 
+  const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
+
+  const supplierColumnMap: Record<string, { key: string; width: string }> = {
+    Kinray: { key: "supplier_Kinray", width: "min-w-[140px]" },
+    McKesson: { key: "supplier_McKesson", width: "min-w-[140px]" },
+    "Real Value Rx": { key: "supplier_RealValueRx", width: "min-w-[160px]" },
+    Parmed: { key: "supplier_Parmed", width: "min-w-[140px]" },
+    Axia: { key: "supplier_Axia", width: "min-w-[120px]" },
+    Citymed: { key: "supplier_Citymed", width: "min-w-[140px]" },
+    "Legacy Health": { key: "supplier_LegacyHealth", width: "min-w-[160px]" },
+    "NDC Distributors": {
+      key: "supplier_NDCDistributors",
+      width: "min-w-[180px]",
+    },
+    TruMarker: { key: "supplier_TruMarker", width: "min-w-[140px]" },
+  };
+
   const toggleColumn = (col: keyof typeof columnFilters) => {
     setColumnFilters((prev) => ({ ...prev, [col]: !prev[col] }));
   };
@@ -894,8 +1103,90 @@ export default function InventoryReportPage() {
   }, []);
 
   const handleExport = () => {
-    console.log(`Exporting as ${exportFormat} with scope ${exportScope}`);
+    const rows = exportScope === "visible" ? paginatedData : filteredData;
+
+    if (!rows.length) return;
+
+    if (exportFormat === "csv") {
+      exportCSV(rows);
+    }
+
+    if (exportFormat === "excel") {
+      exportCSV(rows, "xlsx"); // Excel compatible CSV
+    }
+
+    if (exportFormat === "pdf") {
+      exportPDF(rows);
+    }
+
     setOpenExportModal(false);
+  };
+
+  const exportCSV = (rows: any[], ext: "csv" | "xlsx" = "csv") => {
+    const headers = Object.keys(rows[0]);
+
+    const csv = [
+      headers.join(","),
+      ...rows.map((r) =>
+        headers.map((h) => JSON.stringify(r[h] ?? "")).join(","),
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `inventory-report.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const exportPDF = (rows: any[]) => {
+    const w = window.open("", "_blank");
+    if (!w) return;
+
+    w.document.write(`
+    <html>
+      <head>
+        <title>Inventory Report</title>
+        <style>
+          body { font-family: Arial; padding: 20px; }
+          table { border-collapse: collapse; width: 100%; }
+          th, td { border: 1px solid #ccc; padding: 6px; font-size: 12px; }
+          th { background: #f3f4f6; }
+        </style>
+      </head>
+      <body>
+        <h2>Inventory Report</h2>
+        <table>
+          <thead>
+            <tr>
+              ${Object.keys(rows[0])
+                .map((h) => `<th>${h}</th>`)
+                .join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows
+              .map(
+                (r) => `
+              <tr>
+                ${Object.values(r)
+                  .map((v) => `<td>${v ?? ""}</td>`)
+                  .join("")}
+              </tr>`,
+              )
+              .join("")}
+          </tbody>
+        </table>
+        <script>
+          window.print();
+        </script>
+      </body>
+    </html>
+  `);
   };
 
   const handleDrugTypeToggle = (dtype: string) => {
@@ -991,6 +1282,370 @@ export default function InventoryReportPage() {
             </div>
 
             {/* Filter Dropdowns */}
+            {/* 1️⃣ Columns */}
+            <div className="relative" ref={filterDropdownRef}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-slate-300"
+                onClick={() => setOpenFilter(!openFilter)}
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Filter
+                <ChevronDown className="h-3.5 w-3.5" />
+              </Button>
+
+              {openFilter && (
+                <div className="absolute -left-100 top-full mt-2 w-[900px] max-w-[95vw] bg-white border border-slate-200 rounded-xl shadow-2xl z-50">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-5 py-3 border-b">
+                    <h3 className="text-sm font-bold tracking-wide">FILTERS</h3>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // optional reset
+                          setPbmFilters(availablePBMs);
+                          setFlagFilters([]);
+                        }}
+                      >
+                        Reset Filters
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => setOpenFilter(false)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="grid grid-cols-3 gap-0 max-h-[70vh] overflow-y-auto">
+                    {/* LEFT */}
+                    <div className="p-4 border-r">
+                      <div className="text-xs font-bold text-slate-600 mb-2">
+                        COLUMNS
+                      </div>
+
+                      {(
+                        [
+                          "ndc",
+                          "pkgSize",
+                          "rank",
+                          "totalOrdered",
+                          "totalBilled",
+                          "totalShortage",
+                          "highestShortage",
+                          "cost",
+                        ] as const
+                      ).map((col) => (
+                        <label
+                          key={col}
+                          className="flex items-center gap-2 py-1 text-sm"
+                        >
+                          <Checkbox
+                            checked={columnFilters[col]}
+                            onCheckedChange={() => toggleColumn(col)}
+                          />
+                          {col.replace(/([A-Z])/g, " $1").toUpperCase()}
+                        </label>
+                      ))}
+
+                      <div className="text-xs font-bold text-slate-600 mt-5 mb-2">
+                        SHOW LABEL
+                      </div>
+                      <label className="flex items-center gap-2 text-sm py-1">
+                        <Checkbox /> SHOW ABERRANT
+                      </label>
+                      <label className="flex items-center gap-2 text-sm py-1">
+                        <Checkbox /> CONTROLLED
+                      </label>
+                      <label className="flex items-center gap-2 text-sm py-1">
+                        <Checkbox /> FILTER NDC PERIOD
+                      </label>
+
+                      <div className="text-xs font-bold text-slate-600 mt-5 mb-2">
+                        OPTIONS
+                      </div>
+                      {[
+                        "VERTICAL HEADER",
+                        "REMOVE NDC DASH",
+                        "SHORT NDC'S ONLY",
+                        "INCLUDE SHORTAGE",
+                        "HIGHEST SHORTAGE NAME",
+                        "INCLUDE AMOUNT",
+                        "INCLUDE PBM RANK",
+                        "FILTER BY NOTE",
+                        "CASH DISABLED",
+                      ].map((opt) => (
+                        <div
+                          key={opt}
+                          className="flex items-center justify-between py-1 text-sm"
+                        >
+                          <span>{opt}</span>
+                          <Checkbox />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* MIDDLE */}
+                    <div className="p-4 border-r">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
+                        <span className="h-2 w-2 rounded-full bg-red-500" />{" "}
+                        BILLED
+                      </div>
+
+                      {availablePBMs.map((pbm) => (
+                        <label
+                          key={pbm}
+                          className="flex items-center gap-2 py-1 text-sm"
+                        >
+                          <Checkbox
+                            checked={pbmFilters.includes(pbm)}
+                            onCheckedChange={() => togglePBMFilter(pbm)}
+                          />
+                          {pbm}
+                        </label>
+                      ))}
+                    </div>
+
+                    {/* RIGHT */}
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-600" />{" "}
+                        SUPPLIERS
+                      </div>
+
+                      {Object.keys(supplierColumnMap).map((s) => (
+                        <label
+                          key={s}
+                          className="flex items-center gap-2 py-1 text-sm"
+                        >
+                          <Checkbox
+                            checked={selectedSuppliers.includes(s)}
+                            onCheckedChange={() =>
+                              setSelectedSuppliers((prev) =>
+                                prev.includes(s)
+                                  ? prev.filter((x) => x !== s)
+                                  : [...prev, s],
+                              )
+                            }
+                          />
+                          {s}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 2️⃣ Flags */}
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-slate-300"
+                onClick={() => setOpenFlagDropdown(!openFlagDropdown)}
+              >
+                <Filter className="h-3.5 w-3.5" />
+                FLAGS
+                <ChevronDown className="h-3.5 w-3.5" />
+              </Button>
+
+              {openFlagDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-[260px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-3 py-2 border-b">
+                    <span className="text-sm font-bold">FLAGS</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => setOpenFlagDropdown(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-3 space-y-2">
+                    {/* Aberrant */}
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={flagFilters.includes("aberrant")}
+                        onCheckedChange={() =>
+                          setFlagFilters((prev) =>
+                            prev.includes("aberrant")
+                              ? prev.filter((f) => f !== "aberrant")
+                              : [...prev, "aberrant"],
+                          )
+                        }
+                      />
+                      ABERRANT{" "}
+                      <span className="text-xs text-slate-400">(9)</span>
+                    </label>
+
+                    {/* Controlled */}
+                    <label className="flex items-center gap-2 text-sm font-medium">
+                      <Checkbox
+                        checked={flagFilters.includes("controlled")}
+                        onCheckedChange={() =>
+                          setFlagFilters((prev) =>
+                            prev.includes("controlled")
+                              ? prev.filter((f) => f !== "controlled")
+                              : [...prev, "controlled"],
+                          )
+                        }
+                      />
+                      CONTROLLED SUBSTANCE{" "}
+                      <span className="text-xs text-slate-400">(34)</span>
+                    </label>
+
+                    {/* Controlled Schedules */}
+                    <div className="pl-6 space-y-1">
+                      {(["CI", "CII", "CIII", "CIV", "CV"] as const).map(
+                        (c) => (
+                          <label
+                            key={c}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <Checkbox
+                              checked={controlledSchedules.includes(c)}
+                              onCheckedChange={() =>
+                                setControlledSchedules((prev) =>
+                                  prev.includes(c)
+                                    ? prev.filter((x) => x !== c)
+                                    : [...prev, c],
+                                )
+                              }
+                            />
+                            {c}
+                          </label>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 3️⃣ Tags */}
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-slate-300"
+                onClick={() => setOpenTagsDropdown(!openTagsDropdown)}
+              >
+                TAGS
+                <ChevronDown className="h-3.5 w-3.5" />
+              </Button>
+
+              {openTagsDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-[320px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-3 py-2 border-b">
+                    <span className="text-sm font-bold">TAGS</span>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-emerald-600 hover:bg-emerald-50 h-7 px-2"
+                        onClick={() => setOpenCreateTagModal(true)}
+                      >
+                        + Create Tag
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={() => setOpenTagsDropdown(false)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Tag List */}
+                  <div className="p-3 space-y-2 max-h-[300px] overflow-y-auto">
+                    {availableTags.map((tag) => (
+                      <div
+                        key={tag.id}
+                        className="flex items-center justify-between gap-2 group"
+                      >
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={selectedTags.includes(tag.id)}
+                            onCheckedChange={() =>
+                              setSelectedTags((prev) =>
+                                prev.includes(tag.id)
+                                  ? prev.filter((t) => t !== tag.id)
+                                  : [...prev, tag.id],
+                              )
+                            }
+                          />
+
+                          <span
+                            className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${colorClasses[tag.color]}`}
+                          >
+                            {tag.label}{" "}
+                            <span className="ml-1 text-[10px]">0</span>
+                          </span>
+                        </label>
+
+                        {/* 3-dot menu */}
+                        <div className="relative">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100"
+                            onClick={() =>
+                              setOpenTagMenuId((prev) =>
+                                prev === tag.id ? null : tag.id,
+                              )
+                            }
+                          >
+                            ⋮
+                          </Button>
+
+                          {openTagMenuId === tag.id && (
+                            <div className="absolute right-0 mt-1 w-28 bg-white border rounded-md shadow-lg z-50">
+                              <button
+                                className="w-full px-3 py-1.5 text-sm text-left hover:bg-slate-50"
+                                onClick={() => {
+                                  console.log("Edit tag", tag.id);
+                                  setOpenTagMenuId(null);
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="w-full px-3 py-1.5 text-sm text-left text-red-600 hover:bg-red-50"
+                                onClick={() => {
+                                  console.log("Delete tag", tag.id);
+                                  setOpenTagMenuId(null);
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 4️⃣ QTY Type */}
             <DropdownMenu
               open={openQtyDropdown}
               onOpenChange={setOpenQtyDropdown}
@@ -1001,19 +1656,11 @@ export default function InventoryReportPage() {
                   size="sm"
                   className="gap-2 border-slate-300"
                 >
-                  <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span className="text-xs font-medium">QTY:</span>
-                  <span className="text-xs font-semibold text-emerald-700">
-                    {qtyType || "NONE"}
-                  </span>
+                  QTY
                   <ChevronDown className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel className="text-xs">
-                  Quantity Type
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
                 <DropdownMenuCheckboxItem
                   checked={qtyType === "UNIT"}
                   onCheckedChange={() => setQtyType("UNIT")}
@@ -1029,74 +1676,7 @@ export default function InventoryReportPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <DropdownMenu
-              open={openFlagDropdown}
-              onOpenChange={setOpenFlagDropdown}
-            >
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 border-slate-300"
-                >
-                  <Filter className="h-3.5 w-3.5" />
-                  <span className="text-xs font-medium">FLAGS:</span>
-                  <span className="text-xs font-semibold text-emerald-700">
-                    {flagFilters.length || "ALL"}
-                  </span>
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel className="text-xs">
-                  Filter by Flags
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem
-                  checked={flagFilters.includes("shortage")}
-                  onCheckedChange={() => toggleFlagFilter("shortage")}
-                >
-                  Shortage
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={flagFilters.includes("overstock")}
-                  onCheckedChange={() => toggleFlagFilter("overstock")}
-                >
-                  Overstock
-                </DropdownMenuCheckboxItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu
-              open={openTagsDropdown}
-              onOpenChange={setOpenTagsDropdown}
-            >
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 border-slate-300"
-                >
-                  <span className="text-xs font-medium">TAGS:</span>
-                  <span className="text-xs font-semibold text-emerald-700">
-                    ALL
-                  </span>
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="text-xs">
-                  Filter by Tags
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {availableTags.map((tag) => (
-                  <DropdownMenuCheckboxItem key={tag.id}>
-                    {tag.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
+            {/* 5️⃣ Drug Type */}
             <DropdownMenu
               open={openDrugTypeDropdown}
               onOpenChange={setOpenDrugTypeDropdown}
@@ -1107,18 +1687,11 @@ export default function InventoryReportPage() {
                   size="sm"
                   className="gap-2 border-slate-300"
                 >
-                  <span className="text-xs font-medium">TYPE:</span>
-                  <span className="text-xs font-semibold text-emerald-700">
-                    {drugTypes[0]}
-                  </span>
+                  TYPE
                   <ChevronDown className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel className="text-xs">
-                  Drug Type
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
                 <DropdownMenuCheckboxItem
                   checked={drugTypes.includes("ALL DRUGS")}
                   onCheckedChange={() => handleDrugTypeToggle("ALL DRUGS")}
@@ -1140,140 +1713,36 @@ export default function InventoryReportPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Column Filter */}
-            <div className="relative" ref={filterDropdownRef}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-slate-300"
-                onClick={() => setOpenFilter(!openFilter)}
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                Columns
-                <ChevronDown className="h-3.5 w-3.5" />
-              </Button>
-              {openFilter && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-slate-200 rounded-lg shadow-xl p-4 z-50">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-bold text-slate-900">
-                      Manage Columns
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      onClick={() => setOpenFilter(false)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                    <div className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-                      Core Columns
-                    </div>
-                    {(["rank", "ndc", "drugName", "pkgSize"] as const).map(
-                      (col) => (
-                        <div
-                          key={col}
-                          className="flex items-center space-x-2.5 py-1"
-                        >
-                          <Checkbox
-                            id={col}
-                            checked={columnFilters[col]}
-                            onCheckedChange={() => toggleColumn(col)}
-                          />
-                          <Label
-                            htmlFor={col}
-                            className="text-sm cursor-pointer font-medium text-slate-700"
-                          >
-                            {col === "rank" && "Rank"}
-                            {col === "ndc" && "NDC"}
-                            {col === "drugName" && "Drug Name"}
-                            {col === "pkgSize" && "PKG Size"}
-                          </Label>
-                        </div>
-                      ),
-                    )}
-
-                    <div className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 mt-4 pt-3 border-t border-slate-200">
-                      Totals
-                    </div>
-                    {(
-                      [
-                        "totalOrdered",
-                        "totalBilled",
-                        "totalShortage",
-                        "highestShortage",
-                        "cost",
-                      ] as const
-                    ).map((col) => (
-                      <div
-                        key={col}
-                        className="flex items-center space-x-2.5 py-1"
-                      >
-                        <Checkbox
-                          id={col}
-                          checked={columnFilters[col]}
-                          onCheckedChange={() => toggleColumn(col)}
-                        />
-                        <Label
-                          htmlFor={col}
-                          className="text-sm cursor-pointer font-medium text-slate-700"
-                        >
-                          {col === "totalOrdered" && "Total Ordered"}
-                          {col === "totalBilled" && "Total Billed"}
-                          {col === "totalShortage" && "Total Shortage"}
-                          {col === "highestShortage" && "Highest Shortage"}
-                          {col === "cost" && "$ Cost"}
-                        </Label>
-                      </div>
-                    ))}
-
-                    <div className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 mt-4 pt-3 border-t border-slate-200">
-                      PBMs
-                    </div>
-                    {availablePBMs.map((pbm) => {
-                      const mainKey = supplierToColumnKey[
-                        pbm
-                      ] as keyof typeof columnFilters;
-                      const shortageKey =
-                        `shortage${mainKey.charAt(0).toUpperCase()}${mainKey.slice(1)}` as keyof typeof columnFilters;
-                      return (
-                        <div key={pbm} className="space-y-1.5">
-                          <div className="flex items-center space-x-2.5 py-1">
-                            <Checkbox
-                              id={mainKey}
-                              checked={columnFilters[mainKey]}
-                              onCheckedChange={() => toggleColumn(mainKey)}
-                            />
-                            <Label
-                              htmlFor={mainKey}
-                              className="text-sm cursor-pointer font-medium text-slate-700"
-                            >
-                              {pbm}
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2.5 ml-6 py-1">
-                            <Checkbox
-                              id={shortageKey}
-                              checked={columnFilters[shortageKey]}
-                              onCheckedChange={() => toggleColumn(shortageKey)}
-                            />
-                            <Label
-                              htmlFor={shortageKey}
-                              className="text-sm cursor-pointer text-slate-500"
-                            >
-                              {pbm} Shortage
-                            </Label>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+            {/* 6️⃣ Drug Cost */}
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                placeholder="Max Cost"
+                value={costValue}
+                onChange={(e) => setCostValue(Number(e.target.value) || "")}
+                className="w-[110px] h-9 border-slate-300"
+              />
             </div>
+
+            {/* 7️⃣ Rows */}
+
+            <Select
+              value={String(rowsPerPage)}
+              onValueChange={(v) => setRowsPerPage(Number(v))}
+            >
+              <SelectTrigger className="w-[120px] h-9 border-slate-300">
+                <SelectValue
+                  placeholder={`Rows: ${rowsPerPage}/${totalRows}`}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {rowOptions.map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n === totalRows ? `All (${totalRows})` : n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -1645,6 +2114,22 @@ export default function InventoryReportPage() {
                 </TableHead>
               )}
 
+              {selectedSuppliers.map((s) => {
+                const meta = supplierColumnMap[s];
+                return (
+                  <TableHead
+                    key={s}
+                    className={`${meta.width} border-r border-slate-200`}
+                  >
+                    <div className="h-full px-3 py-2.5 flex items-center justify-center">
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
+                        {s}
+                      </span>
+                    </div>
+                  </TableHead>
+                );
+              })}
+
               {columnFilters.shortageNjMedicaid && (
                 <TableHead className={columnWidths.shortageNjMedicaid}>
                   <HeaderCell
@@ -1864,6 +2349,19 @@ export default function InventoryReportPage() {
                     {renderShortageValue(row.shortageNjMedicaid)}
                   </TableCell>
                 )}
+
+                {selectedSuppliers.map((s) => {
+                  const meta = supplierColumnMap[s];
+                  return (
+                    <TableCell
+                      key={s}
+                      className={`${meta.width} text-center border-r border-slate-100 text-slate-600`}
+                    >
+                      {/* Placeholder for now — replace with real supplier value when available */}
+                      —
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))}
           </TableBody>
