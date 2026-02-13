@@ -834,33 +834,9 @@ export default function InventoryReportPage() {
 
 const [selectedTags, setSelectedTags] = useState<string[]>([]);
 const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
-const headerScrollRef = useRef<HTMLDivElement>(null);
-const bodyScrollRef = useRef<HTMLDivElement>(null);
-const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // default shrinked
 
-const frozenColumnsWidth =
-  48 + 110 + 150 + 260 + 115 + 158; 
-// checkbox + rank + ndc + drugName + pkgSize + totalOrdered
 
-const scrollAreaMinWidth = 2600;
   
-// ADD THIS useEffect TO SYNC SCROLLING
-useEffect(() => {
-  const headerEl = headerScrollRef.current;
-  const bodyEl = bodyScrollRef.current;
-
-  if (!headerEl || !bodyEl) return;
-
-  const syncScroll = (e: Event) => {
-    const target = e.target as HTMLElement;
-    if (target === bodyEl && headerEl) {
-      headerEl.scrollLeft = bodyEl.scrollLeft;
-    }
-  };
-
-  bodyEl.addEventListener('scroll', syncScroll);
-  return () => bodyEl.removeEventListener('scroll', syncScroll);
-}, []);
 
   const filterDropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -913,27 +889,27 @@ useEffect(() => {
     );
   };
 
- const togglePBMFilter = (pbm: string) => {
-  setPbmFilters((prev) => {
-    const isOn = prev.includes(pbm);
+  const togglePBMFilter = (pbm: string) => {
+    setPbmFilters((prev) => {
+      const isOn = prev.includes(pbm);
 
-    // Toggle PBM filter list
-    const next = isOn ? prev.filter((p) => p !== pbm) : [...prev, pbm];
+      // Toggle PBM filter list
+      const next = isOn ? prev.filter((p) => p !== pbm) : [...prev, pbm];
 
-    // Map PBM -> column keys
-    const baseKey = supplierToColumnKey[pbm];
-    if (baseKey) {
-      setColumnFilters((cols) => ({
-        ...cols,
-        [baseKey]: !isOn,
-        [`shortage${baseKey.charAt(0).toUpperCase()}${baseKey.slice(1)}`]:
-          !isOn,
-      }));
-    }
+      // Map PBM -> column keys
+      const baseKey = supplierToColumnKey[pbm];
+      if (baseKey) {
+        setColumnFilters((cols) => ({
+          ...cols,
+          [baseKey]: !isOn,
+          [`shortage${baseKey.charAt(0).toUpperCase()}${baseKey.slice(1)}`]:
+            !isOn,
+        }));
+      }
 
-    return next;
-  });
-};
+      return next;
+    });
+  };
 
   const handleSort = (
     key: keyof (typeof inventoryData)[number],
@@ -992,20 +968,18 @@ useEffect(() => {
   const [rowsPerPage, setRowsPerPage] = useState(inventoryData.length);
   const [currentPage, setCurrentPage] = useState(1);
 
-useEffect(() => {
-  // If user hasn't manually chosen a smaller value, keep showing all rows
-  setRowsPerPage((prev) => {
-    if (prev >= totalRows) return totalRows; // stay in "All"
-    return prev;
-  });
-}, [totalRows]);
-
-
+  useEffect(() => {
+    // If user hasn't manually chosen a smaller value, keep showing all rows
+    setRowsPerPage((prev) => {
+      if (prev >= totalRows) return totalRows; // stay in "All"
+      return prev;
+    });
+  }, [totalRows]);
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const rowOptions = [10, 20, 50, 100, totalRows].filter(
-  (v, i, arr) => v > 0 && arr.indexOf(v) === i,
-);
+    (v, i, arr) => v > 0 && arr.indexOf(v) === i,
+  );
   const paginatedData = filteredData.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage,
@@ -1098,17 +1072,20 @@ useEffect(() => {
 
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
 
-const supplierColumnMap: Record<string, { key: string; width: string }> = {
-  Kinray: { key: "supplier_Kinray", width: "min-w-[140px]" },
-  McKesson: { key: "supplier_McKesson", width: "min-w-[140px]" },
-  "Real Value Rx": { key: "supplier_RealValueRx", width: "min-w-[160px]" },
-  Parmed: { key: "supplier_Parmed", width: "min-w-[140px]" },
-  Axia: { key: "supplier_Axia", width: "min-w-[120px]" },
-  Citymed: { key: "supplier_Citymed", width: "min-w-[140px]" },
-  "Legacy Health": { key: "supplier_LegacyHealth", width: "min-w-[160px]" },
-  "NDC Distributors": { key: "supplier_NDCDistributors", width: "min-w-[180px]" },
-  TruMarker: { key: "supplier_TruMarker", width: "min-w-[140px]" },
-};
+  const supplierColumnMap: Record<string, { key: string; width: string }> = {
+    Kinray: { key: "supplier_Kinray", width: "min-w-[140px]" },
+    McKesson: { key: "supplier_McKesson", width: "min-w-[140px]" },
+    "Real Value Rx": { key: "supplier_RealValueRx", width: "min-w-[160px]" },
+    Parmed: { key: "supplier_Parmed", width: "min-w-[140px]" },
+    Axia: { key: "supplier_Axia", width: "min-w-[120px]" },
+    Citymed: { key: "supplier_Citymed", width: "min-w-[140px]" },
+    "Legacy Health": { key: "supplier_LegacyHealth", width: "min-w-[160px]" },
+    "NDC Distributors": {
+      key: "supplier_NDCDistributors",
+      width: "min-w-[180px]",
+    },
+    TruMarker: { key: "supplier_TruMarker", width: "min-w-[140px]" },
+  };
 
   const toggleColumn = (col: keyof typeof columnFilters) => {
     setColumnFilters((prev) => ({ ...prev, [col]: !prev[col] }));
@@ -1130,52 +1107,51 @@ const supplierColumnMap: Record<string, { key: string; width: string }> = {
   }, []);
 
   const handleExport = () => {
-  const rows =
-    exportScope === "visible" ? paginatedData : filteredData;
+    const rows = exportScope === "visible" ? paginatedData : filteredData;
 
-  if (!rows.length) return;
+    if (!rows.length) return;
 
-  if (exportFormat === "csv") {
-    exportCSV(rows);
-  }
+    if (exportFormat === "csv") {
+      exportCSV(rows);
+    }
 
-  if (exportFormat === "excel") {
-    exportCSV(rows, "xlsx"); // Excel compatible CSV
-  }
+    if (exportFormat === "excel") {
+      exportCSV(rows, "xlsx"); // Excel compatible CSV
+    }
 
-  if (exportFormat === "pdf") {
-    exportPDF(rows);
-  }
+    if (exportFormat === "pdf") {
+      exportPDF(rows);
+    }
 
-  setOpenExportModal(false);
-};
+    setOpenExportModal(false);
+  };
 
-const exportCSV = (rows: any[], ext: "csv" | "xlsx" = "csv") => {
-  const headers = Object.keys(rows[0]);
+  const exportCSV = (rows: any[], ext: "csv" | "xlsx" = "csv") => {
+    const headers = Object.keys(rows[0]);
 
-  const csv = [
-    headers.join(","),
-    ...rows.map((r) =>
-      headers.map((h) => JSON.stringify(r[h] ?? "")).join(","),
-    ),
-  ].join("\n");
+    const csv = [
+      headers.join(","),
+      ...rows.map((r) =>
+        headers.map((h) => JSON.stringify(r[h] ?? "")).join(","),
+      ),
+    ].join("\n");
 
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `inventory-report.${ext}`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-};
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `inventory-report.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
-const exportPDF = (rows: any[]) => {
-  const w = window.open("", "_blank");
-  if (!w) return;
+  const exportPDF = (rows: any[]) => {
+    const w = window.open("", "_blank");
+    if (!w) return;
 
-  w.document.write(`
+    w.document.write(`
     <html>
       <head>
         <title>Inventory Report</title>
@@ -1215,7 +1191,7 @@ const exportPDF = (rows: any[]) => {
       </body>
     </html>
   `);
-};
+  };
 
   const handleDrugTypeToggle = (dtype: string) => {
     setDrugTypes((prev) =>
@@ -1394,117 +1370,161 @@ const exportPDF = (rows: any[]) => {
     variant="outline"
     size="sm"
     className="gap-2 border-slate-300"
-    onClick={() => {
-  closeAllDropdowns();
-  setOpenFilter((v) => !v);
-}}
+    onClick={() => setOpenFilter(!openFilter)}
   >
     <SlidersHorizontal className="h-3.5 w-3.5" />
     Filter
     <ChevronDown className="h-3.5 w-3.5" />
   </Button>
 
+              {openFilter && (
+                <div className="absolute -left-100 top-full mt-2 w-[900px] max-w-[95vw] bg-white border border-slate-200 rounded-xl shadow-2xl z-50">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-5 py-3 border-b">
+                    <h3 className="text-sm font-bold tracking-wide">FILTERS</h3>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // optional reset
+                          setPbmFilters(availablePBMs);
+                          setFlagFilters([]);
+                        }}
+                      >
+                        Reset Filters
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => setOpenFilter(false)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
 
-  {openFilter && (
-  <div className="absolute -left-100 top-full mt-2 w-[900px] max-w-[95vw] bg-white border border-slate-200 rounded-xl shadow-2xl z-50">
-    {/* Header */}
-    <div className="flex items-center justify-between px-5 py-3 border-b">
-      <h3 className="text-sm font-bold tracking-wide">FILTERS</h3>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={() => {
-          // optional reset
-          setPbmFilters(availablePBMs)
-          setFlagFilters([])
-        }}>
-          Reset Filters
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={() => setOpenFilter(false)}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
+                  {/* Content */}
+                  <div className="grid grid-cols-3 gap-0 max-h-[70vh] overflow-y-auto">
+                    {/* LEFT */}
+                    <div className="p-4 border-r">
+                      <div className="text-xs font-bold text-slate-600 mb-2">
+                        COLUMNS
+                      </div>
 
-    {/* Content */}
-    <div className="grid grid-cols-3 gap-0 max-h-[70vh] overflow-y-auto">
-      {/* LEFT */}
-      <div className="p-4 border-r">
-        <div className="text-xs font-bold text-slate-600 mb-2">COLUMNS</div>
+                      {(
+                        [
+                          "ndc",
+                          "pkgSize",
+                          "rank",
+                          "totalOrdered",
+                          "totalBilled",
+                          "totalShortage",
+                          "highestShortage",
+                          "cost",
+                        ] as const
+                      ).map((col) => (
+                        <label
+                          key={col}
+                          className="flex items-center gap-2 py-1 text-sm"
+                        >
+                          <Checkbox
+                            checked={columnFilters[col]}
+                            onCheckedChange={() => toggleColumn(col)}
+                          />
+                          {col.replace(/([A-Z])/g, " $1").toUpperCase()}
+                        </label>
+                      ))}
 
-        {(["ndc","pkgSize","rank","totalOrdered","totalBilled","totalShortage","highestShortage","cost"] as const).map(col => (
-          <label key={col} className="flex items-center gap-2 py-1 text-sm">
-            <Checkbox checked={columnFilters[col]} onCheckedChange={() => toggleColumn(col)} />
-            {col.replace(/([A-Z])/g, " $1").toUpperCase()}
-          </label>
-        ))}
+                      <div className="text-xs font-bold text-slate-600 mt-5 mb-2">
+                        SHOW LABEL
+                      </div>
+                      <label className="flex items-center gap-2 text-sm py-1">
+                        <Checkbox /> SHOW ABERRANT
+                      </label>
+                      <label className="flex items-center gap-2 text-sm py-1">
+                        <Checkbox /> CONTROLLED
+                      </label>
+                      <label className="flex items-center gap-2 text-sm py-1">
+                        <Checkbox /> FILTER NDC PERIOD
+                      </label>
 
-        <div className="text-xs font-bold text-slate-600 mt-5 mb-2">SHOW LABEL</div>
-        <label className="flex items-center gap-2 text-sm py-1"><Checkbox /> SHOW ABERRANT</label>
-        <label className="flex items-center gap-2 text-sm py-1"><Checkbox /> CONTROLLED</label>
-        <label className="flex items-center gap-2 text-sm py-1"><Checkbox /> FILTER NDC PERIOD</label>
+                      <div className="text-xs font-bold text-slate-600 mt-5 mb-2">
+                        OPTIONS
+                      </div>
+                      {[
+                        "VERTICAL HEADER",
+                        "REMOVE NDC DASH",
+                        "SHORT NDC'S ONLY",
+                        "INCLUDE SHORTAGE",
+                        "HIGHEST SHORTAGE NAME",
+                        "INCLUDE AMOUNT",
+                        "INCLUDE PBM RANK",
+                        "FILTER BY NOTE",
+                        "CASH DISABLED",
+                      ].map((opt) => (
+                        <div
+                          key={opt}
+                          className="flex items-center justify-between py-1 text-sm"
+                        >
+                          <span>{opt}</span>
+                          <Checkbox />
+                        </div>
+                      ))}
+                    </div>
 
-        <div className="text-xs font-bold text-slate-600 mt-5 mb-2">OPTIONS</div>
-        {[
-          "VERTICAL HEADER",
-          "REMOVE NDC DASH",
-          "SHORT NDC'S ONLY",
-          "INCLUDE SHORTAGE",
-          "HIGHEST SHORTAGE NAME",
-          "INCLUDE AMOUNT",
-          "INCLUDE PBM RANK",
-          "FILTER BY NOTE",
-          "CASH DISABLED",
-        ].map(opt => (
-          <div key={opt} className="flex items-center justify-between py-1 text-sm">
-            <span>{opt}</span>
-            <Checkbox />
-          </div>
-        ))}
-      </div>
+                    {/* MIDDLE */}
+                    <div className="p-4 border-r">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
+                        <span className="h-2 w-2 rounded-full bg-red-500" />{" "}
+                        BILLED
+                      </div>
 
-      {/* MIDDLE */}
-      <div className="p-4 border-r">
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
-          <span className="h-2 w-2 rounded-full bg-red-500" /> BILLED
-        </div>
+                      {availablePBMs.map((pbm) => (
+                        <label
+                          key={pbm}
+                          className="flex items-center gap-2 py-1 text-sm"
+                        >
+                          <Checkbox
+                            checked={pbmFilters.includes(pbm)}
+                            onCheckedChange={() => togglePBMFilter(pbm)}
+                          />
+                          {pbm}
+                        </label>
+                      ))}
+                    </div>
 
-        {availablePBMs.map(pbm => (
-          <label key={pbm} className="flex items-center gap-2 py-1 text-sm">
-            <Checkbox checked={pbmFilters.includes(pbm)} onCheckedChange={() => togglePBMFilter(pbm)} />
-            {pbm}
-          </label>
-        ))}
-      </div>
+                    {/* RIGHT */}
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-600" />{" "}
+                        SUPPLIERS
+                      </div>
 
-      {/* RIGHT */}
-      <div className="p-4">
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
-          <span className="h-2 w-2 rounded-full bg-emerald-600" /> SUPPLIERS
-        </div>
-
-        {Object.keys(supplierColumnMap).map((s) => (
-  <label key={s} className="flex items-center gap-2 py-1 text-sm">
-    <Checkbox
-      checked={selectedSuppliers.includes(s)}
-      onCheckedChange={() =>
-        setSelectedSuppliers((prev) =>
-          prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
-        )
-      }
-    />
-    {s}
-  </label>
-))}
-      </div>
-    </div>
-  </div>
-)}
-
-</div>
+                      {Object.keys(supplierColumnMap).map((s) => (
+                        <label
+                          key={s}
+                          className="flex items-center gap-2 py-1 text-sm"
+                        >
+                          <Checkbox
+                            checked={selectedSuppliers.includes(s)}
+                            onCheckedChange={() =>
+                              setSelectedSuppliers((prev) =>
+                                prev.includes(s)
+                                  ? prev.filter((x) => x !== s)
+                                  : [...prev, s],
+                              )
+                            }
+                          />
+                          {s}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
 {/* 2️⃣ Flags */}
 <div className="relative">
@@ -1512,86 +1532,89 @@ const exportPDF = (rows: any[]) => {
     variant="outline"
     size="sm"
     className="gap-2 border-slate-300"
-    onClick={() => {
-  closeAllDropdowns();
-  setOpenFlagDropdown((v) => !v);
-}}
+    onClick={() => setOpenFlagDropdown(!openFlagDropdown)}
   >
     <Filter className="h-3.5 w-3.5" />
     FLAGS
     <ChevronDown className="h-3.5 w-3.5" />
   </Button>
 
-  {openFlagDropdown && (
-    <div className="absolute right-0 top-full mt-2 w-[260px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b">
-        <span className="text-sm font-bold">FLAGS</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0"
-          onClick={() => setOpenFlagDropdown(false)}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+              {openFlagDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-[260px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-3 py-2 border-b">
+                    <span className="text-sm font-bold">FLAGS</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => setOpenFlagDropdown(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
 
-      {/* Content */}
-      <div className="p-3 space-y-2">
-        {/* Aberrant */}
-        <label className="flex items-center gap-2 text-sm">
-          <Checkbox
-            checked={flagFilters.includes("aberrant")}
-            onCheckedChange={() =>
-              setFlagFilters((prev) =>
-                prev.includes("aberrant")
-                  ? prev.filter((f) => f !== "aberrant")
-                  : [...prev, "aberrant"],
-              )
-            }
-          />
-          ABERRANT <span className="text-xs text-slate-400">(9)</span>
-        </label>
+                  {/* Content */}
+                  <div className="p-3 space-y-2">
+                    {/* Aberrant */}
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={flagFilters.includes("aberrant")}
+                        onCheckedChange={() =>
+                          setFlagFilters((prev) =>
+                            prev.includes("aberrant")
+                              ? prev.filter((f) => f !== "aberrant")
+                              : [...prev, "aberrant"],
+                          )
+                        }
+                      />
+                      ABERRANT{" "}
+                      <span className="text-xs text-slate-400">(9)</span>
+                    </label>
 
-        {/* Controlled */}
-        <label className="flex items-center gap-2 text-sm font-medium">
-          <Checkbox
-            checked={flagFilters.includes("controlled")}
-            onCheckedChange={() =>
-              setFlagFilters((prev) =>
-                prev.includes("controlled")
-                  ? prev.filter((f) => f !== "controlled")
-                  : [...prev, "controlled"],
-              )
-            }
-          />
-          CONTROLLED SUBSTANCE <span className="text-xs text-slate-400">(34)</span>
-        </label>
+                    {/* Controlled */}
+                    <label className="flex items-center gap-2 text-sm font-medium">
+                      <Checkbox
+                        checked={flagFilters.includes("controlled")}
+                        onCheckedChange={() =>
+                          setFlagFilters((prev) =>
+                            prev.includes("controlled")
+                              ? prev.filter((f) => f !== "controlled")
+                              : [...prev, "controlled"],
+                          )
+                        }
+                      />
+                      CONTROLLED SUBSTANCE{" "}
+                      <span className="text-xs text-slate-400">(34)</span>
+                    </label>
 
-        {/* Controlled Schedules */}
-        <div className="pl-6 space-y-1">
-          {(["CI", "CII", "CIII", "CIV", "CV"] as const).map((c) => (
-            <label key={c} className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={controlledSchedules.includes(c)}
-                onCheckedChange={() =>
-                  setControlledSchedules((prev) =>
-                    prev.includes(c)
-                      ? prev.filter((x) => x !== c)
-                      : [...prev, c],
-                  )
-                }
-              />
-              {c}
-            </label>
-          ))}
-        </div>
-      </div>
-    </div>
-  )}
-</div>
-
+                    {/* Controlled Schedules */}
+                    <div className="pl-6 space-y-1">
+                      {(["CI", "CII", "CIII", "CIV", "CV"] as const).map(
+                        (c) => (
+                          <label
+                            key={c}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <Checkbox
+                              checked={controlledSchedules.includes(c)}
+                              onCheckedChange={() =>
+                                setControlledSchedules((prev) =>
+                                  prev.includes(c)
+                                    ? prev.filter((x) => x !== c)
+                                    : [...prev, c],
+                                )
+                              }
+                            />
+                            {c}
+                          </label>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
 {/* 3️⃣ Tags */}
 <div className="relative">
@@ -1599,122 +1622,113 @@ const exportPDF = (rows: any[]) => {
     variant="outline"
     size="sm"
     className="gap-2 border-slate-300"
-   onClick={() => {
-  closeAllDropdowns();
-  setOpenTagsDropdown((v) => !v);
-}}
+    onClick={() => setOpenTagsDropdown(!openTagsDropdown)}
   >
     TAGS
     <ChevronDown className="h-3.5 w-3.5" />
   </Button>
 
-  {openTagsDropdown && (
-    <div className="absolute right-0 top-full mt-2 w-[320px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b">
-        <span className="text-sm font-bold">TAGS</span>
+              {openTagsDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-[320px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-3 py-2 border-b">
+                    <span className="text-sm font-bold">TAGS</span>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-emerald-600 hover:bg-emerald-50 h-7 px-2"
-            onClick={() => setOpenCreateTagModal(true)}
-          >
-            + Create Tag
-          </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-emerald-600 hover:bg-emerald-50 h-7 px-2"
+                        onClick={() => setOpenCreateTagModal(true)}
+                      >
+                        + Create Tag
+                      </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0"
-            onClick={() => setOpenTagsDropdown(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={() => setOpenTagsDropdown(false)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
 
-      {/* Tag List */}
-      <div className="p-3 space-y-2 max-h-[300px] overflow-y-auto">
-        {availableTags.map((tag) => (
-          <div
-            key={tag.id}
-            className="flex items-center justify-between gap-2 group"
-          >
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={selectedTags.includes(tag.id)}
-                onCheckedChange={() =>
-                  setSelectedTags((prev) =>
-                    prev.includes(tag.id)
-                      ? prev.filter((t) => t !== tag.id)
-                      : [...prev, tag.id],
-                  )
-                }
-              />
+                  {/* Tag List */}
+                  <div className="p-3 space-y-2 max-h-[300px] overflow-y-auto">
+                    {availableTags.map((tag) => (
+                      <div
+                        key={tag.id}
+                        className="flex items-center justify-between gap-2 group"
+                      >
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={selectedTags.includes(tag.id)}
+                            onCheckedChange={() =>
+                              setSelectedTags((prev) =>
+                                prev.includes(tag.id)
+                                  ? prev.filter((t) => t !== tag.id)
+                                  : [...prev, tag.id],
+                              )
+                            }
+                          />
 
-              <span
-                className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${colorClasses[tag.color]}`}
-              >
-                {tag.label} <span className="ml-1 text-[10px]">0</span>
-              </span>
-            </label>
+                          <span
+                            className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${colorClasses[tag.color]}`}
+                          >
+                            {tag.label}{" "}
+                            <span className="ml-1 text-[10px]">0</span>
+                          </span>
+                        </label>
 
-            {/* 3-dot menu */}
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100"
-                onClick={() =>
-                  setOpenTagMenuId((prev) =>
-                    prev === tag.id ? null : tag.id,
-                  )
-                }
-              >
-                ⋮
-              </Button>
+                        {/* 3-dot menu */}
+                        <div className="relative">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100"
+                            onClick={() =>
+                              setOpenTagMenuId((prev) =>
+                                prev === tag.id ? null : tag.id,
+                              )
+                            }
+                          >
+                            ⋮
+                          </Button>
 
-              {openTagMenuId === tag.id && (
-                <div className="absolute right-0 mt-1 w-28 bg-white border rounded-md shadow-lg z-50">
-                  <button
-                    className="w-full px-3 py-1.5 text-sm text-left hover:bg-slate-50"
-                    onClick={() => {
-                      console.log("Edit tag", tag.id);
-                      setOpenTagMenuId(null);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="w-full px-3 py-1.5 text-sm text-left text-red-600 hover:bg-red-50"
-                    onClick={() => {
-                      console.log("Delete tag", tag.id);
-                      setOpenTagMenuId(null);
-                    }}
-                  >
-                    Delete
-                  </button>
+                          {openTagMenuId === tag.id && (
+                            <div className="absolute right-0 mt-1 w-28 bg-white border rounded-md shadow-lg z-50">
+                              <button
+                                className="w-full px-3 py-1.5 text-sm text-left hover:bg-slate-50"
+                                onClick={() => {
+                                  console.log("Edit tag", tag.id);
+                                  setOpenTagMenuId(null);
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="w-full px-3 py-1.5 text-sm text-left text-red-600 hover:bg-red-50"
+                                onClick={() => {
+                                  console.log("Delete tag", tag.id);
+                                  setOpenTagMenuId(null);
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )}
-</div>
-
 
 {/* 4️⃣ QTY Type */}
-<DropdownMenu
-  open={openQtyDropdown}
-  onOpenChange={(v) => {
-    if (v) closeAllDropdowns();
-    setOpenQtyDropdown(v);
-  }}
->
+<DropdownMenu open={openQtyDropdown} onOpenChange={setOpenQtyDropdown}>
   <DropdownMenuTrigger asChild>
     <Button variant="outline" size="sm" className="gap-2 border-slate-300">
       QTY
@@ -1738,13 +1752,7 @@ const exportPDF = (rows: any[]) => {
 </DropdownMenu>
 
 {/* 5️⃣ Drug Type */}
-<DropdownMenu
-  open={openDrugTypeDropdown}
-  onOpenChange={(v) => {
-    if (v) closeAllDropdowns();
-    setOpenDrugTypeDropdown(v);
-  }}
->
+<DropdownMenu open={openDrugTypeDropdown} onOpenChange={setOpenDrugTypeDropdown}>
   <DropdownMenuTrigger asChild>
     <Button variant="outline" size="sm" className="gap-2 border-slate-300">
       TYPE
@@ -1773,36 +1781,36 @@ const exportPDF = (rows: any[]) => {
   </DropdownMenuContent>
 </DropdownMenu>
 
-{/* 6️⃣ Drug Cost */}
-<div className="flex items-center gap-2">
-  <Input
-    type="number"
-    placeholder="Max Cost"
-    value={costValue}
-    onChange={(e) => setCostValue(Number(e.target.value) || "")}
-    className="w-[110px] h-9 border-slate-300"
-  />
-</div>
+            {/* 6️⃣ Drug Cost */}
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                placeholder="Max Cost"
+                value={costValue}
+                onChange={(e) => setCostValue(Number(e.target.value) || "")}
+                className="w-[110px] h-9 border-slate-300"
+              />
+            </div>
 
-{/* 7️⃣ Rows */}
+            {/* 7️⃣ Rows */}
 
-<Select
-  value={String(rowsPerPage)}
-  onValueChange={(v) => setRowsPerPage(Number(v))}
->
-  <SelectTrigger className="w-[120px] h-9 border-slate-300">
-    <SelectValue placeholder={`Rows: ${rowsPerPage}/${totalRows}`} />
-  </SelectTrigger>
-  <SelectContent>
-    {rowOptions.map((n) => (
-      <SelectItem key={n} value={String(n)}>
-        {n === totalRows ? `All (${totalRows})` : n}
-      </SelectItem>
-    ))}
-  </SelectContent>
-</Select>
-
-
+            <Select
+              value={String(rowsPerPage)}
+              onValueChange={(v) => setRowsPerPage(Number(v))}
+            >
+              <SelectTrigger className="w-[120px] h-9 border-slate-300">
+                <SelectValue
+                  placeholder={`Rows: ${rowsPerPage}/${totalRows}`}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {rowOptions.map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n === totalRows ? `All (${totalRows})` : n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -2052,31 +2060,37 @@ const exportPDF = (rows: any[]) => {
               </TableHead>
             )}
 
-            {selectedSuppliers.map((s) => {
-              const meta = supplierColumnMap[s];
-              return (
-                <TableHead key={s} className={`${meta.width} border-r border-slate-200 bg-white h-[52px]`}>
-                  <div className="h-full px-3 py-2.5 flex items-center justify-center">
-                    <span className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
-                      {s}
-                    </span>
-                  </div>
-                </TableHead>
-              );
-            })}
+              {selectedSuppliers.map((s) => {
+  const meta = supplierColumnMap[s];
+  return (
+    <TableHead
+      key={s}
+      className={`${meta.width} border-r border-slate-200`}
+    >
+      <div className="h-full px-3 py-2.5 flex items-center justify-center">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
+          {s}
+        </span>
+      </div>
+    </TableHead>
+  );
+})}
 
-            {columnFilters.shortageNjMedicaid && (
-              <TableHead className={`${columnWidths.shortageNjMedicaid} bg-white h-[52px]`}>
-                <HeaderCell sortKey="shortageNjMedicaid" sortRules={sortRules} onSort={handleSort}>
-                  NJ Medicaid Shortage
-                </HeaderCell>
-              </TableHead>
-            )}
-          </TableRow>
-        </TableHeader>
-      </Table>
-    </div>
-  </div>
+              {columnFilters.shortageNjMedicaid && (
+                <TableHead className={columnWidths.shortageNjMedicaid}>
+                  <HeaderCell
+                    sortKey="shortageNjMedicaid"
+                    sortRules={sortRules}
+                    onSort={handleSort}
+                  >
+                    NJ Medicaid Shortage
+                  </HeaderCell>
+                </TableHead>
+              )}
+
+              
+            </TableRow>
+          </TableHeader>
 
   {/* SCROLLABLE BODY - Controls both vertical and horizontal scroll */}
   <div ref={bodyScrollRef} className="flex-1 overflow-auto min-w-0 relative z-0">
@@ -2239,21 +2253,25 @@ const exportPDF = (rows: any[]) => {
                 </TableCell>
               )}
 
-              {selectedSuppliers.map((s) => {
-                const meta = supplierColumnMap[s];
-                return (
-                  <TableCell key={s} className={`${meta.width} text-center border-r border-slate-100 text-slate-600 h-[52px]`}>
-                    —
-                  </TableCell>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  </div>
-</div>
+                {selectedSuppliers.map((s) => {
+  const meta = supplierColumnMap[s];
+  return (
+    <TableCell
+      key={s}
+      className={`${meta.width} text-center border-r border-slate-100 text-slate-600`}
+    >
+      {/* Placeholder for now — replace with real supplier value when available */}
+      —
+    </TableCell>
+  );
+})}
+
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
       {/* Enhanced Footer */}
       {/* <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-slate-200 shadow-sm">
         <div className="flex items-center gap-3">
