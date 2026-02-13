@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Upload } from "lucide-react";
 import Link from "next/link";
+import axios from "axios";
 
 interface UploadInventoryStepProps {
   inventoryFile: File | null;
@@ -28,6 +29,25 @@ const UploadInventoryStep = ({
     setInventoryFile(file);
   };
 
+  const handleSubmit = async () => {
+    const formData = new FormData();
+    if (inventoryFile) {
+      formData.append("file", inventoryFile);
+      try {
+        const id = localStorage.getItem("auditId");
+        const res = await axios.post(
+          `http://localhost:5000/api/audits/${id}/inventory`,
+          formData,
+        );
+        console.log(res.data);
+        alert("success");
+        onNext();
+      } catch (err) {
+        alert("failed");
+      }
+    }
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto">
       <div className="bg-card rounded-lg border border-border p-8 shadow-sm">
@@ -41,7 +61,12 @@ const UploadInventoryStep = ({
             <div className="flex items-center justify-between">
               <span className="font-semibold text-foreground">PRIMERX</span>
               <label htmlFor="inventory-file">
-                <Button variant="outline" size="sm" className="cursor-pointer" asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer"
+                  asChild
+                >
                   <span>
                     <Upload className="w-4 h-4 mr-2" />
                     Upload file
@@ -66,16 +91,23 @@ const UploadInventoryStep = ({
           {/* Exclude options */}
           <div className="text-center space-y-4">
             <p className="text-sm text-foreground">
-              Make sure to <span className="underline font-medium">EXCLUDE</span> these options before running the report.
+              Make sure to{" "}
+              <span className="underline font-medium">EXCLUDE</span> these
+              options before running the report.
             </p>
             <div className="flex items-center justify-center gap-8">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="excludeTransferred"
                   checked={excludeTransferred}
-                  onCheckedChange={(checked : boolean) => setExcludeTransferred(checked === true)}
+                  onCheckedChange={(checked: boolean) =>
+                    setExcludeTransferred(checked === true)
+                  }
                 />
-                <Label htmlFor="excludeTransferred" className="text-sm text-foreground">
+                <Label
+                  htmlFor="excludeTransferred"
+                  className="text-sm text-foreground"
+                >
                   Exclude Transferred Out
                 </Label>
               </div>
@@ -83,9 +115,14 @@ const UploadInventoryStep = ({
                 <Checkbox
                   id="excludeUnbilled"
                   checked={excludeUnbilled}
-                  onCheckedChange={(checked : boolean) => setExcludeUnbilled(checked === true)}
+                  onCheckedChange={(checked: boolean) =>
+                    setExcludeUnbilled(checked === true)
+                  }
                 />
-                <Label htmlFor="excludeUnbilled" className="text-sm text-foreground">
+                <Label
+                  htmlFor="excludeUnbilled"
+                  className="text-sm text-foreground"
+                >
                   Exclude Unbilled
                 </Label>
               </div>
@@ -95,7 +132,9 @@ const UploadInventoryStep = ({
           <div className="flex justify-center pt-4">
             {/* <Link href="/file-upload" className="px-8 bg-gradient-to-r from-[#0D0D0D] to-[#404040] text-white transition"> */}
             <Button
-              onClick={onNext}
+              onClick={() => {
+                handleSubmit();
+              }}
               disabled={!inventoryFile}
               className="px-8 bg-gradient-to-r from-[#0D0D0D] to-[#404040] text-white transition"
             >

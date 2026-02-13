@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import axios from "axios";
 
 interface NameReportStepProps {
   auditName: string;
@@ -19,6 +20,21 @@ const NameReportStep = ({
   onContinue,
 }: NameReportStepProps) => {
   const isValid = auditName.trim() !== "" && agreedToTerms;
+
+  const handleSubmit = async () => {
+    const name: string = auditName;
+    try {
+      const res = await axios.post("http://localhost:5000/api/audits", {
+        name,
+      });
+      console.log(res.data);
+      localStorage.setItem("auditId", res.data.id);
+      alert("success");
+      onContinue();
+    } catch (err) {
+      alert("failed");
+    }
+  };
 
   return (
     <div className="w-full max-w-xl mx-auto">
@@ -65,7 +81,10 @@ const NameReportStep = ({
 
           <div className="flex justify-end pt-4">
             <Button
-              onClick={onContinue}
+              onClick={() => {
+                handleSubmit();
+                // onContinue;
+              }}
               disabled={!isValid}
               className="px-8 bg-gradient-to-r from-[#0D0D0D] to-[#404040] text-white transition"
             >
