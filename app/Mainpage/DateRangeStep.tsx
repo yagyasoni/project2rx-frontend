@@ -10,6 +10,7 @@ import {
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import axios from "axios";
 
 interface DateRangeStepProps {
   inventoryStartDate: Date | undefined;
@@ -34,6 +35,33 @@ const DateRangeStep = ({
   setWholesalerEndDate,
   onContinue,
 }: DateRangeStepProps) => {
+  const formatDate = (date?: Date) => (date ? format(date, "yyyy-MM-dd") : "");
+
+  const handleSubmit = async () => {
+    const inventory_start_date = formatDate(inventoryStartDate);
+    const inventory_end_date = formatDate(inventoryEndDate);
+    const wholesaler_start_date = formatDate(wholesalerStartDate);
+    const wholesaler_end_date = formatDate(wholesalerEndDate);
+
+    try {
+      const id = localStorage.getItem("auditId");
+      const res = await axios.patch(
+        `http://localhost:5000/api/audits/${id}/dates`,
+        {
+          inventory_start_date,
+          inventory_end_date,
+          wholesaler_start_date,
+          wholesaler_end_date,
+        },
+      );
+      console.log(res.data);
+      alert("success");
+      onContinue();
+    } catch (err) {
+      alert("failed");
+    }
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="bg-card rounded-lg border border-border p-8 shadow-sm">
@@ -121,7 +149,10 @@ const DateRangeStep = ({
 
           <div className="flex justify-end pt-4">
             <Button
-              onClick={onContinue}
+              onClick={() => {
+                handleSubmit();
+                // onContinue;
+              }}
               className="px-8 text-white bg-gradient-to-r from-[#0D0D0D] to-[#404040] transition"
             >
               Continue
@@ -146,7 +177,7 @@ const DatePicker = ({ date, setDate }: DatePickerProps) => {
           variant="outline"
           className={cn(
             "w-full justify-start text-left font-normal",
-            !date && "text-muted-foreground"
+            !date && "text-muted-foreground",
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
