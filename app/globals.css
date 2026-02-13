@@ -362,3 +362,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide horizontal scrollbar but keep scroll working */
+.no-h-scrollbar::-webkit-scrollbar:horizontal {
+  height: 0px;
+}
+.no-h-scrollbar {
+  scrollbar-width: none; /* Firefox */
+}
