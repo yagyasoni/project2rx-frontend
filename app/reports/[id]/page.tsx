@@ -815,10 +815,7 @@ export default function InventoryReportPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
-  const [activeFilters, setActiveFilters] = useState<FilterChip[]>([
-    { id: "pkgSize", label: "PKG SIZE", value: "PKG SIZE" },
-    { id: "cost", label: "$ COST", value: "$ COST" },
-  ]);
+  const [activeFilters, setActiveFilters] = useState<FilterChip[]>([]);
   const [qtyType, setQtyType] = useState<"UNIT" | "PKG SIZE" | null>("UNIT");
   const [openQtyDropdown, setOpenQtyDropdown] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
@@ -1097,6 +1094,14 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
   };
 
   useEffect(() => {
+  // When export modal opens → collapse sidebar
+  if (openExportModal) {
+    setSidebarCollapsed(true);
+  }
+}, [openExportModal]);
+
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
         filterDropdownRef.current &&
@@ -1243,20 +1248,28 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
   <div className="relative h-full w-full flex overflow-hidden">
 
     
-    {/* LEFT SIDEBAR (collapsed by default) */}
-  <div
+    {/* LEFT SIDEBAR x(collapsed by default) */}
+  {/* LEFT SIDEBAR (collapsed by default, fully hidden when export opens) */}
+<div
   className={`flex-shrink-0 transition-all duration-300 ease-in-out ${
-    sidebarCollapsed ? "w-[64px]" : "w-[260px]"
+    openExportModal
+      ? "w-0 opacity-0 pointer-events-none"
+      : sidebarCollapsed
+      ? "w-[64px]"
+      : "w-[260px]"
   }`}
   style={{ zIndex: 100 }}
 >
-  <AppSidebar
-    sidebarOpen={!sidebarCollapsed}
-    setSidebarOpen={() => setSidebarCollapsed((v) => !v)}
-    activePanel={activePanel}
-    setActivePanel={setActivePanel}
-  />
+  {!openExportModal && (
+    <AppSidebar
+      sidebarOpen={!sidebarCollapsed}
+      setSidebarOpen={() => setSidebarCollapsed((v) => !v)}
+      activePanel={activePanel}
+      setActivePanel={setActivePanel}
+    />
+  )}
 </div>
+
 
 
     {/* RIGHT PAGE CONTENT */}
@@ -1264,83 +1277,118 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
 
       {/* Enhanced Header */}
       
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="px-6 py-4 flex items-center justify-between">
+      <div className="bg-white border-b border-slate-200 shadow-sm ">
+        <div className="px-9 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-              INVENTORY REPORT
-            </h1>
+            <h1 className="text-lg md:text-3xl font-bold text-slate-800 tracking-wide uppercase">
+  Inventory Report
+</h1>
+
             <p className="text-sm text-slate-500 mt-0.5">
               Comprehensive pharmaceutical inventory analytics
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-4">
+
   {/* Inventory Dates */}
-  <div className="flex items-start gap-3 bg-white px-4 -py-1 rounded-xl border border-slate-200 shadow-sm">
-    <div className="mt-1 h-2 w-2 rounded-full bg-red-500" />
-    <div>
-      <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase">
-        Inventory Dates
-      </div>
-      <div className="flex items-center gap-3 mt-1">
-        <div>
-          <div className="text-[10px] font-semibold text-red-600 uppercase">
-            Start
-          </div>
-          <div className="text-sm font-semibold text-slate-900">
-            {fromDate}
-          </div>
-        </div>
-        <div>
-          <div className="text-[10px] font-semibold text-red-600 uppercase">
-            End
-          </div>
-          <div className="text-sm font-semibold text-slate-900">
-            {toDate}
-          </div>
-        </div>
-      </div>
+ 
+
+<div className="flex flex-col gap-1 translate-y-1">
+  {/* Title outside the box */}
+  <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-4 -mt-5">
+    <div className="mt-1 h-2 w-2 rounded-full bg-blue-800 -translate-x-4 translate-y-3" />
+    Periods
+  </div>
+  {/* Box */}
+  <div className="bg-white px-4 py-3 rounded-xl border mb-1.5 border-slate-200 shadow-sm min-w-[180px]">
+    <div className="text-xs font-semibold text-slate-900">
+      {fromDate} – {toDate}
     </div>
   </div>
+</div>
 
-  {/* Wholesaler Dates */}
-  <div className="flex items-start gap-3 bg-white px-4 -py-1 rounded-xl border border-slate-200 shadow-sm">
-    <div className="mt-1 h-2 w-2 rounded-full bg-emerald-600" />
-    <div>
-      <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase">
-        Wholesaler Dates
-      </div>
-      <div className="flex items-center gap-3 mt-1">
-        <div>
-          <div className="text-[10px] font-semibold text-emerald-700 uppercase">
-            Start
-          </div>
-          <div className="text-sm font-semibold text-slate-900">
-            {fromDate}
-          </div>
+
+
+  <div className="flex flex-col gap-1">
+  {/* Title outside the box */}
+  <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-4 -mt-5">
+    <div className="mt-1 h-2 w-2 rounded-full bg-red-500 -translate-x-4 translate-y-3" />
+    Inventory Dates
+  </div>
+  {/* Box */}
+  <div className="flex items-start gap-3 bg-white px-4 py-1 rounded-xl border border-slate-200 shadow-sm">
+
+    <div className="flex items-center gap-6">
+      <div>
+        <div className="text-[10px] font-semibold text-red-600 uppercase">
+          Start
         </div>
-        <div>
-          <div className="text-[10px] font-semibold text-emerald-700 uppercase">
-            End
-          </div>
-          <div className="text-sm font-semibold text-slate-900">
-            {toDate}
-          </div>
+        <div className="text-xs font-semibold text-slate-900">
+          {fromDate}
+        </div>
+      </div>
+
+      <div>
+        <div className="text-[10px] font-semibold text-red-600 uppercase">
+          End
+        </div>
+        <div className="text-sm font-semibold text-slate-900">
+          {toDate}
         </div>
       </div>
     </div>
   </div>
 </div>
+
+
+  {/* Wholesaler Dates */}
+  <div className="flex flex-col gap-1 -translate-y-3">
+  {/* Title outside the box */}
+  <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-1">
+    <div className="mt-1 h-2 w-2 rounded-full bg-emerald-600 -translate-x-4 translate-y-3" />
+    Wholesaler Dates
+  </div>
+
+  {/* Box */}
+  <div className="flex items-start gap-3 bg-white px-4 py-1 rounded-xl border border-slate-200 shadow-sm">
+
+    <div className="flex items-center gap-6">
+      <div>
+        <div className="text-[10px] font-semibold text-emerald-700 uppercase">
+          Start
+        </div>
+        <div className="text-xs font-semibold text-slate-900">
+          {fromDate}
+        </div>
+      </div>
+
+      <div>
+        <div className="text-[10px] font-semibold text-emerald-700 uppercase">
+          End
+        </div>
+        <div className="text-sm font-semibold text-slate-900">
+          {toDate}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
             <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => setOpenExportModal(true)}
-            >
-              <Download className="h-4 w-4" />
-              Export
-            </Button>
+  variant="outline"
+  size="sm"
+  className="gap-2"
+  onClick={() => {
+    setSidebarCollapsed(true);   // 👈 hide sidebar immediately
+    setOpenExportModal(true);
+  }}
+>
+  <Download className="h-4 w-4" />
+  Export
+</Button>
+
             <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
               <RotateCw className="h-4 w-4" />
             </Button>
@@ -1349,8 +1397,8 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
       </div>
 
       {/* Enhanced Filter Bar */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="px-6 py-4">
+      <div className="bg-white border-b border-slate-200 ">
+        <div className="px-6 py-3">
           <div className="flex items-center gap-3 flex-wrap">
             {/* Search */}
             <div className="relative flex-1 min-w-[300px] max-w-md">
@@ -1799,7 +1847,7 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
                 placeholder="Max Cost"
                 value={costValue}
                 onChange={(e) => setCostValue(Number(e.target.value) || "")}
-                className="w-[110px] h-9 border-slate-300"
+                className="w-[110px] h-8 border-slate-300"
               />
             </div>
 
@@ -1809,7 +1857,7 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
               value={String(rowsPerPage)}
               onValueChange={(v) => setRowsPerPage(Number(v))}
             >
-              <SelectTrigger className="w-[120px] h-9 border-slate-300">
+              <SelectTrigger className="w-[120px] h-8 border-slate-300">
                 <SelectValue
                   placeholder={`Rows: ${rowsPerPage}/${totalRows}`}
                 />
@@ -1930,6 +1978,7 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
             {columnFilters.totalOrdered && (
               <TableHead className={`${columnWidths.totalOrdered} border-r border-slate-200 bg-white h-[52px]`}>
                 <HeaderCell sortKey="totalOrdered" sortRules={sortRules} onSort={handleSort}>
+                  <div className="-mt-2 h-2 w-2 rounded-full bg-emerald-600 -translate-x-3 translate-y-3" />
                   Total Ordered
                 </HeaderCell>
               </TableHead>
@@ -1938,6 +1987,7 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
             {columnFilters.totalBilled && (
               <TableHead className={`${columnWidths.totalBilled} border-r border-slate-200 bg-white h-[52px]`}>
                 <HeaderCell sortKey="totalBilled" sortRules={sortRules} onSort={handleSort}>
+                  <div className="-mt-2 h-2 w-2 rounded-full bg-red-500 -translate-x-3 translate-y-3" />
                   Total Billed
                 </HeaderCell>
               </TableHead>
@@ -1946,6 +1996,7 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
             {columnFilters.totalShortage && (
               <TableHead className={`${columnWidths.totalShortage} border-r border-slate-200 bg-white h-[52px]`}>
                 <HeaderCell sortKey="totalShortage" sortRules={sortRules} onSort={handleSort}>
+                  <div className="-mt-2 h-2 w-2 rounded-full bg-yellow-500 -translate-x-3 translate-y-3" />
                   Total Shortage
                 </HeaderCell>
               </TableHead>
@@ -1954,6 +2005,7 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
             {columnFilters.highestShortage && (
               <TableHead className={`${columnWidths.highestShortage} border-r border-slate-200 bg-white h-[52px]`}>
                 <HeaderCell sortKey="highestShortage" sortRules={sortRules} onSort={handleSort}>
+                  <div className="-mt-2 h-2 w-2 rounded-full bg-yellow-500 -translate-x-3 translate-y-3" />
                   Highest Shortage
                 </HeaderCell>
               </TableHead>
@@ -1962,73 +2014,179 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
             {columnFilters.cost && (
               <TableHead className={`${columnWidths.cost} border-r border-slate-200 bg-white h-[52px]`}>
                 <HeaderCell sortKey="cost" sortRules={sortRules} onSort={handleSort}>
+                  <div className="-mt-2 h-2 w-2 rounded-full bg-yellow-500 -translate-x-3 translate-y-3" />
                   $ Cost
                 </HeaderCell>
               </TableHead>
             )}
 
             {columnFilters.horizon && (
-              <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-                  Horizon
-                </HeaderCell>
-              </TableHead>
+              <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
+  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+    <div className="flex flex-col items-center leading-tight">
+      {/* Status dot */}
+      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
+
+      {/* Top line */}
+      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+        Billed
+      </span>
+
+      {/* Bottom line */}
+      <span className="text-xs font-semibold text-slate-900">
+        Horizon Health
+      </span>
+    </div>
+  </HeaderCell>
+</TableHead>
+
             )}
 
             {columnFilters.shortageHorizon && (
-              <TableHead className={`${columnWidths.shortageHorizon} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="shortageHorizon" sortRules={sortRules} onSort={handleSort}>
-                  Horizon Shortage
-                </HeaderCell>
-              </TableHead>
+               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
+  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+    <div className="flex flex-col items-center leading-tight">
+      {/* Status dot */}
+      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-yellow-500" />
+
+      {/* Top line */}
+      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+        Billed
+      </span>
+
+      {/* Bottom line */}
+      <span className="text-xs font-semibold text-slate-900">
+        Horizon Health
+      </span>
+    </div>
+  </HeaderCell>
+</TableHead>
             )}
 
             {columnFilters.express && (
-              <TableHead className={`${columnWidths.express} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="express" sortRules={sortRules} onSort={handleSort}>
-                  Express
-                </HeaderCell>
-              </TableHead>
+               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
+  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+    <div className="flex flex-col items-center leading-tight">
+      {/* Status dot */}
+      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
+
+      {/* Top line */}
+      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+        Billed
+      </span>
+
+      {/* Bottom line */}
+      <span className="text-xs font-semibold text-slate-900">
+        Express Scripts
+      </span>
+    </div>
+  </HeaderCell>
+</TableHead>
             )}
 
             {columnFilters.shortageExpress && (
-              <TableHead className={`${columnWidths.shortageExpress} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="shortageExpress" sortRules={sortRules} onSort={handleSort}>
-                  Express Shortage
-                </HeaderCell>
-              </TableHead>
+               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
+  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+    <div className="flex flex-col items-center leading-tight">
+      {/* Status dot */}
+      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-yellow-500" />
+
+      {/* Top line */}
+      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+        shortage
+      </span>
+
+      {/* Bottom line */}
+      <span className="text-xs font-semibold text-slate-900">
+        express scripts
+      </span>
+    </div>
+  </HeaderCell>
+</TableHead>
             )}
 
             {columnFilters.pdmi && (
-              <TableHead className={`${columnWidths.pdmi} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="pdmi" sortRules={sortRules} onSort={handleSort}>
-                  PDMI
-                </HeaderCell>
-              </TableHead>
+               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
+  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+    <div className="flex flex-col items-center leading-tight">
+      {/* Status dot */}
+      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
+
+      {/* Top line */}
+      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+        Billed
+      </span>
+
+      {/* Bottom line */}
+      <span className="text-xs font-semibold text-slate-900">
+        PDMI (CO-PAY CARD)
+      </span>
+    </div>
+  </HeaderCell>
+</TableHead>
             )}
 
             {columnFilters.shortagePdmi && (
-              <TableHead className={`${columnWidths.shortagePdmi} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="shortagePdmi" sortRules={sortRules} onSort={handleSort}>
-                  PDMI Shortage
-                </HeaderCell>
-              </TableHead>
+               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
+  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+    <div className="flex flex-col items-center leading-tight">
+      {/* Status dot */}
+      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
+
+      {/* Top line */}
+      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+        Shortage
+      </span>
+
+      {/* Bottom line */}
+      <span className="text-xs font-semibold text-slate-900">
+        PDMI (CO-PAY CARD)
+      </span>
+    </div>
+  </HeaderCell>
+</TableHead>
             )}
 
             {columnFilters.optumrx && (
-              <TableHead className={`${columnWidths.optumrx} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="optumrx" sortRules={sortRules} onSort={handleSort}>
-                  OptumRx
-                </HeaderCell>
-              </TableHead>
+               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
+  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+    <div className="flex flex-col items-center leading-tight">
+      {/* Status dot */}
+      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
+
+      {/* Top line */}
+      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+        Billed
+      </span>
+
+      {/* Bottom line */}
+      <span className="text-xs font-semibold text-slate-900">
+         Optumrx
+      </span>
+    </div>
+  </HeaderCell>
+</TableHead>
             )}
 
             {columnFilters.shortageOptumrx && (
-              <TableHead className={`${columnWidths.shortageOptumrx} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="shortageOptumrx" sortRules={sortRules} onSort={handleSort}>
-                  OptumRx Shortage
-                </HeaderCell>
-              </TableHead>
+               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
+  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+    <div className="flex flex-col items-center leading-tight">
+      {/* Status dot */}
+      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
+
+      {/* Top line */}
+      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+        Shortage
+      </span>
+
+      {/* Bottom line */}
+      <span className="text-xs font-semibold text-slate-900">
+        Optumrx
+      </span>
+    </div>
+  </HeaderCell>
+</TableHead>
             )}
 
             {columnFilters.cvsCaremark && (
@@ -2040,17 +2198,30 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
             )}
 
             {columnFilters.shortageCvsCaremark && (
-              <TableHead className={`${columnWidths.shortageCvsCaremark} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="shortageCvsCaremark" sortRules={sortRules} onSort={handleSort}>
-                  CVS Caremark Shortage
-                </HeaderCell>
-              </TableHead>
+               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
+  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+    <div className="flex flex-col items-center leading-tight">
+      {/* Status dot */}
+      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
+
+      {/* Top line */}
+      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+        shortage
+      </span>
+
+      {/* Bottom line */}
+      <span className="text-xs font-semibold text-slate-900">
+        CVS Caremark
+      </span>
+    </div>
+  </HeaderCell>
+</TableHead>
             )}
 
             {columnFilters.ssc && (
               <TableHead className={`${columnWidths.ssc} border-r border-slate-200 bg-white h-[52px]`}>
                 <HeaderCell sortKey="ssc" sortRules={sortRules} onSort={handleSort}>
-                  SSC
+                  Billed SSC
                 </HeaderCell>
               </TableHead>
             )}
@@ -2058,17 +2229,30 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
             {columnFilters.shortageSsc && (
               <TableHead className={`${columnWidths.shortageSsc} border-r border-slate-200 bg-white h-[52px]`}>
                 <HeaderCell sortKey="shortageSsc" sortRules={sortRules} onSort={handleSort}>
-                  SSC Shortage
+                 Shortage SSC
                 </HeaderCell>
               </TableHead>
             )}
 
             {columnFilters.njMedicaid && (
-              <TableHead className={`${columnWidths.njMedicaid} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="njMedicaid" sortRules={sortRules} onSort={handleSort}>
-                  NJ Medicaid
-                </HeaderCell>
-              </TableHead>
+               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
+  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+    <div className="flex flex-col items-center leading-tight">
+      {/* Status dot */}
+      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
+
+      {/* Top line */}
+      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+        Billed
+      </span>
+
+      {/* Bottom line */}
+      <span className="text-xs font-semibold text-slate-900">
+        NJ Medical
+      </span>
+    </div>
+  </HeaderCell>
+</TableHead>
             )}
 
               {selectedSuppliers.map((s) => {
@@ -2088,15 +2272,24 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
 })}
 
               {columnFilters.shortageNjMedicaid && (
-                <TableHead className={columnWidths.shortageNjMedicaid}>
-                  <HeaderCell
-                    sortKey="shortageNjMedicaid"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    NJ Medicaid Shortage
-                  </HeaderCell>
-                </TableHead>
+                 <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
+  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+    <div className="flex flex-col items-center leading-tight">
+      {/* Status dot */}
+      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
+
+      {/* Top line */}
+      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+        Shortage
+      </span>
+
+      {/* Bottom line */}
+      <span className="text-xs font-semibold text-slate-900">
+        NJ Medicaid
+      </span>
+    </div>
+  </HeaderCell>
+</TableHead>
               )}
             </TableRow>
           </TableHeader>
@@ -2117,14 +2310,14 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
           {paginatedData.map((row, idx) => (
             <TableRow
               key={row.id}
-              className="cursor-pointer transition-colors hover:bg-emerald-50/30 border-b border-slate-100"
+              className="cursor-pointer transition-colors hover:bg-emerald-50/30 border-b border-slate-100 h-[40px] "
               onClick={() => {
                 setActiveDrug(row);
                 setOpenDrugSidebar(true);
               }}
             >
-              <TableCell className="w-12 border-r border-slate-100 bg-white h-[52px]" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-center">
+              <TableCell className="w-13 border-r border-slate-100 bg-white h-[52px]" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center translate-x-4">
                   <Checkbox
                     checked={selectedRows.includes(row.id)}
                     onCheckedChange={() => toggleRowSelection(row.id)}
@@ -2133,139 +2326,139 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
               </TableCell>
 
               {columnFilters.rank && (
-                <TableCell className={`${columnWidths.rank} text-center border-r border-slate-100 font-medium text-slate-700 h-[52px] `}>
+                <TableCell className={`${columnWidths.rank} text-center border-r border-slate-100 font-medium text-slate-700 h-[36px] py-0 `}>
                   {row.rank}
                 </TableCell>
               )}
 
               {columnFilters.ndc && (
-                <TableCell className={`${columnWidths.ndc} text-center border-r border-slate-100 text-xs text-slate-600 h-[52px]`}>
+                <TableCell className={`${columnWidths.ndc} text-center border-r border-slate-100 text-xs text-slate-600 h-[40px] py-0`}>
                   {row.ndc}
                 </TableCell>
               )}
 
               {columnFilters.drugName && (
-                <TableCell className={`${columnWidths.drugName} border-r border-slate-100 font-semibold text-slate-900 h-[52px]`}>
+                <TableCell className={`${columnWidths.drugName} border-r border-slate-100 font-semibold text-slate-900 h-[40px] py-0`}>
                   {row.drugName}
                 </TableCell>
               )}
 
               {columnFilters.pkgSize && (
-                <TableCell className={`${columnWidths.pkgSize} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.pkgSize} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
                   {row.pkgSize}
                 </TableCell>
               )}
 
               {columnFilters.totalOrdered && (
-                <TableCell className={`${columnWidths.totalOrdered} text-center border-r border-slate-100 font-medium text-slate-700 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.totalOrdered} text-center border-r border-slate-100 font-medium text-slate-700 h-[40px] py-0 translate-x-8`}>
                   {row.totalOrdered.toLocaleString()}
                 </TableCell>
               )}
 
               {columnFilters.totalBilled && (
-                <TableCell className={`${columnWidths.totalBilled} text-center border-r border-slate-100 font-medium text-slate-700 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.totalBilled} text-center border-r border-slate-100 font-medium text-slate-700 h-[40px] py-0 translate-x-8`}>
                   {row.totalBilled.toLocaleString()}
                 </TableCell>
               )}
 
               {columnFilters.totalShortage && (
-                <TableCell className={`${columnWidths.totalShortage} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.totalShortage} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
                   {renderShortageValue(row.totalShortage)}
                 </TableCell>
               )}
 
               {columnFilters.highestShortage && (
-                <TableCell className={`${columnWidths.highestShortage} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.highestShortage} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
                   {renderShortageValue(row.highestShortage)}
                 </TableCell>
               )}
 
               {columnFilters.cost && (
-                <TableCell className={`${columnWidths.cost} text-center border-r border-slate-100 font-semibold text-slate-900 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.cost} text-center border-r border-slate-100 font-semibold text-slate-900 h-[40px] py-0 translate-x-8`}>
                   ${row.cost.toFixed(2)}
                 </TableCell>
               )}
 
               {columnFilters.horizon && (
-                <TableCell className={`${columnWidths.horizon} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.horizon} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
                   {row.horizon}
                 </TableCell>
               )}
 
               {columnFilters.shortageHorizon && (
-                <TableCell className={`${columnWidths.shortageHorizon} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.shortageHorizon} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
                   {renderShortageValue(row.shortageHorizon)}
                 </TableCell>
               )}
 
               {columnFilters.express && (
-                <TableCell className={`${columnWidths.express} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.express} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
                   {row.express}
                 </TableCell>
               )}
 
               {columnFilters.shortageExpress && (
-                <TableCell className={`${columnWidths.shortageExpress} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.shortageExpress} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
                   {renderShortageValue(row.shortageExpress)}
                 </TableCell>
               )}
 
               {columnFilters.pdmi && (
-                <TableCell className={`${columnWidths.pdmi} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.pdmi} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
                   {row.pdmi}
                 </TableCell>
               )}
 
               {columnFilters.shortagePdmi && (
-                <TableCell className={`${columnWidths.shortagePdmi} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.shortagePdmi} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
                   {renderShortageValue(row.shortagePdmi)}
                 </TableCell>
               )}
 
               {columnFilters.optumrx && (
-                <TableCell className={`${columnWidths.optumrx} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.optumrx} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
                   {row.optumrx}
                 </TableCell>
               )}
 
               {columnFilters.shortageOptumrx && (
-                <TableCell className={`${columnWidths.shortageOptumrx} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.shortageOptumrx} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
                   {renderShortageValue(row.shortageOptumrx)}
                 </TableCell>
               )}
 
               {columnFilters.cvsCaremark && (
-                <TableCell className={`${columnWidths.cvsCaremark} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.cvsCaremark} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
                   {row.cvsCaremark}
                 </TableCell>
               )}
 
               {columnFilters.shortageCvsCaremark && (
-                <TableCell className={`${columnWidths.shortageCvsCaremark} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.shortageCvsCaremark} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
                   {renderShortageValue(row.shortageCvsCaremark)}
                 </TableCell>
               )}
 
               {columnFilters.ssc && (
-                <TableCell className={`${columnWidths.ssc} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.ssc} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
                   {row.ssc}
                 </TableCell>
               )}
 
               {columnFilters.shortageSsc && (
-                <TableCell className={`${columnWidths.shortageSsc} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.shortageSsc} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
                   {renderShortageValue(row.shortageSsc)}
                 </TableCell>
               )}
 
               {columnFilters.njMedicaid && (
-                <TableCell className={`${columnWidths.njMedicaid} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.njMedicaid} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
                   {row.njMedicaid}
                 </TableCell>
               )}
 
               {columnFilters.shortageNjMedicaid && (
-                <TableCell className={`${columnWidths.shortageNjMedicaid} text-center h-[52px] translate-x-8`}>
+                <TableCell className={`${columnWidths.shortageNjMedicaid} text-center h-[40px] py-0 translate-x-8`}>
                   {renderShortageValue(row.shortageNjMedicaid)}
                 </TableCell>
               )}

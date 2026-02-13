@@ -4,6 +4,11 @@
   import { ChevronLeft, ChevronRight, Search, X, ChevronDown, RotateCw } from 'lucide-react'
   import { ArrowUpDown } from 'lucide-react'
 
+  type SortRule = {
+    key: string;
+    dir: 'asc' | 'desc' | undefined;
+  };
+
   function SortIcon({ dir }: { dir?: 'asc' | 'desc' }) {
     if (!dir) return <ArrowUpDown className="w-3 h-3 ml-1 text-gray-400" />
     if (dir === 'asc') return <span className="text-[10px] ml-1">▲</span>
