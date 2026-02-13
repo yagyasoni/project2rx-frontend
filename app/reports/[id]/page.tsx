@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import AppSidebar from "@/components/Sidebar"
 import {
   ChevronLeft,
   ChevronRight,
@@ -831,8 +832,11 @@ export default function InventoryReportPage() {
     (typeof inventoryData)[number] | null
   >(null);
 
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
+const [selectedTags, setSelectedTags] = useState<string[]>([]);
+const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
+
+
+  
 
   const filterDropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -1041,29 +1045,29 @@ export default function InventoryReportPage() {
   });
 
   const columnWidths: Record<keyof typeof columnFilters, string> = {
-    rank: "min-w-[70px]",
+    rank: "min-w-[110px]",
     ndc: "min-w-[150px]",
     drugName: "min-w-[260px]",
-    pkgSize: "min-w-[90px]",
-    totalOrdered: "min-w-[120px]",
-    totalBilled: "min-w-[120px]",
-    totalShortage: "min-w-[130px]",
-    highestShortage: "min-w-[140px]",
-    cost: "min-w-[90px]",
-    horizon: "min-w-[90px]",
-    shortageHorizon: "min-w-[140px]",
-    express: "min-w-[90px]",
-    shortageExpress: "min-w-[140px]",
-    cvsCaremark: "min-w-[120px]",
-    shortageCvsCaremark: "min-w-[160px]",
+    pkgSize: "min-w-[115px]",
+    totalOrdered: "min-w-[158px]",
+    totalBilled: "min-w-[141px]",
+    totalShortage: "min-w-[160px]",
+    highestShortage: "min-w-[180px]",
+    cost: "min-w-[110px]",
+    horizon: "min-w-[120px]",
+    shortageHorizon: "min-w-[182px]",
+    express: "min-w-[120px]",
+    shortageExpress: "min-w-[180px]",
+    cvsCaremark: "min-w-[160px]",
+    shortageCvsCaremark: "min-w-[222px]",
     ssc: "min-w-[90px]",
-    shortageSsc: "min-w-[140px]",
-    njMedicaid: "min-w-[120px]",
+    shortageSsc: "min-w-[152px]",
+    njMedicaid: "min-w-[140px]",
     shortageNjMedicaid: "min-w-[160px]",
-    pdmi: "min-w-[90px]",
-    shortagePdmi: "min-w-[140px]",
-    optumrx: "min-w-[90px]",
-    shortageOptumrx: "min-w-[140px]",
+    pdmi: "min-w-[100px]",
+    shortagePdmi: "min-w-[170px]",
+    optumrx: "min-w-[121px]",
+    shortageOptumrx: "min-w-[191px]",
   };
 
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
@@ -1093,7 +1097,7 @@ export default function InventoryReportPage() {
         filterDropdownRef.current &&
         !filterDropdownRef.current.contains(e.target as Node)
       ) {
-        setOpenFilter(false);
+        closeAllDropdowns();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -1211,6 +1215,14 @@ export default function InventoryReportPage() {
     setNewTagColor("yellow");
   };
 
+  const closeAllDropdowns = () => {
+  setOpenFilter(false);
+  setOpenFlagDropdown(false);
+  setOpenTagsDropdown(false);
+  setOpenQtyDropdown(false);
+  setOpenDrugTypeDropdown(false);
+};
+
   const formatDate = (date: Date) => {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
@@ -1222,8 +1234,25 @@ export default function InventoryReportPage() {
   const toDate = formatDate(new Date());
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+  <div className="relative h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-50">
+  <div className="relative h-full w-full flex overflow-hidden">
+
+    
+    {/* LEFT SIDEBAR (collapsed by default) */}
+  <div className={`flex-shrink-0 transition-all ... ${sidebarCollapsed ? "w-[64px]" : "w-[260px]"}`}
+          style={{ zIndex: 100 }}>
+  <AppSidebar
+    collapsed={sidebarCollapsed}
+    onToggle={() => setSidebarCollapsed((v) => !v)}
+  />
+</div>
+
+
+    {/* RIGHT PAGE CONTENT */}
+    <div className="flex-1 min-w-0 flex flex-col overflow-hidden transition-all duration-300 ease-in-out">
+
       {/* Enhanced Header */}
+      
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="px-6 py-4 flex items-center justify-between">
           <div>
@@ -1235,10 +1264,63 @@ export default function InventoryReportPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-sm text-slate-600 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
-              <span className="font-medium text-slate-700">Period:</span>{" "}
-              {fromDate} - {toDate}
-            </div>
+            <div className="flex items-center gap-4">
+  {/* Inventory Dates */}
+  <div className="flex items-start gap-3 bg-white px-4 -py-1 rounded-xl border border-slate-200 shadow-sm">
+    <div className="mt-1 h-2 w-2 rounded-full bg-red-500" />
+    <div>
+      <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase">
+        Inventory Dates
+      </div>
+      <div className="flex items-center gap-3 mt-1">
+        <div>
+          <div className="text-[10px] font-semibold text-red-600 uppercase">
+            Start
+          </div>
+          <div className="text-sm font-semibold text-slate-900">
+            {fromDate}
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] font-semibold text-red-600 uppercase">
+            End
+          </div>
+          <div className="text-sm font-semibold text-slate-900">
+            {toDate}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Wholesaler Dates */}
+  <div className="flex items-start gap-3 bg-white px-4 -py-1 rounded-xl border border-slate-200 shadow-sm">
+    <div className="mt-1 h-2 w-2 rounded-full bg-emerald-600" />
+    <div>
+      <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase">
+        Wholesaler Dates
+      </div>
+      <div className="flex items-center gap-3 mt-1">
+        <div>
+          <div className="text-[10px] font-semibold text-emerald-700 uppercase">
+            Start
+          </div>
+          <div className="text-sm font-semibold text-slate-900">
+            {fromDate}
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] font-semibold text-emerald-700 uppercase">
+            End
+          </div>
+          <div className="text-sm font-semibold text-slate-900">
+            {toDate}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
             <Button
               variant="outline"
               size="sm"
@@ -1283,17 +1365,17 @@ export default function InventoryReportPage() {
 
             {/* Filter Dropdowns */}
             {/* 1️⃣ Columns */}
-            <div className="relative" ref={filterDropdownRef}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-slate-300"
-                onClick={() => setOpenFilter(!openFilter)}
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                Filter
-                <ChevronDown className="h-3.5 w-3.5" />
-              </Button>
+<div className="relative" ref={filterDropdownRef}>
+  <Button
+    variant="outline"
+    size="sm"
+    className="gap-2 border-slate-300"
+    onClick={() => setOpenFilter(!openFilter)}
+  >
+    <SlidersHorizontal className="h-3.5 w-3.5" />
+    Filter
+    <ChevronDown className="h-3.5 w-3.5" />
+  </Button>
 
               {openFilter && (
                 <div className="absolute -left-100 top-full mt-2 w-[900px] max-w-[95vw] bg-white border border-slate-200 rounded-xl shadow-2xl z-50">
@@ -1444,18 +1526,18 @@ export default function InventoryReportPage() {
               )}
             </div>
 
-            {/* 2️⃣ Flags */}
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-slate-300"
-                onClick={() => setOpenFlagDropdown(!openFlagDropdown)}
-              >
-                <Filter className="h-3.5 w-3.5" />
-                FLAGS
-                <ChevronDown className="h-3.5 w-3.5" />
-              </Button>
+{/* 2️⃣ Flags */}
+<div className="relative">
+  <Button
+    variant="outline"
+    size="sm"
+    className="gap-2 border-slate-300"
+    onClick={() => setOpenFlagDropdown(!openFlagDropdown)}
+  >
+    <Filter className="h-3.5 w-3.5" />
+    FLAGS
+    <ChevronDown className="h-3.5 w-3.5" />
+  </Button>
 
               {openFlagDropdown && (
                 <div className="absolute right-0 top-full mt-2 w-[260px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
@@ -1534,17 +1616,17 @@ export default function InventoryReportPage() {
               )}
             </div>
 
-            {/* 3️⃣ Tags */}
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-slate-300"
-                onClick={() => setOpenTagsDropdown(!openTagsDropdown)}
-              >
-                TAGS
-                <ChevronDown className="h-3.5 w-3.5" />
-              </Button>
+{/* 3️⃣ Tags */}
+<div className="relative">
+  <Button
+    variant="outline"
+    size="sm"
+    className="gap-2 border-slate-300"
+    onClick={() => setOpenTagsDropdown(!openTagsDropdown)}
+  >
+    TAGS
+    <ChevronDown className="h-3.5 w-3.5" />
+  </Button>
 
               {openTagsDropdown && (
                 <div className="absolute right-0 top-full mt-2 w-[320px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
@@ -1645,73 +1727,59 @@ export default function InventoryReportPage() {
               )}
             </div>
 
-            {/* 4️⃣ QTY Type */}
-            <DropdownMenu
-              open={openQtyDropdown}
-              onOpenChange={setOpenQtyDropdown}
-            >
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 border-slate-300"
-                >
-                  QTY
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuCheckboxItem
-                  checked={qtyType === "UNIT"}
-                  onCheckedChange={() => setQtyType("UNIT")}
-                >
-                  UNIT
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={qtyType === "PKG SIZE"}
-                  onCheckedChange={() => setQtyType("PKG SIZE")}
-                >
-                  PKG SIZE
-                </DropdownMenuCheckboxItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+{/* 4️⃣ QTY Type */}
+<DropdownMenu open={openQtyDropdown} onOpenChange={setOpenQtyDropdown}>
+  <DropdownMenuTrigger asChild>
+    <Button variant="outline" size="sm" className="gap-2 border-slate-300">
+      QTY
+      <ChevronDown className="h-3.5 w-3.5" />
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end" className="w-48">
+    <DropdownMenuCheckboxItem
+      checked={qtyType === "UNIT"}
+      onCheckedChange={() => setQtyType("UNIT")}
+    >
+      UNIT
+    </DropdownMenuCheckboxItem>
+    <DropdownMenuCheckboxItem
+      checked={qtyType === "PKG SIZE"}
+      onCheckedChange={() => setQtyType("PKG SIZE")}
+    >
+      PKG SIZE
+    </DropdownMenuCheckboxItem>
+  </DropdownMenuContent>
+</DropdownMenu>
 
-            {/* 5️⃣ Drug Type */}
-            <DropdownMenu
-              open={openDrugTypeDropdown}
-              onOpenChange={setOpenDrugTypeDropdown}
-            >
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 border-slate-300"
-                >
-                  TYPE
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuCheckboxItem
-                  checked={drugTypes.includes("ALL DRUGS")}
-                  onCheckedChange={() => handleDrugTypeToggle("ALL DRUGS")}
-                >
-                  ALL DRUGS
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={drugTypes.includes("BRAND")}
-                  onCheckedChange={() => handleDrugTypeToggle("BRAND")}
-                >
-                  BRAND
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={drugTypes.includes("GENERIC")}
-                  onCheckedChange={() => handleDrugTypeToggle("GENERIC")}
-                >
-                  GENERIC
-                </DropdownMenuCheckboxItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+{/* 5️⃣ Drug Type */}
+<DropdownMenu open={openDrugTypeDropdown} onOpenChange={setOpenDrugTypeDropdown}>
+  <DropdownMenuTrigger asChild>
+    <Button variant="outline" size="sm" className="gap-2 border-slate-300">
+      TYPE
+      <ChevronDown className="h-3.5 w-3.5" />
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end" className="w-48">
+    <DropdownMenuCheckboxItem
+      checked={drugTypes.includes("ALL DRUGS")}
+      onCheckedChange={() => handleDrugTypeToggle("ALL DRUGS")}
+    >
+      ALL DRUGS
+    </DropdownMenuCheckboxItem>
+    <DropdownMenuCheckboxItem
+      checked={drugTypes.includes("BRAND")}
+      onCheckedChange={() => handleDrugTypeToggle("BRAND")}
+    >
+      BRAND
+    </DropdownMenuCheckboxItem>
+    <DropdownMenuCheckboxItem
+      checked={drugTypes.includes("GENERIC")}
+      onCheckedChange={() => handleDrugTypeToggle("GENERIC")}
+    >
+      GENERIC
+    </DropdownMenuCheckboxItem>
+  </DropdownMenuContent>
+</DropdownMenu>
 
             {/* 6️⃣ Drug Cost */}
             <div className="flex items-center gap-2">
@@ -1789,346 +1857,224 @@ export default function InventoryReportPage() {
         )}
       </div>
 
-      {/* Table Container - Enhanced with better borders and spacing */}
-      <div className="flex-1 overflow-auto bg-white">
-        <Table>
-          <TableHeader className="sticky top-0 z-10 bg-gradient-to-r from-slate-100 to-slate-50 border-b-2 border-slate-200">
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="w-12 border-r border-slate-200">
-                <div className="flex items-center justify-center">
-                  <Checkbox
-                    checked={
-                      selectedRows.length === paginatedData.length &&
-                      paginatedData.length > 0
-                    }
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </div>
+
+
+
+{/* Table Container - FIXED VERSION */}
+<div className="flex-1 bg-white relative overflow-hidden flex flex-col min-w-0 z-0">
+
+  {/* STATIC HEADER - Scrollbar hidden, syncs with body */}
+  <div 
+  ref={headerScrollRef}
+  className="flex-shrink-0 border-b-2 border-slate-200 shadow-sm bg-white overflow-hidden"
+>
+    <div className="min-w-max">
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="w-12 border-r border-slate-200 bg-white h-[52px]">
+              <div className="flex items-center justify-center">
+                <Checkbox
+                  checked={
+                    selectedRows.length === paginatedData.length &&
+                    paginatedData.length > 0
+                  }
+                  onCheckedChange={toggleSelectAll}
+                />
+              </div>
+            </TableHead>
+
+            {columnFilters.rank && (
+              <TableHead className={`${columnWidths.rank} border-r border-slate-200 bg-white h-[52px] `}>
+                <HeaderCell sortKey="rank" sortRules={sortRules} onSort={handleSort}>
+                  Rank
+                </HeaderCell>
               </TableHead>
+            )}
 
-              {columnFilters.rank && (
-                <TableHead
-                  className={`${columnWidths.rank} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="rank"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    Rank
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.ndc && (
+              <TableHead className={`${columnWidths.ndc} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="ndc" sortRules={sortRules} onSort={handleSort}>
+                  NDC
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.ndc && (
-                <TableHead
-                  className={`${columnWidths.ndc} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="ndc"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    NDC
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.drugName && (
+              <TableHead className={`${columnWidths.drugName} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="drugName" sortRules={sortRules} onSort={handleSort}>
+                  Drug Name
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.drugName && (
-                <TableHead
-                  className={`${columnWidths.drugName} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="drugName"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    Drug Name
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.pkgSize && (
+              <TableHead className={`${columnWidths.pkgSize} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="pkgSize" sortRules={sortRules} onSort={handleSort}>
+                  PKG Size
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.pkgSize && (
-                <TableHead
-                  className={`${columnWidths.pkgSize} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="pkgSize"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    PKG Size
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.totalOrdered && (
+              <TableHead className={`${columnWidths.totalOrdered} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="totalOrdered" sortRules={sortRules} onSort={handleSort}>
+                  Total Ordered
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.totalOrdered && (
-                <TableHead
-                  className={`${columnWidths.totalOrdered} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="totalOrdered"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    Total Ordered
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.totalBilled && (
+              <TableHead className={`${columnWidths.totalBilled} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="totalBilled" sortRules={sortRules} onSort={handleSort}>
+                  Total Billed
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.totalBilled && (
-                <TableHead
-                  className={`${columnWidths.totalBilled} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="totalBilled"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    Total Billed
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.totalShortage && (
+              <TableHead className={`${columnWidths.totalShortage} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="totalShortage" sortRules={sortRules} onSort={handleSort}>
+                  Total Shortage
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.totalShortage && (
-                <TableHead
-                  className={`${columnWidths.totalShortage} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="totalShortage"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    Total Shortage
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.highestShortage && (
+              <TableHead className={`${columnWidths.highestShortage} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="highestShortage" sortRules={sortRules} onSort={handleSort}>
+                  Highest Shortage
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.highestShortage && (
-                <TableHead
-                  className={`${columnWidths.highestShortage} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="highestShortage"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    Highest Shortage
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.cost && (
+              <TableHead className={`${columnWidths.cost} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="cost" sortRules={sortRules} onSort={handleSort}>
+                  $ Cost
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.cost && (
-                <TableHead
-                  className={`${columnWidths.cost} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="cost"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    $ Cost
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.horizon && (
+              <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
+                  Horizon
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.horizon && (
-                <TableHead
-                  className={`${columnWidths.horizon} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="horizon"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    Horizon
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.shortageHorizon && (
+              <TableHead className={`${columnWidths.shortageHorizon} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="shortageHorizon" sortRules={sortRules} onSort={handleSort}>
+                  Horizon Shortage
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.shortageHorizon && (
-                <TableHead
-                  className={`${columnWidths.shortageHorizon} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="shortageHorizon"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    Horizon Shortage
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.express && (
+              <TableHead className={`${columnWidths.express} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="express" sortRules={sortRules} onSort={handleSort}>
+                  Express
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.express && (
-                <TableHead
-                  className={`${columnWidths.express} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="express"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    Express
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.shortageExpress && (
+              <TableHead className={`${columnWidths.shortageExpress} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="shortageExpress" sortRules={sortRules} onSort={handleSort}>
+                  Express Shortage
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.shortageExpress && (
-                <TableHead
-                  className={`${columnWidths.shortageExpress} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="shortageExpress"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    Express Shortage
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.pdmi && (
+              <TableHead className={`${columnWidths.pdmi} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="pdmi" sortRules={sortRules} onSort={handleSort}>
+                  PDMI
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.pdmi && (
-                <TableHead
-                  className={`${columnWidths.pdmi} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="pdmi"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    PDMI
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.shortagePdmi && (
+              <TableHead className={`${columnWidths.shortagePdmi} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="shortagePdmi" sortRules={sortRules} onSort={handleSort}>
+                  PDMI Shortage
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.shortagePdmi && (
-                <TableHead
-                  className={`${columnWidths.shortagePdmi} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="shortagePdmi"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    PDMI Shortage
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.optumrx && (
+              <TableHead className={`${columnWidths.optumrx} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="optumrx" sortRules={sortRules} onSort={handleSort}>
+                  OptumRx
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.optumrx && (
-                <TableHead
-                  className={`${columnWidths.optumrx} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="optumrx"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    OptumRx
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.shortageOptumrx && (
+              <TableHead className={`${columnWidths.shortageOptumrx} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="shortageOptumrx" sortRules={sortRules} onSort={handleSort}>
+                  OptumRx Shortage
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.shortageOptumrx && (
-                <TableHead
-                  className={`${columnWidths.shortageOptumrx} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="shortageOptumrx"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    OptumRx Shortage
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.cvsCaremark && (
+              <TableHead className={`${columnWidths.cvsCaremark} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="cvsCaremark" sortRules={sortRules} onSort={handleSort}>
+                  CVS Caremark
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.cvsCaremark && (
-                <TableHead
-                  className={`${columnWidths.cvsCaremark} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="cvsCaremark"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    CVS Caremark
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.shortageCvsCaremark && (
+              <TableHead className={`${columnWidths.shortageCvsCaremark} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="shortageCvsCaremark" sortRules={sortRules} onSort={handleSort}>
+                  CVS Caremark Shortage
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.shortageCvsCaremark && (
-                <TableHead
-                  className={`${columnWidths.shortageCvsCaremark} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="shortageCvsCaremark"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    CVS Caremark Shortage
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.ssc && (
+              <TableHead className={`${columnWidths.ssc} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="ssc" sortRules={sortRules} onSort={handleSort}>
+                  SSC
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.ssc && (
-                <TableHead
-                  className={`${columnWidths.ssc} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="ssc"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    SSC
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.shortageSsc && (
+              <TableHead className={`${columnWidths.shortageSsc} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="shortageSsc" sortRules={sortRules} onSort={handleSort}>
+                  SSC Shortage
+                </HeaderCell>
+              </TableHead>
+            )}
 
-              {columnFilters.shortageSsc && (
-                <TableHead
-                  className={`${columnWidths.shortageSsc} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="shortageSsc"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    SSC Shortage
-                  </HeaderCell>
-                </TableHead>
-              )}
-
-              {columnFilters.njMedicaid && (
-                <TableHead
-                  className={`${columnWidths.njMedicaid} border-r border-slate-200`}
-                >
-                  <HeaderCell
-                    sortKey="njMedicaid"
-                    sortRules={sortRules}
-                    onSort={handleSort}
-                  >
-                    NJ Medicaid
-                  </HeaderCell>
-                </TableHead>
-              )}
+            {columnFilters.njMedicaid && (
+              <TableHead className={`${columnWidths.njMedicaid} border-r border-slate-200 bg-white h-[52px]`}>
+                <HeaderCell sortKey="njMedicaid" sortRules={sortRules} onSort={handleSort}>
+                  NJ Medicaid
+                </HeaderCell>
+              </TableHead>
+            )}
 
               {selectedSuppliers.map((s) => {
-                const meta = supplierColumnMap[s];
-                return (
-                  <TableHead
-                    key={s}
-                    className={`${meta.width} border-r border-slate-200`}
-                  >
-                    <div className="h-full px-3 py-2.5 flex items-center justify-center">
-                      <span className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
-                        {s}
-                      </span>
-                    </div>
-                  </TableHead>
-                );
-              })}
+  const meta = supplierColumnMap[s];
+  return (
+    <TableHead
+      key={s}
+      className={`${meta.width} border-r border-slate-200`}
+    >
+      <div className="h-full px-3 py-2.5 flex items-center justify-center">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
+          {s}
+        </span>
+      </div>
+    </TableHead>
+  );
+})}
 
               {columnFilters.shortageNjMedicaid && (
                 <TableHead className={columnWidths.shortageNjMedicaid}>
@@ -2141,227 +2087,185 @@ export default function InventoryReportPage() {
                   </HeaderCell>
                 </TableHead>
               )}
+
+              
             </TableRow>
           </TableHeader>
 
-          <TableBody>
-            {paginatedData.map((row, idx) => (
-              <TableRow
-                key={row.id}
-                className="cursor-pointer transition-colors hover:bg-emerald-50/30 border-b border-slate-100"
-                onClick={() => {
-                  setActiveDrug(row);
-                  setOpenDrugSidebar(true);
-                }}
-              >
-                <TableCell
-                  className="border-r border-slate-100"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-center justify-center">
-                    <Checkbox
-                      checked={selectedRows.includes(row.id)}
-                      onCheckedChange={() => toggleRowSelection(row.id)}
-                    />
-                  </div>
+  {/* SCROLLABLE BODY - Controls both vertical and horizontal scroll */}
+  <div ref={bodyScrollRef} className="flex-1 overflow-auto min-w-0 relative z-0">
+    <div className="min-w-max">
+      <Table>
+        <TableBody>
+          {paginatedData.map((row, idx) => (
+            <TableRow
+              key={row.id}
+              className="cursor-pointer transition-colors hover:bg-emerald-50/30 border-b border-slate-100"
+              onClick={() => {
+                setActiveDrug(row);
+                setOpenDrugSidebar(true);
+              }}
+            >
+              <TableCell className="w-12 border-r border-slate-100 bg-white h-[52px]" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-center">
+                  <Checkbox
+                    checked={selectedRows.includes(row.id)}
+                    onCheckedChange={() => toggleRowSelection(row.id)}
+                  />
+                </div>
+              </TableCell>
+
+              {columnFilters.rank && (
+                <TableCell className={`${columnWidths.rank} text-center border-r border-slate-100 font-medium text-slate-700 h-[52px] `}>
+                  {row.rank}
                 </TableCell>
+              )}
 
-                {columnFilters.rank && (
-                  <TableCell
-                    className={`${columnWidths.rank} text-center border-r border-slate-100 font-medium text-slate-700`}
-                  >
-                    {row.rank}
-                  </TableCell>
-                )}
+              {columnFilters.ndc && (
+                <TableCell className={`${columnWidths.ndc} text-center border-r border-slate-100 text-xs text-slate-600 h-[52px]`}>
+                  {row.ndc}
+                </TableCell>
+              )}
 
-                {columnFilters.ndc && (
-                  <TableCell
-                    className={`${columnWidths.ndc} text-center border-r border-slate-100 text-xs text-slate-600`}
-                  >
-                    {row.ndc}
-                  </TableCell>
-                )}
+              {columnFilters.drugName && (
+                <TableCell className={`${columnWidths.drugName} border-r border-slate-100 font-semibold text-slate-900 h-[52px]`}>
+                  {row.drugName}
+                </TableCell>
+              )}
 
-                {columnFilters.drugName && (
-                  <TableCell
-                    className={`${columnWidths.drugName} border-r border-slate-100 font-semibold text-slate-900`}
-                  >
-                    {row.drugName}
-                  </TableCell>
-                )}
+              {columnFilters.pkgSize && (
+                <TableCell className={`${columnWidths.pkgSize} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                  {row.pkgSize}
+                </TableCell>
+              )}
 
-                {columnFilters.pkgSize && (
-                  <TableCell
-                    className={`${columnWidths.pkgSize} text-center border-r border-slate-100 text-slate-700`}
-                  >
-                    {row.pkgSize}
-                  </TableCell>
-                )}
+              {columnFilters.totalOrdered && (
+                <TableCell className={`${columnWidths.totalOrdered} text-center border-r border-slate-100 font-medium text-slate-700 h-[52px] translate-x-8`}>
+                  {row.totalOrdered.toLocaleString()}
+                </TableCell>
+              )}
 
-                {columnFilters.totalOrdered && (
-                  <TableCell
-                    className={`${columnWidths.totalOrdered} text-center border-r border-slate-100 font-medium text-slate-700`}
-                  >
-                    {row.totalOrdered.toLocaleString()}
-                  </TableCell>
-                )}
+              {columnFilters.totalBilled && (
+                <TableCell className={`${columnWidths.totalBilled} text-center border-r border-slate-100 font-medium text-slate-700 h-[52px] translate-x-8`}>
+                  {row.totalBilled.toLocaleString()}
+                </TableCell>
+              )}
 
-                {columnFilters.totalBilled && (
-                  <TableCell
-                    className={`${columnWidths.totalBilled} text-center border-r border-slate-100 font-medium text-slate-700`}
-                  >
-                    {row.totalBilled.toLocaleString()}
-                  </TableCell>
-                )}
+              {columnFilters.totalShortage && (
+                <TableCell className={`${columnWidths.totalShortage} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                  {renderShortageValue(row.totalShortage)}
+                </TableCell>
+              )}
 
-                {columnFilters.totalShortage && (
-                  <TableCell
-                    className={`${columnWidths.totalShortage} text-center border-r border-slate-100`}
-                  >
-                    {renderShortageValue(row.totalShortage)}
-                  </TableCell>
-                )}
+              {columnFilters.highestShortage && (
+                <TableCell className={`${columnWidths.highestShortage} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                  {renderShortageValue(row.highestShortage)}
+                </TableCell>
+              )}
 
-                {columnFilters.highestShortage && (
-                  <TableCell
-                    className={`${columnWidths.highestShortage} text-center border-r border-slate-100`}
-                  >
-                    {renderShortageValue(row.highestShortage)}
-                  </TableCell>
-                )}
+              {columnFilters.cost && (
+                <TableCell className={`${columnWidths.cost} text-center border-r border-slate-100 font-semibold text-slate-900 h-[52px] translate-x-8`}>
+                  ${row.cost.toFixed(2)}
+                </TableCell>
+              )}
 
-                {columnFilters.cost && (
-                  <TableCell
-                    className={`${columnWidths.cost} text-center border-r border-slate-100 font-semibold text-slate-900`}
-                  >
-                    ${row.cost.toFixed(2)}
-                  </TableCell>
-                )}
+              {columnFilters.horizon && (
+                <TableCell className={`${columnWidths.horizon} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                  {row.horizon}
+                </TableCell>
+              )}
 
-                {columnFilters.horizon && (
-                  <TableCell
-                    className={`${columnWidths.horizon} text-center border-r border-slate-100 text-slate-700`}
-                  >
-                    {row.horizon}
-                  </TableCell>
-                )}
+              {columnFilters.shortageHorizon && (
+                <TableCell className={`${columnWidths.shortageHorizon} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                  {renderShortageValue(row.shortageHorizon)}
+                </TableCell>
+              )}
 
-                {columnFilters.shortageHorizon && (
-                  <TableCell
-                    className={`${columnWidths.shortageHorizon} text-center border-r border-slate-100`}
-                  >
-                    {renderShortageValue(row.shortageHorizon)}
-                  </TableCell>
-                )}
+              {columnFilters.express && (
+                <TableCell className={`${columnWidths.express} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                  {row.express}
+                </TableCell>
+              )}
 
-                {columnFilters.express && (
-                  <TableCell
-                    className={`${columnWidths.express} text-center border-r border-slate-100 text-slate-700`}
-                  >
-                    {row.express}
-                  </TableCell>
-                )}
+              {columnFilters.shortageExpress && (
+                <TableCell className={`${columnWidths.shortageExpress} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                  {renderShortageValue(row.shortageExpress)}
+                </TableCell>
+              )}
 
-                {columnFilters.shortageExpress && (
-                  <TableCell
-                    className={`${columnWidths.shortageExpress} text-center border-r border-slate-100`}
-                  >
-                    {renderShortageValue(row.shortageExpress)}
-                  </TableCell>
-                )}
+              {columnFilters.pdmi && (
+                <TableCell className={`${columnWidths.pdmi} text-center border-r border-slate-100 text-slate-700 h-[52px]translate-x-8`}>
+                  {row.pdmi}
+                </TableCell>
+              )}
 
-                {columnFilters.pdmi && (
-                  <TableCell
-                    className={`${columnWidths.pdmi} text-center border-r border-slate-100 text-slate-700`}
-                  >
-                    {row.pdmi}
-                  </TableCell>
-                )}
+              {columnFilters.shortagePdmi && (
+                <TableCell className={`${columnWidths.shortagePdmi} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                  {renderShortageValue(row.shortagePdmi)}
+                </TableCell>
+              )}
 
-                {columnFilters.shortagePdmi && (
-                  <TableCell
-                    className={`${columnWidths.shortagePdmi} text-center border-r border-slate-100`}
-                  >
-                    {renderShortageValue(row.shortagePdmi)}
-                  </TableCell>
-                )}
+              {columnFilters.optumrx && (
+                <TableCell className={`${columnWidths.optumrx} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                  {row.optumrx}
+                </TableCell>
+              )}
 
-                {columnFilters.optumrx && (
-                  <TableCell
-                    className={`${columnWidths.optumrx} text-center border-r border-slate-100 text-slate-700`}
-                  >
-                    {row.optumrx}
-                  </TableCell>
-                )}
+              {columnFilters.shortageOptumrx && (
+                <TableCell className={`${columnWidths.shortageOptumrx} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                  {renderShortageValue(row.shortageOptumrx)}
+                </TableCell>
+              )}
 
-                {columnFilters.shortageOptumrx && (
-                  <TableCell
-                    className={`${columnWidths.shortageOptumrx} text-center border-r border-slate-100`}
-                  >
-                    {renderShortageValue(row.shortageOptumrx)}
-                  </TableCell>
-                )}
+              {columnFilters.cvsCaremark && (
+                <TableCell className={`${columnWidths.cvsCaremark} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                  {row.cvsCaremark}
+                </TableCell>
+              )}
 
-                {columnFilters.cvsCaremark && (
-                  <TableCell
-                    className={`${columnWidths.cvsCaremark} text-center border-r border-slate-100 text-slate-700`}
-                  >
-                    {row.cvsCaremark}
-                  </TableCell>
-                )}
+              {columnFilters.shortageCvsCaremark && (
+                <TableCell className={`${columnWidths.shortageCvsCaremark} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                  {renderShortageValue(row.shortageCvsCaremark)}
+                </TableCell>
+              )}
 
-                {columnFilters.shortageCvsCaremark && (
-                  <TableCell
-                    className={`${columnWidths.shortageCvsCaremark} text-center border-r border-slate-100`}
-                  >
-                    {renderShortageValue(row.shortageCvsCaremark)}
-                  </TableCell>
-                )}
+              {columnFilters.ssc && (
+                <TableCell className={`${columnWidths.ssc} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                  {row.ssc}
+                </TableCell>
+              )}
 
-                {columnFilters.ssc && (
-                  <TableCell
-                    className={`${columnWidths.ssc} text-center border-r border-slate-100 text-slate-700`}
-                  >
-                    {row.ssc}
-                  </TableCell>
-                )}
+              {columnFilters.shortageSsc && (
+                <TableCell className={`${columnWidths.shortageSsc} text-center border-r border-slate-100 h-[52px] translate-x-8`}>
+                  {renderShortageValue(row.shortageSsc)}
+                </TableCell>
+              )}
 
-                {columnFilters.shortageSsc && (
-                  <TableCell
-                    className={`${columnWidths.shortageSsc} text-center border-r border-slate-100`}
-                  >
-                    {renderShortageValue(row.shortageSsc)}
-                  </TableCell>
-                )}
+              {columnFilters.njMedicaid && (
+                <TableCell className={`${columnWidths.njMedicaid} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
+                  {row.njMedicaid}
+                </TableCell>
+              )}
 
-                {columnFilters.njMedicaid && (
-                  <TableCell
-                    className={`${columnWidths.njMedicaid} text-center border-r border-slate-100 text-slate-700`}
-                  >
-                    {row.njMedicaid}
-                  </TableCell>
-                )}
-
-                {columnFilters.shortageNjMedicaid && (
-                  <TableCell
-                    className={`${columnWidths.shortageNjMedicaid} text-center`}
-                  >
-                    {renderShortageValue(row.shortageNjMedicaid)}
-                  </TableCell>
-                )}
+              {columnFilters.shortageNjMedicaid && (
+                <TableCell className={`${columnWidths.shortageNjMedicaid} text-center h-[52px] translate-x-8`}>
+                  {renderShortageValue(row.shortageNjMedicaid)}
+                </TableCell>
+              )}
 
                 {selectedSuppliers.map((s) => {
-                  const meta = supplierColumnMap[s];
-                  return (
-                    <TableCell
-                      key={s}
-                      className={`${meta.width} text-center border-r border-slate-100 text-slate-600`}
-                    >
-                      {/* Placeholder for now — replace with real supplier value when available */}
-                      —
-                    </TableCell>
-                  );
-                })}
+  const meta = supplierColumnMap[s];
+  return (
+    <TableCell
+      key={s}
+      className={`${meta.width} text-center border-r border-slate-100 text-slate-600`}
+    >
+      {/* Placeholder for now — replace with real supplier value when available */}
+      —
+    </TableCell>
+  );
+})}
+
               </TableRow>
             ))}
           </TableBody>
@@ -2369,7 +2273,7 @@ export default function InventoryReportPage() {
       </div>
 
       {/* Enhanced Footer */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-slate-200 shadow-sm">
+      {/* <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-slate-200 shadow-sm">
         <div className="flex items-center gap-3">
           <span className="text-sm text-slate-600 font-medium">
             Rows per page:
@@ -2420,7 +2324,7 @@ export default function InventoryReportPage() {
             </Button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Export Modal */}
       <Dialog open={openExportModal} onOpenChange={setOpenExportModal}>
@@ -2657,5 +2561,15 @@ export default function InventoryReportPage() {
         </SheetContent>
       </Sheet>
     </div>
+  </div>
+  </div>
   );
 }
+
+
+<style jsx global>{`
+  /* Hide scrollbar for header only */
+  div[style*="scrollbarWidth"]::-webkit-scrollbar {
+    display: none;
+  }
+`}</style>
