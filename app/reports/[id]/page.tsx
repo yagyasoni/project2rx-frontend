@@ -59,6 +59,11 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
+interface SortRule {
+  key: keyof (typeof inventoryData)[number];
+  dir: "asc" | "desc";
+}
+
 function SortIcon({ dir }: { dir?: "asc" | "desc" }) {
   if (!dir)
     return (
@@ -834,6 +839,10 @@ export default function InventoryReportPage() {
 
 const [selectedTags, setSelectedTags] = useState<string[]>([]);
 const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
+const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+const [activePanel, setActivePanel] = useState<string | null>(null);
+const headerScrollRef = useRef<HTMLDivElement | null>(null);
+const bodyScrollRef = useRef<HTMLDivElement | null>(null);
 
 
   
@@ -871,10 +880,6 @@ const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
 
   const [pbmFilters, setPbmFilters] = useState(availablePBMs);
 
-  interface SortRule {
-    key: keyof (typeof inventoryData)[number];
-    dir: "asc" | "desc";
-  }
   const [sortRules, setSortRules] = useState<SortRule[]>([
     { key: "totalShortage", dir: "asc" },
   ]);
@@ -1239,11 +1244,17 @@ const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
 
     
     {/* LEFT SIDEBAR (collapsed by default) */}
-  <div className={`flex-shrink-0 transition-all ... ${sidebarCollapsed ? "w-[64px]" : "w-[260px]"}`}
-          style={{ zIndex: 100 }}>
+  <div
+  className={`flex-shrink-0 transition-all duration-300 ease-in-out ${
+    sidebarCollapsed ? "w-[64px]" : "w-[260px]"
+  }`}
+  style={{ zIndex: 100 }}
+>
   <AppSidebar
-    collapsed={sidebarCollapsed}
-    onToggle={() => setSidebarCollapsed((v) => !v)}
+    sidebarOpen={!sidebarCollapsed}
+    setSidebarOpen={() => setSidebarCollapsed((v) => !v)}
+    activePanel={activePanel}
+    setActivePanel={setActivePanel}
   />
 </div>
 
@@ -1257,7 +1268,7 @@ const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
         <div className="px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-              INENTORY REPORT
+              INVENTORY REPORT
             </h1>
             <p className="text-sm text-slate-500 mt-0.5">
               Comprehensive pharmaceutical inventory analytics
@@ -2087,13 +2098,19 @@ const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
                   </HeaderCell>
                 </TableHead>
               )}
-
-              
             </TableRow>
           </TableHeader>
+        </Table>
+      </div>
+    </div>
+  </div>
 
   {/* SCROLLABLE BODY - Controls both vertical and horizontal scroll */}
-  <div ref={bodyScrollRef} className="flex-1 overflow-auto min-w-0 relative z-0">
+  <div
+  ref={bodyScrollRef}
+  className="flex-1 overflow-auto min-w-0 relative z-0 -translate-y-63"
+>
+
     <div className="min-w-max">
       <Table>
         <TableBody>
@@ -2194,7 +2211,7 @@ const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
               )}
 
               {columnFilters.pdmi && (
-                <TableCell className={`${columnWidths.pdmi} text-center border-r border-slate-100 text-slate-700 h-[52px]translate-x-8`}>
+                <TableCell className={`${columnWidths.pdmi} text-center border-r border-slate-100 text-slate-700 h-[52px] translate-x-8`}>
                   {row.pdmi}
                 </TableCell>
               )}
@@ -2563,13 +2580,6 @@ const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
     </div>
   </div>
   </div>
-  );
+  </div>
+);
 }
-
-
-<style jsx global>{`
-  /* Hide scrollbar for header only */
-  div[style*="scrollbarWidth"]::-webkit-scrollbar {
-    display: none;
-  }
-`}</style>
