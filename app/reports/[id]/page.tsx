@@ -2090,7 +2090,8 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
-                          <span className="truncate whitespace-nowrap">
+                          <span className="truncate whitespace-nowrap ">
+                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3"/>
                             Highest Shortage
                           </span>
                         </HeaderCell>
@@ -2104,6 +2105,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             $ Cost
                           </span>
@@ -2118,6 +2120,8 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+
+                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             Horizon Health
                           </span>
@@ -2132,6 +2136,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             Shortage Horizon
                           </span>
@@ -2146,6 +2151,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             Express Scripts
                           </span>
@@ -2160,6 +2166,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             Shortage Express
                           </span>
@@ -2174,6 +2181,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             PDMI (CO-PAY CARD)
                           </span>
@@ -2188,6 +2196,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             Shortage PDMI
                           </span>
@@ -2202,6 +2211,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             Optumrx
                           </span>
@@ -2216,6 +2226,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             Shortage Optumrx
                           </span>
@@ -2230,6 +2241,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             CVS Caremark
                           </span>
@@ -2244,6 +2256,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             Shortage CVS Caremark
                           </span>
@@ -2258,6 +2271,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             Billed SSC
                           </span>
@@ -2272,6 +2286,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             Shortage SSC
                           </span>
@@ -2286,6 +2301,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             NJ Medicaid
                           </span>
@@ -2300,6 +2316,7 @@ export default function InventoryReportPage() {
                           sortRules={sortRules}
                           onSort={handleSort}
                         >
+                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3"/>
                           <span className="truncate whitespace-nowrap">
                             Shortage NJ Medicaid
                           </span>
