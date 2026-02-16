@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import AppSidebar from "@/components/Sidebar"
+import AppSidebar from "@/components/Sidebar";
 import {
   ChevronLeft,
   ChevronRight,
@@ -97,7 +97,7 @@ function HeaderCell({
   return (
     <div
       onClick={(e) => onSort(sortKey, e)}
-      className="h-full px-3 py-2.5 flex items-center justify-center gap-1 cursor-pointer select-none whitespace-nowrap transition-colors hover:bg-emerald-50/50"
+      className="h-full px-3 py-1.5 flex items-center justify-center gap-1 cursor-pointer select-none whitespace-nowrap transition-colors hover:bg-emerald-50/50"
     >
       <span className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
         {children}
@@ -834,15 +834,12 @@ export default function InventoryReportPage() {
     (typeof inventoryData)[number] | null
   >(null);
 
-const [selectedTags, setSelectedTags] = useState<string[]>([]);
-const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
-const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-const [activePanel, setActivePanel] = useState<string | null>(null);
-const headerScrollRef = useRef<HTMLDivElement | null>(null);
-const bodyScrollRef = useRef<HTMLDivElement | null>(null);
-
-
-  
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [activePanel, setActivePanel] = useState<string | null>(null);
+  const headerScrollRef = useRef<HTMLDivElement | null>(null);
+  const bodyScrollRef = useRef<HTMLDivElement | null>(null);
 
   const filterDropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -1047,29 +1044,29 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
   });
 
   const columnWidths: Record<keyof typeof columnFilters, string> = {
-    rank: "min-w-[110px]",
-    ndc: "min-w-[150px]",
-    drugName: "min-w-[260px]",
-    pkgSize: "min-w-[115px]",
-    totalOrdered: "min-w-[158px]",
-    totalBilled: "min-w-[141px]",
-    totalShortage: "min-w-[160px]",
-    highestShortage: "min-w-[180px]",
-    cost: "min-w-[110px]",
-    horizon: "min-w-[120px]",
-    shortageHorizon: "min-w-[182px]",
-    express: "min-w-[120px]",
-    shortageExpress: "min-w-[180px]",
-    cvsCaremark: "min-w-[160px]",
-    shortageCvsCaremark: "min-w-[222px]",
-    ssc: "min-w-[90px]",
-    shortageSsc: "min-w-[152px]",
-    njMedicaid: "min-w-[140px]",
-    shortageNjMedicaid: "min-w-[160px]",
-    pdmi: "min-w-[100px]",
-    shortagePdmi: "min-w-[170px]",
-    optumrx: "min-w-[121px]",
-    shortageOptumrx: "min-w-[191px]",
+    rank: "w-[70px]",
+    ndc: "w-[110px]",
+    drugName: "w-[180px]",
+    pkgSize: "w-[80px]",
+    totalOrdered: "w-[110px]",
+    totalBilled: "w-[100px]",
+    totalShortage: "w-[110px]",
+    highestShortage: "w-[130px]",
+    cost: "w-[80px]",
+    horizon: "w-[90px]",
+    shortageHorizon: "w-[130px]",
+    express: "w-[90px]",
+    shortageExpress: "w-[130px]",
+    cvsCaremark: "w-[110px]",
+    shortageCvsCaremark: "w-[150px]",
+    ssc: "w-[80px]",
+    shortageSsc: "w-[110px]",
+    njMedicaid: "w-[100px]",
+    shortageNjMedicaid: "w-[120px]",
+    pdmi: "w-[80px]",
+    shortagePdmi: "w-[120px]",
+    optumrx: "w-[90px]",
+    shortageOptumrx: "w-[130px]",
   };
 
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
@@ -1094,12 +1091,11 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
   };
 
   useEffect(() => {
-  // When export modal opens → collapse sidebar
-  if (openExportModal) {
-    setSidebarCollapsed(true);
-  }
-}, [openExportModal]);
-
+    // When export modal opens → collapse sidebar
+    if (openExportModal) {
+      setSidebarCollapsed(true);
+    }
+  }, [openExportModal]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -1226,12 +1222,12 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
   };
 
   const closeAllDropdowns = () => {
-  setOpenFilter(false);
-  setOpenFlagDropdown(false);
-  setOpenTagsDropdown(false);
-  setOpenQtyDropdown(false);
-  setOpenDrugTypeDropdown(false);
-};
+    setOpenFilter(false);
+    setOpenFlagDropdown(false);
+    setOpenTagsDropdown(false);
+    setOpenQtyDropdown(false);
+    setOpenDrugTypeDropdown(false);
+  };
 
   const formatDate = (date: Date) => {
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -1244,1535 +1240,1567 @@ const bodyScrollRef = useRef<HTMLDivElement | null>(null);
   const toDate = formatDate(new Date());
 
   return (
-  <div className="relative h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-50">
-  <div className="relative h-full w-full flex overflow-hidden">
-
-    
-    {/* LEFT SIDEBAR x(collapsed by default) */}
-  {/* LEFT SIDEBAR (collapsed by default, fully hidden when export opens) */}
-<div
-  className={`flex-shrink-0 transition-all duration-300 ease-in-out ${
-    openExportModal
-      ? "w-0 opacity-0 pointer-events-none"
-      : sidebarCollapsed
-      ? "w-[64px]"
-      : "w-[260px]"
-  }`}
-  style={{ zIndex: 100 }}
->
-  {!openExportModal && (
-    <AppSidebar
-      sidebarOpen={!sidebarCollapsed}
-      setSidebarOpen={() => setSidebarCollapsed((v) => !v)}
-      activePanel={activePanel}
-      setActivePanel={setActivePanel}
-    />
-  )}
-</div>
-
-
-
-    {/* RIGHT PAGE CONTENT */}
-    <div className="flex-1 min-w-0 flex flex-col overflow-hidden transition-all duration-300 ease-in-out">
-
-      {/* Enhanced Header */}
-      
-      <div className="bg-white border-b border-slate-200 shadow-sm ">
-        <div className="px-9 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg md:text-3xl font-bold text-slate-800 tracking-wide uppercase">
-  Inventory Report
-</h1>
-
-            <p className="text-sm text-slate-500 mt-0.5">
-              Comprehensive pharmaceutical inventory analytics
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-4">
-
-  {/* Inventory Dates */}
- 
-
-<div className="flex flex-col gap-1 translate-y-1">
-  {/* Title outside the box */}
-  <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-4 -mt-5">
-    <div className="mt-1 h-2 w-2 rounded-full bg-blue-800 -translate-x-4 translate-y-3" />
-    Periods
-  </div>
-  {/* Box */}
-  <div className="bg-white px-4 py-3 rounded-xl border mb-1.5 border-slate-200 shadow-sm min-w-[180px]">
-    <div className="text-xs font-semibold text-slate-900">
-      {fromDate} – {toDate}
-    </div>
-  </div>
-</div>
-
-
-
-  <div className="flex flex-col gap-1">
-  {/* Title outside the box */}
-  <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-4 -mt-5">
-    <div className="mt-1 h-2 w-2 rounded-full bg-red-500 -translate-x-4 translate-y-3" />
-    Inventory Dates
-  </div>
-  {/* Box */}
-  <div className="flex items-start gap-3 bg-white px-4 py-1 rounded-xl border border-slate-200 shadow-sm">
-
-    <div className="flex items-center gap-6">
-      <div>
-        <div className="text-[10px] font-semibold text-red-600 uppercase">
-          Start
+    <div className="relative h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="relative h-full w-full flex overflow-hidden">
+        {/* LEFT SIDEBAR x(collapsed by default) */}
+        {/* LEFT SIDEBAR (collapsed by default, fully hidden when export opens) */}
+        <div
+          className={`flex-shrink-0 transition-all duration-300 ease-in-out z-0 ${
+            openExportModal
+              ? "w-0 opacity-0 pointer-events-none"
+              : sidebarCollapsed
+                ? "w-[64px]"
+                : "w-[260px]"
+          }`}
+        >
+          {!openExportModal && (
+            <AppSidebar
+              sidebarOpen={!sidebarCollapsed}
+              setSidebarOpen={() => setSidebarCollapsed((v) => !v)}
+              activePanel={activePanel}
+              setActivePanel={setActivePanel}
+            />
+          )}
         </div>
-        <div className="text-xs font-semibold text-slate-900">
-          {fromDate}
-        </div>
-      </div>
 
-      <div>
-        <div className="text-[10px] font-semibold text-red-600 uppercase">
-          End
-        </div>
-        <div className="text-sm font-semibold text-slate-900">
-          {toDate}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+        {/* RIGHT PAGE CONTENT */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden transition-all duration-300 ease-in-out z-10">
+          {/* Enhanced Header */}
 
+          <div className="bg-white border-b border-slate-200 shadow-sm ">
+            <div className="px-9 py-4 flex items-center justify-between">
+              <div>
+                <h1 className="text-lg md:text-3xl font-bold text-slate-800 tracking-wide uppercase">
+                  Inventory Report
+                </h1>
 
-  {/* Wholesaler Dates */}
-  <div className="flex flex-col gap-1 -translate-y-3">
-  {/* Title outside the box */}
-  <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-1">
-    <div className="mt-1 h-2 w-2 rounded-full bg-emerald-600 -translate-x-4 translate-y-3" />
-    Wholesaler Dates
-  </div>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Comprehensive pharmaceutical inventory analytics
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
+                  {/* Inventory Dates */}
 
-  {/* Box */}
-  <div className="flex items-start gap-3 bg-white px-4 py-1 rounded-xl border border-slate-200 shadow-sm">
-
-    <div className="flex items-center gap-6">
-      <div>
-        <div className="text-[10px] font-semibold text-emerald-700 uppercase">
-          Start
-        </div>
-        <div className="text-xs font-semibold text-slate-900">
-          {fromDate}
-        </div>
-      </div>
-
-      <div>
-        <div className="text-[10px] font-semibold text-emerald-700 uppercase">
-          End
-        </div>
-        <div className="text-sm font-semibold text-slate-900">
-          {toDate}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-</div>
-            <Button
-  variant="outline"
-  size="sm"
-  className="gap-2"
-  onClick={() => {
-    setSidebarCollapsed(true);   // 👈 hide sidebar immediately
-    setOpenExportModal(true);
-  }}
->
-  <Download className="h-4 w-4" />
-  Export
-</Button>
-
-            <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-              <RotateCw className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Enhanced Filter Bar */}
-      <div className="bg-white border-b border-slate-200 ">
-        <div className="px-6 py-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Search */}
-            <div className="relative flex-1 min-w-[300px] max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                type="text"
-                placeholder="Search by drug name or NDC..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-10 h-10 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-              />
-              {searchQuery && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                  onClick={() => setSearchQuery("")}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-
-            {/* Filter Dropdowns */}
-            {/* 1️⃣ Columns */}
-<div className="relative" ref={filterDropdownRef}>
-  <Button
-    variant="outline"
-    size="sm"
-    className="gap-2 border-slate-300"
-    onClick={() => setOpenFilter(!openFilter)}
-  >
-    <SlidersHorizontal className="h-3.5 w-3.5" />
-    Filter
-    <ChevronDown className="h-3.5 w-3.5" />
-  </Button>
-
-              {openFilter && (
-                <div className="absolute -left-100 top-full mt-2 w-[900px] max-w-[95vw] bg-white border border-slate-200 rounded-xl shadow-2xl z-50">
-                  {/* Header */}
-                  <div className="flex items-center justify-between px-5 py-3 border-b">
-                    <h3 className="text-sm font-bold tracking-wide">FILTERS</h3>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          // optional reset
-                          setPbmFilters(availablePBMs);
-                          setFlagFilters([]);
-                        }}
-                      >
-                        Reset Filters
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => setOpenFilter(false)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                  <div className="flex flex-col gap-1 translate-y-1">
+                    {/* Title outside the box */}
+                    <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-4 -mt-5">
+                      <div className="mt-1 h-2 w-2 rounded-full bg-blue-800 -translate-x-4 translate-y-3" />
+                      Periods
+                    </div>
+                    {/* Box */}
+                    <div className="bg-white px-4 py-3 rounded-xl border mb-1.5 border-slate-200 shadow-sm min-w-[180px]">
+                      <div className="text-xs font-semibold text-slate-900">
+                        {fromDate} – {toDate}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Content */}
-                  <div className="grid grid-cols-3 gap-0 max-h-[70vh] overflow-y-auto">
-                    {/* LEFT */}
-                    <div className="p-4 border-r">
-                      <div className="text-xs font-bold text-slate-600 mb-2">
-                        COLUMNS
-                      </div>
-
-                      {(
-                        [
-                          "ndc",
-                          "pkgSize",
-                          "rank",
-                          "totalOrdered",
-                          "totalBilled",
-                          "totalShortage",
-                          "highestShortage",
-                          "cost",
-                        ] as const
-                      ).map((col) => (
-                        <label
-                          key={col}
-                          className="flex items-center gap-2 py-1 text-sm"
-                        >
-                          <Checkbox
-                            checked={columnFilters[col]}
-                            onCheckedChange={() => toggleColumn(col)}
-                          />
-                          {col.replace(/([A-Z])/g, " $1").toUpperCase()}
-                        </label>
-                      ))}
-
-                      <div className="text-xs font-bold text-slate-600 mt-5 mb-2">
-                        SHOW LABEL
-                      </div>
-                      <label className="flex items-center gap-2 text-sm py-1">
-                        <Checkbox /> SHOW ABERRANT
-                      </label>
-                      <label className="flex items-center gap-2 text-sm py-1">
-                        <Checkbox /> CONTROLLED
-                      </label>
-                      <label className="flex items-center gap-2 text-sm py-1">
-                        <Checkbox /> FILTER NDC PERIOD
-                      </label>
-
-                      <div className="text-xs font-bold text-slate-600 mt-5 mb-2">
-                        OPTIONS
-                      </div>
-                      {[
-                        "VERTICAL HEADER",
-                        "REMOVE NDC DASH",
-                        "SHORT NDC'S ONLY",
-                        "INCLUDE SHORTAGE",
-                        "HIGHEST SHORTAGE NAME",
-                        "INCLUDE AMOUNT",
-                        "INCLUDE PBM RANK",
-                        "FILTER BY NOTE",
-                        "CASH DISABLED",
-                      ].map((opt) => (
-                        <div
-                          key={opt}
-                          className="flex items-center justify-between py-1 text-sm"
-                        >
-                          <span>{opt}</span>
-                          <Checkbox />
+                  <div className="flex flex-col gap-1">
+                    {/* Title outside the box */}
+                    <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-4 -mt-5">
+                      <div className="mt-1 h-2 w-2 rounded-full bg-red-500 -translate-x-4 translate-y-3" />
+                      Inventory Dates
+                    </div>
+                    {/* Box */}
+                    <div className="flex items-start gap-3 bg-white px-4 py-1 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="flex items-center py-2 gap-6">
+                        <div>
+                          {/* <div className="text-[10px] font-semibold text-red-600 uppercase">
+                            Start
+                          </div> */}
+                          <div className="text-xs font-semibold text-slate-900">
+                            {fromDate}
+                          </div>
                         </div>
-                      ))}
+
+                        <div>
+                          {/* <div className="text-[10px] font-semibold text-red-600 uppercase">
+                            End
+                          </div> */}
+                          <div className="text-xs font-semibold text-slate-900">
+                            {toDate}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Wholesaler Dates */}
+                  <div className="flex flex-col gap-1 -translate-y-3">
+                    {/* Title outside the box */}
+                    <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-1">
+                      <div className="mt-1 h-2 w-2 rounded-full bg-emerald-600 -translate-x-4 translate-y-3" />
+                      Wholesaler Dates
                     </div>
 
-                    {/* MIDDLE */}
-                    <div className="p-4 border-r">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
-                        <span className="h-2 w-2 rounded-full bg-red-500" />{" "}
-                        BILLED
+                    {/* Box */}
+                    <div className="flex items-start gap-3 bg-white px-4 py-1 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="flex items-center py-2 gap-6">
+                        <div>
+                          {/* <div className="text-[10px] font-semibold text-emerald-700 uppercase">
+                            Start
+                          </div> */}
+                          <div className="text-xs font-semibold text-slate-900">
+                            {fromDate}
+                          </div>
+                        </div>
+
+                        <div>
+                          {/* <div className="text-[10px] font-semibold text-emerald-700 uppercase">
+                            End
+                          </div> */}
+                          <div className="text-xs font-semibold text-slate-900">
+                            {toDate}
+                          </div>
+                        </div>
                       </div>
-
-                      {availablePBMs.map((pbm) => (
-                        <label
-                          key={pbm}
-                          className="flex items-center gap-2 py-1 text-sm"
-                        >
-                          <Checkbox
-                            checked={pbmFilters.includes(pbm)}
-                            onCheckedChange={() => togglePBMFilter(pbm)}
-                          />
-                          {pbm}
-                        </label>
-                      ))}
-                    </div>
-
-                    {/* RIGHT */}
-                    <div className="p-4">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
-                        <span className="h-2 w-2 rounded-full bg-emerald-600" />{" "}
-                        SUPPLIERS
-                      </div>
-
-                      {Object.keys(supplierColumnMap).map((s) => (
-                        <label
-                          key={s}
-                          className="flex items-center gap-2 py-1 text-sm"
-                        >
-                          <Checkbox
-                            checked={selectedSuppliers.includes(s)}
-                            onCheckedChange={() =>
-                              setSelectedSuppliers((prev) =>
-                                prev.includes(s)
-                                  ? prev.filter((x) => x !== s)
-                                  : [...prev, s],
-                              )
-                            }
-                          />
-                          {s}
-                        </label>
-                      ))}
                     </div>
                   </div>
                 </div>
-              )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    setSidebarCollapsed(true); // 👈 hide sidebar immediately
+                    setOpenExportModal(true);
+                  }}
+                >
+                  <Download className="h-4 w-4" />
+                  Export
+                </Button>
+
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                  <RotateCw className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
+          </div>
 
-{/* 2️⃣ Flags */}
-<div className="relative">
-  <Button
-    variant="outline"
-    size="sm"
-    className="gap-2 border-slate-300"
-    onClick={() => setOpenFlagDropdown(!openFlagDropdown)}
-  >
-    <Filter className="h-3.5 w-3.5" />
-    FLAGS
-    <ChevronDown className="h-3.5 w-3.5" />
-  </Button>
-
-              {openFlagDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-[260px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
-                  {/* Header */}
-                  <div className="flex items-center justify-between px-3 py-2 border-b">
-                    <span className="text-sm font-bold">FLAGS</span>
+          {/* Enhanced Filter Bar */}
+          <div className="bg-white border-b border-slate-200 ">
+            <div className="px-6 py-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                {/* Search */}
+                <div className="relative flex-1 min-w-[300px] max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search by drug name or NDC..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-10 h-10 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
+                  />
+                  {searchQuery && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 w-7 p-0"
-                      onClick={() => setOpenFlagDropdown(false)}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                      onClick={() => setSearchQuery("")}
                     >
                       <X className="h-4 w-4" />
                     </Button>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-3 space-y-2">
-                    {/* Aberrant */}
-                    <label className="flex items-center gap-2 text-sm">
-                      <Checkbox
-                        checked={flagFilters.includes("aberrant")}
-                        onCheckedChange={() =>
-                          setFlagFilters((prev) =>
-                            prev.includes("aberrant")
-                              ? prev.filter((f) => f !== "aberrant")
-                              : [...prev, "aberrant"],
-                          )
-                        }
-                      />
-                      ABERRANT{" "}
-                      <span className="text-xs text-slate-400">(9)</span>
-                    </label>
-
-                    {/* Controlled */}
-                    <label className="flex items-center gap-2 text-sm font-medium">
-                      <Checkbox
-                        checked={flagFilters.includes("controlled")}
-                        onCheckedChange={() =>
-                          setFlagFilters((prev) =>
-                            prev.includes("controlled")
-                              ? prev.filter((f) => f !== "controlled")
-                              : [...prev, "controlled"],
-                          )
-                        }
-                      />
-                      CONTROLLED SUBSTANCE{" "}
-                      <span className="text-xs text-slate-400">(34)</span>
-                    </label>
-
-                    {/* Controlled Schedules */}
-                    <div className="pl-6 space-y-1">
-                      {(["CI", "CII", "CIII", "CIV", "CV"] as const).map(
-                        (c) => (
-                          <label
-                            key={c}
-                            className="flex items-center gap-2 text-sm"
-                          >
-                            <Checkbox
-                              checked={controlledSchedules.includes(c)}
-                              onCheckedChange={() =>
-                                setControlledSchedules((prev) =>
-                                  prev.includes(c)
-                                    ? prev.filter((x) => x !== c)
-                                    : [...prev, c],
-                                )
-                              }
-                            />
-                            {c}
-                          </label>
-                        ),
-                      )}
-                    </div>
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-{/* 3️⃣ Tags */}
-<div className="relative">
-  <Button
-    variant="outline"
-    size="sm"
-    className="gap-2 border-slate-300"
-    onClick={() => setOpenTagsDropdown(!openTagsDropdown)}
-  >
-    TAGS
-    <ChevronDown className="h-3.5 w-3.5" />
-  </Button>
+                {/* Filter Dropdowns */}
+                {/* 1️⃣ Columns */}
+                <div className="relative" ref={filterDropdownRef}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-slate-300"
+                    onClick={() => setOpenFilter(!openFilter)}
+                  >
+                    <SlidersHorizontal className="h-3.5 w-3.5" />
+                    Filter
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
 
-              {openTagsDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-[320px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
-                  {/* Header */}
-                  <div className="flex items-center justify-between px-3 py-2 border-b">
-                    <span className="text-sm font-bold">TAGS</span>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-emerald-600 hover:bg-emerald-50 h-7 px-2"
-                        onClick={() => setOpenCreateTagModal(true)}
-                      >
-                        + Create Tag
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={() => setOpenTagsDropdown(false)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Tag List */}
-                  <div className="p-3 space-y-2 max-h-[300px] overflow-y-auto">
-                    {availableTags.map((tag) => (
-                      <div
-                        key={tag.id}
-                        className="flex items-center justify-between gap-2 group"
-                      >
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <Checkbox
-                            checked={selectedTags.includes(tag.id)}
-                            onCheckedChange={() =>
-                              setSelectedTags((prev) =>
-                                prev.includes(tag.id)
-                                  ? prev.filter((t) => t !== tag.id)
-                                  : [...prev, tag.id],
-                              )
-                            }
-                          />
-
-                          <span
-                            className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${colorClasses[tag.color]}`}
+                  {openFilter && (
+                    <div className="absolute -left-100 top-full mt-2 w-[900px] max-w-[95vw] bg-white border border-slate-200 rounded-xl shadow-2xl z-50">
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-5 py-3 border-b">
+                        <h3 className="text-sm font-bold tracking-wide">
+                          FILTERS
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              // optional reset
+                              setPbmFilters(availablePBMs);
+                              setFlagFilters([]);
+                            }}
                           >
-                            {tag.label}{" "}
-                            <span className="ml-1 text-[10px]">0</span>
-                          </span>
-                        </label>
-
-                        {/* 3-dot menu */}
-                        <div className="relative">
+                            Reset Filters
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100"
-                            onClick={() =>
-                              setOpenTagMenuId((prev) =>
-                                prev === tag.id ? null : tag.id,
+                            className="h-8 w-8 p-0"
+                            onClick={() => setOpenFilter(false)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="grid grid-cols-3 gap-0 max-h-[70vh] overflow-y-auto">
+                        {/* LEFT */}
+                        <div className="p-4 border-r">
+                          <div className="text-xs font-bold text-slate-600 mb-2">
+                            COLUMNS
+                          </div>
+
+                          {(
+                            [
+                              "ndc",
+                              "pkgSize",
+                              "rank",
+                              "totalOrdered",
+                              "totalBilled",
+                              "totalShortage",
+                              "highestShortage",
+                              "cost",
+                            ] as const
+                          ).map((col) => (
+                            <label
+                              key={col}
+                              className="flex items-center gap-2 py-1 text-sm"
+                            >
+                              <Checkbox
+                                checked={columnFilters[col]}
+                                onCheckedChange={() => toggleColumn(col)}
+                              />
+                              {col.replace(/([A-Z])/g, " $1").toUpperCase()}
+                            </label>
+                          ))}
+
+                          <div className="text-xs font-bold text-slate-600 mt-5 mb-2">
+                            SHOW LABEL
+                          </div>
+                          <label className="flex items-center gap-2 text-sm py-1">
+                            <Checkbox /> SHOW ABERRANT
+                          </label>
+                          <label className="flex items-center gap-2 text-sm py-1">
+                            <Checkbox /> CONTROLLED
+                          </label>
+                          <label className="flex items-center gap-2 text-sm py-1">
+                            <Checkbox /> FILTER NDC PERIOD
+                          </label>
+
+                          <div className="text-xs font-bold text-slate-600 mt-5 mb-2">
+                            OPTIONS
+                          </div>
+                          {[
+                            "VERTICAL HEADER",
+                            "REMOVE NDC DASH",
+                            "SHORT NDC'S ONLY",
+                            "INCLUDE SHORTAGE",
+                            "HIGHEST SHORTAGE NAME",
+                            "INCLUDE AMOUNT",
+                            "INCLUDE PBM RANK",
+                            "FILTER BY NOTE",
+                            "CASH DISABLED",
+                          ].map((opt) => (
+                            <div
+                              key={opt}
+                              className="flex items-center justify-between py-1 text-sm"
+                            >
+                              <span>{opt}</span>
+                              <Checkbox />
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* MIDDLE */}
+                        <div className="p-4 border-r">
+                          <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
+                            <span className="h-2 w-2 rounded-full bg-red-500" />{" "}
+                            BILLED
+                          </div>
+
+                          {availablePBMs.map((pbm) => (
+                            <label
+                              key={pbm}
+                              className="flex items-center gap-2 py-1 text-sm"
+                            >
+                              <Checkbox
+                                checked={pbmFilters.includes(pbm)}
+                                onCheckedChange={() => togglePBMFilter(pbm)}
+                              />
+                              {pbm}
+                            </label>
+                          ))}
+                        </div>
+
+                        {/* RIGHT */}
+                        <div className="p-4">
+                          <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
+                            <span className="h-2 w-2 rounded-full bg-emerald-600" />{" "}
+                            SUPPLIERS
+                          </div>
+
+                          {Object.keys(supplierColumnMap).map((s) => (
+                            <label
+                              key={s}
+                              className="flex items-center gap-2 py-1 text-sm"
+                            >
+                              <Checkbox
+                                checked={selectedSuppliers.includes(s)}
+                                onCheckedChange={() =>
+                                  setSelectedSuppliers((prev) =>
+                                    prev.includes(s)
+                                      ? prev.filter((x) => x !== s)
+                                      : [...prev, s],
+                                  )
+                                }
+                              />
+                              {s}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2️⃣ Flags */}
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-slate-300"
+                    onClick={() => setOpenFlagDropdown(!openFlagDropdown)}
+                  >
+                    <Filter className="h-3.5 w-3.5" />
+                    FLAGS
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+
+                  {openFlagDropdown && (
+                    <div className="absolute right-0 top-full mt-2 w-[260px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-3 py-2 border-b">
+                        <span className="text-sm font-bold">FLAGS</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => setOpenFlagDropdown(false)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-3 space-y-2">
+                        {/* Aberrant */}
+                        <label className="flex items-center gap-2 text-sm">
+                          <Checkbox
+                            checked={flagFilters.includes("aberrant")}
+                            onCheckedChange={() =>
+                              setFlagFilters((prev) =>
+                                prev.includes("aberrant")
+                                  ? prev.filter((f) => f !== "aberrant")
+                                  : [...prev, "aberrant"],
                               )
                             }
-                          >
-                            ⋮
-                          </Button>
+                          />
+                          ABERRANT{" "}
+                          <span className="text-xs text-slate-400">(9)</span>
+                        </label>
 
-                          {openTagMenuId === tag.id && (
-                            <div className="absolute right-0 mt-1 w-28 bg-white border rounded-md shadow-lg z-50">
-                              <button
-                                className="w-full px-3 py-1.5 text-sm text-left hover:bg-slate-50"
-                                onClick={() => {
-                                  console.log("Edit tag", tag.id);
-                                  setOpenTagMenuId(null);
-                                }}
+                        {/* Controlled */}
+                        <label className="flex items-center gap-2 text-sm font-medium">
+                          <Checkbox
+                            checked={flagFilters.includes("controlled")}
+                            onCheckedChange={() =>
+                              setFlagFilters((prev) =>
+                                prev.includes("controlled")
+                                  ? prev.filter((f) => f !== "controlled")
+                                  : [...prev, "controlled"],
+                              )
+                            }
+                          />
+                          CONTROLLED SUBSTANCE{" "}
+                          <span className="text-xs text-slate-400">(34)</span>
+                        </label>
+
+                        {/* Controlled Schedules */}
+                        <div className="pl-6 space-y-1">
+                          {(["CI", "CII", "CIII", "CIV", "CV"] as const).map(
+                            (c) => (
+                              <label
+                                key={c}
+                                className="flex items-center gap-2 text-sm"
                               >
-                                Edit
-                              </button>
-                              <button
-                                className="w-full px-3 py-1.5 text-sm text-left text-red-600 hover:bg-red-50"
-                                onClick={() => {
-                                  console.log("Delete tag", tag.id);
-                                  setOpenTagMenuId(null);
-                                }}
-                              >
-                                Delete
-                              </button>
-                            </div>
+                                <Checkbox
+                                  checked={controlledSchedules.includes(c)}
+                                  onCheckedChange={() =>
+                                    setControlledSchedules((prev) =>
+                                      prev.includes(c)
+                                        ? prev.filter((x) => x !== c)
+                                        : [...prev, c],
+                                    )
+                                  }
+                                />
+                                {c}
+                              </label>
+                            ),
                           )}
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-{/* 4️⃣ QTY Type */}
-<DropdownMenu open={openQtyDropdown} onOpenChange={setOpenQtyDropdown}>
-  <DropdownMenuTrigger asChild>
-    <Button variant="outline" size="sm" className="gap-2 border-slate-300">
-      QTY
-      <ChevronDown className="h-3.5 w-3.5" />
-    </Button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent align="end" className="w-48">
-    <DropdownMenuCheckboxItem
-      checked={qtyType === "UNIT"}
-      onCheckedChange={() => setQtyType("UNIT")}
-    >
-      UNIT
-    </DropdownMenuCheckboxItem>
-    <DropdownMenuCheckboxItem
-      checked={qtyType === "PKG SIZE"}
-      onCheckedChange={() => setQtyType("PKG SIZE")}
-    >
-      PKG SIZE
-    </DropdownMenuCheckboxItem>
-  </DropdownMenuContent>
-</DropdownMenu>
+                {/* 3️⃣ Tags */}
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-slate-300"
+                    onClick={() => setOpenTagsDropdown(!openTagsDropdown)}
+                  >
+                    TAGS
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
 
-{/* 5️⃣ Drug Type */}
-<DropdownMenu open={openDrugTypeDropdown} onOpenChange={setOpenDrugTypeDropdown}>
-  <DropdownMenuTrigger asChild>
-    <Button variant="outline" size="sm" className="gap-2 border-slate-300">
-      TYPE
-      <ChevronDown className="h-3.5 w-3.5" />
-    </Button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent align="end" className="w-48">
-    <DropdownMenuCheckboxItem
-      checked={drugTypes.includes("ALL DRUGS")}
-      onCheckedChange={() => handleDrugTypeToggle("ALL DRUGS")}
-    >
-      ALL DRUGS
-    </DropdownMenuCheckboxItem>
-    <DropdownMenuCheckboxItem
-      checked={drugTypes.includes("BRAND")}
-      onCheckedChange={() => handleDrugTypeToggle("BRAND")}
-    >
-      BRAND
-    </DropdownMenuCheckboxItem>
-    <DropdownMenuCheckboxItem
-      checked={drugTypes.includes("GENERIC")}
-      onCheckedChange={() => handleDrugTypeToggle("GENERIC")}
-    >
-      GENERIC
-    </DropdownMenuCheckboxItem>
-  </DropdownMenuContent>
-</DropdownMenu>
+                  {openTagsDropdown && (
+                    <div className="absolute right-0 top-full mt-2 w-[320px] bg-white border border-slate-200 rounded-xl shadow-xl z-50">
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-3 py-2 border-b">
+                        <span className="text-sm font-bold">TAGS</span>
 
-            {/* 6️⃣ Drug Cost */}
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                placeholder="Max Cost"
-                value={costValue}
-                onChange={(e) => setCostValue(Number(e.target.value) || "")}
-                className="w-[110px] h-8 border-slate-300"
-              />
-            </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-emerald-600 hover:bg-emerald-50 h-7 px-2"
+                            onClick={() => setOpenCreateTagModal(true)}
+                          >
+                            + Create Tag
+                          </Button>
 
-            {/* 7️⃣ Rows */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() => setOpenTagsDropdown(false)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
 
-            <Select
-              value={String(rowsPerPage)}
-              onValueChange={(v) => setRowsPerPage(Number(v))}
-            >
-              <SelectTrigger className="w-[120px] h-8 border-slate-300">
-                <SelectValue
-                  placeholder={`Rows: ${rowsPerPage}/${totalRows}`}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {rowOptions.map((n) => (
-                  <SelectItem key={n} value={String(n)}>
-                    {n === totalRows ? `All (${totalRows})` : n}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+                      {/* Tag List */}
+                      <div className="p-3 space-y-2 max-h-[300px] overflow-y-auto">
+                        {availableTags.map((tag) => (
+                          <div
+                            key={tag.id}
+                            className="flex items-center justify-between gap-2 group"
+                          >
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <Checkbox
+                                checked={selectedTags.includes(tag.id)}
+                                onCheckedChange={() =>
+                                  setSelectedTags((prev) =>
+                                    prev.includes(tag.id)
+                                      ? prev.filter((t) => t !== tag.id)
+                                      : [...prev, tag.id],
+                                  )
+                                }
+                              />
 
-        {/* Active Filters */}
-        {(activeFilters.length > 0 || costValue !== "") && (
-          <div className="px-6 pb-4 flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-medium text-slate-600">
-              Active filters:
-            </span>
-            {activeFilters.map((chip) => (
-              <Badge
-                key={chip.id}
-                variant="secondary"
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-              >
-                <span className="text-xs font-medium">{chip.label}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-3.5 w-3.5 p-0 hover:bg-transparent"
-                  onClick={() => removeFilter(chip.id)}
+                              <span
+                                className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${colorClasses[tag.color]}`}
+                              >
+                                {tag.label}{" "}
+                                <span className="ml-1 text-[10px]">0</span>
+                              </span>
+                            </label>
+
+                            {/* 3-dot menu */}
+                            <div className="relative">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100"
+                                onClick={() =>
+                                  setOpenTagMenuId((prev) =>
+                                    prev === tag.id ? null : tag.id,
+                                  )
+                                }
+                              >
+                                ⋮
+                              </Button>
+
+                              {openTagMenuId === tag.id && (
+                                <div className="absolute right-0 mt-1 w-28 bg-white border rounded-md shadow-lg z-50">
+                                  <button
+                                    className="w-full px-3 py-1.5 text-sm text-left hover:bg-slate-50"
+                                    onClick={() => {
+                                      console.log("Edit tag", tag.id);
+                                      setOpenTagMenuId(null);
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    className="w-full px-3 py-1.5 text-sm text-left text-red-600 hover:bg-red-50"
+                                    onClick={() => {
+                                      console.log("Delete tag", tag.id);
+                                      setOpenTagMenuId(null);
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4️⃣ QTY Type */}
+                <DropdownMenu
+                  open={openQtyDropdown}
+                  onOpenChange={setOpenQtyDropdown}
                 >
-                  <X className="h-3 w-3" />
-                </Button>
-              </Badge>
-            ))}
-            {costValue !== "" && (
-              <Badge
-                variant="secondary"
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-              >
-                <span className="text-xs font-medium">Cost: ${costValue}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-3.5 w-3.5 p-0 hover:bg-transparent"
-                  onClick={() => setCostValue("")}
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-slate-300"
+                    >
+                      QTY
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuCheckboxItem
+                      checked={qtyType === "UNIT"}
+                      onCheckedChange={() => setQtyType("UNIT")}
+                    >
+                      UNIT
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={qtyType === "PKG SIZE"}
+                      onCheckedChange={() => setQtyType("PKG SIZE")}
+                    >
+                      PKG SIZE
+                    </DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* 5️⃣ Drug Type */}
+                <DropdownMenu
+                  open={openDrugTypeDropdown}
+                  onOpenChange={setOpenDrugTypeDropdown}
                 >
-                  <X className="h-3 w-3" />
-                </Button>
-              </Badge>
-            )}
-          </div>
-        )}
-      </div>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-slate-300"
+                    >
+                      TYPE
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuCheckboxItem
+                      checked={drugTypes.includes("ALL DRUGS")}
+                      onCheckedChange={() => handleDrugTypeToggle("ALL DRUGS")}
+                    >
+                      ALL DRUGS
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={drugTypes.includes("BRAND")}
+                      onCheckedChange={() => handleDrugTypeToggle("BRAND")}
+                    >
+                      BRAND
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={drugTypes.includes("GENERIC")}
+                      onCheckedChange={() => handleDrugTypeToggle("GENERIC")}
+                    >
+                      GENERIC
+                    </DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-
-
-
-{/* Table Container - FIXED VERSION */}
-<div className="flex-1 bg-white relative overflow-hidden flex flex-col min-w-0 z-0">
-
-  {/* STATIC HEADER - Scrollbar hidden, syncs with body */}
-  <div 
-  ref={headerScrollRef}
-  className="flex-shrink-0 border-b-2 border-slate-200 shadow-sm bg-white overflow-hidden"
->
-    <div className="min-w-max">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="w-12 border-r border-slate-200 bg-white h-[52px]">
-              <div className="flex items-center justify-center">
-                <Checkbox
-                  checked={
-                    selectedRows.length === paginatedData.length &&
-                    paginatedData.length > 0
-                  }
-                  onCheckedChange={toggleSelectAll}
-                />
-              </div>
-            </TableHead>
-
-            {columnFilters.rank && (
-              <TableHead className={`${columnWidths.rank} border-r border-slate-200 bg-white h-[52px] `}>
-                <HeaderCell sortKey="rank" sortRules={sortRules} onSort={handleSort}>
-                  Rank
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.ndc && (
-              <TableHead className={`${columnWidths.ndc} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="ndc" sortRules={sortRules} onSort={handleSort}>
-                  NDC
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.drugName && (
-              <TableHead className={`${columnWidths.drugName} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="drugName" sortRules={sortRules} onSort={handleSort}>
-                  Drug Name
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.pkgSize && (
-              <TableHead className={`${columnWidths.pkgSize} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="pkgSize" sortRules={sortRules} onSort={handleSort}>
-                  PKG Size
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.totalOrdered && (
-              <TableHead className={`${columnWidths.totalOrdered} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="totalOrdered" sortRules={sortRules} onSort={handleSort}>
-                  <div className="-mt-2 h-2 w-2 rounded-full bg-emerald-600 -translate-x-3 translate-y-3" />
-                  Total Ordered
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.totalBilled && (
-              <TableHead className={`${columnWidths.totalBilled} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="totalBilled" sortRules={sortRules} onSort={handleSort}>
-                  <div className="-mt-2 h-2 w-2 rounded-full bg-red-500 -translate-x-3 translate-y-3" />
-                  Total Billed
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.totalShortage && (
-              <TableHead className={`${columnWidths.totalShortage} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="totalShortage" sortRules={sortRules} onSort={handleSort}>
-                  <div className="-mt-2 h-2 w-2 rounded-full bg-yellow-500 -translate-x-3 translate-y-3" />
-                  Total Shortage
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.highestShortage && (
-              <TableHead className={`${columnWidths.highestShortage} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="highestShortage" sortRules={sortRules} onSort={handleSort}>
-                  <div className="-mt-2 h-2 w-2 rounded-full bg-yellow-500 -translate-x-3 translate-y-3" />
-                  Highest Shortage
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.cost && (
-              <TableHead className={`${columnWidths.cost} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="cost" sortRules={sortRules} onSort={handleSort}>
-                  <div className="-mt-2 h-2 w-2 rounded-full bg-yellow-500 -translate-x-3 translate-y-3" />
-                  $ Cost
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.horizon && (
-              <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
-  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-    <div className="flex flex-col items-center leading-tight">
-      {/* Status dot */}
-      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
-
-      {/* Top line */}
-      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
-        Billed
-      </span>
-
-      {/* Bottom line */}
-      <span className="text-xs font-semibold text-slate-900">
-        Horizon Health
-      </span>
-    </div>
-  </HeaderCell>
-</TableHead>
-
-            )}
-
-            {columnFilters.shortageHorizon && (
-               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
-  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-    <div className="flex flex-col items-center leading-tight">
-      {/* Status dot */}
-      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-yellow-500" />
-
-      {/* Top line */}
-      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
-        Billed
-      </span>
-
-      {/* Bottom line */}
-      <span className="text-xs font-semibold text-slate-900">
-        Horizon Health
-      </span>
-    </div>
-  </HeaderCell>
-</TableHead>
-            )}
-
-            {columnFilters.express && (
-               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
-  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-    <div className="flex flex-col items-center leading-tight">
-      {/* Status dot */}
-      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
-
-      {/* Top line */}
-      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
-        Billed
-      </span>
-
-      {/* Bottom line */}
-      <span className="text-xs font-semibold text-slate-900">
-        Express Scripts
-      </span>
-    </div>
-  </HeaderCell>
-</TableHead>
-            )}
-
-            {columnFilters.shortageExpress && (
-               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
-  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-    <div className="flex flex-col items-center leading-tight">
-      {/* Status dot */}
-      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-yellow-500" />
-
-      {/* Top line */}
-      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
-        shortage
-      </span>
-
-      {/* Bottom line */}
-      <span className="text-xs font-semibold text-slate-900">
-        express scripts
-      </span>
-    </div>
-  </HeaderCell>
-</TableHead>
-            )}
-
-            {columnFilters.pdmi && (
-               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
-  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-    <div className="flex flex-col items-center leading-tight">
-      {/* Status dot */}
-      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
-
-      {/* Top line */}
-      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
-        Billed
-      </span>
-
-      {/* Bottom line */}
-      <span className="text-xs font-semibold text-slate-900">
-        PDMI (CO-PAY CARD)
-      </span>
-    </div>
-  </HeaderCell>
-</TableHead>
-            )}
-
-            {columnFilters.shortagePdmi && (
-               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
-  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-    <div className="flex flex-col items-center leading-tight">
-      {/* Status dot */}
-      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
-
-      {/* Top line */}
-      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
-        Shortage
-      </span>
-
-      {/* Bottom line */}
-      <span className="text-xs font-semibold text-slate-900">
-        PDMI (CO-PAY CARD)
-      </span>
-    </div>
-  </HeaderCell>
-</TableHead>
-            )}
-
-            {columnFilters.optumrx && (
-               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
-  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-    <div className="flex flex-col items-center leading-tight">
-      {/* Status dot */}
-      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
-
-      {/* Top line */}
-      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
-        Billed
-      </span>
-
-      {/* Bottom line */}
-      <span className="text-xs font-semibold text-slate-900">
-         Optumrx
-      </span>
-    </div>
-  </HeaderCell>
-</TableHead>
-            )}
-
-            {columnFilters.shortageOptumrx && (
-               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
-  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-    <div className="flex flex-col items-center leading-tight">
-      {/* Status dot */}
-      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
-
-      {/* Top line */}
-      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
-        Shortage
-      </span>
-
-      {/* Bottom line */}
-      <span className="text-xs font-semibold text-slate-900">
-        Optumrx
-      </span>
-    </div>
-  </HeaderCell>
-</TableHead>
-            )}
-
-            {columnFilters.cvsCaremark && (
-              <TableHead className={`${columnWidths.cvsCaremark} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="cvsCaremark" sortRules={sortRules} onSort={handleSort}>
-                  CVS Caremark
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.shortageCvsCaremark && (
-               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
-  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-    <div className="flex flex-col items-center leading-tight">
-      {/* Status dot */}
-      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
-
-      {/* Top line */}
-      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
-        shortage
-      </span>
-
-      {/* Bottom line */}
-      <span className="text-xs font-semibold text-slate-900">
-        CVS Caremark
-      </span>
-    </div>
-  </HeaderCell>
-</TableHead>
-            )}
-
-            {columnFilters.ssc && (
-              <TableHead className={`${columnWidths.ssc} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="ssc" sortRules={sortRules} onSort={handleSort}>
-                  Billed SSC
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.shortageSsc && (
-              <TableHead className={`${columnWidths.shortageSsc} border-r border-slate-200 bg-white h-[52px]`}>
-                <HeaderCell sortKey="shortageSsc" sortRules={sortRules} onSort={handleSort}>
-                 Shortage SSC
-                </HeaderCell>
-              </TableHead>
-            )}
-
-            {columnFilters.njMedicaid && (
-               <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
-  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-    <div className="flex flex-col items-center leading-tight">
-      {/* Status dot */}
-      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
-
-      {/* Top line */}
-      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
-        Billed
-      </span>
-
-      {/* Bottom line */}
-      <span className="text-xs font-semibold text-slate-900">
-        NJ Medical
-      </span>
-    </div>
-  </HeaderCell>
-</TableHead>
-            )}
-
-              {selectedSuppliers.map((s) => {
-  const meta = supplierColumnMap[s];
-  return (
-    <TableHead
-      key={s}
-      className={`${meta.width} border-r border-slate-200`}
-    >
-      <div className="h-full px-3 py-2.5 flex items-center justify-center">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
-          {s}
-        </span>
-      </div>
-    </TableHead>
-  );
-})}
-
-              {columnFilters.shortageNjMedicaid && (
-                 <TableHead className={`${columnWidths.horizon} border-r border-slate-200 bg-white`}>
-  <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-    <div className="flex flex-col items-center leading-tight">
-      {/* Status dot */}
-      <div className="-mb-1 translate-y-2 -translate-x-7 h-2 w-2 rounded-full bg-red-500" />
-
-      {/* Top line */}
-      <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">
-        Shortage
-      </span>
-
-      {/* Bottom line */}
-      <span className="text-xs font-semibold text-slate-900">
-        NJ Medicaid
-      </span>
-    </div>
-  </HeaderCell>
-</TableHead>
-              )}
-            </TableRow>
-          </TableHeader>
-        </Table>
-      </div>
-    </div>
-  </div>
-
-  {/* SCROLLABLE BODY - Controls both vertical and horizontal scroll */}
-  <div
-  ref={bodyScrollRef}
-  className="flex-1 overflow-auto min-w-0 relative z-0 -translate-y-63"
->
-
-    <div className="min-w-max">
-      <Table>
-        <TableBody>
-          {paginatedData.map((row, idx) => (
-            <TableRow
-              key={row.id}
-              className="cursor-pointer transition-colors hover:bg-emerald-50/30 border-b border-slate-100 h-[40px] "
-              onClick={() => {
-                setActiveDrug(row);
-                setOpenDrugSidebar(true);
-              }}
-            >
-              <TableCell className="w-13 border-r border-slate-100 bg-white h-[52px]" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center translate-x-4">
-                  <Checkbox
-                    checked={selectedRows.includes(row.id)}
-                    onCheckedChange={() => toggleRowSelection(row.id)}
+                {/* 6️⃣ Drug Cost */}
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    placeholder="Max Cost"
+                    value={costValue}
+                    onChange={(e) => setCostValue(Number(e.target.value) || "")}
+                    className="w-[110px] h-8 border-slate-300"
                   />
                 </div>
-              </TableCell>
 
-              {columnFilters.rank && (
-                <TableCell className={`${columnWidths.rank} text-center border-r border-slate-100 font-medium text-slate-700 h-[36px] py-0 `}>
-                  {row.rank}
-                </TableCell>
-              )}
+                {/* 7️⃣ Rows */}
 
-              {columnFilters.ndc && (
-                <TableCell className={`${columnWidths.ndc} text-center border-r border-slate-100 text-xs text-slate-600 h-[40px] py-0`}>
-                  {row.ndc}
-                </TableCell>
-              )}
-
-              {columnFilters.drugName && (
-                <TableCell className={`${columnWidths.drugName} border-r border-slate-100 font-semibold text-slate-900 h-[40px] py-0`}>
-                  {row.drugName}
-                </TableCell>
-              )}
-
-              {columnFilters.pkgSize && (
-                <TableCell className={`${columnWidths.pkgSize} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
-                  {row.pkgSize}
-                </TableCell>
-              )}
-
-              {columnFilters.totalOrdered && (
-                <TableCell className={`${columnWidths.totalOrdered} text-center border-r border-slate-100 font-medium text-slate-700 h-[40px] py-0 translate-x-8`}>
-                  {row.totalOrdered.toLocaleString()}
-                </TableCell>
-              )}
-
-              {columnFilters.totalBilled && (
-                <TableCell className={`${columnWidths.totalBilled} text-center border-r border-slate-100 font-medium text-slate-700 h-[40px] py-0 translate-x-8`}>
-                  {row.totalBilled.toLocaleString()}
-                </TableCell>
-              )}
-
-              {columnFilters.totalShortage && (
-                <TableCell className={`${columnWidths.totalShortage} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
-                  {renderShortageValue(row.totalShortage)}
-                </TableCell>
-              )}
-
-              {columnFilters.highestShortage && (
-                <TableCell className={`${columnWidths.highestShortage} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
-                  {renderShortageValue(row.highestShortage)}
-                </TableCell>
-              )}
-
-              {columnFilters.cost && (
-                <TableCell className={`${columnWidths.cost} text-center border-r border-slate-100 font-semibold text-slate-900 h-[40px] py-0 translate-x-8`}>
-                  ${row.cost.toFixed(2)}
-                </TableCell>
-              )}
-
-              {columnFilters.horizon && (
-                <TableCell className={`${columnWidths.horizon} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
-                  {row.horizon}
-                </TableCell>
-              )}
-
-              {columnFilters.shortageHorizon && (
-                <TableCell className={`${columnWidths.shortageHorizon} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
-                  {renderShortageValue(row.shortageHorizon)}
-                </TableCell>
-              )}
-
-              {columnFilters.express && (
-                <TableCell className={`${columnWidths.express} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
-                  {row.express}
-                </TableCell>
-              )}
-
-              {columnFilters.shortageExpress && (
-                <TableCell className={`${columnWidths.shortageExpress} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
-                  {renderShortageValue(row.shortageExpress)}
-                </TableCell>
-              )}
-
-              {columnFilters.pdmi && (
-                <TableCell className={`${columnWidths.pdmi} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
-                  {row.pdmi}
-                </TableCell>
-              )}
-
-              {columnFilters.shortagePdmi && (
-                <TableCell className={`${columnWidths.shortagePdmi} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
-                  {renderShortageValue(row.shortagePdmi)}
-                </TableCell>
-              )}
-
-              {columnFilters.optumrx && (
-                <TableCell className={`${columnWidths.optumrx} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
-                  {row.optumrx}
-                </TableCell>
-              )}
-
-              {columnFilters.shortageOptumrx && (
-                <TableCell className={`${columnWidths.shortageOptumrx} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
-                  {renderShortageValue(row.shortageOptumrx)}
-                </TableCell>
-              )}
-
-              {columnFilters.cvsCaremark && (
-                <TableCell className={`${columnWidths.cvsCaremark} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
-                  {row.cvsCaremark}
-                </TableCell>
-              )}
-
-              {columnFilters.shortageCvsCaremark && (
-                <TableCell className={`${columnWidths.shortageCvsCaremark} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
-                  {renderShortageValue(row.shortageCvsCaremark)}
-                </TableCell>
-              )}
-
-              {columnFilters.ssc && (
-                <TableCell className={`${columnWidths.ssc} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
-                  {row.ssc}
-                </TableCell>
-              )}
-
-              {columnFilters.shortageSsc && (
-                <TableCell className={`${columnWidths.shortageSsc} text-center border-r border-slate-100 h-[40px] py-0 translate-x-8`}>
-                  {renderShortageValue(row.shortageSsc)}
-                </TableCell>
-              )}
-
-              {columnFilters.njMedicaid && (
-                <TableCell className={`${columnWidths.njMedicaid} text-center border-r border-slate-100 text-slate-700 h-[40px] py-0 translate-x-8`}>
-                  {row.njMedicaid}
-                </TableCell>
-              )}
-
-              {columnFilters.shortageNjMedicaid && (
-                <TableCell className={`${columnWidths.shortageNjMedicaid} text-center h-[40px] py-0 translate-x-8`}>
-                  {renderShortageValue(row.shortageNjMedicaid)}
-                </TableCell>
-              )}
-
-                {selectedSuppliers.map((s) => {
-  const meta = supplierColumnMap[s];
-  return (
-    <TableCell
-      key={s}
-      className={`${meta.width} text-center border-r border-slate-100 text-slate-600`}
-    >
-      {/* Placeholder for now — replace with real supplier value when available */}
-      —
-    </TableCell>
-  );
-})}
-
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Enhanced Footer */}
-      {/* <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-slate-200 shadow-sm">
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-600 font-medium">
-            Rows per page:
-          </span>
-          <Select
-            value={String(rowsPerPage)}
-            onValueChange={(v) => setRowsPerPage(Number(v))}
-          >
-            <SelectTrigger className="w-20 h-9 border-slate-300">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-          <span className="text-sm text-slate-500">
-            Showing {(currentPage - 1) * rowsPerPage + 1}-
-            {Math.min(currentPage * rowsPerPage, filteredData.length)} of{" "}
-            {filteredData.length}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-600 font-medium">
-            Page {currentPage} of {totalPages}
-          </span>
-          <div className="flex gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-              className="h-9 w-9 p-0 border-slate-300"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === totalPages}
-              onClick={() => handlePageChange(currentPage + 1)}
-              className="h-9 w-9 p-0 border-slate-300"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div> */}
-
-      {/* Export Modal */}
-      <Dialog open={openExportModal} onOpenChange={setOpenExportModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
-              Export Report
-            </DialogTitle>
-            <DialogDescription>
-              Choose your preferred format and scope for the export
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold text-slate-900">
-                Export Format
-              </Label>
-              <RadioGroup
-                value={exportFormat}
-                onValueChange={(v) => setExportFormat(v as any)}
-              >
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
-                  <RadioGroupItem value="csv" id="csv" />
-                  <Label
-                    htmlFor="csv"
-                    className="flex-1 cursor-pointer font-medium"
-                  >
-                    CSV
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
-                  <RadioGroupItem value="excel" id="excel" />
-                  <Label
-                    htmlFor="excel"
-                    className="flex-1 cursor-pointer font-medium"
-                  >
-                    Excel
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
-                  <RadioGroupItem value="pdf" id="pdf" />
-                  <Label
-                    htmlFor="pdf"
-                    className="flex-1 cursor-pointer font-medium"
-                  >
-                    PDF
-                  </Label>
-                </div>
-              </RadioGroup>
+                <Select
+                  value={String(rowsPerPage)}
+                  onValueChange={(v) => setRowsPerPage(Number(v))}
+                >
+                  <SelectTrigger className="w-[120px] h-8 border-slate-300">
+                    <SelectValue
+                      placeholder={`Rows: ${rowsPerPage}/${totalRows}`}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rowOptions.map((n) => (
+                      <SelectItem key={n} value={String(n)}>
+                        {n === totalRows ? `All (${totalRows})` : n}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold text-slate-900">
-                Export Scope
-              </Label>
-              <RadioGroup
-                value={exportScope}
-                onValueChange={(v) => setExportScope(v as any)}
-              >
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
-                  <RadioGroupItem value="visible" id="visible" />
-                  <Label
-                    htmlFor="visible"
-                    className="flex-1 cursor-pointer font-medium"
-                  >
-                    Visible Rows Only
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
-                  <RadioGroupItem value="all" id="all" />
-                  <Label
-                    htmlFor="all"
-                    className="flex-1 cursor-pointer font-medium"
-                  >
-                    All Data
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenExportModal(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleExport}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              Export
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      {/* Create Tag Modal */}
-      <Dialog open={openCreateTagModal} onOpenChange={setOpenCreateTagModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
-              Create New Tag
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-5 py-4">
-            <div className="space-y-2">
-              <Label
-                htmlFor="tagName"
-                className="text-sm font-semibold text-slate-900"
-              >
-                Tag Name
-              </Label>
-              <Input
-                id="tagName"
-                value={newTagName}
-                onChange={(e) => setNewTagName(e.target.value)}
-                placeholder="Enter tag name"
-                className="border-slate-300"
-              />
-            </div>
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold text-slate-900">
-                Tag Color
-              </Label>
-              <RadioGroup value={newTagColor} onValueChange={setNewTagColor}>
-                {(
-                  [
-                    "red",
-                    "orange",
-                    "yellow",
-                    "green",
-                    "blue",
-                    "purple",
-                  ] as const
-                ).map((color) => (
-                  <div
-                    key={color}
-                    className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+            {/* Active Filters */}
+            {(activeFilters.length > 0 || costValue !== "") && (
+              <div className="px-6 pb-4 flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-medium text-slate-600">
+                  Active filters:
+                </span>
+                {activeFilters.map((chip) => (
+                  <Badge
+                    key={chip.id}
+                    variant="secondary"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                   >
-                    <RadioGroupItem value={color} id={color} />
-                    <div
-                      className={`h-4 w-4 rounded-full ${colorClasses[color]}`}
-                    ></div>
-                    <Label
-                      htmlFor={color}
-                      className="flex-1 cursor-pointer font-medium capitalize"
+                    <span className="text-xs font-medium">{chip.label}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-3.5 w-3.5 p-0 hover:bg-transparent"
+                      onClick={() => removeFilter(chip.id)}
                     >
-                      {color}
-                    </Label>
-                  </div>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
                 ))}
-              </RadioGroup>
+                {costValue !== "" && (
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                  >
+                    <span className="text-xs font-medium">
+                      Cost: ${costValue}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-3.5 w-3.5 p-0 hover:bg-transparent"
+                      onClick={() => setCostValue("")}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 bg-white relative overflow-hidden flex flex-col min-w-0 z-20 w-full border border-slate-200 rounded-md">
+            <div
+              ref={bodyScrollRef}
+              className="flex-1 overflow-auto min-w-0 relative z-0 scrollbar-hide"
+              style={{
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+              }}
+            >
+              <style jsx>{`
+                .scrollbar-hide::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
+
+              <Table className="w-full border-separate border-spacing-0">
+                <TableHeader className="relative z-[60]">
+                  <TableRow className="hover:bg-transparent">
+                    {/* 1. Checkbox Column (Fixed Top and Left) */}
+                    <TableHead className="sticky top-0 left-0 z-[100] bg-white w-14 min-w-[56px] border-r border-b border-slate-200 h-[52px] px-3">
+                      <div className="flex items-center justify-center">
+                        <Checkbox
+                          checked={
+                            selectedRows.length === paginatedData.length &&
+                            paginatedData.length > 0
+                          }
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </div>
+                    </TableHead>
+
+                    {/* 2. Rank Column (Fixed Top and Left) */}
+                    {columnFilters.rank && (
+                      <TableHead
+                        className="sticky top-0 z-[100] bg-white w-20 min-w-[80px] border-r border-b border-slate-200 h-[52px] px-3"
+                        style={{ left: "56px" }}
+                      >
+                        <HeaderCell
+                          sortKey="rank"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Rank
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {/* 3. NDC Column (Fixed Top and Left) */}
+                    {columnFilters.ndc && (
+                      <TableHead
+                        className="sticky top-0 z-[100] bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3"
+                        style={{
+                          left: `${56 + (columnFilters.rank ? 80 : 0)}px`,
+                        }}
+                      >
+                        <HeaderCell
+                          sortKey="ndc"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            NDC
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {/* 4. Drug Name Column (Fixed Top and Left) */}
+                    {columnFilters.drugName && (
+                      <TableHead
+                        className="sticky top-0 z-[100] bg-white w-60 min-w-[240px] border-r border-b border-slate-200 h-[52px] px-3"
+                        style={{
+                          left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0)}px`,
+                        }}
+                      >
+                        <HeaderCell
+                          sortKey="drugName"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Drug Name
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {/* 5. PKG Size Column (Fixed Top and Left) */}
+                    {columnFilters.pkgSize && (
+                      <TableHead
+                        className="sticky top-0 z-[100] bg-white w-[100px] min-w-[100px] border-r border-b border-slate-200 h-[52px] px-3"
+                        style={{
+                          left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0) + (columnFilters.drugName ? 240 : 0)}px`,
+                        }}
+                      >
+                        <HeaderCell
+                          sortKey="pkgSize"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            PKG Size
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {/* 6. Total Ordered Column (Fixed Top and Left + Shadow) */}
+                    {columnFilters.totalOrdered && (
+                      <TableHead
+                        className="sticky top-0 z-[100] bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.15)]"
+                        style={{
+                          left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0) + (columnFilters.drugName ? 240 : 0) + (columnFilters.pkgSize ? 100 : 0)}px`,
+                        }}
+                      >
+                        <HeaderCell
+                          sortKey="totalOrdered"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden justify-center">
+                            <div className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" />
+                            <span className="truncate whitespace-nowrap">
+                              Total Ordered
+                            </span>
+                          </div>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {/* Non-Sticky Left Columns (Still Fixed to Top) */}
+                    {columnFilters.totalBilled && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="totalBilled"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden justify-center">
+                            <div className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
+                            <span className="truncate whitespace-nowrap">
+                              Total Billed
+                            </span>
+                          </div>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.totalShortage && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="totalShortage"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden justify-center">
+                            <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0" />
+                            <span className="truncate whitespace-nowrap">
+                              Total Shortage
+                            </span>
+                          </div>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.highestShortage && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[150px] min-w-[150px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="highestShortage"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Highest Shortage
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.cost && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[120px] min-w-[120px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="cost"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            $ Cost
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.horizon && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="horizon"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Horizon Health
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.shortageHorizon && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[150px] min-w-[150px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="shortageHorizon"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Shortage Horizon
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.express && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="express"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Express Scripts
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.shortageExpress && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[150px] min-w-[150px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="shortageExpress"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Shortage Express
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.pdmi && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[180px] min-w-[180px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="pdmi"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            PDMI (CO-PAY CARD)
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.shortagePdmi && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[150px] min-w-[150px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="shortagePdmi"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Shortage PDMI
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.optumrx && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[120px] min-w-[120px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="optumrx"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Optumrx
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.shortageOptumrx && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[150px] min-w-[150px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="shortageOptumrx"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Shortage Optumrx
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.cvsCaremark && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="cvsCaremark"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            CVS Caremark
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.shortageCvsCaremark && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[180px] min-w-[180px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="shortageCvsCaremark"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Shortage CVS Caremark
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.ssc && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[120px] min-w-[120px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="ssc"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Billed SSC
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.shortageSsc && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="shortageSsc"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Shortage SSC
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.njMedicaid && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[130px] min-w-[130px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="njMedicaid"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            NJ Medicaid
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+
+                    {columnFilters.shortageNjMedicaid && (
+                      <TableHead className="sticky top-0 z-50 bg-white w-[170px] min-w-[170px] border-r border-b border-slate-200 h-[52px] px-3">
+                        <HeaderCell
+                          sortKey="shortageNjMedicaid"
+                          sortRules={sortRules}
+                          onSort={handleSort}
+                        >
+                          <span className="truncate whitespace-nowrap">
+                            Shortage NJ Medicaid
+                          </span>
+                        </HeaderCell>
+                      </TableHead>
+                    )}
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {paginatedData.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      className="group bg-white cursor-pointer transition-colors hover:bg-slate-50 border-b border-slate-100 h-[36px]"
+                      onClick={() => {
+                        setActiveDrug(row);
+                        setOpenDrugSidebar(true);
+                      }}
+                    >
+                      {/* Sticky Cells in Body */}
+                      <TableCell
+                        className="sticky left-0 z-20 bg-white group-hover:bg-slate-50 w-14 min-w-[56px] border-r border-slate-100 h-[36px] px-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-center">
+                          <Checkbox
+                            checked={selectedRows.includes(row.id)}
+                            onCheckedChange={() => toggleRowSelection(row.id)}
+                          />
+                        </div>
+                      </TableCell>
+
+                      {columnFilters.rank && (
+                        <TableCell
+                          className="sticky z-20 bg-white group-hover:bg-slate-50 w-20 min-w-[80px] text-right border-r border-slate-100 h-[36px] px-3"
+                          style={{ left: "56px" }}
+                        >
+                          {row.rank}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.ndc && (
+                        <TableCell
+                          className="sticky z-20 bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3"
+                          style={{
+                            left: `${56 + (columnFilters.rank ? 80 : 0)}px`,
+                          }}
+                        >
+                          {row.ndc}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.drugName && (
+                        <TableCell
+                          className="sticky z-20 bg-white group-hover:bg-slate-50 w-60 min-w-[240px] text-left border-r border-slate-100 h-[36px] px-3"
+                          style={{
+                            left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0)}px`,
+                          }}
+                        >
+                          <span className="font-bold text-slate-900 truncate block">
+                            {row.drugName}
+                          </span>
+                        </TableCell>
+                      )}
+
+                      {columnFilters.pkgSize && (
+                        <TableCell
+                          className="sticky z-20 bg-white group-hover:bg-slate-50 w-[100px] min-w-[100px] text-right border-r border-slate-100 h-[36px] px-3"
+                          style={{
+                            left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0) + (columnFilters.drugName ? 240 : 0)}px`,
+                          }}
+                        >
+                          {row.pkgSize}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.totalOrdered && (
+                        <TableCell
+                          className="sticky z-20 bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.15)]"
+                          style={{
+                            left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0) + (columnFilters.drugName ? 240 : 0) + (columnFilters.pkgSize ? 100 : 0)}px`,
+                          }}
+                        >
+                          {row.totalOrdered.toLocaleString()}
+                        </TableCell>
+                      )}
+
+                      {/* Non-Sticky Body Cells */}
+                      {columnFilters.totalBilled && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {row.totalBilled.toLocaleString()}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.totalShortage && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {renderShortageValue(row.totalShortage)}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.highestShortage && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[150px] min-w-[150px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {renderShortageValue(row.highestShortage)}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.cost && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[120px] min-w-[120px] text-right border-r border-slate-100 h-[36px] px-3">
+                          ${row.cost.toFixed(2)}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.horizon && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {row.horizon}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.shortageHorizon && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[150px] min-w-[150px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {renderShortageValue(row.shortageHorizon)}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.express && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {row.express}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.shortageExpress && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[150px] min-w-[150px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {renderShortageValue(row.shortageExpress)}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.pdmi && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[180px] min-w-[180px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {row.pdmi}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.shortagePdmi && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[150px] min-w-[150px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {renderShortageValue(row.shortagePdmi)}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.optumrx && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[120px] min-w-[120px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {row.optumrx}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.shortageOptumrx && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[150px] min-w-[150px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {renderShortageValue(row.shortageOptumrx)}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.cvsCaremark && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {row.cvsCaremark}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.shortageCvsCaremark && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[180px] min-w-[180px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {renderShortageValue(row.shortageCvsCaremark)}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.ssc && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[120px] min-w-[120px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {row.ssc}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.shortageSsc && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {renderShortageValue(row.shortageSsc)}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.njMedicaid && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[130px] min-w-[130px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {row.njMedicaid}
+                        </TableCell>
+                      )}
+
+                      {columnFilters.shortageNjMedicaid && (
+                        <TableCell className="bg-white group-hover:bg-slate-50 w-[170px] min-w-[170px] text-right border-r border-slate-100 h-[36px] px-3">
+                          {renderShortageValue(row.shortageNjMedicaid)}
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination Section */}
+            <div className="border-t border-slate-200 bg-white px-4 py-3 flex items-center justify-between z-30">
+              <div className="text-sm text-slate-500">
+                Showing{" "}
+                <span className="font-medium">
+                  {(currentPage - 1) * rowsPerPage + 1}
+                </span>{" "}
+                to{" "}
+                <span className="font-medium">
+                  {Math.min(currentPage * rowsPerPage, filteredData.length)}
+                </span>{" "}
+                of <span className="font-medium">{filteredData.length}</span>{" "}
+                results
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        className="w-8 h-8 p-0"
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ),
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenCreateTagModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateTag}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      {/* Drug Details Sidebar */}
-      <Sheet open={openDrugSidebar} onOpenChange={setOpenDrugSidebar}>
-        <SheetContent className="w-[450px] sm:w-[540px] bg-gradient-to-br from-white to-slate-50">
-          <SheetHeader>
-            <SheetTitle className="text-xl font-bold text-slate-900">
-              Drug Details
-            </SheetTitle>
-            <SheetDescription className="text-sm text-slate-600">
-              {activeDrug ? activeDrug.drugName : "No drug selected"}
-            </SheetDescription>
-          </SheetHeader>
-          {activeDrug && (
-            <div className="mt-8 space-y-5">
-              <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  NDC
-                </Label>
-                <p className="text-base font-mono font-semibold text-slate-900 mt-1">
-                  {activeDrug.ndc}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Package Size
+          {/* Export Modal */}
+          <Dialog open={openExportModal} onOpenChange={setOpenExportModal}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold">
+                  Export Report
+                </DialogTitle>
+                <DialogDescription>
+                  Choose your preferred format and scope for the export
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6 py-4">
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-slate-900">
+                    Export Format
                   </Label>
-                  <p className="text-lg font-bold text-slate-900 mt-1">
-                    {activeDrug.pkgSize}
-                  </p>
+                  <RadioGroup
+                    value={exportFormat}
+                    onValueChange={(v) => setExportFormat(v as any)}
+                  >
+                    <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                      <RadioGroupItem value="csv" id="csv" />
+                      <Label
+                        htmlFor="csv"
+                        className="flex-1 cursor-pointer font-medium"
+                      >
+                        CSV
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                      <RadioGroupItem value="excel" id="excel" />
+                      <Label
+                        htmlFor="excel"
+                        className="flex-1 cursor-pointer font-medium"
+                      >
+                        Excel
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                      <RadioGroupItem value="pdf" id="pdf" />
+                      <Label
+                        htmlFor="pdf"
+                        className="flex-1 cursor-pointer font-medium"
+                      >
+                        PDF
+                      </Label>
+                    </div>
+                  </RadioGroup>
                 </div>
-                <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Cost
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-slate-900">
+                    Export Scope
                   </Label>
-                  <p className="text-lg font-bold text-emerald-700 mt-1">
-                    ${activeDrug.cost.toFixed(2)}
-                  </p>
+                  <RadioGroup
+                    value={exportScope}
+                    onValueChange={(v) => setExportScope(v as any)}
+                  >
+                    <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                      <RadioGroupItem value="visible" id="visible" />
+                      <Label
+                        htmlFor="visible"
+                        className="flex-1 cursor-pointer font-medium"
+                      >
+                        Visible Rows Only
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                      <RadioGroupItem value="all" id="all" />
+                      <Label
+                        htmlFor="all"
+                        className="flex-1 cursor-pointer font-medium"
+                      >
+                        All Data
+                      </Label>
+                    </div>
+                  </RadioGroup>
                 </div>
               </div>
-              <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Total Ordered
-                </Label>
-                <p className="text-lg font-bold text-slate-900 mt-1">
-                  {activeDrug.totalOrdered.toLocaleString()}
-                </p>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenExportModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleExport}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  Export
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Create Tag Modal */}
+          <Dialog
+            open={openCreateTagModal}
+            onOpenChange={setOpenCreateTagModal}
+          >
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold">
+                  Create New Tag
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-5 py-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="tagName"
+                    className="text-sm font-semibold text-slate-900"
+                  >
+                    Tag Name
+                  </Label>
+                  <Input
+                    id="tagName"
+                    value={newTagName}
+                    onChange={(e) => setNewTagName(e.target.value)}
+                    placeholder="Enter tag name"
+                    className="border-slate-300"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-slate-900">
+                    Tag Color
+                  </Label>
+                  <RadioGroup
+                    value={newTagColor}
+                    onValueChange={setNewTagColor}
+                  >
+                    {(
+                      [
+                        "red",
+                        "orange",
+                        "yellow",
+                        "green",
+                        "blue",
+                        "purple",
+                      ] as const
+                    ).map((color) => (
+                      <div
+                        key={color}
+                        className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+                      >
+                        <RadioGroupItem value={color} id={color} />
+                        <div
+                          className={`h-4 w-4 rounded-full ${colorClasses[color]}`}
+                        ></div>
+                        <Label
+                          htmlFor={color}
+                          className="flex-1 cursor-pointer font-medium capitalize"
+                        >
+                          {color}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
               </div>
-              <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Total Billed
-                </Label>
-                <p className="text-lg font-bold text-slate-900 mt-1">
-                  {activeDrug.totalBilled.toLocaleString()}
-                </p>
-              </div>
-              <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Total Shortage
-                </Label>
-                <p className="text-lg font-bold mt-1">
-                  {renderShortageValue(activeDrug.totalShortage)}
-                </p>
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenCreateTagModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateTag}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  Create
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Drug Details Sidebar */}
+          <Sheet open={openDrugSidebar} onOpenChange={setOpenDrugSidebar}>
+            <SheetContent className="w-[450px] sm:w-[540px] bg-gradient-to-br from-white to-slate-50">
+              <SheetHeader>
+                <SheetTitle className="text-xl font-bold text-slate-900">
+                  Drug Details
+                </SheetTitle>
+                <SheetDescription className="text-sm text-slate-600">
+                  {activeDrug ? activeDrug.drugName : "No drug selected"}
+                </SheetDescription>
+              </SheetHeader>
+              {activeDrug && (
+                <div className="mt-8 space-y-5">
+                  <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      NDC
+                    </Label>
+                    <p className="text-base font-mono font-semibold text-slate-900 mt-1">
+                      {activeDrug.ndc}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Package Size
+                      </Label>
+                      <p className="text-lg font-bold text-slate-900 mt-1">
+                        {activeDrug.pkgSize}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Cost
+                      </Label>
+                      <p className="text-lg font-bold text-emerald-700 mt-1">
+                        ${activeDrug.cost.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Total Ordered
+                    </Label>
+                    <p className="text-lg font-bold text-slate-900 mt-1">
+                      {activeDrug.totalOrdered.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Total Billed
+                    </Label>
+                    <p className="text-lg font-bold text-slate-900 mt-1">
+                      {activeDrug.totalBilled.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Total Shortage
+                    </Label>
+                    <p className="text-lg font-bold mt-1">
+                      {renderShortageValue(activeDrug.totalShortage)}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
     </div>
-  </div>
-  </div>
-  </div>
-);
+    // </div>
+  );
 }
