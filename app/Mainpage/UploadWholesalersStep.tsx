@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, MoreVertical, Plus, Eye, Check } from "lucide-react";
 import axios from "axios";
+import Link from "next/link"
 
 interface Wholesaler {
   id: string;
@@ -128,60 +129,151 @@ const UploadWholesalersStep = ({
     "WELLGISTICS",
     "WESTERN WELLNES SOLUTION",
   ];
+const [wholesalerFieldMappings, setWholesalerFieldMappings] = useState<Record<string, Record<string, string>>>({});
+const [wholesalerHeaders, setWholesalerHeaders] = useState<Record<string, string[]>>({});
+const [showMappingFor, setShowMappingFor] = useState<string | null>(null);
+const [showMappingWarning, setShowMappingWarning] = useState(false);
+const [missingMappingFields, setMissingMappingFields] = useState<string[]>([]);
 
-  const handleFileChange = (
-    id: string,
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = event.target.files?.[0] || null;
-    setWholesalers(wholesalers.map((w) => (w.id === id ? { ...w, file } : w)));
-  };
+const WHOLESALER_REQUIRED_FIELDS = [
+  { key: "ndcNumber", label: "Ndc Number" },
+  { key: "invoiceDate", label: "Invoice Date" },
+  { key: "itemDescription", label: "Item Description" },
+  { key: "quantity", label: "Quantity" },
+] as const;
+
+const WHOLESALER_OPTIONAL_FIELDS = [
+  { key: "unitPrice", label: "Unit Price" },
+  { key: "totalPrice", label: "Total Price" },
+] as const;
+
+const WHOLESALER_ALL_FIELDS = [...WHOLESALER_REQUIRED_FIELDS, ...WHOLESALER_OPTIONAL_FIELDS];
+
+const WHOLESALER_HEADER_ALIASES: Record<string, string[]> = {
+  ndcNumber: ["ndc", "ndcnumber", "ndc_number", "ndc number"],
+  invoiceDate: ["invoicedate", "invoice_date", "invoice date", "date"],
+  itemDescription: ["itemdescription", "item_description", "item description", "description", "drug", "drugname"],
+  quantity: ["quantity", "qty"],
+  unitPrice: ["unitprice", "unit_price", "unit price", "price"],
+  totalPrice: ["totalprice", "total_price", "total price", "total"],
+};
+
+const WHOLESALER_STANDARD_OPTIONS = [
+  "ndc", "invoice_date", "item_description", "quantity", "unit_price", "total_price"
+];
+
+const WHOLESALER_FIELD_TO_VALUE: Record<string, string> = {
+  ndcNumber: "ndc",
+  invoiceDate: "invoice_date",
+  itemDescription: "item_description",
+  quantity: "quantity",
+  unitPrice: "unit_price",
+  totalPrice: "total_price",
+};
+
+const normalizeHeader = (value: string) =>
+  value.toLowerCase().replace(/[\s_]/g, "");
+
+const parseCsvHeaderLine = (line: string): string[] => {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (char === "," && !inQuotes) {
+      result.push(current.trim()); current = "";
+    } else current += char;
+  }
+  if (current.length > 0) result.push(current.trim());
+  return result.filter((h) => h.length > 0);
+};
+
+const buildWholesalerAutoMapping = (parsedHeaders: string[]) => {
+  const autoMapping: Record<string, string> = {};
+  WHOLESALER_ALL_FIELDS.forEach((field) => {
+    const aliases = WHOLESALER_HEADER_ALIASES[field.key] || [];
+    const found = parsedHeaders.find((header) =>
+      aliases.some((alias) => normalizeHeader(alias) === normalizeHeader(header))
+    );
+    if (found) autoMapping[field.key] = found; // 👈 store actual CSV header name, not standard value
+  });
+  return autoMapping;
+};
+
+ const handleFileChange = (
+  id: string,
+  event: React.ChangeEvent<HTMLInputElement>,
+) => {
+  const file = event.target.files?.[0] || null;
+  setWholesalers(wholesalers.map((w) => (w.id === id ? { ...w, file } : w)));
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = (e.target?.result as string) || "";
+      const firstNonEmptyLine =
+        text.split(/\r?\n/).find((line) => line.trim().length > 0) || "";
+      const parsedHeaders = parseCsvHeaderLine(firstNonEmptyLine);
+      setWholesalerHeaders((prev) => ({ ...prev, [id]: parsedHeaders }));
+      const auto = buildWholesalerAutoMapping(parsedHeaders);
+      setWholesalerFieldMappings((prev) => ({ ...prev, [id]: auto }));
+      setShowMappingFor(id); // auto-open mapping UI
+    };
+    reader.readAsText(file);
+  }
+};
 
   const handleSubmit = async () => {
-    try {
-      const id = localStorage.getItem("auditId");
-      if (!id) {
-        alert("Audit not found");
+  try {
+    const id = localStorage.getItem("auditId");
+    if (!id) { alert("Audit not found"); return; }
+
+    // Validate all uploaded wholesalers have required field mappings
+    for (const w of wholesalers) {
+      if (!w.file) continue;
+      const mapping = wholesalerFieldMappings[w.id] || {};
+      const missing = WHOLESALER_REQUIRED_FIELDS.filter((f) => !mapping[f.key]).map((f) => f.label);
+      if (missing.length > 0) {
+        setMissingMappingFields(missing);
+        setShowMappingFor(w.id);
+        setShowMappingWarning(true);
         return;
       }
-
-      const formData = new FormData();
-
-      // build metadata array
-      const metadata: { field: string; wholesaler_name: string }[] = [];
-
-      wholesalers.forEach((w) => {
-        if (w.file) {
-          const fieldName = w.name.toLowerCase().replace(/\s+/g, "");
-          metadata.push({
-            field: fieldName,
-            wholesaler_name: w.name,
-          });
-
-          formData.append(fieldName, w.file);
-        }
-      });
-
-      // append metadata as string
-      formData.append("metadata", JSON.stringify(metadata));
-
-      const res = await axios.post(
-        `http://localhost:5000/api/audits/${id}/wholesalers`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      );
-
-      console.log(res.data);
-      alert("Files uploaded successfully");
-    } catch (err) {
-      console.error(err);
-      alert("Upload failed");
     }
-  };
+
+    const formData = new FormData();
+    const metadata: { field: string; wholesaler_name: string; headerMapping: Record<string, string> }[] = [];
+
+    wholesalers.forEach((w) => {
+      if (w.file) {
+        const fieldName = w.name.toLowerCase().replace(/\s+/g, "");
+        metadata.push({
+          field: fieldName,
+          wholesaler_name: w.name,
+          headerMapping: wholesalerFieldMappings[w.id] || {},
+        });
+        formData.append(fieldName, w.file);
+      }
+    });
+
+    formData.append("metadata", JSON.stringify(metadata));
+
+    const res = await axios.post(
+      `http://localhost:5000/api/audits/${id}/wholesalers`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+
+    console.log(res.data);
+    alert("Files uploaded successfully");
+  } catch (err) {
+    console.error(err);
+    alert("Upload failed");
+  }
+};
 
   const handleDelete = (id: string) => {
     setWholesalers(wholesalers.filter((w) => w.id !== id));
@@ -214,75 +306,163 @@ const UploadWholesalersStep = ({
 
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {wholesalers.map((wholesaler) => (
-            <div
-              key={wholesaler.id}
-              className="relative flex items-center justify-between border border-border rounded-lg px-4 py-3"
-            >
-              <span className="font-medium text-foreground text-sm">
-                {wholesaler.name}
-              </span>
-              <div className="flex items-center gap-2">
-                <label htmlFor={`wholesaler-${wholesaler.id}`}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="cursor-pointer"
-                    asChild
-                  >
-                    <span className="text-primary">
-                      <Upload className="w-4 h-4 mr-1" />
-                      Upload file
-                    </span>
-                  </Button>
-                  <input
-                    id={`wholesaler-${wholesaler.id}`}
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => handleFileChange(wholesaler.id, e)}
-                    accept=".csv,.xlsx,.xls"
-                  />
-                </label>
-                {wholesaler.file && (
-                  <span className="text-xs text-muted-foreground truncate max-w-24">
-                    {wholesaler.file.name}
-                  </span>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => {
-                    setEdit(!edit || editId !== wholesaler.id);
-                    setEditId(wholesaler.id);
-                  }}
-                >
-                  <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                </Button>
-              </div>
+  <div key={wholesaler.id}>
+    <div className="relative flex items-center justify-between border border-border rounded-lg px-4 py-3">
+      <span className="font-medium text-foreground text-sm">{wholesaler.name}</span>
+      <div className="flex items-center gap-2">
+        <label htmlFor={`wholesaler-${wholesaler.id}`}>
+          <Button variant="ghost" size="sm" className="cursor-pointer" asChild>
+            <span className="text-primary">
+              <Upload className="w-4 h-4 mr-1" />
+              Upload file
+            </span>
+          </Button>
+          <input
+            id={`wholesaler-${wholesaler.id}`}
+            type="file"
+            className="hidden"
+            onChange={(e) => handleFileChange(wholesaler.id, e)}
+            accept=".csv"
+          />
+        </label>
+        {wholesaler.file && (
+          <span className="text-xs text-muted-foreground truncate max-w-24">
+            {wholesaler.file.name}
+          </span>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => {
+            setEdit(!edit || editId !== wholesaler.id);
+            setEditId(wholesaler.id);
+          }}
+        >
+          <MoreVertical className="w-4 h-4 text-muted-foreground" />
+        </Button>
+      </div>
 
-              {/* DELETE POPUP - Background set to White */}
-              {edit && editId === wholesaler.id && (
-                <div className="absolute right-2 top-10 w-[max-content] bg-white border border-gray-200 rounded-lg shadow-xl z-50">
-                  <button
-                    onClick={() => handleDelete(wholesaler.id)}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors rounded-lg"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
+      {edit && editId === wholesaler.id && (
+        <div className="absolute right-2 top-10 w-[max-content] bg-white border border-gray-200 rounded-lg shadow-xl z-50">
+          <button
+            onClick={() => handleDelete(wholesaler.id)}
+            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors rounded-lg"
+          >
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
+
+    {/* Column Mapping UI - shown after file upload */}
+    {wholesaler.file && wholesalerHeaders[wholesaler.id]?.length > 0 && showMappingFor === wholesaler.id && (
+      <div className="mt-2 mb-2 bg-white rounded-xl border border-border/70 p-5 shadow-sm">
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-semibold text-foreground">
+            {wholesaler.name} | File Upload
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Select the file headers below and click upload
+          </p>
+          <p className="text-sm text-primary font-medium mt-1">
+            Please make sure to include all your columns below.
+          </p>
+          <p className="text-sm text-foreground mt-1">
+            File - {wholesaler.file.name}
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {/* Header row indicator */}
+          <div className="flex items-center justify-between rounded-lg border bg-slate-50 px-4 py-2 text-xs sm:text-sm">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-foreground">Header</span>
+              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                Row 1
+              </span>
             </div>
-          ))}
+            <span className="text-emerald-600 text-[11px] font-medium">
+              Detected automatically ✓
+            </span>
+          </div>
+
+          <hr />
+
+          {WHOLESALER_ALL_FIELDS.map((field) => {
+            const isRequired = WHOLESALER_REQUIRED_FIELDS.some((r) => r.key === field.key);
+            const currentMapping = wholesalerFieldMappings[wholesaler.id]?.[field.key] || "";
+            return (
+              <div
+                key={field.key}
+                className="grid grid-cols-[1.7fr,2.3fr] gap-4 items-center rounded-md border border-transparent hover:border-primary/20 px-2 py-1.5 transition-colors"
+              >
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <span>{field.label}</span>
+                  {isRequired ? (
+                    <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600">
+                      Required
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+                      Optional
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <select
+                    className={`w-full border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/70 transition ${currentMapping ? "border-emerald-400" : "border-dashed border-border"}`}
+                    value={currentMapping}
+                    onChange={(e) =>
+  setWholesalerFieldMappings((prev) => ({
+    ...prev,
+    [wholesaler.id]: {
+      ...(prev[wholesaler.id] || {}),
+      [field.key]: e.target.value, // this is already the actual header name from the select options
+    },
+  }))
+}
+                  >
+                    <option value="">Select file header</option>
+                    {wholesalerHeaders[wholesaler.id]?.map((header) => (
+                      <option key={header} value={header}>
+                        {header}
+                      </option>
+                    ))}
+                  </select>
+                  {currentMapping && (
+                    <span className="absolute right-8 top-1/2 -translate-y-1/2 text-emerald-500">✓</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="flex justify-center pt-2">
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-[#0D0D0D] to-[#404040] text-white px-6"
+              onClick={() => setShowMappingFor(null)}
+            >
+              Confirm Mapping
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+))}
         </div>
 
         <div className="flex items-center justify-center gap-3 mt-6 pt-4 border-t border-border">
-          <Button
-            className="bg-gradient-to-r from-[#0D0D0D] to-[#404040] text-white transition"
-            variant="outline"
-            onClick={onSkip}
-          >
-            Skip
-          </Button>
+          <Link href="/ReportsPage">
+  <Button
+    className="bg-gradient-to-r from-[#0D0D0D] to-[#404040] text-white transition"
+    variant="outline"
+  >
+    Skip
+  </Button>
+</Link>
           <Button
             className="cursor-pointer"
             variant="default"
@@ -346,6 +526,28 @@ const UploadWholesalersStep = ({
           </div>
         </>
       )}
+
+      {showMappingWarning && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+    <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+      <button
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+        onClick={() => setShowMappingWarning(false)}
+      >
+        ×
+      </button>
+      <h3 className="text-lg font-bold mb-3 text-foreground">Warning</h3>
+      <p className="text-sm mb-2 text-red-600">
+        Header{" "}
+        <span className="font-semibold">{missingMappingFields.join(", ")}</span>{" "}
+        is required.
+      </p>
+      <p className="text-sm text-foreground">
+        Please match all required headers before proceeding.
+      </p>
+    </div>
+  </div>
+)}
     </div>
   );
 };
