@@ -8,6 +8,7 @@ import { Layers, FileText, FileSymlink } from "lucide-react";
 import AuditWizard from "./AuditWizard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import axios from "axios";
 
 export default function BatchRxDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
