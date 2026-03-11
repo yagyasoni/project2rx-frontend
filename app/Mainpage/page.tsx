@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Loading from "./loading";
 import Sidebar from "@/components/Sidebar";
 import { Layers, FileText, FileSymlink } from "lucide-react";
@@ -15,6 +16,24 @@ export default function BatchRxDashboard() {
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [view, setView] = useState(false);
+  const [initialStep, setInitialStep] = useState<number>(1);
+  const [initialAuditId, setInitialAuditId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const auditId = searchParams.get("auditId");
+    const step = searchParams.get("step");
+    if (auditId && step === "inventory") {
+      setInitialAuditId(auditId);
+      setInitialStep(3);
+      setView(true);
+    }
+    if (auditId && step === "wholesaler") {
+      setInitialAuditId(auditId);
+      setInitialStep(4);
+      setView(true);
+    }
+  }, [searchParams]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -108,7 +127,7 @@ export default function BatchRxDashboard() {
                 </div>
               </div>
             ) : (
-              <AuditWizard />
+              <AuditWizard initialStep={initialStep} initialAuditId={initialAuditId} />
             )}
           </div>
 

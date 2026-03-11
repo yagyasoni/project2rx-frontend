@@ -17,7 +17,7 @@ import {
   Settings,
   Phone,
   X,
-  ChevronDown,
+  GitBranch,
 } from "lucide-react";
 import axios from "axios";
 
@@ -27,6 +27,8 @@ interface SidebarProps {
   activePanel: string | null;
   setActivePanel: (value: string | null) => void;
 }
+
+type Popup = "support" | "account" | "settings" | null;
 
 export default function Sidebar({
   sidebarOpen,
@@ -87,23 +89,21 @@ export default function Sidebar({
     pharmacy();
   }, []);
 
-  // Close dropdowns when clicking outside
+  const [openPopup, setOpenPopup] = useState<Popup>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const toggle = (name: Popup) =>
+    setOpenPopup((prev) => (prev === name ? null : name));
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
-        supportRef.current &&
-        !supportRef.current.contains(event.target as Node)
+        bottomRef.current &&
+        !bottomRef.current.contains(event.target as Node)
       ) {
-        setShowSupportPopup(false);
-      }
-      if (
-        accountRef.current &&
-        !accountRef.current.contains(event.target as Node)
-      ) {
-        setShowAccountDropdown(false);
+        setOpenPopup(null);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -119,9 +119,7 @@ export default function Sidebar({
      }`;
 
   const handleLogout = () => {
-    // Add your logout logic here
     console.log("Logging out...");
-    // Example: router.push('/login')
   };
 
   return (
@@ -138,7 +136,6 @@ export default function Sidebar({
               <span className="font-bold text-gray-900">AuditProRx</span>
             </div>
           )}
-
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-1 hover:bg-gray-100 rounded"
@@ -188,13 +185,13 @@ export default function Sidebar({
       </nav>
 
       {/* BOTTOM */}
-      <div className="border-t border-gray-200 p-4 space-y-2">
-        {/* Customer Support with Popup */}
-        <div className="relative" ref={supportRef}>
+      <div className="border-t border-gray-200 p-4 space-y-2" ref={bottomRef}>
+        {/* ── Customer Support ───────────────────────────────────────── */}
+        <div className="relative">
           <button
-            onClick={() => setShowSupportPopup(!showSupportPopup)}
+            onClick={() => toggle("support")}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
-              showSupportPopup
+              openPopup === "support"
                 ? "bg-gray-200/60 text-gray-700"
                 : "text-gray-700 hover:bg-gray-100"
             }`}
@@ -208,8 +205,7 @@ export default function Sidebar({
             )}
           </button>
 
-          {/* Support Popup */}
-          {showSupportPopup && sidebarOpen && (
+          {openPopup === "support" && sidebarOpen && (
             <div className="absolute left-full ml-2 bottom-0 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
@@ -217,15 +213,13 @@ export default function Sidebar({
                     Contact Support
                   </h3>
                   <button
-                    onClick={() => setShowSupportPopup(false)}
+                    onClick={() => setOpenPopup(null)}
                     className="text-gray-400 hover:text-gray-600"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-
-                <div className="space-y-4">
-                  {/* Customer Support */}
+                <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -233,22 +227,20 @@ export default function Sidebar({
                       </div>
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          Customer Support
+                          Fahad Mulla
                         </div>
                         <div className="text-sm text-gray-600">
-                          (917) 274-7648
+                          +1 (551) 229-6466
                         </div>
                       </div>
                     </div>
                     <a
-                      href="tel:9172747648"
+                      href="tel:+15512296466"
                       className="p-2 hover:bg-white rounded-full transition-colors"
                     >
                       <Phone className="w-5 h-5 text-green-700" />
                     </a>
                   </div>
-
-                  {/* Zee Rabushaj */}
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
@@ -256,15 +248,15 @@ export default function Sidebar({
                       </div>
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          XYZ
+                          Fahad Mulla
                         </div>
                         <div className="text-sm text-gray-600">
-                          (646) 8889881
+                          +1 (551) 229-6466
                         </div>
                       </div>
                     </div>
                     <a
-                      href="tel:6466179881"
+                      href="tel:+15512296466"
                       className="p-2 hover:bg-white rounded-full transition-colors"
                     >
                       <Phone className="w-5 h-5 text-gray-600" />
@@ -276,17 +268,13 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Account Name with Dropdown */}
-        <div className="relative" ref={accountRef}>
+        {/* ── Account Name ───────────────────────────────────────────── */}
+        <div className="relative">
           <button
-            onClick={() => setShowAccountDropdown(!showAccountDropdown)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 border-2 ${
-              showAccountDropdown
-                ? "bg-gray-50 border-gray-300 text-gray-900"
-                : "border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300"
-            }`}
+            onClick={() => toggle("account")}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200"
           >
-            <User className="w-5 h-5" />
+            <User className="w-5 h-5 text-gray-700 shrink-0" />
             {sidebarOpen && (
               <>
                 <div className="flex-1 text-left">
@@ -297,66 +285,93 @@ export default function Sidebar({
                     {accountName}
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 text-gray-400" />
               </>
             )}
           </button>
 
-          {/* Account Dropdown */}
-          {showAccountDropdown && sidebarOpen && (
-            <div className="absolute left-full ml-2 bottom-0 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
-              <div className="p-2">
-                {/* Account Header */}
-                {/* <div className="px-3 py-2 mb-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="text-sm font-semibold text-gray-900">MedRx.co</div>
-                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div> */}
-
-                {/* Settings */}
-                <Link
-                  href="/settings"
-                  className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                  onClick={() => setShowAccountDropdown(false)}
-                >
-                  <Settings className="w-4 h-4" />
-                  <span>Settings</span>
-                </Link>
-
-                {/* Logout */}
-                <button
-                  onClick={() => {
-                    setShowAccountDropdown(false);
-                    handleLogout();
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                >
+          {openPopup === "account" && sidebarOpen && (
+            <div className="absolute left-full ml-2 bottom-0 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-3">
+              <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-gray-100">
+                <span className="text-sm font-semibold text-gray-900">
+                  United Drugs Pharmacy
+                </span>
+                <div className="w-6 h-6 rounded-full border-2 border-green-600 flex items-center justify-center shrink-0 ml-2">
                   <svg
-                    className="w-4 h-4"
+                    className="w-3.5 h-3.5 text-green-600"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    strokeWidth={3}
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                      d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  <span>Logout</span>
-                </button>
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Hard Refresh */}
+        {/* ── Settings ───────────────────────────────────────────────── */}
+        <div className="relative">
+          <button
+            onClick={() => toggle("settings")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
+              openPopup === "settings"
+                ? "bg-gray-100 text-gray-900"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <Settings className="w-5 h-5 shrink-0" />
+            {sidebarOpen && (
+              <>
+                <span className="flex-1 text-left">Settings</span>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </>
+            )}
+          </button>
+
+          {openPopup === "settings" && sidebarOpen && (
+            <div className="absolute left-full ml-2 bottom-0 w-52 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+              <Link
+                href="/settings"
+                className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={() => setOpenPopup(null)}
+              >
+                <Settings className="w-4 h-4" />
+                <span className="font-medium">Settings</span>
+              </Link>
+              <button
+                onClick={() => {
+                  setOpenPopup(null);
+                  handleLogout();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                <span className="font-medium">Logout</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ── Hard Refresh ───────────────────────────────────────────── */}
         <button
           onClick={() => window.location.reload()}
           className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-semibold transition-all duration-200"
@@ -364,6 +379,16 @@ export default function Sidebar({
           <RefreshCw className="w-5 h-5" />
           {sidebarOpen && <span>Hard Refresh</span>}
         </button>
+
+        {/* ── Version ───────────────────────────────────────────── */}
+        <div className="flex items-center gap-3 px-4 py-2">
+          <GitBranch className="w-5 h-5 text-gray-900 shrink-0" />
+          {sidebarOpen && (
+            <span className="text-sm font-semibold text-gray-900">
+              Version 1.0
+            </span>
+          )}
+        </div>
       </div>
     </aside>
   );

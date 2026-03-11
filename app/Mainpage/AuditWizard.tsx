@@ -23,8 +23,14 @@ const steps = [
   { id: 4, label: "UPLOAD", sublabel: "Supplier" },
 ];
 
-const AuditWizard = () => {
-  const [currentStep, setCurrentStep] = useState(1);
+interface AuditWizardProps {
+  initialStep?: number;
+  initialAuditId?: string | null;
+}
+
+const AuditWizard = ({ initialStep = 1, initialAuditId = null }: AuditWizardProps) => {
+  const [currentStep, setCurrentStep] = useState(initialStep);
+  const [auditId, setAuditId] = useState<string | null>(initialAuditId);
 
   // Step 1 state
   const [auditName, setAuditName] = useState("");
