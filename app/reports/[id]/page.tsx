@@ -1905,7 +1905,7 @@ export default function InventoryReportPage() {
           shortagePdmi: Number(row.total_ordered ?? 0) - Number(row.pdmi ?? 0),
         }));
 
-        const sortedByBilled = [...normalized].sort((a, b) => b.totalBilled - a.totalBilled);
+        const sortedByBilled = [...normalized].sort((a, b) => b.amount - a.amount);
         sortedByBilled.forEach((row, index) => {
           row.rank = index + 1;
         });
@@ -1993,29 +1993,29 @@ export default function InventoryReportPage() {
 
     if (qtyType === "PKG SIZE") {
       const newTotalOrdered = row.totalOrdered * pkg;
-      const sH    = newTotalOrdered - row.horizon;
-      const sEx   = newTotalOrdered - row.express;
-      const sCvs  = newTotalOrdered - row.cvsCaremark;
-      const sOpt  = newTotalOrdered - row.optumrx;
-      const sHum  = newTotalOrdered - row.humana;
-      const sNj   = newTotalOrdered - row.njMedicaid;
-      const sSsc  = newTotalOrdered - row.ssc;
-      const sPdmi = newTotalOrdered - row.pdmi;
+     const sH    = Number((newTotalOrdered - row.horizon).toFixed(2));
+const sEx   = Number((newTotalOrdered - row.express).toFixed(2));
+const sCvs  = Number((newTotalOrdered - row.cvsCaremark).toFixed(2));
+const sOpt  = Number((newTotalOrdered - row.optumrx).toFixed(2));
+const sHum  = Number((newTotalOrdered - row.humana).toFixed(2));
+const sNj   = Number((newTotalOrdered - row.njMedicaid).toFixed(2));
+const sSsc  = Number((newTotalOrdered - row.ssc).toFixed(2));
+const sPdmi = Number((newTotalOrdered - row.pdmi).toFixed(2));
       const minShortage = Math.min(sH, sEx, sCvs, sOpt, sHum, sNj, sSsc, sPdmi);
       return {
-        ...row,
-        totalOrdered:        newTotalOrdered,
-        totalShortage:       newTotalOrdered - row.totalBilled,
-        highestShortage:     minShortage < 0 ? minShortage : 0,  // ← ADDED
-        shortageHorizon:     sH,
-        shortageExpress:     sEx,
-        shortageCvsCaremark: sCvs,
-        shortageOptumrx:     sOpt,
-        shortageHumana:      sHum,
-        shortageNjMedicaid:  sNj,
-        shortageSsc:         sSsc,
-        shortagePdmi:        sPdmi,
-      };
+  ...row,
+  totalOrdered:        Number(newTotalOrdered.toFixed(2)),
+  totalShortage:       Number((newTotalOrdered - row.totalBilled).toFixed(2)),
+  highestShortage:     Number((minShortage < 0 ? minShortage : 0).toFixed(2)),
+  shortageHorizon:     sH,
+  shortageExpress:     sEx,
+  shortageCvsCaremark: sCvs,
+  shortageOptumrx:     sOpt,
+  shortageHumana:      sHum,
+  shortageNjMedicaid:  sNj,
+  shortageSsc:         sSsc,
+  shortagePdmi:        sPdmi,
+};
     }
 
     if (qtyType === "UNIT") {
@@ -2028,37 +2028,37 @@ export default function InventoryReportPage() {
       const newNjMedicaid   = Number((row.njMedicaid   / pkg).toFixed(2));
       const newSsc          = Number((row.ssc          / pkg).toFixed(2));
       const newPdmi         = Number((row.pdmi         / pkg).toFixed(2));
-      const sH    = row.totalOrdered - newHorizon;
-      const sEx   = row.totalOrdered - newExpress;
-      const sCvs  = row.totalOrdered - newCvsCaremark;
-      const sOpt  = row.totalOrdered - newOptumrx;
-      const sHum  = row.totalOrdered - newHumana;
-      const sNj   = row.totalOrdered - newNjMedicaid;
-      const sSsc  = row.totalOrdered - newSsc;
-      const sPdmi = row.totalOrdered - newPdmi;
+      const sH    = Number((row.totalOrdered - newHorizon).toFixed(2));
+const sEx   = Number((row.totalOrdered - newExpress).toFixed(2));
+const sCvs  = Number((row.totalOrdered - newCvsCaremark).toFixed(2));
+const sOpt  = Number((row.totalOrdered - newOptumrx).toFixed(2));
+const sHum  = Number((row.totalOrdered - newHumana).toFixed(2));
+const sNj   = Number((row.totalOrdered - newNjMedicaid).toFixed(2));
+const sSsc  = Number((row.totalOrdered - newSsc).toFixed(2));
+const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
       const minShortage = Math.min(sH, sEx, sCvs, sOpt, sHum, sNj, sSsc, sPdmi);
       return {
-        ...row,
-        totalBilled:         newTotalBilled,
-        totalShortage:       row.totalOrdered - newTotalBilled,
-        highestShortage:     minShortage < 0 ? minShortage : 0,  // ← ADDED
-        horizon:             newHorizon,
-        shortageHorizon:     sH,
-        express:             newExpress,
-        shortageExpress:     sEx,
-        cvsCaremark:         newCvsCaremark,
-        shortageCvsCaremark: sCvs,
-        optumrx:             newOptumrx,
-        shortageOptumrx:     sOpt,
-        humana:              newHumana,
-        shortageHumana:      sHum,
-        njMedicaid:          newNjMedicaid,
-        shortageNjMedicaid:  sNj,
-        ssc:                 newSsc,
-        shortageSsc:         sSsc,
-        pdmi:                newPdmi,
-        shortagePdmi:        sPdmi,
-      };
+  ...row,
+  totalBilled:         newTotalBilled,
+  totalShortage:       Number((row.totalOrdered - newTotalBilled).toFixed(2)),
+  highestShortage:     Number((minShortage < 0 ? minShortage : 0).toFixed(2)),
+  horizon:             newHorizon,
+  shortageHorizon:     sH,
+  express:             newExpress,
+  shortageExpress:     sEx,
+  cvsCaremark:         newCvsCaremark,
+  shortageCvsCaremark: sCvs,
+  optumrx:             newOptumrx,
+  shortageOptumrx:     sOpt,
+  humana:              newHumana,
+  shortageHumana:      sHum,
+  njMedicaid:          newNjMedicaid,
+  shortageNjMedicaid:  sNj,
+  ssc:                 newSsc,
+  shortageSsc:         sSsc,
+  pdmi:                newPdmi,
+  shortagePdmi:        sPdmi,
+};
     }
 
     return row;

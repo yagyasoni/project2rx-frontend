@@ -268,12 +268,7 @@ export default function Sidebar({
                 </svg>
                 <span className="font-medium">Logout</span>
               </button>
-
-              {/* ── Version tag ── */}
-              <div className="flex items-center gap-3 px-4 py-2.5 border-t border-gray-100 bg-gray-50">
-                <GitBranch className="w-4 h-4 text-gray-400 shrink-0" />
-                <span className="text-sm font-medium text-gray-400">Version 1.5</span>
-              </div>
+              
             </div>
           )}
         </div>
@@ -291,7 +286,7 @@ export default function Sidebar({
         <div className="flex items-center gap-3 px-4 py-2">
           <GitBranch className="w-5 h-5 text-gray-900 shrink-0" />
           {sidebarOpen && (
-            <span className="text-sm font-semibold text-gray-900">Version 1.5</span>
+            <span className="text-sm font-semibold text-gray-900">Version 1.0</span>
           )}
         </div>
       </div>
