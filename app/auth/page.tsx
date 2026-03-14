@@ -19,8 +19,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const AuthPage = () => {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -29,6 +31,7 @@ const AuthPage = () => {
   const [showOtp, setShowOtp] = useState(false);
   const [otp, setOtp] = useState("");
   const [forgot, setForgot] = useState(false);
+  const [phone, setPhone] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +47,7 @@ const AuthPage = () => {
         localStorage.setItem("refreshToken", res?.data?.refreshToken);
         alert("successfully logged in");
 
-        window.location.href = "/Mainpage";
+        router.push("/Mainpage");
       } catch (err) {
         console.error("Login failed:", err);
       }
@@ -53,9 +56,11 @@ const AuthPage = () => {
         const res = await axios.post("http://localhost:5000/auth/register", {
           name,
           email,
+          phone,
           password,
         });
         console.log(res?.data);
+        localStorage.setItem("userId", res?.data?.user?.id);
         alert(res?.data?.message);
         setShowOtp(true);
         setIsLogin(true);
@@ -74,7 +79,7 @@ const AuthPage = () => {
       console.log(res?.data);
 
       alert(res?.data?.message);
-      // window.location.href = "/Mainpage";
+      router.push("/info-page");
     } catch (err) {
       console.error("OTP verification failed:", err);
     }
@@ -292,6 +297,25 @@ const AuthPage = () => {
                 className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
               />
             </div>
+
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label
+                  htmlFor="phone"
+                  className="text-sm text-muted-foreground"
+                >
+                  Phone No.
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="123-456-7890"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
+                />
+              </div>
+            )}
 
             <div className="space-y-0">
               <div className="flex items-center justify-between">

@@ -19,7 +19,7 @@ const navItems = [
   { id: 1, title: "Suppliers", icon: Package },
   { id: 2, title: "PMS", icon: SquareStack },
   { id: 3, title: "Users", icon: Users },
-  { id: 4, title: "Mailing Info", icon: Mail },
+  // { id: 4, title: "Mailing Info", icon: Mail },
 ];
 
 const SettingsLayout = () => {

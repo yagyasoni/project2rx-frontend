@@ -19,6 +19,7 @@ import {
   X,
   GitBranch,
 } from "lucide-react";
+import axios from "axios";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -35,7 +36,58 @@ export default function Sidebar({
   activePanel,
   setActivePanel,
 }: SidebarProps) {
+  // useEffect(() => {
+  //   const user = async () => {
+  //     try {
+  //       const token = localStorage.getItem("accessToken");
+
+  //       const res = await axios.get(
+  //         "http://localhost:5000/auth/pharmacy-details",
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         },
+  //       );
+  //       console.log(res.data);
+  //       setAccountName(res?.data?.pharmacy?.pharmacy_name || "Account Name");
+  //     } catch (err) {
+  //       console.log("error");
+  //       alert("Failed to fetch user info");
+  //     }
+  //   };
+  //   user();
+  // }, []);
+
   const pathname = usePathname();
+  const [showSupportPopup, setShowSupportPopup] = useState(false);
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const [accountName, setAccountName] = useState("...");
+  const supportRef = useRef<HTMLDivElement>(null);
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const pharmacy = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+
+        const res = await axios.get(
+          "http://localhost:5000/auth/pharmacy-details",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        console.log(res.data);
+        setAccountName(res?.data?.pharmacy?.pharmacy_name || "Account Name");
+      } catch (err) {
+        console.log("error");
+        alert("Failed to fetch user info");
+      }
+    };
+    pharmacy();
+  }, []);
 
   const [openPopup, setOpenPopup] = useState<Popup>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -161,8 +213,13 @@ export default function Sidebar({
             <div className="absolute left-full ml-2 bottom-0 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">Contact Support</h3>
-                  <button onClick={() => setOpenPopup(null)} className="text-gray-400 hover:text-gray-600">
+                  <h3 className="font-semibold text-gray-900">
+                    Contact Support
+                  </h3>
+                  <button
+                    onClick={() => setOpenPopup(null)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -173,11 +230,18 @@ export default function Sidebar({
                         <LifeBuoy className="w-5 h-5 text-green-700" />
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-900">Fahad Mulla</div>
-                        <div className="text-sm text-gray-600">+1 (551) 229-6466</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          Fahad Mulla
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          +1 (551) 229-6466
+                        </div>
                       </div>
                     </div>
-                    <a href="tel:+15512296466" className="p-2 hover:bg-white rounded-full transition-colors">
+                    <a
+                      href="tel:+15512296466"
+                      className="p-2 hover:bg-white rounded-full transition-colors"
+                    >
                       <Phone className="w-5 h-5 text-green-700" />
                     </a>
                   </div>
@@ -187,11 +251,18 @@ export default function Sidebar({
                         <User className="w-5 h-5 text-gray-600" />
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-900">Fahad Mulla</div>
-                        <div className="text-sm text-gray-600">+1 (551) 229-6466</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          Fahad Mulla
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          +1 (551) 229-6466
+                        </div>
                       </div>
                     </div>
-                    <a href="tel:+15512296466" className="p-2 hover:bg-white rounded-full transition-colors">
+                    <a
+                      href="tel:+15512296466"
+                      className="p-2 hover:bg-white rounded-full transition-colors"
+                    >
                       <Phone className="w-5 h-5 text-gray-600" />
                     </a>
                   </div>
@@ -212,9 +283,13 @@ export default function Sidebar({
             <User className="w-5 h-5 text-gray-700 shrink-0" />
             {sidebarOpen && (
               <>
-                <div className="flex-1 min-w-0 text-left">
-                  <div className="text-sm font-semibold text-gray-900">Account Name</div>
-                  <div className="text-xs text-gray-500 truncate">United Drugs Pharma...</div>
+                <div className="flex-1 text-left">
+                  <div className="text-sm font-semibold text-gray-900">
+                    Account Name
+                  </div>
+                  <div className="text-xs text-gray-500 truncate">
+                    {accountName}
+                  </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
               </>
@@ -224,10 +299,22 @@ export default function Sidebar({
           {openPopup === "account" && sidebarOpen && (
             <div className="absolute left-full ml-2 bottom-0 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-3">
               <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-gray-100">
-                <span className="text-sm font-semibold text-gray-900">United Drugs Pharmacy</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  United Drugs Pharmacy
+                </span>
                 <div className="w-6 h-6 rounded-full border-2 border-green-600 flex items-center justify-center shrink-0 ml-2">
-                  <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-3.5 h-3.5 text-green-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
               </div>
@@ -267,15 +354,27 @@ export default function Sidebar({
                 <span className="font-medium">Settings</span>
               </Link>
               <button
-                onClick={() => { setOpenPopup(null); handleLogout(); }}
+                onClick={() => {
+                  setOpenPopup(null);
+                  handleLogout();
+                }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
                 </svg>
                 <span className="font-medium">Logout</span>
               </button>
-              
             </div>
           )}
         </div>
@@ -295,7 +394,9 @@ export default function Sidebar({
         <div className={`flex items-center gap-3 py-2 ${sidebarOpen ? "px-4" : "px-0 justify-center"}`}>
           <GitBranch className="w-5 h-5 text-gray-900 shrink-0" />
           {sidebarOpen && (
-            <span className="text-sm font-semibold text-gray-900">Version 1.0</span>
+            <span className="text-sm font-semibold text-gray-900">
+              Version 1.0
+            </span>
           )}
         </div>
       </div>
