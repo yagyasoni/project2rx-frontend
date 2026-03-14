@@ -36,7 +36,12 @@ export default function ReportsPage() {
     wholesaler_end_date: "",
   });
 
-  const pharmacyName = localStorage.getItem("pharmacyName") || "Loading...";
+  const [pharmacyName, setPharmacyName] = useState("Loading...");
+
+  useEffect(() => {
+    const name = localStorage.getItem("pharmacyName") || "Loading...";
+    setPharmacyName(name);
+  }, []);
 
   const getFilteredReports = () => {
     switch (activeFilter) {
@@ -194,16 +199,15 @@ export default function ReportsPage() {
                   <div className="w-14 h-14 bg-gray-100 border border-gray-200 rounded-xl flex items-center justify-center">
                     <Layers className="w-7 h-7 text-gray-700" />
                   </div>
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-                      REPORTS
-                      <RotateCw className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
-                    </h1>
-                    <p className="text-sm text-gray-500">
-                      {pharmacyName} Inventory Reports
-                    </p>
-                  </div>
+                  <div></div>
                 </div>
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                  REPORTS
+                  <RotateCw className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
+                </h1>
+                <p className="text-sm text-gray-500">
+                  {pharmacyName} Inventory Reports
+                </p>
               </div>
 
               {/* Tabs */}
