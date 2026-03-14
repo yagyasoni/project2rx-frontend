@@ -89,9 +89,8 @@ export default function Sidebar({
   const isActive = (path: string) => pathname === path;
 
   const navClass = (path: string) =>
-    `w-full flex items-center ${sidebarOpen ? "px-4" : "px-2"} py-3 rounded-lg font-semibold transition-all duration-200 ${
-      sidebarOpen ? "justify-start" : "justify-center"
-    }
+    `w-full flex items-center gap-3 py-3 rounded-lg font-semibold transition-all duration-200
+     ${sidebarOpen ? "px-4" : "px-0 justify-center"}
      ${
        isActive(path)
          ? "bg-gray-200/60 text-gray-700"
@@ -115,7 +114,7 @@ export default function Sidebar({
   return (
     <aside
       className={`${
-        sidebarOpen ? "w-64" : "w-20 "
+        sidebarOpen ? "w-65" : "w-[72px]"
       } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col relative`}
     >
       {/* HEADER */}
@@ -128,7 +127,7 @@ export default function Sidebar({
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1 hover:bg-gray-100 rounded"
+            className="p-1 hover:bg-gray-100 rounded translate-x-2"
           >
             {sidebarOpen ? (
               <ChevronLeft className="w-5 h-5 text-gray-600" />
@@ -175,12 +174,14 @@ export default function Sidebar({
       </nav>
 
       {/* BOTTOM */}
-      <div className="border-t border-gray-200 p-4 space-y-2" ref={bottomRef}>
+      <div className="border-t border-gray-200 p-4 space-y-2 " ref={bottomRef}>
         {/* ── Customer Support ───────────────────────────────────────── */}
         <div className="relative">
           <button
             onClick={() => toggle("support")}
-            className={`w-full flex items-center ${sidebarOpen ? "px-4" : "px-2 justify-center"} py-3 rounded-lg font-semibold transition-all duration-200 ${
+            className={`w-full flex items-center gap-3 py-3 rounded-lg font-semibold transition-all duration-200 ${
+              sidebarOpen ? "px-4" : "px-0 justify-center"
+            } ${
               openPopup === "support"
                 ? "bg-gray-200/60 text-gray-700"
                 : "text-gray-700 hover:bg-gray-100"
@@ -262,7 +263,9 @@ export default function Sidebar({
         <div className="relative">
           <button
             onClick={() => toggle("account")}
-            className={`w-full flex items-center ${sidebarOpen ? "px-4" : "px-2 justify-center"} py-3 rounded-lg border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200`}
+            className={`w-full flex items-center gap-3 py-3 rounded-lg border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ${
+              sidebarOpen ? "px-3" : "px-0 justify-center"
+            }`}
           >
             <User className="w-5 h-5 text-gray-700 shrink-0" />
             {sidebarOpen && (
@@ -310,7 +313,9 @@ export default function Sidebar({
         <div className="relative">
           <button
             onClick={() => toggle("settings")}
-            className={`w-full flex items-center ${sidebarOpen ? "px-4" : "px-2 justify-center"} py-3 rounded-lg font-semibold transition-all duration-200 ${
+            className={`w-full flex items-center gap-3 py-3 rounded-lg font-semibold transition-all duration-200 ${
+              sidebarOpen ? "px-4" : "px-0 justify-center"
+            } ${
               openPopup === "settings"
                 ? "bg-gray-100 text-gray-900"
                 : "text-gray-700 hover:bg-gray-100"
@@ -364,7 +369,9 @@ export default function Sidebar({
         {/* ── Hard Refresh ───────────────────────────────────────────── */}
         <button
           onClick={() => window.location.reload()}
-          className={`w-full flex items-center ${sidebarOpen ? "px-4" : "px-2 justify-center"} py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-semibold transition-all duration-200`}
+          className={`w-full flex items-center gap-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-semibold transition-all duration-200 ${
+            sidebarOpen ? "px-4" : "px-0 justify-center"
+          }`}
         >
           <RefreshCw className="w-5 h-5 shrink-0" />
           {sidebarOpen && <span className="ml-3">Hard Refresh</span>}
@@ -372,7 +379,7 @@ export default function Sidebar({
 
         {/* ── Version ───────────────────────────────────────────── */}
         <div
-          className={`flex items-center ${sidebarOpen ? "px-4" : "px-2 justify-center"} py-2`}
+          className={`flex items-center gap-3 py-2 ${sidebarOpen ? "px-4" : "px-0 justify-center"}`}
         >
           <GitBranch className="w-5 h-5 text-gray-900 shrink-0" />
           {sidebarOpen && (

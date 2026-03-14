@@ -143,6 +143,8 @@
 // }
 
 // export default function InventoryReportPage() {
+//   const [loadingProgress, setLoadingProgress] = useState(0);
+// const [loadingDone, setLoadingDone] = useState(false);
 //   const [inventoryData, setInventoryData] = useState<InventoryRow[]>([]);
 //   const [loading, setLoading] = useState(true);
 //   const [openExportModal, setOpenExportModal] = useState(false);
@@ -203,8 +205,17 @@
 
 //   useEffect(() => {
 //     const loadReport = async () => {
+//       let progressInterval: ReturnType<typeof setInterval> | null = null;
 //       try {
 //         setLoading(true);
+//         setLoadingProgress(0);
+//         setLoadingDone(false);
+//         progressInterval = setInterval(() => {
+//   setLoadingProgress((prev) => {
+//     if (prev >= 90) { clearInterval(progressInterval); return 90; }
+//     return prev + Math.random() * 8 + 2;
+//   });
+// }, 200);
 
 //         const res = await fetch(`http://localhost:5000/api/audits/${auditId}/report`);
 //         const json = await res.json();
@@ -218,7 +229,7 @@
 //         const normalized = data.map((row: any, index: number) => ({
 //           id: row.id ?? index + 1,
 //           ndc: row.ndc ?? "",
-//           drugName: (row.drug_name ?? row.drugName ?? "").replace(/\s*\([\d-]+\)\s*$/, "").trim(),
+//           drugName: (row.drug_name ?? row.drugName ?? "").replace(/\s*\(\d{5}-\d{4}-\d{2}\).*$/, "").trim(),
 //           rank: 0,
 //           pkgSize: row.package_size ?? 0,
 //           unit: row.package_size > 0
@@ -250,7 +261,7 @@
 //           shortagePdmi: Number(row.total_ordered ?? 0) - Number(row.pdmi ?? 0),
 //         }));
 
-//         const sortedByBilled = [...normalized].sort((a, b) => b.totalBilled - a.totalBilled);
+//         const sortedByBilled = [...normalized].sort((a, b) => b.amount - a.amount);
 //         sortedByBilled.forEach((row, index) => {
 //           row.rank = index + 1;
 //         });
@@ -279,7 +290,13 @@
 //         console.error("Failed to load report", err);
 //         setInventoryData([]);
 //       } finally {
-//         setLoading(false);
+//         if (progressInterval) clearInterval(progressInterval);
+// setLoadingProgress(100);
+// // Small delay so user sees 100% before table appears
+// setTimeout(() => {
+//   setLoadingDone(true);
+//   setTimeout(() => setLoading(false), 400); // fade out
+// }, 500);
 //       }
 //     };
 
@@ -328,60 +345,82 @@
 //     shortagePdmi: true,
 //     optumrx: true,
 //     shortageOptumrx: true,
+//     humana: true,           // ← ADDED
+//     shortageHumana: true,
 //   });
 
 //   // ─── applyQtyMode MUST be defined before paginatedData ───────────────────────
-//   const applyQtyMode = (row: InventoryRow): InventoryRow => {
+//  const applyQtyMode = (row: InventoryRow): InventoryRow => {
 //     const pkg = row.pkgSize || 1;
 
 //     if (qtyType === "PKG SIZE") {
 //       const newTotalOrdered = row.totalOrdered * pkg;
+//      const sH    = Number((newTotalOrdered - row.horizon).toFixed(2));
+// const sEx   = Number((newTotalOrdered - row.express).toFixed(2));
+// const sCvs  = Number((newTotalOrdered - row.cvsCaremark).toFixed(2));
+// const sOpt  = Number((newTotalOrdered - row.optumrx).toFixed(2));
+// const sHum  = Number((newTotalOrdered - row.humana).toFixed(2));
+// const sNj   = Number((newTotalOrdered - row.njMedicaid).toFixed(2));
+// const sSsc  = Number((newTotalOrdered - row.ssc).toFixed(2));
+// const sPdmi = Number((newTotalOrdered - row.pdmi).toFixed(2));
+//       const minShortage = Math.min(sH, sEx, sCvs, sOpt, sHum, sNj, sSsc, sPdmi);
 //       return {
-//         ...row,
-//         totalOrdered: newTotalOrdered,
-//         totalShortage: newTotalOrdered - row.totalBilled,
-//         shortageHorizon: newTotalOrdered - row.horizon,
-//         shortageExpress: newTotalOrdered - row.express,
-//         shortageCvsCaremark: newTotalOrdered - row.cvsCaremark,
-//         shortageOptumrx: newTotalOrdered - row.optumrx,
-//         shortageHumana: newTotalOrdered - row.humana,
-//         shortageNjMedicaid: newTotalOrdered - row.njMedicaid,
-//         shortageSsc: newTotalOrdered - row.ssc,
-//         shortagePdmi: newTotalOrdered - row.pdmi,
-//       };
+//   ...row,
+//   totalOrdered:        Number(newTotalOrdered.toFixed(2)),
+//   totalShortage:       Number((newTotalOrdered - row.totalBilled).toFixed(2)),
+//   highestShortage:     Number((minShortage < 0 ? minShortage : 0).toFixed(2)),
+//   shortageHorizon:     sH,
+//   shortageExpress:     sEx,
+//   shortageCvsCaremark: sCvs,
+//   shortageOptumrx:     sOpt,
+//   shortageHumana:      sHum,
+//   shortageNjMedicaid:  sNj,
+//   shortageSsc:         sSsc,
+//   shortagePdmi:        sPdmi,
+// };
 //     }
 
 //     if (qtyType === "UNIT") {
-//       const newTotalBilled = Number((row.totalBilled / pkg).toFixed(2));
-//       const newHorizon = Number((row.horizon / pkg).toFixed(2));
-//       const newExpress = Number((row.express / pkg).toFixed(2));
-//       const newCvsCaremark = Number((row.cvsCaremark / pkg).toFixed(2));
-//       const newOptumrx = Number((row.optumrx / pkg).toFixed(2));
-//       const newHumana = Number((row.humana / pkg).toFixed(2));
-//       const newNjMedicaid = Number((row.njMedicaid / pkg).toFixed(2));
-//       const newSsc = Number((row.ssc / pkg).toFixed(2));
-//       const newPdmi = Number((row.pdmi / pkg).toFixed(2));
+//       const newTotalBilled  = Number((row.totalBilled  / pkg).toFixed(2));
+//       const newHorizon      = Number((row.horizon      / pkg).toFixed(2));
+//       const newExpress      = Number((row.express      / pkg).toFixed(2));
+//       const newCvsCaremark  = Number((row.cvsCaremark  / pkg).toFixed(2));
+//       const newOptumrx      = Number((row.optumrx      / pkg).toFixed(2));
+//       const newHumana       = Number((row.humana       / pkg).toFixed(2));
+//       const newNjMedicaid   = Number((row.njMedicaid   / pkg).toFixed(2));
+//       const newSsc          = Number((row.ssc          / pkg).toFixed(2));
+//       const newPdmi         = Number((row.pdmi         / pkg).toFixed(2));
+//       const sH    = Number((row.totalOrdered - newHorizon).toFixed(2));
+// const sEx   = Number((row.totalOrdered - newExpress).toFixed(2));
+// const sCvs  = Number((row.totalOrdered - newCvsCaremark).toFixed(2));
+// const sOpt  = Number((row.totalOrdered - newOptumrx).toFixed(2));
+// const sHum  = Number((row.totalOrdered - newHumana).toFixed(2));
+// const sNj   = Number((row.totalOrdered - newNjMedicaid).toFixed(2));
+// const sSsc  = Number((row.totalOrdered - newSsc).toFixed(2));
+// const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
+//       const minShortage = Math.min(sH, sEx, sCvs, sOpt, sHum, sNj, sSsc, sPdmi);
 //       return {
-//         ...row,
-//         totalBilled: newTotalBilled,
-//         totalShortage: row.totalOrdered - newTotalBilled,
-//         horizon: newHorizon,
-//         shortageHorizon: row.totalOrdered - newHorizon,
-//         express: newExpress,
-//         shortageExpress: row.totalOrdered - newExpress,
-//         cvsCaremark: newCvsCaremark,
-//         shortageCvsCaremark: row.totalOrdered - newCvsCaremark,
-//         optumrx: newOptumrx,
-//         shortageOptumrx: row.totalOrdered - newOptumrx,
-//         humana: newHumana,
-//         shortageHumana: row.totalOrdered - newHumana,
-//         njMedicaid: newNjMedicaid,
-//         shortageNjMedicaid: row.totalOrdered - newNjMedicaid,
-//         ssc: newSsc,
-//         shortageSsc: row.totalOrdered - newSsc,
-//         pdmi: newPdmi,
-//         shortagePdmi: row.totalOrdered - newPdmi,
-//       };
+//   ...row,
+//   totalBilled:         newTotalBilled,
+//   totalShortage:       Number((row.totalOrdered - newTotalBilled).toFixed(2)),
+//   highestShortage:     Number((minShortage < 0 ? minShortage : 0).toFixed(2)),
+//   horizon:             newHorizon,
+//   shortageHorizon:     sH,
+//   express:             newExpress,
+//   shortageExpress:     sEx,
+//   cvsCaremark:         newCvsCaremark,
+//   shortageCvsCaremark: sCvs,
+//   optumrx:             newOptumrx,
+//   shortageOptumrx:     sOpt,
+//   humana:              newHumana,
+//   shortageHumana:      sHum,
+//   njMedicaid:          newNjMedicaid,
+//   shortageNjMedicaid:  sNj,
+//   ssc:                 newSsc,
+//   shortageSsc:         sSsc,
+//   pdmi:                newPdmi,
+//   shortagePdmi:        sPdmi,
+// };
 //     }
 
 //     return row;
@@ -700,13 +739,57 @@
 //         </div>
 
 //         {loading && (
-//           <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-//             <div className="flex flex-col items-center gap-3">
-//               <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-600" />
-//               <p className="text-sm font-medium text-slate-500">Loading report...</p>
-//             </div>
-//           </div>
-//         )}
+//   <div
+//     className={`absolute inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-sm transition-opacity duration-400 ${
+//       loadingDone ? "opacity-0 pointer-events-none" : "opacity-100"
+//     }`}
+//   >
+//     <div className="flex flex-col items-center gap-6 w-72">
+//       {/* Icon */}
+//       <div className="relative">
+//         <div className="h-16 w-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm">
+//           <svg className="h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+//               d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+//             />
+//           </svg>
+//         </div>
+//         {/* Spinning ring */}
+//         <div className="absolute -inset-1 rounded-[18px] border-2 border-transparent border-t-emerald-500 border-r-emerald-300 animate-spin" />
+//       </div>
+
+//       {/* Text */}
+//       <div className="text-center space-y-1">
+//         <p className="text-sm font-semibold text-slate-700 tracking-wide">
+//           {loadingProgress < 30
+//             ? "Fetching inventory data..."
+//             : loadingProgress < 60
+//             ? "Processing records..."
+//             : loadingProgress < 90
+//             ? "Calculating analytics..."
+//             : "Finalizing report..."}
+//         </p>
+//         <p className="text-xs text-slate-400">Please wait a moment</p>
+//       </div>
+
+//       {/* Progress bar */}
+//       <div className="w-full space-y-2">
+//         <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+//           <div
+//             className="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-300 ease-out"
+//             style={{ width: `${Math.min(loadingProgress, 100)}%` }}
+//           />
+//         </div>
+//         <div className="flex items-center justify-between">
+//           <span className="text-xs text-slate-400">Loading report</span>
+//           <span className="text-xs font-bold text-emerald-600 tabular-nums">
+//             {Math.min(Math.round(loadingProgress), 100)}%
+//           </span>
+//         </div>
+//       </div>
+//     </div>
+//   </div>
+// )}
 
 //         <div className="flex-1 min-w-0 flex flex-col overflow-hidden transition-all duration-300 ease-in-out z-10">
 //           {/* Header */}
@@ -901,7 +984,7 @@
 //                 {/* QTY Type */}
 //                 <DropdownMenu open={openQtyDropdown} onOpenChange={setOpenQtyDropdown}>
 //                   <DropdownMenuTrigger asChild>
-//                     <Button variant="outline" size="sm" className="gap-2 border-slate-300 -translate-x-3">
+//                     <Button variant="outline" size="sm" className="gap-2 border-slate-300 translate-x-2">
 //                       QTY
 //                       <ChevronDown className="h-3.5 w-3.5" />
 //                     </Button>
@@ -1304,6 +1387,25 @@
 //                         </HeaderCell>
 //                       </TableHead>
 //                     )}
+
+//                     {columnFilters.humana && (
+//                       <TableHead className="sticky top-0 z-50 bg-white w-[130px] min-w-[130px] border-r border-b border-slate-200 h-[52px] px-3">
+//                         <HeaderCell sortKey="humana" sortRules={sortRules} onSort={handleSort}>
+//                           <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3" />
+//                           <span className="truncate whitespace-nowrap">Humana</span>
+//                         </HeaderCell>
+//                       </TableHead>
+//                     )}
+
+//                     {columnFilters.shortageHumana && (
+//                       <TableHead className="sticky top-0 z-50 bg-white w-[160px] min-w-[160px] border-r border-b border-slate-200 h-[52px] px-3">
+//                         <HeaderCell sortKey="shortageHumana" sortRules={sortRules} onSort={handleSort}>
+//                           <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3" />
+//                           <span className="truncate whitespace-nowrap">Shortage Humana</span>
+//                         </HeaderCell>
+//                       </TableHead>
+//                     )}
+
 //                   </TableRow>
 //                 </TableHeader>
 
@@ -1494,6 +1596,18 @@
 //                       {columnFilters.shortageNjMedicaid && (
 //                         <TableCell className="bg-white group-hover:bg-slate-50 w-[170px] min-w-[170px] text-right border-r border-slate-100 h-[36px] px-3">
 //                           {renderShortageValue(row.shortageNjMedicaid)}
+//                         </TableCell>
+//                       )}
+
+//                        {columnFilters.humana && (
+//                         <TableCell className="bg-white group-hover:bg-slate-50 w-[130px] min-w-[130px] text-right border-r border-slate-100 h-[36px] px-3">
+//                           {row.humana}
+//                         </TableCell>
+//                       )}
+
+//                       {columnFilters.shortageHumana && (
+//                         <TableCell className="bg-white group-hover:bg-slate-50 w-[160px] min-w-[160px] text-right border-r border-slate-100 h-[36px] px-3">
+//                           {renderShortageValue(row.shortageHumana)}
 //                         </TableCell>
 //                       )}
 //                     </TableRow>
@@ -1798,6 +1912,8 @@ interface FilterChip {
 }
 
 export default function InventoryReportPage() {
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingDone, setLoadingDone] = useState(false);
   const [inventoryData, setInventoryData] = useState<InventoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [openExportModal, setOpenExportModal] = useState(false);
@@ -1858,8 +1974,17 @@ export default function InventoryReportPage() {
 
   useEffect(() => {
     const loadReport = async () => {
+      let progressInterval: ReturnType<typeof setInterval> | null = null;
       try {
         setLoading(true);
+        setLoadingProgress(0);
+        setLoadingDone(false);
+        progressInterval = setInterval(() => {
+          setLoadingProgress((prev) => {
+            if (prev >= 90) { clearInterval(progressInterval!); return 90; }
+            return prev + Math.random() * 8 + 2;
+          });
+        }, 200);
 
         const res = await fetch(`http://localhost:5000/api/audits/${auditId}/report`);
         const json = await res.json();
@@ -1934,7 +2059,12 @@ export default function InventoryReportPage() {
         console.error("Failed to load report", err);
         setInventoryData([]);
       } finally {
-        setLoading(false);
+        if (progressInterval) clearInterval(progressInterval);
+        setLoadingProgress(100);
+        setTimeout(() => {
+          setLoadingDone(true);
+          setTimeout(() => setLoading(false), 400);
+        }, 500);
       }
     };
 
@@ -1983,39 +2113,39 @@ export default function InventoryReportPage() {
     shortagePdmi: true,
     optumrx: true,
     shortageOptumrx: true,
-    humana: true,           // ← ADDED
+    humana: true,
     shortageHumana: true,
   });
 
   // ─── applyQtyMode MUST be defined before paginatedData ───────────────────────
- const applyQtyMode = (row: InventoryRow): InventoryRow => {
+  const applyQtyMode = (row: InventoryRow): InventoryRow => {
     const pkg = row.pkgSize || 1;
 
     if (qtyType === "PKG SIZE") {
       const newTotalOrdered = row.totalOrdered * pkg;
-     const sH    = Number((newTotalOrdered - row.horizon).toFixed(2));
-const sEx   = Number((newTotalOrdered - row.express).toFixed(2));
-const sCvs  = Number((newTotalOrdered - row.cvsCaremark).toFixed(2));
-const sOpt  = Number((newTotalOrdered - row.optumrx).toFixed(2));
-const sHum  = Number((newTotalOrdered - row.humana).toFixed(2));
-const sNj   = Number((newTotalOrdered - row.njMedicaid).toFixed(2));
-const sSsc  = Number((newTotalOrdered - row.ssc).toFixed(2));
-const sPdmi = Number((newTotalOrdered - row.pdmi).toFixed(2));
+      const sH    = Number((newTotalOrdered - row.horizon).toFixed(2));
+      const sEx   = Number((newTotalOrdered - row.express).toFixed(2));
+      const sCvs  = Number((newTotalOrdered - row.cvsCaremark).toFixed(2));
+      const sOpt  = Number((newTotalOrdered - row.optumrx).toFixed(2));
+      const sHum  = Number((newTotalOrdered - row.humana).toFixed(2));
+      const sNj   = Number((newTotalOrdered - row.njMedicaid).toFixed(2));
+      const sSsc  = Number((newTotalOrdered - row.ssc).toFixed(2));
+      const sPdmi = Number((newTotalOrdered - row.pdmi).toFixed(2));
       const minShortage = Math.min(sH, sEx, sCvs, sOpt, sHum, sNj, sSsc, sPdmi);
       return {
-  ...row,
-  totalOrdered:        Number(newTotalOrdered.toFixed(2)),
-  totalShortage:       Number((newTotalOrdered - row.totalBilled).toFixed(2)),
-  highestShortage:     Number((minShortage < 0 ? minShortage : 0).toFixed(2)),
-  shortageHorizon:     sH,
-  shortageExpress:     sEx,
-  shortageCvsCaremark: sCvs,
-  shortageOptumrx:     sOpt,
-  shortageHumana:      sHum,
-  shortageNjMedicaid:  sNj,
-  shortageSsc:         sSsc,
-  shortagePdmi:        sPdmi,
-};
+        ...row,
+        totalOrdered:        Number(newTotalOrdered.toFixed(2)),
+        totalShortage:       Number((newTotalOrdered - row.totalBilled).toFixed(2)),
+        highestShortage:     Number((minShortage < 0 ? minShortage : 0).toFixed(2)),
+        shortageHorizon:     sH,
+        shortageExpress:     sEx,
+        shortageCvsCaremark: sCvs,
+        shortageOptumrx:     sOpt,
+        shortageHumana:      sHum,
+        shortageNjMedicaid:  sNj,
+        shortageSsc:         sSsc,
+        shortagePdmi:        sPdmi,
+      };
     }
 
     if (qtyType === "UNIT") {
@@ -2029,36 +2159,36 @@ const sPdmi = Number((newTotalOrdered - row.pdmi).toFixed(2));
       const newSsc          = Number((row.ssc          / pkg).toFixed(2));
       const newPdmi         = Number((row.pdmi         / pkg).toFixed(2));
       const sH    = Number((row.totalOrdered - newHorizon).toFixed(2));
-const sEx   = Number((row.totalOrdered - newExpress).toFixed(2));
-const sCvs  = Number((row.totalOrdered - newCvsCaremark).toFixed(2));
-const sOpt  = Number((row.totalOrdered - newOptumrx).toFixed(2));
-const sHum  = Number((row.totalOrdered - newHumana).toFixed(2));
-const sNj   = Number((row.totalOrdered - newNjMedicaid).toFixed(2));
-const sSsc  = Number((row.totalOrdered - newSsc).toFixed(2));
-const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
+      const sEx   = Number((row.totalOrdered - newExpress).toFixed(2));
+      const sCvs  = Number((row.totalOrdered - newCvsCaremark).toFixed(2));
+      const sOpt  = Number((row.totalOrdered - newOptumrx).toFixed(2));
+      const sHum  = Number((row.totalOrdered - newHumana).toFixed(2));
+      const sNj   = Number((row.totalOrdered - newNjMedicaid).toFixed(2));
+      const sSsc  = Number((row.totalOrdered - newSsc).toFixed(2));
+      const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
       const minShortage = Math.min(sH, sEx, sCvs, sOpt, sHum, sNj, sSsc, sPdmi);
       return {
-  ...row,
-  totalBilled:         newTotalBilled,
-  totalShortage:       Number((row.totalOrdered - newTotalBilled).toFixed(2)),
-  highestShortage:     Number((minShortage < 0 ? minShortage : 0).toFixed(2)),
-  horizon:             newHorizon,
-  shortageHorizon:     sH,
-  express:             newExpress,
-  shortageExpress:     sEx,
-  cvsCaremark:         newCvsCaremark,
-  shortageCvsCaremark: sCvs,
-  optumrx:             newOptumrx,
-  shortageOptumrx:     sOpt,
-  humana:              newHumana,
-  shortageHumana:      sHum,
-  njMedicaid:          newNjMedicaid,
-  shortageNjMedicaid:  sNj,
-  ssc:                 newSsc,
-  shortageSsc:         sSsc,
-  pdmi:                newPdmi,
-  shortagePdmi:        sPdmi,
-};
+        ...row,
+        totalBilled:         newTotalBilled,
+        totalShortage:       Number((row.totalOrdered - newTotalBilled).toFixed(2)),
+        highestShortage:     Number((minShortage < 0 ? minShortage : 0).toFixed(2)),
+        horizon:             newHorizon,
+        shortageHorizon:     sH,
+        express:             newExpress,
+        shortageExpress:     sEx,
+        cvsCaremark:         newCvsCaremark,
+        shortageCvsCaremark: sCvs,
+        optumrx:             newOptumrx,
+        shortageOptumrx:     sOpt,
+        humana:              newHumana,
+        shortageHumana:      sHum,
+        njMedicaid:          newNjMedicaid,
+        shortageNjMedicaid:  sNj,
+        ssc:                 newSsc,
+        shortageSsc:         sSsc,
+        pdmi:                newPdmi,
+        shortagePdmi:        sPdmi,
+      };
     }
 
     return row;
@@ -2146,7 +2276,6 @@ const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
     (v, i, arr) => v > 0 && arr.indexOf(v) === i
   );
 
-  // applyQtyMode is now defined above — no initialization error
   const paginatedData = filteredData
     .slice(
       (currentPage - 1) * effectiveRowsPerPage,
@@ -2354,19 +2483,51 @@ const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
     ? formatDate(new Date(auditDates.wholesaler_end_date))
     : "—";
 
+  // ─── Sticky left offsets (must match actual rendered widths below) ────────────
+  const COL_W = {
+    checkbox: 44,
+    rank:     72,
+    ndc:      140,
+    drugName: 240,
+    pkgSize:  100,
+    unit:     100,
+  } as const;
+
+  const left = {
+    checkbox: 0,
+    rank:     COL_W.checkbox,
+    ndc:      COL_W.checkbox + (columnFilters.rank     ? COL_W.rank     : 0),
+    drugName: COL_W.checkbox + (columnFilters.rank     ? COL_W.rank     : 0)
+                             + (columnFilters.ndc      ? COL_W.ndc      : 0),
+    pkgSize:  COL_W.checkbox + (columnFilters.rank     ? COL_W.rank     : 0)
+                             + (columnFilters.ndc      ? COL_W.ndc      : 0)
+                             + (columnFilters.drugName ? COL_W.drugName : 0),
+    unit:     COL_W.checkbox + (columnFilters.rank     ? COL_W.rank     : 0)
+                             + (columnFilters.ndc      ? COL_W.ndc      : 0)
+                             + (columnFilters.drugName ? COL_W.drugName : 0)
+                             + (columnFilters.pkgSize  ? COL_W.pkgSize  : 0),
+    totalOrdered:
+              COL_W.checkbox + (columnFilters.rank     ? COL_W.rank     : 0)
+                             + (columnFilters.ndc      ? COL_W.ndc      : 0)
+                             + (columnFilters.drugName ? COL_W.drugName : 0)
+                             + (columnFilters.pkgSize  ? COL_W.pkgSize  : 0)
+                             + (columnFilters.unit     ? COL_W.unit     : 0),
+  };
+  // ─────────────────────────────────────────────────────────────────────────────
+
   return (
     <div className="relative h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <div className="relative h-full w-full flex overflow-hidden">
         <div
-          className={`flex-shrink-0 transition-all duration-300 ease-in-out z-0 ${
-            openExportModal
+          className={`flex-shrink-0 relative transition-all duration-300 ease-in-out z-[130] ${
+            openExportModal || loading
               ? "w-0 opacity-0 pointer-events-none"
               : sidebarCollapsed
-              ? "w-[64px]"
+              ? "w-[72px]"
               : "w-[260px]"
           }`}
         >
-          {!openExportModal && (
+          {!openExportModal && !loading && (
             <AppSidebar
               sidebarOpen={!sidebarCollapsed}
               setSidebarOpen={() => setSidebarCollapsed((v) => !v)}
@@ -2377,15 +2538,53 @@ const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
         </div>
 
         {loading && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-600" />
-              <p className="text-sm font-medium text-slate-500">Loading report...</p>
+          <div
+            className={`absolute inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-sm transition-opacity duration-400 ${
+              loadingDone ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          >
+            <div className="flex flex-col items-center gap-6 w-72">
+              <div className="relative">
+                <div className="h-16 w-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm">
+                  <svg className="h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <div className="absolute -inset-1 rounded-[18px] border-2 border-transparent border-t-emerald-500 border-r-emerald-300 animate-spin" />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-sm font-semibold text-slate-700 tracking-wide">
+                  {loadingProgress < 30
+                    ? "Fetching inventory data..."
+                    : loadingProgress < 60
+                    ? "Processing records..."
+                    : loadingProgress < 90
+                    ? "Calculating analytics..."
+                    : "Finalizing report..."}
+                </p>
+                <p className="text-xs text-slate-400">Please wait a moment</p>
+              </div>
+              <div className="w-full space-y-2">
+                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-300 ease-out"
+                    style={{ width: `${Math.min(loadingProgress, 100)}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Loading report</span>
+                  <span className="text-xs font-bold text-emerald-600 tabular-nums">
+                    {Math.min(Math.round(loadingProgress), 100)}%
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden transition-all duration-300 ease-in-out z-10">
+        <div className="flex-1 min-w-0 relative isolate flex flex-col overflow-hidden transition-all duration-300 ease-in-out z-0">
           {/* Header */}
           <div className="bg-white border-b border-slate-200 shadow-sm">
             <div className="px-9 py-4 flex items-center justify-between">
@@ -2400,11 +2599,11 @@ const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col gap-1 translate-y-1">
-                    <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-4 -mt-5">
+                    <div className="text-[11px] font-bold tracking-wide text-blue-700 uppercase ml-4 -mt-5">
                       <div className="mt-1 h-2 w-2 rounded-full bg-blue-800 -translate-x-4 translate-y-3" />
                       Periods
                     </div>
-                    <div className="bg-white px-4 py-3 rounded-xl border mb-1.5 border-slate-200 shadow-sm min-w-[180px]">
+                    <div className="bg-blue-50 px-4 py-3 rounded-xl border mb-1.5 border-blue-200 shadow-sm min-w-[180px]">
                       <div className="text-xs font-semibold text-slate-900">
                         {fromDate} – {toDate}
                       </div>
@@ -2412,11 +2611,11 @@ const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-4 -mt-5">
+                    <div className="text-[11px] font-bold tracking-wide text-red-700 uppercase ml-4 -mt-5">
                       <div className="mt-1 h-2 w-2 rounded-full bg-red-500 -translate-x-4 translate-y-3" />
                       Inventory Dates
                     </div>
-                    <div className="flex items-start gap-3 bg-white px-4 py-1 rounded-xl border border-slate-200 shadow-sm">
+                    <div className="flex items-start gap-3 bg-red-50 px-4 py-1 rounded-xl border border-red-200 shadow-sm">
                       <div className="flex items-center py-2 gap-2">
                         <div className="text-xs font-semibold text-slate-900">{fromDate}</div>
                         <span className="text-xs text-slate-900">–</span>
@@ -2426,11 +2625,11 @@ const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
                   </div>
 
                   <div className="flex flex-col gap-1 -translate-y-3">
-                    <div className="text-[11px] font-bold tracking-wide text-slate-700 uppercase ml-1">
+                    <div className="text-[11px] font-bold tracking-wide text-emerald-600 uppercase ml-1">
                       <div className="mt-1 h-2 w-2 rounded-full bg-emerald-600 -translate-x-4 translate-y-3" />
                       Wholesaler Dates
                     </div>
-                    <div className="flex items-start gap-3 bg-white px-4 py-1 rounded-xl border border-slate-200 shadow-sm">
+                    <div className="flex items-start gap-3 bg-emerald-50 px-4 py-1 rounded-xl border border-emerald-200 shadow-sm">
                       <div className="flex items-center py-2 gap-2">
                         <div className="text-xs font-semibold text-slate-900">{wholesalerFromDate}</div>
                         <span className="text-xs text-slate-900">–</span>
@@ -2713,564 +2912,627 @@ const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
             )}
           </div>
 
-          {/* Table */}
-          <div className="flex-1 bg-white relative overflow-hidden flex flex-col min-w-0 z-20 w-full border border-slate-200 rounded-md">
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+              TABLE SECTION
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+          <style jsx global>{`
+  /* ── thin, styled scrollbar ── */
+  .inv-scroll::-webkit-scrollbar          { height: 5px; width: 5px; }
+  .inv-scroll::-webkit-scrollbar-track    { background: transparent; }
+  .inv-scroll::-webkit-scrollbar-thumb    { background: #cbd5e1; border-radius: 99px; }
+  .inv-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  /* ── header borders ── */
+  thead th { border-bottom: 2px solid #cbd5e1; }
+
+  /* NON-sticky header right borders */
+  thead th:not(.sticky-col):not(.sticky-last) { border-right: 1px solid #cbd5e1; }
+  thead th:last-child { border-right: none; }
+
+  /* ── body cell borders ── */
+  tbody td { border-bottom: 1px solid #e2e8f0; }
+
+  /* NON-sticky body right borders */
+  tbody td:not(.sticky-col):not(.sticky-last) { border-right: 1px solid #e2e8f0; }
+  tbody td:last-child { border-right: none; }
+
+  /* ── STICKY col right border — uses inset shadow, survives scroll ── */
+  thead th.sticky-col { box-shadow: inset -1px 0 0 0 #cbd5e1; }
+  tbody td.sticky-col { box-shadow: inset -1px 0 0 0 #e2e8f0; }
+
+  /* ── last sticky col: border + drop shadow divider ── */
+  thead th.sticky-last { box-shadow: inset -1px 0 0 0 #cbd5e1, 4px 0 10px -3px rgba(0,0,0,0.10); }
+  tbody td.sticky-last { box-shadow: inset -1px 0 0 0 #e2e8f0, 4px 0 10px -3px rgba(0,0,0,0.10); }
+
+  /* ── row hover ── */
+  .inv-row td                   { transition: background-color 80ms ease; }
+  .inv-row:hover td             { background-color: #f0fdf8 !important; }
+  .inv-row.is-selected td       { background-color: #eff6ff !important; }
+  .inv-row.is-selected:hover td { background-color: #dbeafe !important; }
+  .inv-row.has-shortage:hover td{ background-color: #fff5f5 !important; }
+  /* zebra */
+  .inv-row.even-row td          { background-color: #f8fafc; }
+  .inv-row.even-row:hover td    { background-color: #f0fdf8 !important; }
+
+  /* ── Force table layout to respect exact widths ── */
+  .inv-table { table-layout: fixed; }
+`}</style>
+
+          <div className="flex-1 bg-white relative overflow-hidden flex flex-col min-w-0 z-20 w-full">
+
             <div
               ref={bodyScrollRef}
-              className="flex-1 overflow-auto min-w-0 relative z-0 scrollbar-hide"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              className="flex-1 overflow-auto min-w-0 relative z-0 inv-scroll"
             >
-              <style jsx>{`
-                .scrollbar-hide::-webkit-scrollbar { display: none; }
-              `}</style>
+              <table className="w-full border-separate border-spacing-0 text-sm inv-table" style={{ minWidth: "max-content" }}>
 
-              <Table className="w-full border-separate border-spacing-0">
-                <TableHeader className="relative z-[60]">
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="sticky top-0 left-0 z-[100] bg-white w-14 min-w-[56px] border-r border-b border-slate-200 h-[52px] px-3">
-                      <div className="flex items-center justify-center">
-                        <Checkbox
-                          checked={selectedRows.length === paginatedData.length && paginatedData.length > 0}
-                          onCheckedChange={toggleSelectAll}
-                        />
-                      </div>
-                    </TableHead>
+                {/* ═══════════ HEADER ═══════════ */}
+                <thead>
+                  <tr className="bg-slate-50">
 
-                    {columnFilters.rank && (
-                      <TableHead
-                        className="sticky top-0 z-[100] bg-white w-20 min-w-[80px] border-r border-b border-slate-200 h-[52px] px-3"
-                        style={{ left: "56px" }}
-                      >
-                        <HeaderCell sortKey="rank" sortRules={sortRules} onSort={handleSort}>
-                          <span className="truncate whitespace-nowrap">Rank</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.ndc && (
-                      <TableHead
-                        className="sticky top-0 z-[100] bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3"
-                        style={{ left: `${56 + (columnFilters.rank ? 80 : 0)}px` }}
-                      >
-                        <HeaderCell sortKey="ndc" sortRules={sortRules} onSort={handleSort}>
-                          <span className="truncate whitespace-nowrap">NDC</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.drugName && (
-                      <TableHead
-                        className="sticky top-0 z-[100] bg-white w-60 min-w-[240px] border-r border-b border-slate-200 h-[52px] px-3"
-                        style={{ left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0)}px` }}
-                      >
-                        <HeaderCell sortKey="drugName" sortRules={sortRules} onSort={handleSort}>
-                          <span className="truncate whitespace-nowrap">Drug Name</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.pkgSize && (
-                      <TableHead
-                        className="sticky top-0 z-[100] bg-white w-[100px] min-w-[100px] border-r border-b border-slate-200 h-[52px] px-3"
-                        style={{ left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0) + (columnFilters.drugName ? 240 : 0)}px` }}
-                      >
-                        <HeaderCell sortKey="pkgSize" sortRules={sortRules} onSort={handleSort}>
-                          <span className="truncate whitespace-nowrap">PKG Size</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.unit && (
-                      <TableHead
-                        className="sticky top-0 z-[100] bg-white w-[100px] min-w-[100px] border-r border-b border-slate-200 h-[52px] px-3"
-                        style={{ left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0) + (columnFilters.drugName ? 240 : 0) + (columnFilters.pkgSize ? 100 : 0)}px` }}
-                      >
-                        <HeaderCell sortKey="unit" sortRules={sortRules} onSort={handleSort}>
-                          <span className="truncate whitespace-nowrap">Unit</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.totalOrdered && (
-                      <TableHead
-                        className="sticky top-0 z-[100] bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.15)]"
-                        style={{ left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0) + (columnFilters.drugName ? 240 : 0) + (columnFilters.pkgSize ? 100 : 0) + (columnFilters.unit ? 100 : 0)}px` }}
-                      >
-                        <HeaderCell sortKey="totalOrdered" sortRules={sortRules} onSort={handleSort}>
-                          <div className="flex items-center gap-2 overflow-hidden justify-center">
-                            <div className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" />
-                            <span className="truncate whitespace-nowrap">Total Ordered</span>
-                          </div>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.totalBilled && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="totalBilled" sortRules={sortRules} onSort={handleSort}>
-                          <div className="flex items-center gap-2 overflow-hidden justify-center">
-                            <div className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
-                            <span className="truncate whitespace-nowrap">Total Billed</span>
-                          </div>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.totalShortage && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="totalShortage" sortRules={sortRules} onSort={handleSort}>
-                          <div className="flex items-center gap-2 overflow-hidden justify-center">
-                            <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0" />
-                            <span className="truncate whitespace-nowrap">Total Shortage</span>
-                          </div>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.highestShortage && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[150px] min-w-[150px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="highestShortage" sortRules={sortRules} onSort={handleSort}>
-                          <span className="truncate whitespace-nowrap">
-                            <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3" />
-                            Highest Shortage
-                          </span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.cost && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[120px] min-w-[120px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="cost" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">$ Cost</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.amount && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[120px] min-w-[120px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="amount" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">$ Amount</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.horizon && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="horizon" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Horizon Health</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.shortageHorizon && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[150px] min-w-[150px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="shortageHorizon" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Shortage Horizon</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.express && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="express" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Express Scripts</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.shortageExpress && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[150px] min-w-[150px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="shortageExpress" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Shortage Express</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.pdmi && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[180px] min-w-[180px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="pdmi" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">PDMI (CO-PAY CARD)</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.shortagePdmi && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[150px] min-w-[150px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="shortagePdmi" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Shortage PDMI</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.optumrx && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[120px] min-w-[120px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="optumrx" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Optumrx</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.shortageOptumrx && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[150px] min-w-[150px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="shortageOptumrx" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Shortage Optumrx</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.cvsCaremark && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="cvsCaremark" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">CVS Caremark</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.shortageCvsCaremark && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[180px] min-w-[180px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="shortageCvsCaremark" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Shortage CVS Caremark</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.ssc && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[120px] min-w-[120px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="ssc" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Billed SSC</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.shortageSsc && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[140px] min-w-[140px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="shortageSsc" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Shortage SSC</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.njMedicaid && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[130px] min-w-[130px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="njMedicaid" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">NJ Medicaid</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.shortageNjMedicaid && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[170px] min-w-[170px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="shortageNjMedicaid" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Shortage NJ Medicaid</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.humana && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[130px] min-w-[130px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="humana" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-yellow-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Humana</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                    {columnFilters.shortageHumana && (
-                      <TableHead className="sticky top-0 z-50 bg-white w-[160px] min-w-[160px] border-r border-b border-slate-200 h-[52px] px-3">
-                        <HeaderCell sortKey="shortageHumana" sortRules={sortRules} onSort={handleSort}>
-                          <div className="h-2 w-2 rounded-full bg-red-500 shrink-0 -translate-x-4 translate-y-3" />
-                          <span className="truncate whitespace-nowrap">Shortage Humana</span>
-                        </HeaderCell>
-                      </TableHead>
-                    )}
-
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                  {paginatedData.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      className="group bg-white cursor-pointer transition-colors hover:bg-slate-50 border-b border-slate-100 h-[36px]"
-                      onClick={() => {
-                        setActiveDrug(row);
-                        setOpenDrugSidebar(true);
-                      }}
+                    {/* ── Checkbox ── */}
+                    <th
+                      className="sticky top-0 z-[110] bg-slate-50 h-11 px-3 text-center sticky-col"
+                      style={{ left: left.checkbox, width: COL_W.checkbox, minWidth: COL_W.checkbox, maxWidth: COL_W.checkbox }}
                     >
-                      <TableCell
-                        className="sticky left-0 z-20 bg-white group-hover:bg-slate-50 w-14 min-w-[56px] border-r border-slate-100 h-[36px] px-3"
-                        onClick={(e) => e.stopPropagation()}
+                      <Checkbox
+                        checked={selectedRows.length === paginatedData.length && paginatedData.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                        className="h-3.5 w-3.5"
+                      />
+                    </th>
+
+                    {/* ── Rank ── */}
+                    {columnFilters.rank && (
+                      <th
+                        className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none sticky-col"
+                        style={{ left: left.rank, width: COL_W.rank, minWidth: COL_W.rank, maxWidth: COL_W.rank }}
+                        onClick={(e) => handleSort("rank", e)}
                       >
-                        <div className="flex items-center justify-center">
-                          <Checkbox
-                            checked={selectedRows.includes(row.id)}
-                            onCheckedChange={() => toggleRowSelection(row.id)}
-                          />
+                        <div className="flex items-center justify-center gap-1 h-full px-2 hover:bg-emerald-50/60 transition-colors">
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Rank</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "rank")?.dir} />
                         </div>
-                      </TableCell>
+                      </th>
+                    )}
 
-                      {columnFilters.rank && (
-                        <TableCell
-                          className="sticky z-20 bg-white group-hover:bg-slate-50 w-20 min-w-[80px] text-right border-r border-slate-100 h-[36px] px-3"
-                          style={{ left: "56px" }}
+                    {/* ── NDC ── */}
+                    {columnFilters.ndc && (
+                      <th
+                        className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none sticky-col"
+                        style={{ left: left.ndc, width: COL_W.ndc, minWidth: COL_W.ndc, maxWidth: COL_W.ndc }}
+                        onClick={(e) => handleSort("ndc", e)}
+                      >
+                        <div className="flex items-center justify-center gap-1 h-full px-2 hover:bg-emerald-50/60 transition-colors">
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">NDC</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "ndc")?.dir} />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* ── Drug Name ── */}
+                    {columnFilters.drugName && (
+                      <th
+                        className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none text-left sticky-col"
+                        style={{ left: left.drugName, width: COL_W.drugName, minWidth: COL_W.drugName, maxWidth: COL_W.drugName }}
+                        onClick={(e) => handleSort("drugName", e)}
+                      >
+                        <div className="flex items-center gap-1 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Drug Name</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "drugName")?.dir} />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* ── Pkg Size ── */}
+                    {columnFilters.pkgSize && (
+                      <th
+                        className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none sticky-col"
+                        style={{ left: left.pkgSize, width: COL_W.pkgSize, minWidth: COL_W.pkgSize, maxWidth: COL_W.pkgSize }}
+                        onClick={(e) => handleSort("pkgSize", e)}
+                      >
+                        <div className="flex items-center justify-center gap-1 h-full px-2 hover:bg-emerald-50/60 transition-colors">
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Pkg</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "pkgSize")?.dir} />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* ── Unit ── */}
+                    {columnFilters.unit && (
+                      <th
+                        className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none sticky-col"
+                        style={{ left: left.unit, width: COL_W.unit, minWidth: COL_W.unit, maxWidth: COL_W.unit }}
+                        onClick={(e) => handleSort("unit", e)}
+                      >
+                        <div className="flex items-center justify-center gap-1 h-full px-2 hover:bg-emerald-50/60 transition-colors">
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Unit</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "unit")?.dir} />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* ── Total Ordered — last sticky col ── */}
+                    {columnFilters.totalOrdered && (
+                      <th
+                        className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none sticky-last"
+                        style={{ left: left.totalOrdered, width: 140, minWidth: 140, maxWidth: 140 }}
+                        onClick={(e) => handleSort("totalOrdered", e)}
+                      >
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Total Ordered</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "totalOrdered")?.dir} />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* ── Scrollable column headers ── */}
+                    {columnFilters.totalBilled && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 140 }} onClick={(e) => handleSort("totalBilled", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Total Billed</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "totalBilled")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.totalShortage && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 140 }} onClick={(e) => handleSort("totalShortage", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Total Shortage</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "totalShortage")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.highestShortage && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 150 }} onClick={(e) => handleSort("highestShortage", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Highest Shortage</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "highestShortage")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.cost && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 110 }} onClick={(e) => handleSort("cost", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">$ Cost</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "cost")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.amount && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 120 }} onClick={(e) => handleSort("amount", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">$ Amount</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "amount")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.horizon && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 140 }} onClick={(e) => handleSort("horizon", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Horizon Health</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "horizon")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.shortageHorizon && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 150 }} onClick={(e) => handleSort("shortageHorizon", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Shrt Horizon</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "shortageHorizon")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.express && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 140 }} onClick={(e) => handleSort("express", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Express Scripts</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "express")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.shortageExpress && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 150 }} onClick={(e) => handleSort("shortageExpress", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Shrt Express</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "shortageExpress")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.pdmi && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 180 }} onClick={(e) => handleSort("pdmi", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">PDMI (CO-PAY)</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "pdmi")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.shortagePdmi && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 150 }} onClick={(e) => handleSort("shortagePdmi", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Shrt PDMI</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "shortagePdmi")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.optumrx && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 120 }} onClick={(e) => handleSort("optumrx", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">OptumRx</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "optumrx")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.shortageOptumrx && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 150 }} onClick={(e) => handleSort("shortageOptumrx", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Shrt OptumRx</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "shortageOptumrx")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.cvsCaremark && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 140 }} onClick={(e) => handleSort("cvsCaremark", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">CVS Caremark</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "cvsCaremark")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.shortageCvsCaremark && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 180 }} onClick={(e) => handleSort("shortageCvsCaremark", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Shrt CVS Caremark</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "shortageCvsCaremark")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.ssc && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 120 }} onClick={(e) => handleSort("ssc", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Billed SSC</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "ssc")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.shortageSsc && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 140 }} onClick={(e) => handleSort("shortageSsc", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Shrt SSC</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "shortageSsc")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.njMedicaid && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 130 }} onClick={(e) => handleSort("njMedicaid", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">NJ Medicaid</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "njMedicaid")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.shortageNjMedicaid && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 170 }} onClick={(e) => handleSort("shortageNjMedicaid", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Shrt NJ Medicaid</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "shortageNjMedicaid")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.humana && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 130 }} onClick={(e) => handleSort("humana", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Humana</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "humana")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                    {columnFilters.shortageHumana && (
+                      <th className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap" style={{ minWidth: 160 }} onClick={(e) => handleSort("shortageHumana", e)}>
+                        <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Shrt Humana</span>
+                          <SortIcon dir={sortRules.find((r) => r.key === "shortageHumana")?.dir} />
+                        </div>
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+
+                {/* ═══════════ BODY ═══════════ */}
+                <tbody>
+                  {paginatedData.map((row, rowIndex) => {
+                    const isSelected  = selectedRows.includes(row.id);
+                    const hasShortage = row.totalShortage < 0;
+                    const isEven      = rowIndex % 2 === 1;
+                    const baseBg = isSelected ? "#eff6ff" : isEven ? "#f8fafc" : "#ffffff";
+
+                    return (
+                      <tr
+                        key={row.id}
+                        className={[
+                          "inv-row cursor-pointer",
+                          isSelected  ? "is-selected"  : "",
+                          hasShortage ? "has-shortage" : "",
+                          isEven      ? "even-row"     : "",
+                        ].join(" ")}
+                        style={{ height: 38 }}
+                        onClick={() => { setActiveDrug(row); setOpenDrugSidebar(true); }}
+                      >
+                        {/* Checkbox */}
+                        <td
+                          className="sticky z-20 px-3 text-center sticky-col"
+                          style={{ left: left.checkbox, width: COL_W.checkbox, minWidth: COL_W.checkbox, maxWidth: COL_W.checkbox, backgroundColor: baseBg }}
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          {row.rank}
-                        </TableCell>
-                      )}
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleRowSelection(row.id)}
+                            className="h-3.5 w-3.5"
+                          />
+                        </td>
 
-                      {columnFilters.ndc && (
-                        <TableCell
-                          className="sticky z-20 bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3"
-                          style={{ left: `${56 + (columnFilters.rank ? 80 : 0)}px` }}
-                        >
-                          {row.ndc}
-                        </TableCell>
-                      )}
+                        {/* Rank */}
+                        {columnFilters.rank && (
+                          <td
+                            className="sticky z-20 px-2 text-center sticky-col"
+                            style={{ left: left.rank, width: COL_W.rank, minWidth: COL_W.rank, maxWidth: COL_W.rank, backgroundColor: baseBg }}
+                          >
+                            <span className="text-[12px] text-slate-600 tabular-nums font-medium">{row.rank}</span>
+                          </td>
+                        )}
 
-                      {columnFilters.drugName && (
-                        <TableCell
-                          className="sticky z-20 bg-white group-hover:bg-slate-50 w-60 min-w-[240px] text-left border-r border-slate-100 h-[36px] px-3"
-                          style={{ left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0)}px` }}
-                        >
-                          <span className="font-bold text-slate-900 truncate block">{row.drugName}</span>
-                        </TableCell>
-                      )}
+                        {/* NDC */}
+                        {columnFilters.ndc && (
+                          <td
+                            className="sticky z-20 px-3 text-center sticky-col"
+                            style={{ left: left.ndc, width: COL_W.ndc, minWidth: COL_W.ndc, maxWidth: COL_W.ndc, backgroundColor: baseBg }}
+                          >
+                            <span className="text-[11px] font-mono text-slate-500 tabular-nums tracking-tight">{row.ndc}</span>
+                          </td>
+                        )}
 
-                      {columnFilters.pkgSize && (
-                        <TableCell
-                          className="sticky z-20 bg-white group-hover:bg-slate-50 w-[100px] min-w-[100px] text-right border-r border-slate-100 h-[36px] px-3"
-                          style={{ left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0) + (columnFilters.drugName ? 240 : 0)}px` }}
-                        >
-                          {row.pkgSize}
-                        </TableCell>
-                      )}
+                        {/* Drug Name */}
+                        {columnFilters.drugName && (
+                          <td
+                            className="sticky z-20 px-3 text-left sticky-col"
+                            style={{ left: left.drugName, width: COL_W.drugName, minWidth: COL_W.drugName, maxWidth: COL_W.drugName, backgroundColor: baseBg }}
+                          >
+                            <span className="text-[12px] font-semibold text-slate-800 truncate block max-w-[220px]" title={row.drugName}>
+                              {row.drugName}
+                            </span>
+                          </td>
+                        )}
 
-                      {columnFilters.unit && (
-                        <TableCell
-                          className="sticky z-20 bg-white group-hover:bg-slate-50 w-[100px] min-w-[100px] text-right border-r border-slate-100 h-[36px] px-3"
-                          style={{ left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0) + (columnFilters.drugName ? 240 : 0) + (columnFilters.pkgSize ? 100 : 0)}px` }}
-                        >
-                          {row.unit}
-                        </TableCell>
-                      )}
+                        {/* Pkg Size */}
+                        {columnFilters.pkgSize && (
+                          <td
+                            className="sticky z-20 px-3 text-right sticky-col"
+                            style={{ left: left.pkgSize, width: COL_W.pkgSize, minWidth: COL_W.pkgSize, maxWidth: COL_W.pkgSize, backgroundColor: baseBg }}
+                          >
+                            <span className="text-[12px] text-slate-600 tabular-nums">{row.pkgSize}</span>
+                          </td>
+                        )}
 
-                      {columnFilters.totalOrdered && (
-                        <TableCell
-                          className="sticky z-20 bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.15)]"
-                          style={{ left: `${56 + (columnFilters.rank ? 80 : 0) + (columnFilters.ndc ? 140 : 0) + (columnFilters.drugName ? 240 : 0) + (columnFilters.pkgSize ? 100 : 0) + (columnFilters.unit ? 100 : 0)}px` }}
-                        >
-                          {row.totalOrdered.toLocaleString()}
-                        </TableCell>
-                      )}
+                        {/* Unit */}
+                        {columnFilters.unit && (
+                          <td
+                            className="sticky z-20 px-3 text-right sticky-col"
+                            style={{ left: left.unit, width: COL_W.unit, minWidth: COL_W.unit, maxWidth: COL_W.unit, backgroundColor: baseBg }}
+                          >
+                            <span className="text-[12px] text-slate-600 tabular-nums">{row.unit}</span>
+                          </td>
+                        )}
 
-                      {columnFilters.totalBilled && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {row.totalBilled.toLocaleString()}
-                        </TableCell>
-                      )}
+                        {/* Total Ordered — last sticky */}
+                        {columnFilters.totalOrdered && (
+                          <td
+                            className="sticky z-20 px-3 text-right sticky-last"
+                            style={{ left: left.totalOrdered, width: 140, minWidth: 140, maxWidth: 140, backgroundColor: baseBg }}
+                          >
+                            <span className="text-[12px] font-semibold text-slate-800 tabular-nums">{row.totalOrdered.toLocaleString()}</span>
+                          </td>
+                        )}
 
-                      {columnFilters.totalShortage && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {renderShortageValue(row.totalShortage)}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.highestShortage && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[150px] min-w-[150px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {renderShortageValue(row.highestShortage)}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.cost && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[120px] min-w-[120px] text-right border-r border-slate-100 h-[36px] px-3">
-                          ${row.cost.toFixed(2)}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.amount && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[120px] min-w-[120px] text-right border-r border-slate-100 h-[36px] px-3">
-                          ${row.amount.toFixed(2)}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.horizon && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {row.horizon}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.shortageHorizon && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[150px] min-w-[150px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {renderShortageValue(row.shortageHorizon)}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.express && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {row.express}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.shortageExpress && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[150px] min-w-[150px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {renderShortageValue(row.shortageExpress)}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.pdmi && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[180px] min-w-[180px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {row.pdmi}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.shortagePdmi && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[150px] min-w-[150px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {renderShortageValue(row.shortagePdmi)}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.optumrx && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[120px] min-w-[120px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {row.optumrx}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.shortageOptumrx && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[150px] min-w-[150px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {renderShortageValue(row.shortageOptumrx)}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.cvsCaremark && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {row.cvsCaremark}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.shortageCvsCaremark && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[180px] min-w-[180px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {renderShortageValue(row.shortageCvsCaremark)}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.ssc && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[120px] min-w-[120px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {row.ssc}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.shortageSsc && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[140px] min-w-[140px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {renderShortageValue(row.shortageSsc)}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.njMedicaid && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[130px] min-w-[130px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {row.njMedicaid}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.shortageNjMedicaid && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[170px] min-w-[170px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {renderShortageValue(row.shortageNjMedicaid)}
-                        </TableCell>
-                      )}
-
-                       {columnFilters.humana && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[130px] min-w-[130px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {row.humana}
-                        </TableCell>
-                      )}
-
-                      {columnFilters.shortageHumana && (
-                        <TableCell className="bg-white group-hover:bg-slate-50 w-[160px] min-w-[160px] text-right border-r border-slate-100 h-[36px] px-3">
-                          {renderShortageValue(row.shortageHumana)}
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        {/* ── Scrollable data cells ── */}
+                        {columnFilters.totalBilled && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 140 }}>
+                            <span className="text-[12px] text-slate-700 tabular-nums">{row.totalBilled.toLocaleString()}</span>
+                          </td>
+                        )}
+                        {columnFilters.totalShortage && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 140 }}>
+                            <span className="text-[12px] tabular-nums">{renderShortageValue(row.totalShortage)}</span>
+                          </td>
+                        )}
+                        {columnFilters.highestShortage && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 150 }}>
+                            <span className="text-[12px] tabular-nums">{renderShortageValue(row.highestShortage)}</span>
+                          </td>
+                        )}
+                        {columnFilters.cost && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 110 }}>
+                            <span className="text-[12px] text-slate-700 tabular-nums">${row.cost.toFixed(2)}</span>
+                          </td>
+                        )}
+                        {columnFilters.amount && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 120 }}>
+                            <span className="text-[12px] font-semibold text-slate-800 tabular-nums">${row.amount.toFixed(2)}</span>
+                          </td>
+                        )}
+                        {columnFilters.horizon && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 140 }}>
+                            <span className="text-[12px] text-slate-600 tabular-nums">{row.horizon}</span>
+                          </td>
+                        )}
+                        {columnFilters.shortageHorizon && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 150 }}>
+                            <span className="text-[12px] tabular-nums">{renderShortageValue(row.shortageHorizon)}</span>
+                          </td>
+                        )}
+                        {columnFilters.express && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 140 }}>
+                            <span className="text-[12px] text-slate-600 tabular-nums">{row.express}</span>
+                          </td>
+                        )}
+                        {columnFilters.shortageExpress && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 150 }}>
+                            <span className="text-[12px] tabular-nums">{renderShortageValue(row.shortageExpress)}</span>
+                          </td>
+                        )}
+                        {columnFilters.pdmi && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 180 }}>
+                            <span className="text-[12px] text-slate-600 tabular-nums">{row.pdmi}</span>
+                          </td>
+                        )}
+                        {columnFilters.shortagePdmi && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 150 }}>
+                            <span className="text-[12px] tabular-nums">{renderShortageValue(row.shortagePdmi)}</span>
+                          </td>
+                        )}
+                        {columnFilters.optumrx && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 120 }}>
+                            <span className="text-[12px] text-slate-600 tabular-nums">{row.optumrx}</span>
+                          </td>
+                        )}
+                        {columnFilters.shortageOptumrx && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 150 }}>
+                            <span className="text-[12px] tabular-nums">{renderShortageValue(row.shortageOptumrx)}</span>
+                          </td>
+                        )}
+                        {columnFilters.cvsCaremark && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 140 }}>
+                            <span className="text-[12px] text-slate-600 tabular-nums">{row.cvsCaremark}</span>
+                          </td>
+                        )}
+                        {columnFilters.shortageCvsCaremark && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 180 }}>
+                            <span className="text-[12px] tabular-nums">{renderShortageValue(row.shortageCvsCaremark)}</span>
+                          </td>
+                        )}
+                        {columnFilters.ssc && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 120 }}>
+                            <span className="text-[12px] text-slate-600 tabular-nums">{row.ssc}</span>
+                          </td>
+                        )}
+                        {columnFilters.shortageSsc && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 140 }}>
+                            <span className="text-[12px] tabular-nums">{renderShortageValue(row.shortageSsc)}</span>
+                          </td>
+                        )}
+                        {columnFilters.njMedicaid && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 130 }}>
+                            <span className="text-[12px] text-slate-600 tabular-nums">{row.njMedicaid}</span>
+                          </td>
+                        )}
+                        {columnFilters.shortageNjMedicaid && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 170 }}>
+                            <span className="text-[12px] tabular-nums">{renderShortageValue(row.shortageNjMedicaid)}</span>
+                          </td>
+                        )}
+                        {columnFilters.humana && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 130 }}>
+                            <span className="text-[12px] text-slate-600 tabular-nums">{row.humana}</span>
+                          </td>
+                        )}
+                        {columnFilters.shortageHumana && (
+                          <td className="border-r border-slate-100 px-3 text-right" style={{ minWidth: 160 }}>
+                            <span className="text-[12px] tabular-nums">{renderShortageValue(row.shortageHumana)}</span>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
 
-            {/* Pagination */}
-            <div className="border-t border-slate-200 bg-white px-4 py-3 flex items-center justify-between z-30">
-              <div className="text-sm text-slate-500">
+            {/* ── Pagination ── */}
+            <div className="border-t border-slate-200 bg-white px-5 py-3 flex items-center justify-between z-30 shrink-0">
+              <div className="text-xs text-slate-500">
                 Showing{" "}
-                <span className="font-medium">
+                <span className="font-semibold text-slate-700">
                   {filteredData.length === 0 ? 0 : (currentPage - 1) * effectiveRowsPerPage + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-medium">
+                </span>
+                {" – "}
+                <span className="font-semibold text-slate-700">
                   {Math.min(currentPage * effectiveRowsPerPage, filteredData.length)}
-                </span>{" "}
-                of <span className="font-medium">{filteredData.length}</span> results
+                </span>
+                {" of "}
+                <span className="font-semibold text-slate-700">{filteredData.length}</span> results
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
+                  className="h-8 px-3 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
-                  Previous
-                </Button>
+                  ← Prev
+                </button>
                 <div className="flex items-center gap-1">
                   {(() => {
-                    const pages = [];
+                    const pages: number[] = [];
                     const delta = 2;
-                    const left = Math.max(2, currentPage - delta);
-                    const right = Math.min(totalPages - 1, currentPage + delta);
+                    const lp = Math.max(2, currentPage - delta);
+                    const rp = Math.min(totalPages - 1, currentPage + delta);
                     pages.push(1);
-                    if (left > 2) pages.push(-1);
-                    for (let i = left; i <= right; i++) pages.push(i);
-                    if (right < totalPages - 1) pages.push(-2);
+                    if (lp > 2) pages.push(-1);
+                    for (let i = lp; i <= rp; i++) pages.push(i);
+                    if (rp < totalPages - 1) pages.push(-2);
                     if (totalPages > 1) pages.push(totalPages);
                     return pages.map((page, idx) =>
                       page < 0 ? (
-                        <span key={`ellipsis-${idx}`} className="px-1 text-slate-400">…</span>
+                        <span key={`e${idx}`} className="px-1 text-slate-400 text-xs">…</span>
                       ) : (
-                        <Button
+                        <button
                           key={page}
-                          variant={currentPage === page ? "default" : "outline"}
-                          size="sm"
-                          className="w-8 h-8 p-0"
                           onClick={() => setCurrentPage(page)}
+                          className={`h-8 w-8 text-xs font-semibold rounded-lg transition-colors ${
+                            currentPage === page
+                              ? "bg-emerald-600 text-white shadow-sm"
+                              : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                          }`}
                         >
                           {page}
-                        </Button>
+                        </button>
                       )
                     );
                   })()}
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                   disabled={currentPage === totalPages}
+                  className="h-8 px-3 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
-                  Next
-                </Button>
+                  Next →
+                </button>
               </div>
             </div>
           </div>
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+              END TABLE SECTION
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
 
           {/* Export Modal */}
           <Dialog open={openExportModal} onOpenChange={setOpenExportModal}>
