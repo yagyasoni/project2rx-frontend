@@ -7,7 +7,7 @@ const config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
-  safelist: ['scrollbar-hide'],
+  // safelist: ["scrollbar-hide"],
   theme: {
     extend: {
       colors: {
@@ -75,3 +75,4 @@ const config = {
 } satisfies Config
 
 export default config
+
