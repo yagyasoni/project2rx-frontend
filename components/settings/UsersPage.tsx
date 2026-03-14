@@ -27,7 +27,7 @@ const UsersPage = () => {
       try {
         const token = localStorage.getItem("accessToken");
 
-        const res = await api.get("/user-info", {
+        const res = await api.get("/auth/user-info", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

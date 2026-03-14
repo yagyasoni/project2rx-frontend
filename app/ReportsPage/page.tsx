@@ -22,6 +22,7 @@ import { Suspense } from "react";
 import Loading from "./loading";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 interface Report {
   id: string;
@@ -190,314 +191,316 @@ export default function ReportsPage() {
   };
 
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="flex h-screen bg-white">
-        <Sidebar
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-          activePanel={activePanel}
-          setActivePanel={setActivePanel}
-        />
+    <ProtectedRoute>
+      <Suspense fallback={<Loading />}>
+        <div className="flex h-screen bg-white">
+          <Sidebar
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+            activePanel={activePanel}
+            setActivePanel={setActivePanel}
+          />
 
-        <main className="flex-1 overflow-auto bg-white">
-          <div className="p-8">
-            {/* Header */}
-            <div className="mb-6">
-              <div className="flex items-center gap-3 mb-1">
-                <div className="w-14 h-14 bg-gray-100 border border-gray-200 rounded-xl flex items-center justify-center">
-                  <Layers className="w-7 h-7 text-gray-700" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-                    REPORTS
-                    <RotateCw className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
-                  </h1>
-                  <p className="text-sm text-gray-500">
-                    United Drugs Pharmacy | 507 Central Ave
-                  </p>
+          <main className="flex-1 overflow-auto bg-white">
+            <div className="p-8">
+              {/* Header */}
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-14 h-14 bg-gray-100 border border-gray-200 rounded-xl flex items-center justify-center">
+                    <Layers className="w-7 h-7 text-gray-700" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                      REPORTS
+                      <RotateCw className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
+                    </h1>
+                    <p className="text-sm text-gray-500">
+                      {localStorage.getItem("pharmacyName") || ""}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Tabs */}
-            <div className="flex justify-end gap-6 -mb-9 -translate-y-13 border-b border-gray-200">
-              {[
-                { key: "all", label: "ALL", count: filterCounts.all },
-                // { key: 'inventory', label: 'INVENTORY', count: filterCounts.inventory },
-                // { key: 'aberrant', label: 'ABERRANT', count: filterCounts.aberrant },
-                // { key: 'optum', label: 'OPTUM', count: filterCounts.optum },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveFilter(tab.key as FilterType)}
-                  className={`pb-3 px-2 font-semibold text-xs transition-colors relative ${
-                    activeFilter === tab.key
-                      ? "text-gray-900"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 bg-white text-gray-700 border-2 border-gray-500 rounded-full flex items-center justify-center text-[10px] font-bold">
-                      {tab.count}
-                    </span>
-                    {tab.label}
-                  </div>
-                  {activeFilter === tab.key && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900" />
-                  )}
-                </button>
-              ))}
-            </div>
+              {/* Tabs */}
+              <div className="flex justify-end gap-6 -mb-9 -translate-y-13 border-b border-gray-200">
+                {[
+                  { key: "all", label: "ALL", count: filterCounts.all },
+                  // { key: 'inventory', label: 'INVENTORY', count: filterCounts.inventory },
+                  // { key: 'aberrant', label: 'ABERRANT', count: filterCounts.aberrant },
+                  // { key: 'optum', label: 'OPTUM', count: filterCounts.optum },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveFilter(tab.key as FilterType)}
+                    className={`pb-3 px-2 font-semibold text-xs transition-colors relative ${
+                      activeFilter === tab.key
+                        ? "text-gray-900"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 bg-white text-gray-700 border-2 border-gray-500 rounded-full flex items-center justify-center text-[10px] font-bold">
+                        {tab.count}
+                      </span>
+                      {tab.label}
+                    </div>
+                    {activeFilter === tab.key && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900" />
+                    )}
+                  </button>
+                ))}
+              </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr className="border-b border-gray-200">
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 w-10"></th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
-                      Audit Name
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
-                      Status
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
-                      Inventory Dates
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
-                      Wholesaler Dates
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
-                      Type
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
-                      Created Date
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  {filteredReports.map((report, index) => (
-                    <tr
-                      key={report.id}
-                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                      }`}
-                    >
-                      <td className="px-4 py-1.5 text-sm text-gray-500 font-medium">
-                        {index + 1}
-                      </td>
-                      <td className="px-4 py-1.5 text-sm text-gray-900 font-medium">
-                        <Link
-                          href={`/reports/${report.id}`}
-                          className="hover:text-blue-600 hover:underline cursor-pointer transition-colors"
-                        >
-                          {report.auditName}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={`text-xs font-medium ${
-                            report.status === "Started"
-                              ? "text-blue-600"
-                              : "text-green-700"
-                          }`}
-                        >
-                          {report.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-1.5 text-sm text-gray-600">
-                        {report.inventoryDates}
-                      </td>
-                      <td className="px-4 py-1.5 text-sm text-gray-600">
-                        {report.wholesalerDates}
-                      </td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-semibold inline-block ${
-                            report.type === "PBM"
-                              ? "bg-blue-100 text-blue-700 border border-blue-300"
-                              : "bg-pink-100 text-pink-700 border border-pink-300"
-                          }`}
-                        >
-                          {report.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-1.5 text-sm text-gray-600">
-                        {report.createdDate}
-                      </td>
-                      <td className="px-4 py-2">
-                        <div className="relative">
-                          <button
-                            onClick={() =>
-                              setActiveMenu(
-                                activeMenu === report.id ? null : report.id,
-                              )
-                            }
-                            className="p-1 hover:bg-gray-200 rounded transition-colors"
-                          >
-                            <MoreVertical className="w-4 h-4 text-gray-600" />
-                          </button>
-                          {activeMenu === report.id && (
-                            <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                              <button
-                                onClick={() => handleEdit(report)}
-                                className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors rounded-t-lg"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setActiveMenu(null);
-                                  window.location.href = `/Mainpage?auditId=${report.id}&step=inventory`;
-                                }}
-                                className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
-                              >
-                                InventoryFiles
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setActiveMenu(null);
-                                  window.location.href = `/Mainpage?auditId=${report.id}&step=wholesaler`;
-                                }}
-                                className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
-                              >
-                                SupplierFiles
-                              </button>
-                              <button
-                                onClick={() => handleDelete(report.id)}
-                                className="w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 transition-colors border-t border-gray-200 rounded-b-lg"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </td>
+              {/* Table */}
+              <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr className="border-b border-gray-200">
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 w-10"></th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                        Audit Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                        Status
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                        Inventory Dates
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                        Wholesaler Dates
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                        Type
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                        Created Date
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </main>
-      </div>
-
-      {/* Edit Modal */}
-      {editModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h2 className="text-base font-bold text-gray-900 mb-1">
-              Edit Report Dates
-            </h2>
-            <p className="text-xs text-gray-500 mb-4">
-              {editingReport?.auditName}
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                  Inventory Dates
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">
-                      Start Date
-                    </label>
-                    <input
-                      type="date"
-                      value={editForm.inventory_start_date}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({
-                          ...prev,
-                          inventory_start_date: e.target.value,
-                        }))
-                      }
-                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">
-                      End Date
-                    </label>
-                    <input
-                      type="date"
-                      value={editForm.inventory_end_date}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({
-                          ...prev,
-                          inventory_end_date: e.target.value,
-                        }))
-                      }
-                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
+                  </thead>
+                  <tbody className="bg-white">
+                    {filteredReports.map((report, index) => (
+                      <tr
+                        key={report.id}
+                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                          index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                        }`}
+                      >
+                        <td className="px-4 py-1.5 text-sm text-gray-500 font-medium">
+                          {index + 1}
+                        </td>
+                        <td className="px-4 py-1.5 text-sm text-gray-900 font-medium">
+                          <Link
+                            href={`/reports/${report.id}`}
+                            className="hover:text-blue-600 hover:underline cursor-pointer transition-colors"
+                          >
+                            {report.auditName}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-2">
+                          <span
+                            className={`text-xs font-medium ${
+                              report.status === "Started"
+                                ? "text-blue-600"
+                                : "text-green-700"
+                            }`}
+                          >
+                            {report.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-1.5 text-sm text-gray-600">
+                          {report.inventoryDates}
+                        </td>
+                        <td className="px-4 py-1.5 text-sm text-gray-600">
+                          {report.wholesalerDates}
+                        </td>
+                        <td className="px-4 py-2">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold inline-block ${
+                              report.type === "PBM"
+                                ? "bg-blue-100 text-blue-700 border border-blue-300"
+                                : "bg-pink-100 text-pink-700 border border-pink-300"
+                            }`}
+                          >
+                            {report.type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-1.5 text-sm text-gray-600">
+                          {report.createdDate}
+                        </td>
+                        <td className="px-4 py-2">
+                          <div className="relative">
+                            <button
+                              onClick={() =>
+                                setActiveMenu(
+                                  activeMenu === report.id ? null : report.id,
+                                )
+                              }
+                              className="p-1 hover:bg-gray-200 rounded transition-colors"
+                            >
+                              <MoreVertical className="w-4 h-4 text-gray-600" />
+                            </button>
+                            {activeMenu === report.id && (
+                              <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                <button
+                                  onClick={() => handleEdit(report)}
+                                  className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors rounded-t-lg"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setActiveMenu(null);
+                                    window.location.href = `/Mainpage?auditId=${report.id}&step=inventory`;
+                                  }}
+                                  className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                  InventoryFiles
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setActiveMenu(null);
+                                    window.location.href = `/Mainpage?auditId=${report.id}&step=wholesaler`;
+                                  }}
+                                  className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                  SupplierFiles
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(report.id)}
+                                  className="w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 transition-colors border-t border-gray-200 rounded-b-lg"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                  Wholesaler Dates
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">
-                      Start Date
-                    </label>
-                    <input
-                      type="date"
-                      value={editForm.wholesaler_start_date}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({
-                          ...prev,
-                          wholesaler_start_date: e.target.value,
-                        }))
-                      }
-                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">
-                      End Date
-                    </label>
-                    <input
-                      type="date"
-                      value={editForm.wholesaler_end_date}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({
-                          ...prev,
-                          wholesaler_end_date: e.target.value,
-                        }))
-                      }
-                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
-
-            <div className="flex justify-end gap-3 mt-5">
-              <button
-                onClick={() => {
-                  setEditModal(false);
-                  setEditingReport(null);
-                }}
-                className="px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditSave}
-                className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
+          </main>
         </div>
-      )}
-    </Suspense>
+
+        {/* Edit Modal */}
+        {editModal && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+              <h2 className="text-base font-bold text-gray-900 mb-1">
+                Edit Report Dates
+              </h2>
+              <p className="text-xs text-gray-500 mb-4">
+                {editingReport?.auditName}
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                    Inventory Dates
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        value={editForm.inventory_start_date}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            inventory_start_date: e.target.value,
+                          }))
+                        }
+                        className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">
+                        End Date
+                      </label>
+                      <input
+                        type="date"
+                        value={editForm.inventory_end_date}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            inventory_end_date: e.target.value,
+                          }))
+                        }
+                        className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                    Wholesaler Dates
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        value={editForm.wholesaler_start_date}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            wholesaler_start_date: e.target.value,
+                          }))
+                        }
+                        className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">
+                        End Date
+                      </label>
+                      <input
+                        type="date"
+                        value={editForm.wholesaler_end_date}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            wholesaler_end_date: e.target.value,
+                          }))
+                        }
+                        className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-5">
+                <button
+                  onClick={() => {
+                    setEditModal(false);
+                    setEditingReport(null);
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Suspense>
+    </ProtectedRoute>
   );
 }

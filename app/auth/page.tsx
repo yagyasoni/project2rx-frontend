@@ -417,7 +417,7 @@ const AuthPage = () => {
               </svg>
               GitHub
             </Button> */}
-            <GoogleLogin
+            {/* <GoogleLogin
               theme="outline"
               size="large"
               shape="rectangular"
@@ -441,7 +441,40 @@ const AuthPage = () => {
               onError={() => {
                 console.log("Google Login Failed");
               }}
-            />
+            /> */}
+
+            {isLogin && (
+              <GoogleLogin
+                theme="outline"
+                size="large"
+                shape="rectangular"
+                width="100%"
+                onSuccess={async (credentialResponse) => {
+                  try {
+                    const res = await axios.post(
+                      "http://localhost:5000/auth/google",
+                      {
+                        credential: credentialResponse.credential,
+                      },
+                    );
+
+                    console.log(res.data);
+
+                    localStorage.setItem("accessToken", res?.data?.token);
+
+                    alert("Google login successful");
+
+                    window.location.href = "/Mainpage";
+                  } catch (error) {
+                    console.error("Google login failed", error);
+                    alert("Google login failed. Please register first.");
+                  }
+                }}
+                onError={() => {
+                  console.log("Google Login Failed");
+                }}
+              />
+            )}
           </div>
         </div>
 

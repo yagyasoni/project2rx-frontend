@@ -52,19 +52,23 @@ export default function Sidebar({
       try {
         const token = localStorage.getItem("accessToken");
 
-        const res = await api.get("/pharmacy-details", {
+        const res = await api.get("/auth/pharmacy-details", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         console.log(res.data);
-        setAccountName(res?.data?.pharmacy?.pharmacy_name || "Account Name");
+        localStorage.setItem(
+          "pharmacyName",
+          res?.data?.pharmacy?.pharmacy_name,
+        );
+        setAccountName(localStorage.getItem("pharmacyName") || "Account Name");
       } catch (err) {
         console.log("error");
         alert("Failed to fetch user info");
       }
     };
-    pharmacy();
+    !localStorage.getItem("pharmacyName") && pharmacy();
   }, []);
 
   const [openPopup, setOpenPopup] = useState<Popup>(null);
@@ -275,7 +279,7 @@ export default function Sidebar({
                     Account Name
                   </div>
                   <div className="text-xs text-gray-500 truncate">
-                    {accountName}
+                    {localStorage.getItem("pharmacyName") || "Loading..."}
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -287,7 +291,7 @@ export default function Sidebar({
             <div className="absolute left-full ml-2 bottom-0 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-3">
               <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-gray-100">
                 <span className="text-sm font-semibold text-gray-900">
-                  {accountName}
+                  {localStorage.getItem("pharmacyName") || "Loading..."}
                 </span>
                 <div className="w-6 h-6 rounded-full border-2 border-green-600 flex items-center justify-center shrink-0 ml-2">
                   <svg

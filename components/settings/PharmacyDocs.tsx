@@ -26,7 +26,7 @@ const PharmacyDocs = () => {
   const fetchBlob = async (type: string) => {
     const token = localStorage.getItem("accessToken");
 
-    const res = await api.get(`/pharmacy-file/${type}`, {
+    const res = await api.get(`/auth/pharmacy-file/${type}`, {
       responseType: "blob",
       headers: { Authorization: `Bearer ${token}` },
     });

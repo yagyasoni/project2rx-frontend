@@ -26,8 +26,8 @@ const NameReportStep = ({
     const token = localStorage.getItem("accessToken");
     const name: string = auditName;
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/audits",
+      const res = await api.post(
+        "/api/audits",
         { name },
         {
           headers: {

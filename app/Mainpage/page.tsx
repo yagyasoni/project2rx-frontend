@@ -181,6 +181,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const reportTypes = [
   {
@@ -250,154 +251,158 @@ export default function BatchRxDashboard() {
   };
 
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="flex h-screen bg-background">
-        {/* Sidebar */}
-        <Sidebar
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-          activePanel={activePanel}
-          setActivePanel={setActivePanel}
-        />
+    <ProtectedRoute>
+      <Suspense fallback={<Loading />}>
+        <div className="flex h-screen bg-background">
+          {/* Sidebar */}
+          <Sidebar
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+            activePanel={activePanel}
+            setActivePanel={setActivePanel}
+          />
 
-        {/* MAIN */}
-        <main className="flex-1 overflow-auto bg-muted/30 flex">
-          <div className="flex-1 flex flex-col items-center justify-center p-8">
-            {!view ? (
-              <>
-                {/* Title */}
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-center mb-12"
-                >
-                  <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-                    Select a Report to Get Started
-                  </h1>
-
-                  <p className="text-muted-foreground text-base">
-                    Features that streamline your pharmacy audit compliance.
-                  </p>
-                </motion.div>
-
-                {/* Report Cards */}
-                <div className="flex flex-wrap justify-center gap-6 mb-10 max-w-3xl">
-                  {reportTypes.map((report, index) => (
-                    <motion.div
-                      key={report.id}
-                      initial={{ opacity: 0, y: 30 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.1 }}
-                    >
-                      <Card
-                        onClick={() =>
-                          report.id === "inventory"
-                            ? setSelectedReport(report.id)
-                            : null
-                        }
-                        className={`w-48 relative overflow-hidden p-6 flex flex-col items-center gap-4 transition-all duration-300 border-2 ${
-                          report.id !== "inventory"
-                            ? "cursor-not-allowed opacity-70 border-border bg-card"
-                            : selectedReport === report.id
-                              ? "cursor-pointer shadow-lg scale-105 bg-card"
-                              : "cursor-pointer border-border bg-card hover:border-gray-400 hover:shadow-lg"
-                        }`}
-                      >
-                        {/* Coming Soon Overlay */}
-                        {report.id !== "inventory" && (
-                          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                            <span className="bg-muted text-muted-foreground text-xs font-semibold px-3 py-1 rounded-full border border-border">
-                              Coming Soon
-                            </span>
-                          </div>
-                        )}
-
-                        <div
-                          className={`w-14 h-14 ${report.color} rounded-xl flex items-center justify-center`}
-                        >
-                          <report.icon
-                            className={`w-7 h-7 ${report.iconColor}`}
-                          />
-                        </div>
-
-                        <div className="text-center">
-                          <p className="font-bold text-sm text-foreground tracking-wide">
-                            {report.label}
-                          </p>
-
-                          <p className="text-muted-foreground text-sm">
-                            {report.sublabel}
-                          </p>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Description */}
-                <AnimatePresence mode="wait">
-                  {selectedData && (
-                    <motion.p
-                      key={selectedData.id}
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="text-muted-foreground text-sm text-center mb-8 max-w-md"
-                    >
-                      {selectedData.description}
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-
-                {/* Start Button */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <Button
-                    onClick={handleStart}
-                    disabled={!selectedReport}
-                    className="px-10 py-3 bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-lg gap-2 disabled:opacity-40"
+          {/* MAIN */}
+          <main className="flex-1 overflow-auto bg-muted/30 flex">
+            <div className="flex-1 flex flex-col items-center justify-center p-8">
+              {!view ? (
+                <>
+                  {/* Title */}
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="text-center mb-12"
                   >
-                    Start
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </motion.div>
-              </>
-            ) : (
-              <AuditWizard
-                initialStep={initialStep}
-                initialAuditId={initialAuditId}
-              />
-            )}
-          </div>
+                    <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+                      Select a Report to Get Started
+                    </h1>
 
-          {/* RIGHT PANEL */}
-          {activePanel && (
-            <div className="w-80 bg-white border-l border-gray-200 p-6 overflow-y-auto">
-              {activePanel === "support" && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                    Customer Support
-                  </h2>
-                  <p className="text-sm text-gray-600">Call: 777-777-7777</p>
-                </div>
-              )}
+                    <p className="text-muted-foreground text-base">
+                      Features that streamline your pharmacy audit compliance.
+                    </p>
+                  </motion.div>
 
-              {activePanel === "account" && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                    Account Information
-                  </h2>
-                  <p className="text-sm text-gray-600">United Drugs Pharmacy</p>
-                </div>
+                  {/* Report Cards */}
+                  <div className="flex flex-wrap justify-center gap-6 mb-10 max-w-3xl">
+                    {reportTypes.map((report, index) => (
+                      <motion.div
+                        key={report.id}
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: index * 0.1 }}
+                      >
+                        <Card
+                          onClick={() =>
+                            report.id === "inventory"
+                              ? setSelectedReport(report.id)
+                              : null
+                          }
+                          className={`w-48 relative overflow-hidden p-6 flex flex-col items-center gap-4 transition-all duration-300 border-2 ${
+                            report.id !== "inventory"
+                              ? "cursor-not-allowed opacity-70 border-border bg-card"
+                              : selectedReport === report.id
+                                ? "cursor-pointer shadow-lg scale-105 bg-card"
+                                : "cursor-pointer border-border bg-card hover:border-gray-400 hover:shadow-lg"
+                          }`}
+                        >
+                          {/* Coming Soon Overlay */}
+                          {report.id !== "inventory" && (
+                            <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                              <span className="bg-muted text-muted-foreground text-xs font-semibold px-3 py-1 rounded-full border border-border">
+                                Coming Soon
+                              </span>
+                            </div>
+                          )}
+
+                          <div
+                            className={`w-14 h-14 ${report.color} rounded-xl flex items-center justify-center`}
+                          >
+                            <report.icon
+                              className={`w-7 h-7 ${report.iconColor}`}
+                            />
+                          </div>
+
+                          <div className="text-center">
+                            <p className="font-bold text-sm text-foreground tracking-wide">
+                              {report.label}
+                            </p>
+
+                            <p className="text-muted-foreground text-sm">
+                              {report.sublabel}
+                            </p>
+                          </div>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Description */}
+                  <AnimatePresence mode="wait">
+                    {selectedData && (
+                      <motion.p
+                        key={selectedData.id}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="text-muted-foreground text-sm text-center mb-8 max-w-md"
+                      >
+                        {selectedData.description}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Start Button */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <Button
+                      onClick={handleStart}
+                      disabled={!selectedReport}
+                      className="px-10 py-3 bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-lg gap-2 disabled:opacity-40"
+                    >
+                      Start
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </motion.div>
+                </>
+              ) : (
+                <AuditWizard
+                  initialStep={initialStep}
+                  initialAuditId={initialAuditId}
+                />
               )}
             </div>
-          )}
-        </main>
-      </div>
-    </Suspense>
+
+            {/* RIGHT PANEL */}
+            {activePanel && (
+              <div className="w-80 bg-white border-l border-gray-200 p-6 overflow-y-auto">
+                {activePanel === "support" && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                      Customer Support
+                    </h2>
+                    <p className="text-sm text-gray-600">Call: 777-777-7777</p>
+                  </div>
+                )}
+
+                {activePanel === "account" && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                      Account Information
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      United Drugs Pharmacy
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
+        </div>
+      </Suspense>
+    </ProtectedRoute>
   );
 }
