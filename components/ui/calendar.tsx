@@ -7,7 +7,12 @@ import { buttonVariants } from "@/components/ui/button";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
-function Calendar({ className, classNames, showOutsideDays = false, ...props }: CalendarProps) {
+function Calendar({
+  className,
+  classNames,
+  showOutsideDays = false,
+  ...props
+}: CalendarProps) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -21,11 +26,10 @@ function Calendar({ className, classNames, showOutsideDays = false, ...props }: 
 
         row: "grid grid-cols-7 mt-2",
 
-        cell:
-          "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+        cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 relative font-normal aria-selected:opacity-100 hover:bg-blue-50 hover:text-blue-600"
+          "h-10 w-10 p-0 relative font-normal aria-selected:opacity-100 hover:bg-blue-50 hover:text-blue-600",
         ),
         day_selected:
           "bg-blue-600 text-white hover:bg-blue-700 hover:text-white focus:bg-blue-600 focus:text-white rounded-md",
@@ -33,10 +37,17 @@ function Calendar({ className, classNames, showOutsideDays = false, ...props }: 
         day_outside: "text-slate-400 opacity-50",
         ...classNames,
       }}
-
       components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        PreviousMonthButton: (props) => (
+          <button {...props}>
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        ),
+        NextMonthButton: (props) => (
+          <button {...props}>
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        ),
       }}
       {...props}
     />
