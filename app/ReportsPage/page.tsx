@@ -36,6 +36,8 @@ export default function ReportsPage() {
     wholesaler_end_date: "",
   });
 
+  const pharmacyName = localStorage.getItem("pharmacyName") || "Loading...";
+
   const getFilteredReports = () => {
     switch (activeFilter) {
       case "inventory":
@@ -198,7 +200,7 @@ export default function ReportsPage() {
                       <RotateCw className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
                     </h1>
                     <p className="text-sm text-gray-500">
-                      {localStorage.getItem("pharmacyName") || ""}
+                      {pharmacyName} Inventory Reports
                     </p>
                   </div>
                 </div>
