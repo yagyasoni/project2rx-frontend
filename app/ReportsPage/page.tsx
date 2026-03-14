@@ -1,24 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import axios from "axios";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Layers,
-  RotateCw,
-  MoreVertical,
-  LifeBuoy,
-  User,
-  RefreshCw,
-  Settings,
-  HelpCircle,
-  Ticket,
-  Search,
-  FileText,
-} from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Layers, RotateCw, MoreVertical } from "lucide-react";
 import Loading from "./loading";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
@@ -42,7 +26,7 @@ export default function ReportsPage() {
   const [loadingReports, setLoadingReports] = useState(true);
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
-  const [activeMenu, setActiveMenu] = useState<number | null>(null);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [editModal, setEditModal] = useState(false);
   const [editingReport, setEditingReport] = useState<any>(null);
   const [editForm, setEditForm] = useState({
@@ -51,7 +35,6 @@ export default function ReportsPage() {
     wholesaler_start_date: "",
     wholesaler_end_date: "",
   });
-  const searchParams = useSearchParams();
 
   const getFilteredReports = () => {
     switch (activeFilter) {
