@@ -1,176 +1,193 @@
-'use client'
+"use client";
 
-import React, { useEffect, useState } from 'react'
-import axios from 'axios'
-import { ChevronLeft, ChevronRight, Layers, RotateCw, MoreVertical, LifeBuoy, User, RefreshCw, Settings, HelpCircle, Ticket, Search, FileText } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
-import Loading from './loading'
-import Link from 'next/link'
-import Sidebar from '@/components/Sidebar'
-
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Layers,
+  RotateCw,
+  MoreVertical,
+  LifeBuoy,
+  User,
+  RefreshCw,
+  Settings,
+  HelpCircle,
+  Ticket,
+  Search,
+  FileText,
+} from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import Loading from "./loading";
+import Link from "next/link";
+import Sidebar from "@/components/Sidebar";
 
 interface Report {
-  id: string
-  auditName: string
-  status: 'Ready' | 'Started' | 'Completed'
-  inventoryDates: string
-  wholesalerDates: string
-  type: 'INVENTORY' | 'PBM' | 'ABERRANT'  
-  createdDate: string
+  id: string;
+  auditName: string;
+  status: "Ready" | "Started" | "Completed";
+  inventoryDates: string;
+  wholesalerDates: string;
+  type: "INVENTORY" | "PBM" | "ABERRANT";
+  createdDate: string;
 }
 
-
-
-type FilterType = 'all' | 'inventory' | 'aberrant' | 'optum'
+type FilterType = "all" | "inventory" | "aberrant" | "optum";
 
 export default function ReportsPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [reportsData, setReportsData] = useState<Report[]>([])
-const [loadingReports, setLoadingReports] = useState(true)
-  const [activePanel, setActivePanel] = useState<string | null>(null)
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all')
-  const [activeMenu, setActiveMenu] = useState<number | null>(null)
-  const [editModal, setEditModal] = useState(false)
-const [editingReport, setEditingReport] = useState<any>(null)
-const [editForm, setEditForm] = useState({
-  inventory_start_date: '',
-  inventory_end_date: '',
-  wholesaler_start_date: '',
-  wholesaler_end_date: '',
-})
-  const searchParams = useSearchParams()
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [reportsData, setReportsData] = useState<Report[]>([]);
+  const [loadingReports, setLoadingReports] = useState(true);
+  const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [activeMenu, setActiveMenu] = useState<number | null>(null);
+  const [editModal, setEditModal] = useState(false);
+  const [editingReport, setEditingReport] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    inventory_start_date: "",
+    inventory_end_date: "",
+    wholesaler_start_date: "",
+    wholesaler_end_date: "",
+  });
+  const searchParams = useSearchParams();
 
   const getFilteredReports = () => {
     switch (activeFilter) {
-      case 'inventory':
-        return reportsData.filter(r => r.type === 'INVENTORY')
-      case 'aberrant':
-        return reportsData.filter(r => r.type === 'ABERRANT')
-      case 'optum':
-        return reportsData.filter(r => r.type === 'PBM')
+      case "inventory":
+        return reportsData.filter((r) => r.type === "INVENTORY");
+      case "aberrant":
+        return reportsData.filter((r) => r.type === "ABERRANT");
+      case "optum":
+        return reportsData.filter((r) => r.type === "PBM");
       default:
-        return reportsData
+        return reportsData;
     }
-  }
+  };
 
   const handleDelete = async (auditId: string) => {
-  const ok = window.confirm("Are you sure you want to delete this report?");
-  if (!ok) return;
+    const ok = window.confirm("Are you sure you want to delete this report?");
+    if (!ok) return;
 
-  try {
-    await axios.delete(`http://localhost:5000/api/audits/${auditId}`);
-    setReportsData((prev) => prev.filter((r) => r.id !== auditId));
+    try {
+      await axios.delete(`http://localhost:5000/api/audits/${auditId}`);
+      setReportsData((prev) => prev.filter((r) => r.id !== auditId));
+      setActiveMenu(null);
+    } catch (e) {
+      console.error("Delete failed:", e);
+      alert("Delete failed. Check backend logs.");
+    }
+  };
+
+  const handleEdit = (report: Report) => {
+    setEditingReport(report);
+    axios.get(`http://localhost:5000/api/audits/${report.id}`).then((res) => {
+      const a = res.data;
+      setEditForm({
+        inventory_start_date: a.inventory_start_date?.slice(0, 10) ?? "",
+        inventory_end_date: a.inventory_end_date?.slice(0, 10) ?? "",
+        wholesaler_start_date: a.wholesaler_start_date?.slice(0, 10) ?? "",
+        wholesaler_end_date: a.wholesaler_end_date?.slice(0, 10) ?? "",
+      });
+    });
+    setEditModal(true);
     setActiveMenu(null);
-  } catch (e) {
-    console.error("Delete failed:", e);
-    alert("Delete failed. Check backend logs.");
-  }
-};
+  };
 
-const handleEdit = (report: Report) => {
-  setEditingReport(report)
-  axios.get(`http://localhost:5000/api/audits/${report.id}`).then((res) => {
-    const a = res.data
-    setEditForm({
-      inventory_start_date: a.inventory_start_date?.slice(0, 10) ?? '',
-      inventory_end_date: a.inventory_end_date?.slice(0, 10) ?? '',
-      wholesaler_start_date: a.wholesaler_start_date?.slice(0, 10) ?? '',
-      wholesaler_end_date: a.wholesaler_end_date?.slice(0, 10) ?? '',
-    })
-  })
-  setEditModal(true)
-  setActiveMenu(null)
-}
-
-const handleEditSave = async () => {
-  if (!editingReport) return
-  try {
-    await axios.patch(
-  `http://localhost:5000/api/audits/${editingReport.id}/dates`,
-  editForm
-)
-    setReportsData((prev) =>
-      prev.map((r) =>
-        r.id === editingReport.id
-          ? {
-              ...r,
-              inventoryDates: formatRange(
-                editForm.inventory_start_date,
-                editForm.inventory_end_date
-              ),
-              wholesalerDates: formatRange(
-                editForm.wholesaler_start_date,
-                editForm.wholesaler_end_date
-              ),
-            }
-          : r
-      )
-    )
-    setEditModal(false)
-    setEditingReport(null)
-  } catch (e) {
-    console.error('Edit failed:', e)
-    alert('Failed to save. Check backend logs.')
-  }
-}
+  const handleEditSave = async () => {
+    if (!editingReport) return;
+    try {
+      await axios.patch(
+        `http://localhost:5000/api/audits/${editingReport.id}/dates`,
+        editForm,
+      );
+      setReportsData((prev) =>
+        prev.map((r) =>
+          r.id === editingReport.id
+            ? {
+                ...r,
+                inventoryDates: formatRange(
+                  editForm.inventory_start_date,
+                  editForm.inventory_end_date,
+                ),
+                wholesalerDates: formatRange(
+                  editForm.wholesaler_start_date,
+                  editForm.wholesaler_end_date,
+                ),
+              }
+            : r,
+        ),
+      );
+      setEditModal(false);
+      setEditingReport(null);
+    } catch (e) {
+      console.error("Edit failed:", e);
+      alert("Failed to save. Check backend logs.");
+    }
+  };
 
   const formatDate = (d?: string | null) => {
-  if (!d) return '-'
-  const dt = new Date(d)
-  return dt.toLocaleDateString('en-US', {
-    month: '2-digit',
-    day: '2-digit',
-    year: 'numeric',
-  })
-}
+    if (!d) return "-";
+    const dt = new Date(d);
+    return dt.toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    });
+  };
 
-const formatRange = (start?: string | null, end?: string | null) => {
-  if (!start || !end) return '-'
-  return `${formatDate(start)} - ${formatDate(end)}`
-}
+  const formatRange = (start?: string | null, end?: string | null) => {
+    if (!start || !end) return "-";
+    return `${formatDate(start)} - ${formatDate(end)}`;
+  };
 
-const mapStatus = (s?: string | null): Report['status'] => {
-  const v = (s || '').toLowerCase()
-  if (v === 'completed') return 'Completed'
-  if (v === 'started') return 'Started'
-  return 'Ready'
-}
+  const mapStatus = (s?: string | null): Report["status"] => {
+    const v = (s || "").toLowerCase();
+    if (v === "completed") return "Completed";
+    if (v === "started") return "Started";
+    return "Ready";
+  };
 
-useEffect(() => {
-  const load = async () => {
-    try {
-      setLoadingReports(true)
-      const res = await axios.get('http://localhost:5000/api/audits')
-      const rows = res.data as any[]
-      const mapped: Report[] = rows.map((a) => ({
-        id: a.id,
-        auditName: a.name,
-        status: mapStatus(a.status),
-        inventoryDates: formatRange(a.inventory_start_date, a.inventory_end_date),
-        wholesalerDates: formatRange(a.wholesaler_start_date, a.wholesaler_end_date),
-        type: 'INVENTORY',
-        createdDate: formatDate(a.created_at),
-      }))
-      setReportsData(mapped)
-    } catch (e) {
-      console.error('Failed to load reports', e)
-      setReportsData([])
-    } finally {
-      setLoadingReports(false)
-    }
-  }
-  load()
-}, [])
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoadingReports(true);
+        const res = await axios.get("http://localhost:5000/api/audits");
+        const rows = res.data as any[];
+        const mapped: Report[] = rows.map((a) => ({
+          id: a.id,
+          auditName: a.name,
+          status: mapStatus(a.status),
+          inventoryDates: formatRange(
+            a.inventory_start_date,
+            a.inventory_end_date,
+          ),
+          wholesalerDates: formatRange(
+            a.wholesaler_start_date,
+            a.wholesaler_end_date,
+          ),
+          type: "INVENTORY",
+          createdDate: formatDate(a.created_at),
+        }));
+        setReportsData(mapped);
+      } catch (e) {
+        console.error("Failed to load reports", e);
+        setReportsData([]);
+      } finally {
+        setLoadingReports(false);
+      }
+    };
+    load();
+  }, []);
 
-  const filteredReports = getFilteredReports()
+  const filteredReports = getFilteredReports();
 
   const filterCounts = {
     all: reportsData.length,
-    inventory: reportsData.filter(r => r.type === 'INVENTORY').length,
-    aberrant: reportsData.filter(r => r.type === 'ABERRANT').length,
-    optum: reportsData.filter(r => r.type === 'PBM').length,
-  }
+    inventory: reportsData.filter((r) => r.type === "INVENTORY").length,
+    aberrant: reportsData.filter((r) => r.type === "ABERRANT").length,
+    optum: reportsData.filter((r) => r.type === "PBM").length,
+  };
 
   return (
     <Suspense fallback={<Loading />}>
@@ -188,33 +205,35 @@ useEffect(() => {
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-1">
                 <div className="w-14 h-14 bg-gray-100 border border-gray-200 rounded-xl flex items-center justify-center">
-  <Layers className="w-7 h-7 text-gray-700" />
-</div>
-<div>
-  <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-    REPORTS
-    <RotateCw className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
-  </h1>
-  <p className="text-sm text-gray-500">United Drugs Pharmacy | 507 Central Ave</p>
-</div>
+                  <Layers className="w-7 h-7 text-gray-700" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                    REPORTS
+                    <RotateCw className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
+                  </h1>
+                  <p className="text-sm text-gray-500">
+                    United Drugs Pharmacy | 507 Central Ave
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Tabs */}
             <div className="flex justify-end gap-6 -mb-9 -translate-y-13 border-b border-gray-200">
               {[
-                { key: 'all', label: 'ALL', count: filterCounts.all },
+                { key: "all", label: "ALL", count: filterCounts.all },
                 // { key: 'inventory', label: 'INVENTORY', count: filterCounts.inventory },
                 // { key: 'aberrant', label: 'ABERRANT', count: filterCounts.aberrant },
                 // { key: 'optum', label: 'OPTUM', count: filterCounts.optum },
-              ].map(tab => (
+              ].map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveFilter(tab.key as FilterType)}
                   className={`pb-3 px-2 font-semibold text-xs transition-colors relative ${
                     activeFilter === tab.key
-                      ? 'text-gray-900'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? "text-gray-900"
+                      : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -236,13 +255,27 @@ useEffect(() => {
                 <thead className="bg-gray-50">
                   <tr className="border-b border-gray-200">
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 w-10"></th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Audit Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Status</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Inventory Dates</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Wholesaler Dates</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Type</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Created Date</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Actions</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                      Audit Name
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                      Status
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                      Inventory Dates
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                      Wholesaler Dates
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                      Type
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                      Created Date
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">
@@ -250,7 +283,7 @@ useEffect(() => {
                     <tr
                       key={report.id}
                       className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                        index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                       }`}
                     >
                       <td className="px-4 py-1.5 text-sm text-gray-500 font-medium">
@@ -265,30 +298,44 @@ useEffect(() => {
                         </Link>
                       </td>
                       <td className="px-4 py-2">
-                        <span className={`text-xs font-medium ${
-                          report.status === 'Started' ? 'text-blue-600' : 'text-green-700'
-                        }`}>
+                        <span
+                          className={`text-xs font-medium ${
+                            report.status === "Started"
+                              ? "text-blue-600"
+                              : "text-green-700"
+                          }`}
+                        >
                           {report.status}
                         </span>
                       </td>
-                      <td className="px-4 py-1.5 text-sm text-gray-600">{report.inventoryDates}</td>
-                      <td className="px-4 py-1.5 text-sm text-gray-600">{report.wholesalerDates}</td>
+                      <td className="px-4 py-1.5 text-sm text-gray-600">
+                        {report.inventoryDates}
+                      </td>
+                      <td className="px-4 py-1.5 text-sm text-gray-600">
+                        {report.wholesalerDates}
+                      </td>
                       <td className="px-4 py-2">
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-semibold inline-block ${
-                            report.type === 'PBM'
-                              ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                              : 'bg-pink-100 text-pink-700 border border-pink-300'
+                            report.type === "PBM"
+                              ? "bg-blue-100 text-blue-700 border border-blue-300"
+                              : "bg-pink-100 text-pink-700 border border-pink-300"
                           }`}
                         >
                           {report.type}
                         </span>
                       </td>
-                      <td className="px-4 py-1.5 text-sm text-gray-600">{report.createdDate}</td>
+                      <td className="px-4 py-1.5 text-sm text-gray-600">
+                        {report.createdDate}
+                      </td>
                       <td className="px-4 py-2">
                         <div className="relative">
                           <button
-                            onClick={() => setActiveMenu(activeMenu === report.id ? null : report.id)}
+                            onClick={() =>
+                              setActiveMenu(
+                                activeMenu === report.id ? null : report.id,
+                              )
+                            }
                             className="p-1 hover:bg-gray-200 rounded transition-colors"
                           >
                             <MoreVertical className="w-4 h-4 text-gray-600" />
@@ -302,23 +349,23 @@ useEffect(() => {
                                 Edit
                               </button>
                               <button
-  onClick={() => {
-    setActiveMenu(null);
-    window.location.href = `/Mainpage?auditId=${report.id}&step=inventory`;
-  }}
-  className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
->
-  InventoryFiles
-</button>
-<button
-  onClick={() => {
-    setActiveMenu(null);
-    window.location.href = `/Mainpage?auditId=${report.id}&step=wholesaler`;
-  }}
-  className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
->
-  SupplierFiles
-</button>
+                                onClick={() => {
+                                  setActiveMenu(null);
+                                  window.location.href = `/Mainpage?auditId=${report.id}&step=inventory`;
+                                }}
+                                className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                InventoryFiles
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setActiveMenu(null);
+                                  window.location.href = `/Mainpage?auditId=${report.id}&step=wholesaler`;
+                                }}
+                                className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                SupplierFiles
+                              </button>
                               <button
                                 onClick={() => handleDelete(report.id)}
                                 className="w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 transition-colors border-t border-gray-200 rounded-b-lg"
@@ -342,8 +389,12 @@ useEffect(() => {
       {editModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h2 className="text-base font-bold text-gray-900 mb-1">Edit Report Dates</h2>
-            <p className="text-xs text-gray-500 mb-4">{editingReport?.auditName}</p>
+            <h2 className="text-base font-bold text-gray-900 mb-1">
+              Edit Report Dates
+            </h2>
+            <p className="text-xs text-gray-500 mb-4">
+              {editingReport?.auditName}
+            </p>
 
             <div className="space-y-4">
               <div>
@@ -352,23 +403,33 @@ useEffect(() => {
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      Start Date
+                    </label>
                     <input
                       type="date"
                       value={editForm.inventory_start_date}
                       onChange={(e) =>
-                        setEditForm((prev) => ({ ...prev, inventory_start_date: e.target.value }))
+                        setEditForm((prev) => ({
+                          ...prev,
+                          inventory_start_date: e.target.value,
+                        }))
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">End Date</label>
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      End Date
+                    </label>
                     <input
                       type="date"
                       value={editForm.inventory_end_date}
                       onChange={(e) =>
-                        setEditForm((prev) => ({ ...prev, inventory_end_date: e.target.value }))
+                        setEditForm((prev) => ({
+                          ...prev,
+                          inventory_end_date: e.target.value,
+                        }))
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -382,23 +443,33 @@ useEffect(() => {
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      Start Date
+                    </label>
                     <input
                       type="date"
                       value={editForm.wholesaler_start_date}
                       onChange={(e) =>
-                        setEditForm((prev) => ({ ...prev, wholesaler_start_date: e.target.value }))
+                        setEditForm((prev) => ({
+                          ...prev,
+                          wholesaler_start_date: e.target.value,
+                        }))
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">End Date</label>
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      End Date
+                    </label>
                     <input
                       type="date"
                       value={editForm.wholesaler_end_date}
                       onChange={(e) =>
-                        setEditForm((prev) => ({ ...prev, wholesaler_end_date: e.target.value }))
+                        setEditForm((prev) => ({
+                          ...prev,
+                          wholesaler_end_date: e.target.value,
+                        }))
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -409,7 +480,10 @@ useEffect(() => {
 
             <div className="flex justify-end gap-3 mt-5">
               <button
-                onClick={() => { setEditModal(false); setEditingReport(null) }}
+                onClick={() => {
+                  setEditModal(false);
+                  setEditingReport(null);
+                }}
                 className="px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Cancel
@@ -425,5 +499,5 @@ useEffect(() => {
         </div>
       )}
     </Suspense>
-  )
+  );
 }

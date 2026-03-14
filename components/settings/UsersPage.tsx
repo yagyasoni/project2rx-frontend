@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import UserCard from "./UserCard";
 import axios from "axios";
+import api from "@/lib/api";
 
 const UsersPage = () => {
   const [search, setSearch] = useState("");
@@ -26,7 +27,7 @@ const UsersPage = () => {
       try {
         const token = localStorage.getItem("accessToken");
 
-        const res = await axios.get("http://localhost:5000/auth/user-info", {
+        const res = await api.get("/user-info", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

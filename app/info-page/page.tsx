@@ -75,6 +75,44 @@ const PharmacyDetailsForm = () => {
     name: "",
   });
 
+  // EIN
+  const [einNumber, setEinNumber] = useState("");
+  const [einFile, setEinFile] = useState<FileUpload>({ file: null, name: "" });
+
+  // Liability Insurance
+  const [insuranceExpiration, setInsuranceExpiration] = useState<
+    Date | undefined
+  >();
+  const [liabilityInsuranceFile, setLiabilityInsuranceFile] =
+    useState<FileUpload>({
+      file: null,
+      name: "",
+    });
+
+  // Workers Comp
+  const [workersCompExpiration, setWorkersCompExpiration] = useState<
+    Date | undefined
+  >();
+  const [workersCompFile, setWorkersCompFile] = useState<FileUpload>({
+    file: null,
+    name: "",
+  });
+
+  // Surety Bond
+  const [suretyBondExpiration, setSuretyBondExpiration] = useState<
+    Date | undefined
+  >();
+  const [suretyBondFile, setSuretyBondFile] = useState<FileUpload>({
+    file: null,
+    name: "",
+  });
+
+  // Voided Cheque
+  const [voidedChequeFile, setVoidedChequeFile] = useState<FileUpload>({
+    file: null,
+    name: "",
+  });
+
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: React.Dispatch<React.SetStateAction<FileUpload>>,
@@ -129,6 +167,36 @@ const PharmacyDetailsForm = () => {
       formData.append("pharmacistFile", pharmacistFile.file);
 
     if (cmeaFile.file) formData.append("cmeaFile", cmeaFile.file);
+    formData.append("einNumber", einNumber);
+
+    if (einFile.file) formData.append("einFile", einFile.file);
+
+    if (insuranceExpiration)
+      formData.append("insuranceExpiration", insuranceExpiration.toISOString());
+
+    if (liabilityInsuranceFile.file)
+      formData.append("liabilityInsuranceFile", liabilityInsuranceFile.file);
+
+    if (workersCompExpiration)
+      formData.append(
+        "workersCompExpiration",
+        workersCompExpiration.toISOString(),
+      );
+
+    if (workersCompFile.file)
+      formData.append("workersCompFile", workersCompFile.file);
+
+    if (suretyBondExpiration)
+      formData.append(
+        "suretyBondExpiration",
+        suretyBondExpiration.toISOString(),
+      );
+
+    if (suretyBondFile.file)
+      formData.append("suretyBondFile", suretyBondFile.file);
+
+    if (voidedChequeFile.file)
+      formData.append("voidedChequeFile", voidedChequeFile.file);
 
     try {
       // TODO: Replace with actual API endpoint
@@ -334,6 +402,87 @@ const PharmacyDetailsForm = () => {
                     className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Section: Business & Insurance Documents */}
+            <div>
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
+                Business & Insurance Documents
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground">
+                    EIN Number
+                  </Label>
+                  <Input
+                    value={einNumber}
+                    onChange={(e) => setEinNumber(e.target.value)}
+                    placeholder="Enter EIN number"
+                    className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground"
+                  />
+                </div>
+
+                <FileUploadField
+                  label="Upload EIN File"
+                  fileState={einFile}
+                  onFileChange={(e) => handleFileChange(e, setEinFile)}
+                  onClear={() => clearFile(setEinFile)}
+                  id="ein-file"
+                />
+
+                <DatePickerField
+                  label="Insurance Expiration"
+                  date={insuranceExpiration}
+                  setDate={setInsuranceExpiration}
+                />
+
+                <FileUploadField
+                  label="Liability Insurance File"
+                  fileState={liabilityInsuranceFile}
+                  onFileChange={(e) =>
+                    handleFileChange(e, setLiabilityInsuranceFile)
+                  }
+                  onClear={() => clearFile(setLiabilityInsuranceFile)}
+                  id="liability-insurance-file"
+                />
+
+                <DatePickerField
+                  label="Workers Comp Expiration"
+                  date={workersCompExpiration}
+                  setDate={setWorkersCompExpiration}
+                />
+
+                <FileUploadField
+                  label="Workers Comp File"
+                  fileState={workersCompFile}
+                  onFileChange={(e) => handleFileChange(e, setWorkersCompFile)}
+                  onClear={() => clearFile(setWorkersCompFile)}
+                  id="workers-comp-file"
+                />
+
+                <DatePickerField
+                  label="Surety Bond Expiration"
+                  date={suretyBondExpiration}
+                  setDate={setSuretyBondExpiration}
+                />
+
+                <FileUploadField
+                  label="Surety Bond File"
+                  fileState={suretyBondFile}
+                  onFileChange={(e) => handleFileChange(e, setSuretyBondFile)}
+                  onClear={() => clearFile(setSuretyBondFile)}
+                  id="surety-bond-file"
+                />
+
+                <FileUploadField
+                  label="Voided Cheque"
+                  fileState={voidedChequeFile}
+                  onFileChange={(e) => handleFileChange(e, setVoidedChequeFile)}
+                  onClear={() => clearFile(setVoidedChequeFile)}
+                  id="voided-cheque-file"
+                />
               </div>
             </div>
 

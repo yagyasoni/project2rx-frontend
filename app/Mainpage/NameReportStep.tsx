@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
+import api from "@/lib/api";
 
 interface NameReportStepProps {
   auditName: string;
@@ -22,11 +23,18 @@ const NameReportStep = ({
   const isValid = auditName.trim() !== "" && agreedToTerms;
 
   const handleSubmit = async () => {
+    const token = localStorage.getItem("accessToken");
     const name: string = auditName;
     try {
-      const res = await axios.post("http://localhost:5000/api/audits", {
-        name,
-      });
+      const res = await axios.post(
+        "http://localhost:5000/api/audits",
+        { name },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
       console.log(res.data);
       localStorage.setItem("auditId", res.data.id);
       alert("success");

@@ -20,6 +20,8 @@ import {
   GitBranch,
 } from "lucide-react";
 import axios from "axios";
+import api from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -36,28 +38,7 @@ export default function Sidebar({
   activePanel,
   setActivePanel,
 }: SidebarProps) {
-  // useEffect(() => {
-  //   const user = async () => {
-  //     try {
-  //       const token = localStorage.getItem("accessToken");
-
-  //       const res = await axios.get(
-  //         "http://localhost:5000/auth/pharmacy-details",
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //         },
-  //       );
-  //       console.log(res.data);
-  //       setAccountName(res?.data?.pharmacy?.pharmacy_name || "Account Name");
-  //     } catch (err) {
-  //       console.log("error");
-  //       alert("Failed to fetch user info");
-  //     }
-  //   };
-  //   user();
-  // }, []);
+  const router = useRouter();
 
   const pathname = usePathname();
   const [showSupportPopup, setShowSupportPopup] = useState(false);
@@ -71,14 +52,11 @@ export default function Sidebar({
       try {
         const token = localStorage.getItem("accessToken");
 
-        const res = await axios.get(
-          "http://localhost:5000/auth/pharmacy-details",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const res = await api.get("/pharmacy-details", {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
         console.log(res.data);
         setAccountName(res?.data?.pharmacy?.pharmacy_name || "Account Name");
       } catch (err) {
@@ -111,21 +89,33 @@ export default function Sidebar({
   const isActive = (path: string) => pathname === path;
 
   const navClass = (path: string) =>
-    `w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200
+    `w-full flex items-center ${sidebarOpen ? "px-4" : "px-2"} py-3 rounded-lg font-semibold transition-all duration-200 ${
+      sidebarOpen ? "justify-start" : "justify-center"
+    }
      ${
        isActive(path)
          ? "bg-gray-200/60 text-gray-700"
          : "text-gray-700 hover:bg-gray-100"
      }`;
 
-  const handleLogout = () => {
-    console.log("Logging out...");
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      // Revoke refresh token on server
+      await api.post("/logout", { refreshToken });
+    } catch {
+      // Even if API fails, still clear local storage and redirect
+    } finally {
+      localStorage.clear();
+      router.push("/login");
+    }
   };
 
   return (
     <aside
       className={`${
-        sidebarOpen ? "w-64" : "w-20"
+        sidebarOpen ? "w-64" : "w-20 "
       } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col relative`}
     >
       {/* HEADER */}
@@ -153,23 +143,23 @@ export default function Sidebar({
       <nav className="flex-1 p-4 space-y-2">
         <Link href="/Mainpage" className={navClass("/Mainpage")}>
           <Layers className="w-5 h-5" />
-          {sidebarOpen && <span>Start Audit</span>}
+          {sidebarOpen && <span className="ml-3">Start Audit</span>}
         </Link>
 
         <Link href="/ReportsPage" className={navClass("/ReportsPage")}>
           <FileText className="w-5 h-5" />
-          {sidebarOpen && <span>Reports</span>}
+          {sidebarOpen && <span className="ml-3">Reports</span>}
         </Link>
 
         <Link href="/bin-search" className={navClass("/bin-search")}>
           <Search className="w-5 h-5" />
-          {sidebarOpen && <span>Bin Search</span>}
+          {sidebarOpen && <span className="ml-3">Bin Search</span>}
         </Link>
 
         <Link href="/tickets" className={navClass("/tickets")}>
           <Ticket className="w-5 h-5" />
           {sidebarOpen && (
-            <div className="flex justify-between w-full">
+            <div className="flex justify-between w-full ml-3">
               <span>Tickets</span>
               <span className="bg-pink-500 text-white text-xs px-2 py-0.5 rounded">
                 NEW
@@ -180,7 +170,7 @@ export default function Sidebar({
 
         <Link href="/how-to" className={navClass("/how-to")}>
           <HelpCircle className="w-5 h-5" />
-          {sidebarOpen && <span>How To</span>}
+          {sidebarOpen && <span className="ml-3">How To</span>}
         </Link>
       </nav>
 
@@ -190,16 +180,16 @@ export default function Sidebar({
         <div className="relative">
           <button
             onClick={() => toggle("support")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
+            className={`w-full flex items-center ${sidebarOpen ? "px-4" : "px-2 justify-center"} py-3 rounded-lg font-semibold transition-all duration-200 ${
               openPopup === "support"
                 ? "bg-gray-200/60 text-gray-700"
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
-            <LifeBuoy className="w-5 h-5" />
+            <LifeBuoy className="w-5 h-5 shrink-0" />
             {sidebarOpen && (
               <>
-                <span className="flex-1 text-left">Customer Support</span>
+                <span className="flex-1 text-left ml-3">Customer Support</span>
                 <ChevronRight className="w-4 h-4" />
               </>
             )}
@@ -272,12 +262,12 @@ export default function Sidebar({
         <div className="relative">
           <button
             onClick={() => toggle("account")}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200"
+            className={`w-full flex items-center ${sidebarOpen ? "px-4" : "px-2 justify-center"} py-3 rounded-lg border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200`}
           >
             <User className="w-5 h-5 text-gray-700 shrink-0" />
             {sidebarOpen && (
               <>
-                <div className="flex-1 text-left">
+                <div className="flex-1 text-left ml-3">
                   <div className="text-sm font-semibold text-gray-900">
                     Account Name
                   </div>
@@ -294,7 +284,7 @@ export default function Sidebar({
             <div className="absolute left-full ml-2 bottom-0 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-3">
               <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-gray-100">
                 <span className="text-sm font-semibold text-gray-900">
-                  United Drugs Pharmacy
+                  {accountName}
                 </span>
                 <div className="w-6 h-6 rounded-full border-2 border-green-600 flex items-center justify-center shrink-0 ml-2">
                   <svg
@@ -320,7 +310,7 @@ export default function Sidebar({
         <div className="relative">
           <button
             onClick={() => toggle("settings")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
+            className={`w-full flex items-center ${sidebarOpen ? "px-4" : "px-2 justify-center"} py-3 rounded-lg font-semibold transition-all duration-200 ${
               openPopup === "settings"
                 ? "bg-gray-100 text-gray-900"
                 : "text-gray-700 hover:bg-gray-100"
@@ -329,7 +319,7 @@ export default function Sidebar({
             <Settings className="w-5 h-5 shrink-0" />
             {sidebarOpen && (
               <>
-                <span className="flex-1 text-left">Settings</span>
+                <span className="flex-1 text-left ml-3">Settings</span>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
               </>
             )}
@@ -374,17 +364,19 @@ export default function Sidebar({
         {/* ── Hard Refresh ───────────────────────────────────────────── */}
         <button
           onClick={() => window.location.reload()}
-          className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-semibold transition-all duration-200"
+          className={`w-full flex items-center ${sidebarOpen ? "px-4" : "px-2 justify-center"} py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-semibold transition-all duration-200`}
         >
-          <RefreshCw className="w-5 h-5" />
-          {sidebarOpen && <span>Hard Refresh</span>}
+          <RefreshCw className="w-5 h-5 shrink-0" />
+          {sidebarOpen && <span className="ml-3">Hard Refresh</span>}
         </button>
 
         {/* ── Version ───────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 px-4 py-2">
+        <div
+          className={`flex items-center ${sidebarOpen ? "px-4" : "px-2 justify-center"} py-2`}
+        >
           <GitBranch className="w-5 h-5 text-gray-900 shrink-0" />
           {sidebarOpen && (
-            <span className="text-sm font-semibold text-gray-900">
+            <span className="text-sm font-semibold text-gray-900 ml-3">
               Version 1.0
             </span>
           )}
