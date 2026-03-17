@@ -53,7 +53,7 @@ const AuthPage = () => {
       }
     } else {
       try {
-        const res = await axios.post("http://localhost:5000/auth/register", {
+        const res = await axios.post("http://51.21.167.65:22/auth/register", {
           name,
           email,
           phone,
