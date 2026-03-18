@@ -1500,7 +1500,7 @@ const Index = () => {
                   "Unlimited audits",
                   "Advanced analytics",
                   "Priority support",
-                  "5 user seats",
+                  "50 user seats",
                   "API access",
                 ],
                 highlighted: true,
