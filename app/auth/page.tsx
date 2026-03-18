@@ -45,6 +45,9 @@ const AuthPage = () => {
         console.log(res?.data);
         localStorage.setItem("accessToken", res?.data?.accessToken);
         localStorage.setItem("refreshToken", res?.data?.refreshToken);
+        if (!localStorage.getItem("userId")) {
+          localStorage.setItem("userId", res?.data?.user?.id);
+        }
         alert("successfully logged in");
 
         router.push("/Mainpage");
