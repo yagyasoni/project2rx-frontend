@@ -2,7 +2,6 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import axios from "axios";
 import api from "@/lib/api";
 
 interface NameReportStepProps {
@@ -22,25 +21,38 @@ const NameReportStep = ({
 }: NameReportStepProps) => {
   const isValid = auditName.trim() !== "" && agreedToTerms;
 
+  // const handleSubmit = async () => {
+  //   const token = localStorage.getItem("accessToken");
+  //   const name: string = auditName;
+  //   try {
+  //     const res = await api.post(
+  //       "/api/audits",
+  //       { name },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       },
+  //     );
+  //     console.log(res.data);
+  //     localStorage.setItem("auditId", res.data.id);
+  //     alert("success");
+  //     onContinue();
+  //   } catch (err) {
+  //     alert("failed");
+  //   }
+  // };
+
   const handleSubmit = async () => {
-    const token = localStorage.getItem("accessToken");
     const name: string = auditName;
     try {
-      const res = await api.post(
-        "/api/audits",
-        { name },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const res = await api.post("/audits", { name });
       console.log(res.data);
       localStorage.setItem("auditId", res.data.id);
-      alert("success");
       onContinue();
     } catch (err) {
-      alert("failed");
+      console.error("Audit creation failed:", err);
+      alert("Failed to create audit. Please try again.");
     }
   };
 
@@ -48,7 +60,7 @@ const NameReportStep = ({
     <div className="w-full max-w-xl mx-auto">
       <div className="bg-card rounded-lg border border-border p-8 shadow-sm">
         <h2 className="text-2xl font-bold text-foreground text-center mb-8">
-          Let's name your inventory report
+          Lets name your inventory report
         </h2>
 
         <div className="space-y-6">
