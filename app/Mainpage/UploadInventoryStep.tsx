@@ -359,17 +359,14 @@ const UploadInventoryStep = ({
 
     if (!inventoryFile) return;
 
-   const transformedMapping: Record<string, string> = {};
-  Object.entries(fieldMapping).forEach(([fieldKey, csvHeader]) => {
-    const standardKey = STANDARD_FIELD_TO_VALUE[fieldKey];
-    if (standardKey && csvHeader) {
-      transformedMapping[standardKey] = csvHeader;
-    }
-  });
-
-  const formData = new FormData();
-  formData.append("file", inventoryFile);
-  formData.append("headerMapping", JSON.stringify(transformedMapping));
+    const formData = new FormData();
+    formData.append("file", inventoryFile);
+    formData.append(
+  "headerMapping",
+  new Blob([JSON.stringify(fieldMapping)], {
+    type: "application/json",
+  })
+);
 
     setUploadProgress(0);
     setIsUploading(true);
@@ -395,11 +392,20 @@ const UploadInventoryStep = ({
 
     try {
       const id = localStorage.getItem("auditId");
+      if (!id) {
+  alert("Missing audit ID");
+  return;
+}
       console.log("⬆️ Starting upload...");
 
       const res = await axios.post(
         `https://51.21.167.65/api/audits/${id}/inventory`,
         formData,
+        {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }
       );
 
       console.log("✅ Upload complete:", res.status, res.data);
@@ -410,6 +416,9 @@ const UploadInventoryStep = ({
       setIsUploading(false);
       setSubmitSuccess(true);
     } catch (err: any) {
+      console.error("❌ FULL ERROR:", err);
+  console.error("❌ RESPONSE:", err?.response);
+  console.error("❌ DATA:", err?.response?.data);
       clearTimeout(safetyTimer);
       clearInterval(interval);
       setIsUploading(false);

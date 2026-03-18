@@ -21,40 +21,28 @@ const NameReportStep = ({
 }: NameReportStepProps) => {
   const isValid = auditName.trim() !== "" && agreedToTerms;
 
-  // const handleSubmit = async () => {
-  //   const token = localStorage.getItem("accessToken");
-  //   const name: string = auditName;
-  //   try {
-  //     const res = await api.post(
-  //       "/api/audits",
-  //       { name },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       },
-  //     );
-  //     console.log(res.data);
-  //     localStorage.setItem("auditId", res.data.id);
-  //     alert("success");
-  //     onContinue();
-  //   } catch (err) {
-  //     alert("failed");
-  //   }
-  // };
-
   const handleSubmit = async () => {
+    const token = localStorage.getItem("accessToken");
     const name: string = auditName;
     try {
-      const res = await api.post("/audits", { name });
+      const res = await api.post(
+        "/api/audits",
+        { name },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
       console.log(res.data);
       localStorage.setItem("auditId", res.data.id);
+      alert("success");
       onContinue();
     } catch (err) {
-      console.error("Audit creation failed:", err);
-      alert("Failed to create audit. Please try again.");
+      alert("failed");
     }
   };
+
 
   return (
     <div className="w-full max-w-xl mx-auto">
