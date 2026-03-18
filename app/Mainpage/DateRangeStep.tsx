@@ -22,8 +22,18 @@ interface DateRangeStepProps {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const MONTHS = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -55,9 +65,11 @@ function getFirstDayOfMonth(year: number, month: number) {
 
 function isSameDay(a: Date | undefined, b: Date | undefined) {
   if (!a || !b) return false;
-  return a.getFullYear() === b.getFullYear() &&
+  return (
+    a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
+    a.getDate() === b.getDate()
+  );
 }
 
 function isInRange(d: Date, start: Date | undefined, end: Date | undefined) {
@@ -76,10 +88,20 @@ interface CalendarDropdownProps {
   onClose: () => void;
 }
 
-function CalendarDropdown({ selected, onSelect, rangeStart, rangeEnd, onClose }: CalendarDropdownProps) {
+function CalendarDropdown({
+  selected,
+  onSelect,
+  rangeStart,
+  rangeEnd,
+  onClose,
+}: CalendarDropdownProps) {
   const today = new Date();
-  const [viewYear, setViewYear] = useState(selected?.getFullYear() ?? today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(selected?.getMonth() ?? today.getMonth());
+  const [viewYear, setViewYear] = useState(
+    selected?.getFullYear() ?? today.getFullYear(),
+  );
+  const [viewMonth, setViewMonth] = useState(
+    selected?.getMonth() ?? today.getMonth(),
+  );
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -93,12 +115,16 @@ function CalendarDropdown({ selected, onSelect, rangeStart, rangeEnd, onClose }:
   }, [onClose]);
 
   const prevMonth = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
-    else setViewMonth(m => m - 1);
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear((y) => y - 1);
+    } else setViewMonth((m) => m - 1);
   };
   const nextMonth = () => {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
-    else setViewMonth(m => m + 1);
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear((y) => y + 1);
+    } else setViewMonth((m) => m + 1);
   };
 
   const daysInMonth = getDaysInMonth(viewYear, viewMonth);
@@ -110,7 +136,10 @@ function CalendarDropdown({ selected, onSelect, rangeStart, rangeEnd, onClose }:
   // Pad to complete last row
   while (cells.length % 7 !== 0) cells.push(null);
 
-  const yearRange = Array.from({ length: 30 }, (_, i) => today.getFullYear() - 10 + i);
+  const yearRange = Array.from(
+    { length: 30 },
+    (_, i) => today.getFullYear() - 10 + i,
+  );
 
   return (
     <div
@@ -120,26 +149,38 @@ function CalendarDropdown({ selected, onSelect, rangeStart, rangeEnd, onClose }:
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <button onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded-lg transition">
+        <button
+          onClick={prevMonth}
+          className="p-1 hover:bg-gray-100 rounded-lg transition"
+        >
           <ChevronLeft className="w-4 h-4 text-gray-600" />
         </button>
 
         <div className="flex gap-1">
           <button
-            onClick={() => { setShowMonthPicker(v => !v); setShowYearPicker(false); }}
+            onClick={() => {
+              setShowMonthPicker((v) => !v);
+              setShowYearPicker(false);
+            }}
             className="px-2 py-1 text-sm font-semibold hover:bg-gray-100 rounded-lg transition"
           >
             {MONTHS[viewMonth]}
           </button>
           <button
-            onClick={() => { setShowYearPicker(v => !v); setShowMonthPicker(false); }}
+            onClick={() => {
+              setShowYearPicker((v) => !v);
+              setShowMonthPicker(false);
+            }}
             className="px-2 py-1 text-sm font-semibold hover:bg-gray-100 rounded-lg transition"
           >
             {viewYear}
           </button>
         </div>
 
-        <button onClick={nextMonth} className="p-1 hover:bg-gray-100 rounded-lg transition">
+        <button
+          onClick={nextMonth}
+          className="p-1 hover:bg-gray-100 rounded-lg transition"
+        >
           <ChevronRight className="w-4 h-4 text-gray-600" />
         </button>
       </div>
@@ -150,9 +191,14 @@ function CalendarDropdown({ selected, onSelect, rangeStart, rangeEnd, onClose }:
           {MONTHS.map((m, i) => (
             <button
               key={m}
-              onClick={() => { setViewMonth(i); setShowMonthPicker(false); }}
+              onClick={() => {
+                setViewMonth(i);
+                setShowMonthPicker(false);
+              }}
               className={`py-1.5 text-xs rounded-lg transition font-medium ${
-                i === viewMonth ? "bg-gray-900 text-white" : "hover:bg-gray-100 text-gray-700"
+                i === viewMonth
+                  ? "bg-gray-900 text-white"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               {m.slice(0, 3)}
@@ -164,12 +210,17 @@ function CalendarDropdown({ selected, onSelect, rangeStart, rangeEnd, onClose }:
       {/* Year Picker Overlay */}
       {showYearPicker && (
         <div className="grid grid-cols-4 gap-1 mb-3 max-h-40 overflow-y-auto">
-          {yearRange.map(y => (
+          {yearRange.map((y) => (
             <button
               key={y}
-              onClick={() => { setViewYear(y); setShowYearPicker(false); }}
+              onClick={() => {
+                setViewYear(y);
+                setShowYearPicker(false);
+              }}
               className={`py-1.5 text-xs rounded-lg transition font-medium ${
-                y === viewYear ? "bg-gray-900 text-white" : "hover:bg-gray-100 text-gray-700"
+                y === viewYear
+                  ? "bg-gray-900 text-white"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               {y}
@@ -182,8 +233,13 @@ function CalendarDropdown({ selected, onSelect, rangeStart, rangeEnd, onClose }:
         <>
           {/* Day headers */}
           <div className="grid grid-cols-7 mb-1">
-            {["Su","Mo","Tu","We","Th","Fr","Sa"].map(d => (
-              <div key={d} className="text-center text-[11px] font-medium text-gray-400 py-1">{d}</div>
+            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+              <div
+                key={d}
+                className="text-center text-[11px] font-medium text-gray-400 py-1"
+              >
+                {d}
+              </div>
             ))}
           </div>
 
@@ -201,14 +257,18 @@ function CalendarDropdown({ selected, onSelect, rangeStart, rangeEnd, onClose }:
               return (
                 <button
                   key={idx}
-                  onClick={() => { onSelect(thisDate); onClose(); }}
+                  onClick={() => {
+                    onSelect(thisDate);
+                    onClose();
+                  }}
                   className={`
                     relative h-9 w-full flex items-center justify-center text-sm rounded-lg transition-all
-                    ${isSelected || isStart || isEnd
-                      ? "bg-gray-900 text-white font-semibold shadow-md"
-                      : inRange
-                        ? "bg-gray-100 text-gray-800"
-                        : "hover:bg-gray-100 text-gray-700"
+                    ${
+                      isSelected || isStart || isEnd
+                        ? "bg-gray-900 text-white font-semibold shadow-md"
+                        : inRange
+                          ? "bg-gray-100 text-gray-800"
+                          : "hover:bg-gray-100 text-gray-700"
                     }
                   `}
                 >
@@ -224,10 +284,14 @@ function CalendarDropdown({ selected, onSelect, rangeStart, rangeEnd, onClose }:
           {/* Today shortcut */}
           <div className="mt-3 pt-3 border-t border-gray-100">
             <button
-              onClick={() => { onSelect(today); onClose(); }}
+              onClick={() => {
+                onSelect(today);
+                onClose();
+              }}
               className="w-full text-xs text-center text-gray-500 hover:text-gray-900 transition font-medium"
             >
-              Today — {MONTHS[today.getMonth()]} {today.getDate()}, {today.getFullYear()}
+              Today — {MONTHS[today.getMonth()]} {today.getDate()},{" "}
+              {today.getFullYear()}
             </button>
           </div>
         </>
@@ -246,7 +310,13 @@ interface SmartDateInputProps {
   placeholder?: string;
 }
 
-function SmartDateInput({ date, setDate, rangeStart, rangeEnd, placeholder = "MM/DD/YYYY" }: SmartDateInputProps) {
+function SmartDateInput({
+  date,
+  setDate,
+  rangeStart,
+  rangeEnd,
+  placeholder = "MM/DD/YYYY",
+}: SmartDateInputProps) {
   const [inputVal, setInputVal] = useState(formatDisplay(date));
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(false);
@@ -312,7 +382,9 @@ function SmartDateInput({ date, setDate, rangeStart, rangeEnd, placeholder = "MM
         `}
         onClick={() => setOpen(true)}
       >
-        <CalendarIcon className={`w-4 h-4 flex-shrink-0 ${error ? "text-red-400" : "text-gray-400"}`} />
+        <CalendarIcon
+          className={`w-4 h-4 flex-shrink-0 ${error ? "text-red-400" : "text-gray-400"}`}
+        />
         <input
           type="text"
           value={inputVal}
@@ -324,14 +396,19 @@ function SmartDateInput({ date, setDate, rangeStart, rangeEnd, placeholder = "MM
           className={`flex-1 bg-transparent outline-none placeholder:text-gray-300 ${error ? "text-red-500" : "text-gray-800"}`}
         />
         {(inputVal || date) && (
-          <button onClick={clear} className="p-0.5 hover:bg-gray-100 rounded transition flex-shrink-0">
+          <button
+            onClick={clear}
+            className="p-0.5 hover:bg-gray-100 rounded transition flex-shrink-0"
+          >
             <X className="w-3 h-3 text-gray-400" />
           </button>
         )}
       </div>
 
       {error && (
-        <p className="text-xs text-red-500 mt-1">Invalid date. Use MM/DD/YYYY</p>
+        <p className="text-xs text-red-500 mt-1">
+          Invalid date. Use MM/DD/YYYY
+        </p>
       )}
 
       {date && !error && (
@@ -343,7 +420,11 @@ function SmartDateInput({ date, setDate, rangeStart, rangeEnd, placeholder = "MM
       {open && (
         <CalendarDropdown
           selected={date}
-          onSelect={(d) => { setDate(d); setInputVal(formatDisplay(d)); setError(false); }}
+          onSelect={(d) => {
+            setDate(d);
+            setInputVal(formatDisplay(d));
+            setError(false);
+          }}
           rangeStart={rangeStart}
           rangeEnd={rangeEnd}
           onClose={() => setOpen(false)}
@@ -356,23 +437,33 @@ function SmartDateInput({ date, setDate, rangeStart, rangeEnd, placeholder = "MM
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const DateRangeStep = ({
-  inventoryStartDate, setInventoryStartDate,
-  inventoryEndDate, setInventoryEndDate,
-  wholesalerStartDate, setWholesalerStartDate,
-  wholesalerEndDate, setWholesalerEndDate,
+  inventoryStartDate,
+  setInventoryStartDate,
+  inventoryEndDate,
+  setInventoryEndDate,
+  wholesalerStartDate,
+  setWholesalerStartDate,
+  wholesalerEndDate,
+  setWholesalerEndDate,
   onContinue,
 }: DateRangeStepProps) => {
-  const formatDate = (date?: Date) => (date ? `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` : "");
+  const formatDate = (date?: Date) =>
+    date
+      ? `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+      : "";
 
   const handleSubmit = async () => {
     try {
       const id = localStorage.getItem("auditId");
-      const res = await axios.patch(`http://localhost:5000/api/audits/${id}/dates`, {
-        inventory_start_date: formatDate(inventoryStartDate),
-        inventory_end_date: formatDate(inventoryEndDate),
-        wholesaler_start_date: formatDate(wholesalerStartDate),
-        wholesaler_end_date: formatDate(wholesalerEndDate),
-      });
+      const res = await axios.patch(
+        `https://51.21.167.65/api/audits/${id}/dates`,
+        {
+          inventory_start_date: formatDate(inventoryStartDate),
+          inventory_end_date: formatDate(inventoryEndDate),
+          wholesaler_start_date: formatDate(wholesalerStartDate),
+          wholesaler_end_date: formatDate(wholesalerEndDate),
+        },
+      );
       console.log(res.data);
       onContinue();
     } catch (err) {
@@ -380,7 +471,11 @@ const DateRangeStep = ({
     }
   };
 
-  const allFilled = inventoryStartDate && inventoryEndDate && wholesalerStartDate && wholesalerEndDate;
+  const allFilled =
+    inventoryStartDate &&
+    inventoryEndDate &&
+    wholesalerStartDate &&
+    wholesalerEndDate;
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -389,20 +484,33 @@ const DateRangeStep = ({
           <span className="text-[11px] text-gray-400 uppercase tracking-widest font-medium">
             Inventory Report
           </span>
-          <h2 className="text-2xl font-bold text-gray-900 mt-1">Select Dates</h2>
-          <p className="text-sm text-gray-400 mt-1">Type or click to pick dates. Navigate months and years freely.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mt-1">
+            Select Dates
+          </h2>
+          <p className="text-sm text-gray-400 mt-1">
+            Type or click to pick dates. Navigate months and years freely.
+          </p>
         </div>
 
         <div className="space-y-8">
           {/* Inventory Dates */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold text-gray-900">Inventory Dates</h3>
-              <Badge variant="outline" className="text-[11px] font-semibold tracking-wide">BILLED</Badge>
+              <h3 className="text-base font-semibold text-gray-900">
+                Inventory Dates
+              </h3>
+              <Badge
+                variant="outline"
+                className="text-[11px] font-semibold tracking-wide"
+              >
+                BILLED
+              </Badge>
             </div>
             <div className="flex items-start gap-3">
               <div className="flex-1 space-y-1.5">
-                <Label className="text-[11px] text-gray-400 uppercase tracking-widest font-medium">Start Date</Label>
+                <Label className="text-[11px] text-gray-400 uppercase tracking-widest font-medium">
+                  Start Date
+                </Label>
                 <SmartDateInput
                   date={inventoryStartDate}
                   setDate={setInventoryStartDate}
@@ -411,7 +519,9 @@ const DateRangeStep = ({
               </div>
               <span className="text-gray-300 mt-[38px] text-lg">→</span>
               <div className="flex-1 space-y-1.5">
-                <Label className="text-[11px] text-gray-400 uppercase tracking-widest font-medium">End Date</Label>
+                <Label className="text-[11px] text-gray-400 uppercase tracking-widest font-medium">
+                  End Date
+                </Label>
                 <SmartDateInput
                   date={inventoryEndDate}
                   setDate={setInventoryEndDate}
@@ -421,9 +531,18 @@ const DateRangeStep = ({
             </div>
             {inventoryStartDate && inventoryEndDate && (
               <div className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
-                📅 {MONTHS[inventoryStartDate.getMonth()]} {inventoryStartDate.getDate()} – {MONTHS[inventoryEndDate.getMonth()]} {inventoryEndDate.getDate()}, {inventoryEndDate.getFullYear()}
+                📅 {MONTHS[inventoryStartDate.getMonth()]}{" "}
+                {inventoryStartDate.getDate()} –{" "}
+                {MONTHS[inventoryEndDate.getMonth()]}{" "}
+                {inventoryEndDate.getDate()}, {inventoryEndDate.getFullYear()}
                 <span className="ml-2 font-medium text-gray-600">
-                  ({Math.round((inventoryEndDate.getTime() - inventoryStartDate.getTime()) / 86400000)} days)
+                  (
+                  {Math.round(
+                    (inventoryEndDate.getTime() -
+                      inventoryStartDate.getTime()) /
+                      86400000,
+                  )}{" "}
+                  days)
                 </span>
               </div>
             )}
@@ -432,12 +551,21 @@ const DateRangeStep = ({
           {/* Wholesaler Dates */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold text-gray-900">Wholesaler Dates</h3>
-              <Badge variant="outline" className="text-[11px] font-semibold tracking-wide">ORDERED</Badge>
+              <h3 className="text-base font-semibold text-gray-900">
+                Wholesaler Dates
+              </h3>
+              <Badge
+                variant="outline"
+                className="text-[11px] font-semibold tracking-wide"
+              >
+                ORDERED
+              </Badge>
             </div>
             <div className="flex items-start gap-3">
               <div className="flex-1 space-y-1.5">
-                <Label className="text-[11px] text-gray-400 uppercase tracking-widest font-medium">Start Date</Label>
+                <Label className="text-[11px] text-gray-400 uppercase tracking-widest font-medium">
+                  Start Date
+                </Label>
                 <SmartDateInput
                   date={wholesalerStartDate}
                   setDate={setWholesalerStartDate}
@@ -446,7 +574,9 @@ const DateRangeStep = ({
               </div>
               <span className="text-gray-300 mt-[38px] text-lg">→</span>
               <div className="flex-1 space-y-1.5">
-                <Label className="text-[11px] text-gray-400 uppercase tracking-widest font-medium">End Date</Label>
+                <Label className="text-[11px] text-gray-400 uppercase tracking-widest font-medium">
+                  End Date
+                </Label>
                 <SmartDateInput
                   date={wholesalerEndDate}
                   setDate={setWholesalerEndDate}
@@ -456,9 +586,18 @@ const DateRangeStep = ({
             </div>
             {wholesalerStartDate && wholesalerEndDate && (
               <div className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
-                📅 {MONTHS[wholesalerStartDate.getMonth()]} {wholesalerStartDate.getDate()} – {MONTHS[wholesalerEndDate.getMonth()]} {wholesalerEndDate.getDate()}, {wholesalerEndDate.getFullYear()}
+                📅 {MONTHS[wholesalerStartDate.getMonth()]}{" "}
+                {wholesalerStartDate.getDate()} –{" "}
+                {MONTHS[wholesalerEndDate.getMonth()]}{" "}
+                {wholesalerEndDate.getDate()}, {wholesalerEndDate.getFullYear()}
                 <span className="ml-2 font-medium text-gray-600">
-                  ({Math.round((wholesalerEndDate.getTime() - wholesalerStartDate.getTime()) / 86400000)} days)
+                  (
+                  {Math.round(
+                    (wholesalerEndDate.getTime() -
+                      wholesalerStartDate.getTime()) /
+                      86400000,
+                  )}{" "}
+                  days)
                 </span>
               </div>
             )}

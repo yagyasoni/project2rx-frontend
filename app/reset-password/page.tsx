@@ -17,13 +17,10 @@ const ResetPasswordPage = () => {
     const token = new URLSearchParams(window.location.search).get("token");
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/auth/reset-password",
-        {
-          token,
-          newPassword: confirmPassword,
-        },
-      );
+      const res = await axios.post("https://51.21.167.65/auth/reset-password", {
+        token,
+        newPassword: confirmPassword,
+      });
       console.log(res?.data);
       alert(res?.data?.message);
     } catch (err) {

@@ -217,7 +217,7 @@
 //   });
 // }, 200);
 
-//         const res = await fetch(`http://localhost:5000/api/audits/${auditId}/report`);
+//         const res = await fetch(`https://51.21.167.65/api/audits/${auditId}/report`);
 //         const json = await res.json();
 
 //         const data = Array.isArray(json)
@@ -283,7 +283,7 @@
 
 //         setInventoryData(normalized);
 
-//         const auditRes = await fetch(`http://localhost:5000/api/audits/${auditId}`);
+//         const auditRes = await fetch(`https://51.21.167.65/api/audits/${auditId}`);
 //         const auditData = await auditRes.json();
 //         setAuditDates(auditData);
 //       } catch (err) {
@@ -1995,7 +1995,7 @@ export default function InventoryReportPage() {
         }, 200);
 
         const res = await fetch(
-          `http://localhost:5000/api/audits/${auditId}/report`,
+          `https://51.21.167.65/api/audits/${auditId}/report`,
         );
         const json = await res.json();
 
@@ -2081,7 +2081,7 @@ export default function InventoryReportPage() {
         setInventoryData(normalized);
 
         const auditRes = await fetch(
-          `http://localhost:5000/api/audits/${auditId}`,
+          `https://51.21.167.65/api/audits/${auditId}`,
         );
         const auditData = await auditRes.json();
         setAuditDates(auditData);

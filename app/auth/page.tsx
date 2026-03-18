@@ -38,7 +38,7 @@ const AuthPage = () => {
 
     if (isLogin) {
       try {
-        const res = await axios.post("http://localhost:5000/auth/login", {
+        const res = await axios.post("https://51.21.167.65/auth/login", {
           email,
           password,
         });
@@ -72,7 +72,7 @@ const AuthPage = () => {
 
   const verifyOtp = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/auth/verify-otp", {
+      const res = await axios.post("https://51.21.167.65/auth/verify-otp", {
         email,
         otp,
       });
@@ -87,7 +87,7 @@ const AuthPage = () => {
 
   const resendOtp = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/auth/resend-otp", {
+      const res = await axios.post("https://51.21.167.65/auth/resend-otp", {
         email,
       });
       console.log(res?.data);
@@ -102,7 +102,7 @@ const AuthPage = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/auth/forgot-password",
+        "https://51.21.167.65/auth/forgot-password",
         { email },
       );
       console.log(res?.data);
@@ -425,7 +425,7 @@ const AuthPage = () => {
               onSuccess={async (credentialResponse) => {
                 try {
                   const res = await axios.post(
-                    "http://localhost:5000/auth/google",
+                    "https://51.21.167.65/auth/google",
                     {
                       credential: credentialResponse.credential,
                     },
@@ -452,7 +452,7 @@ const AuthPage = () => {
                 onSuccess={async (credentialResponse) => {
                   try {
                     const res = await axios.post(
-                      "http://localhost:5000/auth/google",
+                      "https://51.21.167.65/auth/google",
                       {
                         credential: credentialResponse.credential,
                       },

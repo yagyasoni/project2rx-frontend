@@ -204,7 +204,7 @@ const PharmacyDetailsForm = () => {
 
       // Simulate network delay
       const res = await axios.post(
-        "http://localhost:5000/auth/pharmacy",
+        "https://51.21.167.65/auth/pharmacy",
         formData,
       );
       console.log(res?.data);
