@@ -38,7 +38,7 @@ const AuthPage = () => {
 
     if (isLogin) {
       try {
-        const res = await axios.post("https://51.21.167.65/auth/login", {
+        const res = await axios.post("https://api.auditprorx.com/auth/login", {
           email,
           password,
         });
@@ -56,7 +56,7 @@ const AuthPage = () => {
       }
     } else {
       try {
-        const res = await axios.post("https://51.21.167.65/auth/register", {
+        const res = await axios.post("https://api.auditprorx.com/auth/register", {
           name,
           email,
           phone,
@@ -75,7 +75,7 @@ const AuthPage = () => {
 
   const verifyOtp = async () => {
     try {
-      const res = await axios.post("https://51.21.167.65/auth/verify-otp", {
+      const res = await axios.post("https://api.auditprorx.com/auth/verify-otp", {
         email,
         otp,
       });
@@ -90,7 +90,7 @@ const AuthPage = () => {
 
   const resendOtp = async () => {
     try {
-      const res = await axios.post("https://51.21.167.65/auth/resend-otp", {
+      const res = await axios.post("https://api.auditprorx.com/auth/resend-otp", {
         email,
       });
       console.log(res?.data);
@@ -105,7 +105,7 @@ const AuthPage = () => {
 
     try {
       const res = await axios.post(
-        "https://51.21.167.65/auth/forgot-password",
+        "https://api.auditprorx.com/auth/forgot-password",
         { email },
       );
       console.log(res?.data);
@@ -428,7 +428,7 @@ const AuthPage = () => {
               onSuccess={async (credentialResponse) => {
                 try {
                   const res = await axios.post(
-                    "https://51.21.167.65/auth/google",
+                    "https://api.auditprorx.com/auth/google",
                     {
                       credential: credentialResponse.credential,
                     },
@@ -455,7 +455,7 @@ const AuthPage = () => {
                 onSuccess={async (credentialResponse) => {
                   try {
                     const res = await axios.post(
-                      "https://51.21.167.65/auth/google",
+                      "https://api.auditprorx.com/auth/google",
                       {
                         credential: credentialResponse.credential,
                       },
