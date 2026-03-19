@@ -17,7 +17,7 @@ const ResetPasswordPage = () => {
     const token = new URLSearchParams(window.location.search).get("token");
 
     try {
-      const res = await axios.post("https://51.21.167.65/auth/reset-password", {
+      const res = await axios.post("https://api.auditprorx.com/auth/reset-password", {
         token,
         newPassword: confirmPassword,
       });
