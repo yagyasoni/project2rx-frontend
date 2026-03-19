@@ -390,7 +390,7 @@
 //       console.log("⬆️ Starting upload...");
 
 //       const res = await axios.post(
-//         `https://51.21.167.65/api/audits/${id}/inventory`,
+//         `https://api.auditprorx.com/api/audits/${id}/inventory`,
 //         formData,
 //       );
 
@@ -1217,7 +1217,7 @@ const UploadInventoryStep = ({
       console.log("⬆️ Starting upload...");
 
       const res = await axios.post(
-        `https://51.21.167.65/api/audits/${id}/inventory`,
+        `https://api.auditprorx.com/api/audits/${id}/inventory`,
         formData,
       );
 
