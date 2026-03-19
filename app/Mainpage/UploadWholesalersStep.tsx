@@ -484,7 +484,7 @@ const UploadWholesalersStep = ({
 
     try {
       const res = await axios.post(
-        `https://51.21.167.65/api/audits/${id}/wholesalers`,
+        `https://api.auditprorx.com/api/audits/${id}/wholesalers`,
         formData,
       );
 
