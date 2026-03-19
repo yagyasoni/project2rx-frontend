@@ -61,7 +61,7 @@ export default function ReportsPage() {
     if (!ok) return;
 
     try {
-      await axios.delete(`https://51.21.167.65/api/audits/${auditId}`);
+      await axios.delete(`https://api.auditprorx.com/api/audits/${auditId}`);
       setReportsData((prev) => prev.filter((r) => r.id !== auditId));
       setActiveMenu(null);
     } catch (e) {
@@ -72,7 +72,7 @@ export default function ReportsPage() {
 
   const handleEdit = (report: Report) => {
     setEditingReport(report);
-    axios.get(`https://51.21.167.65/api/audits/${report.id}`).then((res) => {
+    axios.get(`https://api.auditprorx.com/api/audits/${report.id}`).then((res) => {
       const a = res.data;
       setEditForm({
         inventory_start_date: a.inventory_start_date?.slice(0, 10) ?? "",
@@ -89,7 +89,7 @@ export default function ReportsPage() {
     if (!editingReport) return;
     try {
       await axios.patch(
-        `https://51.21.167.65/api/audits/${editingReport.id}/dates`,
+        `https://api.auditprorx.com/api/audits/${editingReport.id}/dates`,
         editForm,
       );
       setReportsData((prev) =>
@@ -143,7 +143,7 @@ export default function ReportsPage() {
     const load = async () => {
       try {
         setLoadingReports(true);
-        const res = await axios.get("https://51.21.167.65/api/audits");
+        const res = await axios.get("https://api.auditprorx.com/api/audits");
         const rows = res.data as any[];
         const mapped: Report[] = rows.map((a) => ({
           id: a.id,
