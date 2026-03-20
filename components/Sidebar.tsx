@@ -111,7 +111,7 @@ export default function Sidebar({
       // Even if API fails, still clear local storage and redirect
     } finally {
       localStorage.clear();
-      router.push("/login");
+      router.push("/auth");
     }
   };
 
