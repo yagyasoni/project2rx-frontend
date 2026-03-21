@@ -109,6 +109,7 @@ const AuthPage = () => {
       router.push("/info-page");
     } catch (err) {
       console.error("OTP verification failed:", err);
+      alert("OTP verification failed. Please try again.");
     }
   };
 
