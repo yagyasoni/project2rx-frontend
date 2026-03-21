@@ -330,7 +330,7 @@ const Index = () => {
               className="text-xs font-medium"
               style={{ color: "hsl(0 0% 75%)" }}
             >
-              Pharmacy Audits, Simplified
+              Built for Modern Pharmacy Operations
             </span>
             <ChevronRight
               className="w-3 h-3"
@@ -342,10 +342,10 @@ const Index = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-[5rem] font-bold leading-[0.95] tracking-tight mb-6 max-w-5xl mx-auto"
+            className="font-display text-5xl sm:text-5xl md:text-5xl lg:text-[4.47rem] font-bold leading-[0.95] tracking-tight mb-6 max-w-5xl mx-auto"
             style={{ color: textLight }}
           >
-            Where Pharmacies Turn for{" "}
+            Precision Audit Workflows for{" "}
             <span
               className="bg-clip-text text-transparent"
               style={{
@@ -353,9 +353,9 @@ const Index = () => {
                   "linear-gradient(135deg, hsl(0 0% 100%), hsl(210 15% 70%), hsl(0 0% 70%))",
               }}
             >
-              Trusted Audit
+              High-Volume
             </span>{" "}
-            Support
+            Pharmacies
           </motion.h1>
 
           <motion.p
@@ -365,9 +365,8 @@ const Index = () => {
             className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
             style={{ color: "hsl(0 0% 75%)" }}
           >
-            Streamline your audit process with our all-in-one tool designed
-            specifically for pharmacies. Save time, reduce errors, protect
-            revenue.
+            Automate audit workflows, eliminate manual errors, and protect
+            revenue with a platform designed specifically for pharmacy teams.
           </motion.p>
 
           <motion.div
@@ -434,7 +433,7 @@ const Index = () => {
                 />
               ))}
             </div>
-            <span>Trusted by 100+ pharmacies</span>
+            <span>Trusted by 10+ pharmacies</span>
           </motion.div>
 
           {/* Product mockup */}
@@ -1589,7 +1588,7 @@ const Index = () => {
                     ))}
                   </ul>
                   <a
-                    href="#demo"
+                    href="tel:+15512296466"
                     className={`block text-center py-3 rounded-lg text-sm font-semibold transition-all`}
                     style={
                       plan.highlighted
@@ -1726,7 +1725,7 @@ const Index = () => {
                   className="text-lg max-w-xl mx-auto mb-8"
                   style={{ color: "hsl(0 0% 75%)" }}
                 >
-                  Join 100+ pharmacies that trust AuditProRx to simplify audits
+                  Join 10+ pharmacies that trust AuditProRx to simplify audits
                   and protect their bottom line.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -1780,7 +1779,7 @@ const Index = () => {
                 className="text-sm leading-relaxed"
                 style={{ color: "hsl(0 0% 70%)" }}
               >
-                Pharmacy audit management platform trusted by 100+ pharmacies
+                Pharmacy audit management platform trusted by 10+ pharmacies
                 across the country.
               </p>
             </div>
