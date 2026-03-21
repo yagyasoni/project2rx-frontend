@@ -143,7 +143,12 @@ export default function ReportsPage() {
     const load = async () => {
       try {
         setLoadingReports(true);
-        const res = await axios.get("https://api.auditprorx.com/api/audits");
+        const token = localStorage.getItem("accessToken");
+const res = await axios.get("https://api.auditprorx.com/api/audits", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
         const rows = res.data as any[];
         const mapped: Report[] = rows.map((a) => ({
           id: a.id,
