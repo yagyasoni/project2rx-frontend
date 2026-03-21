@@ -67,9 +67,10 @@ import {
   Target,
   Workflow,
 } from "lucide-react";
-import logo1 from "../../public/logo1.jpg";
+import Link from "next/link";
 
 /* ─── Animated counter ─── */
+
 const Counter = ({
   end,
   suffix = "",
@@ -100,7 +101,7 @@ const Counter = ({
   return (
     <span ref={ref}>
       {prefix}
-      {count.toLocaleString()}
+      {count.toLocaleString("en-US")}
       {suffix}
     </span>
   );
@@ -201,7 +202,7 @@ const Index = () => {
           </div>
           <div className="hidden lg:flex items-center gap-3">
             <a
-              href="#demo"
+              href="tel:+15512296466"
               className="px-5 py-2.5 text-sm font-semibold rounded-lg transition-opacity"
               style={{ background: "hsl(0 0% 95%)", color: textDark }}
             >
@@ -246,11 +247,24 @@ const Index = () => {
               </a>
             ))}
             <a
-              href="#demo"
+              href="tel:+15512296466"
               className="block text-center px-5 py-2.5 text-sm font-semibold rounded-lg"
               style={{ background: "hsl(0 0% 95%)", color: textDark }}
             >
               Request Demo
+            </a>
+            <a
+              href="/auth"
+              className="block text-center px-5 py-2.5 text-sm font-medium rounded-lg border transition-colors"
+              style={{ borderColor: "hsl(0 0% 30%)", color: textLight }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "hsl(0 0% 12%)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "transparent")
+              }
+            >
+              Login
             </a>
           </div>
         )}
@@ -363,7 +377,7 @@ const Index = () => {
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
           >
             <a
-              href="#demo"
+              href="tel:+15512296466"
               className="group px-8 py-4 rounded-xl font-semibold text-base flex items-center gap-2 transition-all duration-300"
               style={{
                 background:
@@ -397,7 +411,7 @@ const Index = () => {
             style={{ color: "hsl(0 0% 75%)" }}
           >
             <div className="flex -space-x-2">
-              {[...Array(4)].map((_, i) => (
+              {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
                   className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-bold"
@@ -407,7 +421,7 @@ const Index = () => {
                     color: textLight,
                   }}
                 >
-                  {["JD", "SK", "ML", "AR"][i]}
+                  {["UC", "IA", "KA"][i]}
                 </div>
               ))}
             </div>
@@ -420,7 +434,7 @@ const Index = () => {
                 />
               ))}
             </div>
-            <span>Trusted by 300+ pharmacies</span>
+            <span>Trusted by 100+ pharmacies</span>
           </motion.div>
 
           {/* Product mockup */}
@@ -465,7 +479,7 @@ const Index = () => {
                       className="text-[10px] font-mono"
                       style={{ color: "hsl(0 0% 60%)" }}
                     >
-                      AuditProRx.com/dashboard/inventory
+                      auditprorx.com/dashboard/inventory
                     </span>
                   </div>
                 </div>
@@ -640,12 +654,12 @@ const Index = () => {
             {[
               {
                 label: "Audit Recoupments Saved",
-                value: 12000000,
+                value: 1000000,
                 prefix: "$",
                 suffix: "+",
               },
-              { label: "Audits Generated", value: 3200, suffix: "+" },
-              { label: "Active Pharmacies", value: 250, suffix: "+" },
+              { label: "Audits Generated", value: 100, suffix: "+" },
+              { label: "Active Pharmacies", value: 10, suffix: "+" },
               { label: "HIPAA Compliant", value: 100, suffix: "%" },
             ].map((s, i) => (
               <AnimatedSection
@@ -681,7 +695,7 @@ const Index = () => {
             className="text-center text-xs uppercase tracking-[0.2em] mb-8"
             style={{ color: "hsl(0 0% 60%)" }}
           >
-            Trusted by leading pharmacy groups
+            Built for modern pharmacy workflows
           </p>
           {/* Auto-scrolling logo1s container */}
           <div className="relative overflow-hidden">
@@ -705,37 +719,29 @@ const Index = () => {
               }
             `}</style>
             <div className="scroll-container">
-              {[
-                "PharmaCorp",
-                "MedChain",
-                "RxGroup",
-                "AuditPro",
-                "HealthNet",
-              ].map((name) => (
-                <div
-                  key={name}
-                  className="scroll-item font-display text-lg font-bold tracking-wider"
-                  style={{ color: `hsl(0 0% 40%)` }}
-                >
-                  {name}
-                </div>
-              ))}
+              {["Audits", "Recovery", "Claims", "Compliance", "Analytics"].map(
+                (name) => (
+                  <div
+                    key={name}
+                    className="scroll-item font-display text-lg font-bold tracking-wider"
+                    style={{ color: `hsl(0 0% 40%)` }}
+                  >
+                    {name}
+                  </div>
+                ),
+              )}
               {/* Duplicate for seamless loop */}
-              {[
-                "PharmaCorp",
-                "MedChain",
-                "RxGroup",
-                "AuditPro",
-                "HealthNet",
-              ].map((name) => (
-                <div
-                  key={`${name}-2`}
-                  className="scroll-item font-display text-lg font-bold tracking-wider"
-                  style={{ color: `hsl(0 0% 40%)` }}
-                >
-                  {name}
-                </div>
-              ))}
+              {["Audits", "Recovery", "Claims", "Compliance", "Analytics"].map(
+                (name) => (
+                  <div
+                    key={`${name}-2`}
+                    className="scroll-item font-display text-lg font-bold tracking-wider"
+                    style={{ color: `hsl(0 0% 40%)` }}
+                  >
+                    {name}
+                  </div>
+                ),
+              )}
             </div>
           </div>
         </div>
@@ -1369,21 +1375,24 @@ const Index = () => {
             {[
               {
                 quote:
-                  "AuditProRx saved us over $200K in audit recoupments in just the first year. The ROI is incredible.",
-                name: "Dr. Sarah Kim",
-                role: "Owner, Greenfield Pharmacy",
+                  "AuditProRx has really streamlined how we handle audits. It saves us time and helps us stay more organized.",
+                name: "Dr. Uzair Chachar",
+                role: "Owner, Life Care Pharmacy",
+                dname: "Uzair Chachar",
               },
               {
                 quote:
-                  "The automated documentation alone saves our team 15 hours per week. We can focus on patient care instead.",
-                name: "James Thornton",
-                role: "Director of Operations, MedPlus",
+                  "Managing documentation and claims has become much easier. The system is simple and very efficient.",
+                name: "Dr. Irfan Ali",
+                role: "Owner, Bergen Road Pharmacy",
+                dname: "Irfan Ali",
               },
               {
                 quote:
-                  "Finally a tool built by people who understand pharmacy audits. The workflow is intuitive and powerful.",
-                name: "Maria Rodriguez",
-                role: "Compliance Manager, HealthFirst",
+                  "The workflow is smooth and easy to follow. It’s a helpful tool for improving our overall audit process.",
+                name: "Dr. Khilat Abbas",
+                role: "Owner, United Drugs",
+                dname: "Khilat Abbas",
               },
             ].map((t, i) => (
               <AnimatedSection key={t.name} delay={i * 0.1}>
@@ -1417,7 +1426,7 @@ const Index = () => {
                         color: textLight,
                       }}
                     >
-                      {t.name
+                      {t.dname
                         .split(" ")
                         .map((n) => n[0])
                         .join("")}
@@ -1482,12 +1491,12 @@ const Index = () => {
                 name: "Starter",
                 price: "Free",
                 period: "/mo",
-                desc: "Perfect for single-location pharmacies",
+                desc: "Start with core audit workflows",
                 features: [
-                  "Up to 50 audits/mo",
-                  "Basic analytics",
+                  "Up to 2 audits/mo",
+                  "Basic audit insights",
                   "Email support",
-                  "1 user seat",
+                  "14-day free trial",
                 ],
                 highlighted: false,
               },
@@ -1495,13 +1504,12 @@ const Index = () => {
                 name: "Professional",
                 price: "$199",
                 period: "/mo",
-                desc: "For growing pharmacy operations",
+                desc: "Tools for efficient audit management",
                 features: [
                   "Unlimited audits",
                   "Advanced analytics",
                   "Priority support",
-                  "50 user seats",
-                  "API access",
+                  "Export & reporting tools",
                 ],
                 highlighted: true,
               },
@@ -1509,13 +1517,12 @@ const Index = () => {
                 name: "Enterprise",
                 price: "Custom",
                 period: "",
-                desc: "For multi-location pharmacy groups",
+                desc: "Scalable for complex operations",
                 features: [
-                  "Everything in Pro",
-                  "Dedicated account manager",
-                  "Custom integrations",
-                  "Unlimited seats",
-                  "SLA guarantee",
+                  "Everything in Professional",
+                  "Dedicated support",
+                  "Custom workflows",
+                  "Advanced compliance controls",
                 ],
                 highlighted: false,
               },
@@ -1633,19 +1640,23 @@ const Index = () => {
             {[
               {
                 q: "How quickly can we get started?",
-                a: "Most pharmacies are fully onboarded within 48 hours. Our team handles the integration with your PMS system.",
+                a: "Most pharmacies are onboarded within 48 hours. Our team manages the setup and ensures a smooth integration with your existing systems.",
               },
               {
                 q: "Is my data secure?",
-                a: "Absolutely. We're fully HIPAA compliant with end-to-end encryption, SOC 2 certification, and regular security audits.",
+                a: "Yes. We follow HIPAA-compliant practices with end-to-end encryption and industry-standard security protocols to ensure your data remains protected.",
               },
               {
                 q: "Do you integrate with my PMS?",
-                a: "We support all major pharmacy management systems including QS/1, PioneerRx, BestRx, and more.",
+                a: "We support integration with leading pharmacy management systems, ensuring seamless data flow and minimal disruption to your workflow.",
               },
               {
                 q: "What kind of support do you offer?",
-                a: "All plans include email support. Professional and Enterprise plans include priority phone support and a dedicated success manager.",
+                a: "All plans include email support, with priority assistance available for higher-tier plans to ensure timely issue resolution.",
+              },
+              {
+                q: "Are there any long-term contracts or commitments?",
+                a: "No. Our plans are flexible with no long-term commitments, allowing you to scale or cancel based on your operational needs.",
               },
             ].map((faq, i) => (
               <AnimatedSection key={i} delay={i * 0.06}>
@@ -1715,7 +1726,7 @@ const Index = () => {
                   className="text-lg max-w-xl mx-auto mb-8"
                   style={{ color: "hsl(0 0% 75%)" }}
                 >
-                  Join 300+ pharmacies that trust AuditProRx to simplify audits
+                  Join 100+ pharmacies that trust AuditProRx to simplify audits
                   and protect their bottom line.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -1732,7 +1743,7 @@ const Index = () => {
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </a>
                   <a
-                    href="#contact"
+                    href="tel:+15512296466"
                     className="px-8 py-4 rounded-xl font-medium border transition-colors flex items-center gap-2"
                     style={{ borderColor: "hsl(0 0% 30%)", color: textLight }}
                     onMouseEnter={(e) =>
@@ -1769,26 +1780,39 @@ const Index = () => {
                 className="text-sm leading-relaxed"
                 style={{ color: "hsl(0 0% 70%)" }}
               >
-                Pharmacy audit management platform trusted by 300+ pharmacies
+                Pharmacy audit management platform trusted by 100+ pharmacies
                 across the country.
               </p>
             </div>
             {[
               {
                 title: "Product",
-                links: ["Features", "Pricing", "Integrations", "Changelog"],
+                links: [
+                  { label: "Features", href: "#features" },
+                  { label: "Pricing", href: "#pricing" },
+                  { label: "Integrations", href: "#" },
+                  { label: "Changelog", href: "#" },
+                ],
               },
               {
                 title: "Company",
-                links: ["About", "Blog", "Careers", "Contact"],
+                links: [
+                  { label: "About", href: "#" },
+                  { label: "Blog", href: "#" },
+                  { label: "Careers", href: "#" },
+                  { label: "Contact", href: "#" },
+                ],
               },
               {
                 title: "Legal",
                 links: [
-                  "Privacy Policy",
-                  "Terms of Service",
-                  "HIPAA Compliance",
-                  "Security",
+                  { label: "Privacy Policy", href: "/privacy-policy" },
+                  { label: "Terms of Service", href: "/terms-of-service" },
+                  {
+                    label: "Cancellation Policy",
+                    href: "/cancellation-policy",
+                  },
+                  { label: "HIPAA Compliance", href: "#hipaa" },
                 ],
               },
             ].map((col) => (
@@ -1801,20 +1825,36 @@ const Index = () => {
                 </p>
                 <ul className="space-y-2.5">
                   {col.links.map((link) => (
-                    <li key={link}>
-                      <a
-                        href="#"
-                        className="text-sm transition-colors"
-                        style={{ color: "hsl(0 0% 70%)" }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.color = textLight)
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.color = "hsl(0 0% 70%)")
-                        }
-                      >
-                        {link}
-                      </a>
+                    <li key={link.label}>
+                      {link.href.startsWith("#") ? (
+                        <a
+                          href={link.href}
+                          className="text-sm transition-colors"
+                          style={{ color: "hsl(0 0% 70%)" }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.color = textLight)
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.color = "hsl(0 0% 70%)")
+                          }
+                        >
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link
+                          href={link.href}
+                          className="text-sm transition-colors"
+                          style={{ color: "hsl(0 0% 70%)" }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.color = textLight)
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.color = "hsl(0 0% 70%)")
+                          }
+                        >
+                          {link.label}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>
