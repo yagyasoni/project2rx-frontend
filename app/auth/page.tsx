@@ -33,8 +33,19 @@ const AuthPage = () => {
   const [forgot, setForgot] = useState(false);
   const [phone, setPhone] = useState("");
 
+  const validatePassword = (password: string) => {
+    const regex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return regex.test(password);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email || !password || (!isLogin && !name) || (!isLogin && !phone)) {
+      alert("Please fill in all required fields.");
+      return;
+    }
 
     if (isLogin) {
       try {
@@ -55,13 +66,23 @@ const AuthPage = () => {
         console.error("Login failed:", err);
       }
     } else {
+      if (!validatePassword(password)) {
+        alert(
+          "Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character.",
+        );
+        return; // Stop the execution
+      }
+
       try {
-        const res = await axios.post("https://api.auditprorx.com/auth/register", {
-          name,
-          email,
-          phone,
-          password,
-        });
+        const res = await axios.post(
+          "https://api.auditprorx.com/auth/register",
+          {
+            name,
+            email,
+            phone,
+            password,
+          },
+        );
         console.log(res?.data);
         localStorage.setItem("userId", res?.data?.user?.id);
         alert(res?.data?.message);
@@ -75,10 +96,13 @@ const AuthPage = () => {
 
   const verifyOtp = async () => {
     try {
-      const res = await axios.post("https://api.auditprorx.com/auth/verify-otp", {
-        email,
-        otp,
-      });
+      const res = await axios.post(
+        "https://api.auditprorx.com/auth/verify-otp",
+        {
+          email,
+          otp,
+        },
+      );
       console.log(res?.data);
 
       alert(res?.data?.message);
@@ -90,9 +114,12 @@ const AuthPage = () => {
 
   const resendOtp = async () => {
     try {
-      const res = await axios.post("https://api.auditprorx.com/auth/resend-otp", {
-        email,
-      });
+      const res = await axios.post(
+        "https://api.auditprorx.com/auth/resend-otp",
+        {
+          email,
+        },
+      );
       console.log(res?.data);
       alert(res?.data?.message);
     } catch (err) {
@@ -337,7 +364,13 @@ const AuthPage = () => {
                     Forgot password?
                   </button>
                 )}
+                {/* {!isLogin && (
+                  <p className="text-[10px] text-blue-500 mt-1">
+                    At least 8 chars, 1 uppercase, 1 number, and 1 symbol.
+                  </p>
+                )} */}
               </div>
+
               <div className="relative">
                 <Input
                   id="password"
@@ -356,6 +389,12 @@ const AuthPage = () => {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {!isLogin && (
+                <p className="text-[10px] text-blue-500 mt-1">
+                  Password must be atleast 8 chars, 1 uppercase, 1 number, and 1
+                  symbol.
+                </p>
+              )}
             </div>
 
             <Button
