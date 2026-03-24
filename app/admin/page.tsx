@@ -50,7 +50,7 @@ const Welcome = () => {
 
     const navTimer = setTimeout(
       () => {
-        // router.push("/reports");
+        router.push("/admin-dashboard");
       },
       introDuration + loadDuration + 800,
     );
