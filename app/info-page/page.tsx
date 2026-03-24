@@ -210,7 +210,7 @@ const [confirmed, setConfirmed] = useState(false);
       console.log(res?.data);
       localStorage.setItem("pharmacyName", pharmacyName);
 localStorage.setItem("ownerName", pharmacistName);
-localStorage.setItem("userEmail", localStorage.getItem("userId") || "");
+// localStorage.setItem("userEmail", localStorage.getItem("userId") || "");
       toast.success(
         "Details submitted successfully! Your pharmacy details have been saved.",
       );
