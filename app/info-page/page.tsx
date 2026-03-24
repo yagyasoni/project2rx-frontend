@@ -74,7 +74,7 @@ const PharmacyDetailsForm = () => {
     file: null,
     name: "",
   });
-
+  const [confirmed, setConfirmed] = useState(false);
   // EIN
   const [einNumber, setEinNumber] = useState("");
   const [einFile, setEinFile] = useState<FileUpload>({ file: null, name: "" });
@@ -245,6 +245,9 @@ const PharmacyDetailsForm = () => {
         formData,
       );
       console.log(res?.data);
+      localStorage.setItem("pharmacyName", pharmacyName);
+      localStorage.setItem("ownerName", pharmacistName);
+      // localStorage.setItem("userEmail", localStorage.getItem("userId") || "");
       toast.success(
         "Details submitted successfully! Your pharmacy details have been saved.",
       );
@@ -739,19 +742,61 @@ const PharmacyDetailsForm = () => {
             </div> */}
 
             {/* Submit */}
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-12 bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all duration-200 group"
-            >
-              {isSubmitting ? "Submitting..." : "Submit Details"}
-              {!isSubmitting && (
-                <ArrowRight
-                  size={16}
-                  className="ml-2 group-hover:translate-x-0.5 transition-transform"
-                />
+            {/* Confirmation checkbox + Submit */}
+            <div className="space-y-4 pt-2">
+              {/* Checkbox */}
+              <div
+                className="flex items-start gap-3 cursor-pointer group select-none"
+                onClick={() => setConfirmed((v) => !v)}
+              >
+                <div
+                  className={cn(
+                    "mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-150",
+                    confirmed
+                      ? "bg-primary border-primary"
+                      : "border-border bg-input group-hover:border-muted-foreground",
+                  )}
+                  style={{ height: 18, width: 18 }}
+                >
+                  {confirmed && (
+                    <svg viewBox="0 0 10 8" fill="none" className="w-2.5 h-2">
+                      <path
+                        d="M1 4l3 3 5-6"
+                        stroke="white"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className="text-sm text-muted-foreground leading-relaxed">
+                  I confirm that all the information provided above is{" "}
+                  <span className="font-semibold text-foreground">
+                    accurate and complete
+                  </span>
+                  . I understand that submitting incorrect information may
+                  affect my pharmacy registration.
+                </span>
+              </div>
+
+              {/* Submit — only shows when confirmed */}
+              {confirmed && (
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-12 bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all duration-200 group"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Details"}
+                  {!isSubmitting && (
+                    <ArrowRight
+                      size={16}
+                      className="ml-2 group-hover:translate-x-0.5 transition-transform"
+                    />
+                  )}
+                </Button>
               )}
-            </Button>
+            </div>
             {errors.general && (
               <p className="text-sm text-red-500 text-center">
                 {errors.general}
