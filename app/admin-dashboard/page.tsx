@@ -613,7 +613,7 @@ export default function AdminDashboardPage() {
       ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 99px; }
     `;
     document.head.appendChild(style);
-    return () => document.head.removeChild(style);
+    return () => { document.head.removeChild(style); };
   }, []);
 
   const fetchUsers = async () => {
