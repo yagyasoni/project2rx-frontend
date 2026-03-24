@@ -113,6 +113,14 @@ const PharmacyDetailsForm = () => {
     name: "",
   });
 
+  const [errors, setErrors] = useState({
+    pharmacyName: "",
+    address: "",
+    phone: "",
+    fax: "",
+    general: "",
+  });
+
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: React.Dispatch<React.SetStateAction<FileUpload>>,
@@ -132,13 +140,42 @@ const PharmacyDetailsForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!pharmacyName || !address || !phone) {
-      toast.error(
-        "Missing required fields: Please fill in Pharmacy Name, Address, and Phone.",
-      );
-      return;
+    // RESET ERRORS
+    setErrors({
+      pharmacyName: "",
+      address: "",
+      phone: "",
+      fax: "",
+      general: "",
+    });
+
+    let newErrors: any = {};
+
+    // REQUIRED VALIDATIONS
+    if (!pharmacyName) {
+      newErrors.pharmacyName = "Pharmacy name is required";
     }
 
+    if (!address) {
+      newErrors.address = "Address is required";
+    }
+
+    if (!phone) {
+      newErrors.phone = "Phone number is required";
+    } else if (!/^\d{10}$/.test(phone)) {
+      newErrors.phone = "Phone must be exactly 10 digits";
+    }
+
+    // OPTIONAL FIELD (fax)
+    if (fax && !/^\d{10}$/.test(fax)) {
+      newErrors.fax = "Fax must be 10 digits";
+    }
+
+    // STOP IF ERRORS
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
     setIsSubmitting(true);
 
     // Simulate API call
@@ -212,8 +249,15 @@ const PharmacyDetailsForm = () => {
         "Details submitted successfully! Your pharmacy details have been saved.",
       );
       router.push("/auth");
-    } catch {
-      toast.error("Submission failed: Something went wrong. Please try again.");
+    } catch (err: any) {
+      console.error(err);
+
+      setErrors((prev) => ({
+        ...prev,
+        general:
+          err?.response?.data?.message ||
+          "Something went wrong. Please try again.",
+      }));
     } finally {
       setIsSubmitting(false);
     }
@@ -363,11 +407,19 @@ const PharmacyDetailsForm = () => {
                   </Label>
                   <Input
                     value={pharmacyName}
-                    onChange={(e) => setPharmacyName(e.target.value)}
+                    onChange={(e) => {
+                      setPharmacyName(e.target.value);
+                      setErrors((prev) => ({ ...prev, pharmacyName: "" }));
+                    }}
                     placeholder="Enter pharmacy name"
                     className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                     required
                   />
+                  {errors.pharmacyName && (
+                    <p className="text-xs text-red-500">
+                      {errors.pharmacyName}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label className="text-sm text-muted-foreground">
@@ -375,11 +427,17 @@ const PharmacyDetailsForm = () => {
                   </Label>
                   <Input
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      setErrors((prev) => ({ ...prev, address: "" }));
+                    }}
                     placeholder="Enter full address"
                     className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                     required
                   />
+                  {errors.address && (
+                    <p className="text-xs text-red-500">{errors.address}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">
@@ -387,26 +445,38 @@ const PharmacyDetailsForm = () => {
                   </Label>
                   <Input
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      setErrors((prev) => ({ ...prev, phone: "" }));
+                    }}
                     placeholder="(555) 123-4567"
                     className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                     required
                   />
+                  {errors.phone && (
+                    <p className="text-xs text-red-500">{errors.phone}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Fax</Label>
                   <Input
                     value={fax}
-                    onChange={(e) => setFax(e.target.value)}
+                    onChange={(e) => {
+                      setFax(e.target.value);
+                      setErrors((prev) => ({ ...prev, fax: "" }));
+                    }}
                     placeholder="(555) 123-4568"
                     className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                   />
+                  {errors.fax && (
+                    <p className="text-xs text-red-500">{errors.fax}</p>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Section: Business & Insurance Documents */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 Business & Insurance Documents
               </h2>
@@ -484,10 +554,10 @@ const PharmacyDetailsForm = () => {
                   id="voided-cheque-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Section: License & Identification Numbers */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 License & Identification Numbers
               </h2>
@@ -538,10 +608,10 @@ const PharmacyDetailsForm = () => {
                   id="license-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Section: DEA Information */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 DEA Information
               </h2>
@@ -570,10 +640,10 @@ const PharmacyDetailsForm = () => {
                   id="dea-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Section: CDS Information */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 CDS Information
               </h2>
@@ -602,10 +672,10 @@ const PharmacyDetailsForm = () => {
                   id="cds-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Section: Pharmacist In-Charge */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 Pharmacist In-Charge
               </h2>
@@ -645,10 +715,10 @@ const PharmacyDetailsForm = () => {
                   id="pharmacist-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Section: CMEA */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 CMEA Certification
               </h2>
@@ -666,7 +736,7 @@ const PharmacyDetailsForm = () => {
                   id="cmea-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Submit */}
             <Button
@@ -682,6 +752,11 @@ const PharmacyDetailsForm = () => {
                 />
               )}
             </Button>
+            {errors.general && (
+              <p className="text-sm text-red-500 text-center">
+                {errors.general}
+              </p>
+            )}
           </form>
         </div>
       </div>

@@ -388,7 +388,7 @@ export default function Sidebar({
           <GitBranch className="w-5 h-5 text-gray-900 shrink-0" />
           {sidebarOpen && (
             <span className="text-sm font-semibold text-gray-900 ml-3">
-              Version 1.0
+              Version 1.2
             </span>
           )}
         </div>

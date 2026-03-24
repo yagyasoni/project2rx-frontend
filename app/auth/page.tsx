@@ -32,47 +32,155 @@ const AuthPage = () => {
   const [otp, setOtp] = useState("");
   const [forgot, setForgot] = useState(false);
   const [phone, setPhone] = useState("");
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    otp: "",
+    forgotEmail: "",
+    general: "",
+  });
 
   const validatePassword = (password: string) => {
     const regex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
     return regex.test(password);
   };
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   if (!email || !password || (!isLogin && !name) || (!isLogin && !phone)) {
+  //     alert("Please fill in all required fields.");
+  //     return;
+  //   }
+
+  //   if (isLogin) {
+  //     try {
+  //       const res = await axios.post("https://api.auditprorx.com/auth/login", {
+  //         email,
+  //         password,
+  //       });
+  //       console.log(res?.data);
+  //       if (res?.data?.requiresOtp) {
+  //         setShowOtp(true);
+  //         return;
+  //       }
+
+  //       localStorage.setItem("accessToken", res?.data?.accessToken);
+  //       localStorage.setItem("refreshToken", res?.data?.refreshToken);
+  //       if (!localStorage.getItem("userId")) {
+  //         localStorage.setItem("userId", res?.data?.user?.id);
+  //       }
+  //       alert("successfully logged in");
+
+  //       router.push("/Mainpage");
+  //     } catch (err) {
+  //       console.error("Login failed:", err);
+  //     }
+  //   } else {
+  //     if (!validatePassword(password)) {
+  //       alert(
+  //         "Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character.",
+  //       );
+  //       return; // Stop the execution
+  //     }
+
+  //     try {
+  //       const res = await axios.post(
+  //         "https://api.auditprorx.com/auth/register",
+  //         {
+  //           name,
+  //           email,
+  //           phone,
+  //           password,
+  //         },
+  //       );
+  //       console.log(res?.data);
+  //       localStorage.setItem("userId", res?.data?.user?.id);
+  //       alert(res?.data?.message);
+  //       setShowOtp(true);
+  //       setIsLogin(true);
+  //     } catch (err) {
+  //       console.error("Registration failed:", err);
+  //     }
+  //   }
+  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password || (!isLogin && !name) || (!isLogin && !phone)) {
-      alert("Please fill in all required fields.");
+    // RESET ERRORS FIRST
+    setErrors({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      otp: "",
+      forgotEmail: "",
+      general: "",
+    });
+
+    let newErrors: any = {};
+
+    // FIELD VALIDATION
+    if (!email) newErrors.email = "Email is required";
+    if (!password) newErrors.password = "Password is required";
+
+    if (!isLogin) {
+      if (!name) newErrors.name = "Full name is required";
+      if (!phone || phone.length < 10) {
+        newErrors.phone = "Phone number is required and it should be 10 digit";
+      }
+
+      if (password && !validatePassword(password)) {
+        newErrors.password =
+          "Min 8 chars, 1 uppercase, 1 lowercase, 1 number & 1 special char";
+      }
+    }
+
+    // IF ERRORS → STOP
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
+    // ================= LOGIN =================
     if (isLogin) {
       try {
         const res = await axios.post("https://api.auditprorx.com/auth/login", {
           email,
           password,
         });
+
         console.log(res?.data);
+
+        if (res?.data?.requiresOtp) {
+          setShowOtp(true);
+          return;
+        }
+
         localStorage.setItem("accessToken", res?.data?.accessToken);
         localStorage.setItem("refreshToken", res?.data?.refreshToken);
+
         if (!localStorage.getItem("userId")) {
           localStorage.setItem("userId", res?.data?.user?.id);
         }
-        alert("successfully logged in");
 
         router.push("/Mainpage");
       } catch (err) {
         console.error("Login failed:", err);
-      }
-    } else {
-      if (!validatePassword(password)) {
-        alert(
-          "Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character.",
-        );
-        return; // Stop the execution
-      }
 
+        setErrors((prev) => ({
+          ...prev,
+          general: "Invalid email or password",
+        }));
+      }
+    }
+
+    // ================= REGISTER =================
+    else {
       try {
         const res = await axios.post(
           "https://api.auditprorx.com/auth/register",
@@ -83,33 +191,63 @@ const AuthPage = () => {
             password,
           },
         );
+
         console.log(res?.data);
+
         localStorage.setItem("userId", res?.data?.user?.id);
-        alert(res?.data?.message);
+
         setShowOtp(true);
-        setIsLogin(true);
+        // setIsLogin(true);
       } catch (err) {
         console.error("Registration failed:", err);
+
+        setErrors((prev) => ({
+          ...prev,
+          general: "Registration failed. Try again.",
+        }));
       }
     }
   };
 
   const verifyOtp = async () => {
+    // RESET OTP ERROR
+    setErrors((prev) => ({ ...prev, otp: "", general: "" }));
+
+    if (!otp || otp.length < 6) {
+      setErrors((prev) => ({
+        ...prev,
+        otp: "Please enter a valid 6-digit OTP",
+      }));
+      return;
+    }
+
     try {
-      const res = await axios.post(
-        "https://api.auditprorx.com/auth/verify-otp",
-        {
-          email,
-          otp,
-        },
-      );
+      // isLogin true = came from admin login OTP, false = came from registration OTP
+      const url = isLogin
+        ? "https://api.auditprorx.com/auth/admin/verify-otp"
+        : "https://api.auditprorx.com/auth/verify-otp";
+
+      const res = await axios.post(url, { email, otp });
       console.log(res?.data);
 
-      alert(res?.data?.message);
-      router.push("/info-page");
+      if (isLogin) {
+        // Admin — store tokens and go to admin dashboard
+        localStorage.setItem("accessToken", res?.data?.accessToken);
+        localStorage.setItem("refreshToken", res?.data?.refreshToken);
+        localStorage.setItem("userId", res?.data?.user?.id);
+        router.push("/admin");
+      } else {
+        // Regular user registration OTP
+        alert(res?.data?.message);
+        router.push("/info-page");
+      }
     } catch (err) {
       console.error("OTP verification failed:", err);
-      alert("OTP verification failed. Please try again.");
+      setErrors((prev) => ({
+        ...prev,
+        otp: "Invalid or expired OTP",
+      }));
+      return;
     }
   };
 
@@ -131,17 +269,38 @@ const AuthPage = () => {
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setErrors((prev) => ({
+      ...prev,
+      forgotEmail: "",
+      general: "",
+    }));
+
+    if (!email) {
+      setErrors((prev) => ({
+        ...prev,
+        forgotEmail: "Email is required",
+      }));
+      return;
+    }
+
     try {
       const res = await axios.post(
         "https://api.auditprorx.com/auth/forgot-password",
         { email },
       );
       console.log(res?.data);
-      alert(res?.data?.message);
+
+      setErrors((prev) => ({
+        ...prev,
+        general: res?.data?.message || "Reset link sent",
+      }));
       setForgot(false); // Close the modal on success
     } catch (error: any) {
       console.error("Forgot password failed:", error.response || error);
-      alert("Failed to send reset link. Please try again.");
+      setErrors((prev) => ({
+        ...prev,
+        forgotEmail: "Failed to send reset link",
+      }));
     }
   };
 
@@ -204,6 +363,9 @@ const AuthPage = () => {
                   />
                 </InputOTPGroup>
               </InputOTP>
+              {errors.otp && (
+                <p className="text-sm text-red-500 text-center">{errors.otp}</p>
+              )}
 
               <Button
                 onClick={verifyOtp}
@@ -234,6 +396,11 @@ const AuthPage = () => {
                   Resend code
                 </button>
               </div>
+              {errors.general && (
+                <p className="text-sm text-green-500 text-center">
+                  {errors.general}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -312,6 +479,9 @@ const AuthPage = () => {
                   onChange={(e) => setName(e.target.value)}
                   className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                 />
+                {errors.name && (
+                  <p className="text-xs text-red-500 mt-1">{errors.name}</p>
+                )}
               </div>
             )}
 
@@ -327,6 +497,9 @@ const AuthPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
               />
+              {errors.email && (
+                <p className="text-xs text-red-500 mt-1">{errors.email}</p>
+              )}
             </div>
 
             {!isLogin && (
@@ -345,6 +518,9 @@ const AuthPage = () => {
                   onChange={(e) => setPhone(e.target.value)}
                   className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                 />
+                {errors.phone && (
+                  <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
+                )}
               </div>
             )}
 
@@ -390,11 +566,14 @@ const AuthPage = () => {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              {!isLogin && (
+              {/* {!isLogin && (
                 <p className="text-[10px] text-blue-500 mt-1">
-                  Password must be atleast 8 chars, 1 uppercase, 1 number, and 1
-                  symbol.
+                  Password must be atleast 8 characters, 1 uppercase, 1 number,
+                  and 1 symbol.
                 </p>
+              )} */}
+              {errors.password && (
+                <p className="text-xs text-red-500 mt-1">{errors.password}</p>
               )}
             </div>
 
@@ -408,16 +587,21 @@ const AuthPage = () => {
                 className="ml-2 group-hover:translate-x-0.5 transition-transform"
               />
             </Button>
+            {errors.general && (
+              <p className="text-sm text-red-500 text-center">
+                {errors.general}
+              </p>
+            )}
           </form>
 
           {/* Divider */}
-          <div className="flex items-center gap-4 my-6">
+          {/* <div className="flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-border" />
             <span className="text-xs text-muted-foreground uppercase tracking-wider">
               or
             </span>
             <div className="flex-1 h-px bg-border" />
-          </div>
+          </div> */}
 
           {/* Social buttons */}
           <div className="grid grid-cols-1 gap-3">
@@ -486,7 +670,7 @@ const AuthPage = () => {
               }}
             /> */}
 
-            {isLogin && (
+            {/* {isLogin && (
               <GoogleLogin
                 theme="outline"
                 size="large"
@@ -517,20 +701,26 @@ const AuthPage = () => {
                   console.log("Google Login Failed");
                 }}
               />
-            )}
+            )} */}
           </div>
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-center text-xs text-muted-foreground mt-8 space-x-1 gap-2">
-          <Checkbox className="m-0" />
+          {/* <Checkbox className="m-0" /> */}
           <span>
             By continuing, you agree to our{" "}
-            <a href="#" className="text-foreground hover:underline">
+            <a
+              href="/terms-of-service"
+              className="text-foreground hover:underline"
+            >
               Terms
             </a>{" "}
             and{" "}
-            <a href="#" className="text-foreground hover:underline">
+            <a
+              href="/privacy-policy"
+              className="text-foreground hover:underline"
+            >
               Privacy Policy
             </a>
           </span>
@@ -558,6 +748,11 @@ const AuthPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
               />
+              {errors.forgotEmail && (
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.forgotEmail}
+                </p>
+              )}
             </div>
             <Button
               type="submit"
