@@ -148,9 +148,9 @@ const ResetPasswordPage = () => {
               )}
             </div>
 
-            {/* {password && confirmPassword && password !== confirmPassword && (
+       {password && confirmPassword && password !== confirmPassword && (
               <p className="text-sm text-destructive">Passwords do not match</p>
-            )} */}
+            )} 
 
             <Button
               type="submit"
