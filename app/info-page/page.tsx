@@ -74,7 +74,7 @@ const PharmacyDetailsForm = () => {
     file: null,
     name: "",
   });
-const [confirmed, setConfirmed] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
   // EIN
   const [einNumber, setEinNumber] = useState("");
   const [einFile, setEinFile] = useState<FileUpload>({ file: null, name: "" });
@@ -113,6 +113,14 @@ const [confirmed, setConfirmed] = useState(false);
     name: "",
   });
 
+  const [errors, setErrors] = useState({
+    pharmacyName: "",
+    address: "",
+    phone: "",
+    fax: "",
+    general: "",
+  });
+
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: React.Dispatch<React.SetStateAction<FileUpload>>,
@@ -132,13 +140,42 @@ const [confirmed, setConfirmed] = useState(false);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!pharmacyName || !address || !phone) {
-      toast.error(
-        "Missing required fields: Please fill in Pharmacy Name, Address, and Phone.",
-      );
-      return;
+    // RESET ERRORS
+    setErrors({
+      pharmacyName: "",
+      address: "",
+      phone: "",
+      fax: "",
+      general: "",
+    });
+
+    let newErrors: any = {};
+
+    // REQUIRED VALIDATIONS
+    if (!pharmacyName) {
+      newErrors.pharmacyName = "Pharmacy name is required";
     }
 
+    if (!address) {
+      newErrors.address = "Address is required";
+    }
+
+    if (!phone) {
+      newErrors.phone = "Phone number is required";
+    } else if (!/^\d{10}$/.test(phone)) {
+      newErrors.phone = "Phone must be exactly 10 digits";
+    }
+
+    // OPTIONAL FIELD (fax)
+    if (fax && !/^\d{10}$/.test(fax)) {
+      newErrors.fax = "Fax must be 10 digits";
+    }
+
+    // STOP IF ERRORS
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
     setIsSubmitting(true);
 
     // Simulate API call
@@ -209,14 +246,21 @@ const [confirmed, setConfirmed] = useState(false);
       );
       console.log(res?.data);
       localStorage.setItem("pharmacyName", pharmacyName);
-localStorage.setItem("ownerName", pharmacistName);
-// localStorage.setItem("userEmail", localStorage.getItem("userId") || "");
+      localStorage.setItem("ownerName", pharmacistName);
+      // localStorage.setItem("userEmail", localStorage.getItem("userId") || "");
       toast.success(
         "Details submitted successfully! Your pharmacy details have been saved.",
       );
-      router.push("/agreements");
-    } catch {
-      toast.error("Submission failed: Something went wrong. Please try again.");
+      router.push("/auth");
+    } catch (err: any) {
+      console.error(err);
+
+      setErrors((prev) => ({
+        ...prev,
+        general:
+          err?.response?.data?.message ||
+          "Something went wrong. Please try again.",
+      }));
     } finally {
       setIsSubmitting(false);
     }
@@ -366,11 +410,19 @@ localStorage.setItem("ownerName", pharmacistName);
                   </Label>
                   <Input
                     value={pharmacyName}
-                    onChange={(e) => setPharmacyName(e.target.value)}
+                    onChange={(e) => {
+                      setPharmacyName(e.target.value);
+                      setErrors((prev) => ({ ...prev, pharmacyName: "" }));
+                    }}
                     placeholder="Enter pharmacy name"
                     className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                     required
                   />
+                  {errors.pharmacyName && (
+                    <p className="text-xs text-red-500">
+                      {errors.pharmacyName}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label className="text-sm text-muted-foreground">
@@ -378,11 +430,17 @@ localStorage.setItem("ownerName", pharmacistName);
                   </Label>
                   <Input
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      setErrors((prev) => ({ ...prev, address: "" }));
+                    }}
                     placeholder="Enter full address"
                     className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                     required
                   />
+                  {errors.address && (
+                    <p className="text-xs text-red-500">{errors.address}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">
@@ -390,26 +448,38 @@ localStorage.setItem("ownerName", pharmacistName);
                   </Label>
                   <Input
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      setErrors((prev) => ({ ...prev, phone: "" }));
+                    }}
                     placeholder="(555) 123-4567"
                     className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                     required
                   />
+                  {errors.phone && (
+                    <p className="text-xs text-red-500">{errors.phone}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Fax</Label>
                   <Input
                     value={fax}
-                    onChange={(e) => setFax(e.target.value)}
+                    onChange={(e) => {
+                      setFax(e.target.value);
+                      setErrors((prev) => ({ ...prev, fax: "" }));
+                    }}
                     placeholder="(555) 123-4568"
                     className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                   />
+                  {errors.fax && (
+                    <p className="text-xs text-red-500">{errors.fax}</p>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Section: Business & Insurance Documents */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 Business & Insurance Documents
               </h2>
@@ -487,10 +557,10 @@ localStorage.setItem("ownerName", pharmacistName);
                   id="voided-cheque-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Section: License & Identification Numbers */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 License & Identification Numbers
               </h2>
@@ -541,10 +611,10 @@ localStorage.setItem("ownerName", pharmacistName);
                   id="license-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Section: DEA Information */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 DEA Information
               </h2>
@@ -573,10 +643,10 @@ localStorage.setItem("ownerName", pharmacistName);
                   id="dea-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Section: CDS Information */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 CDS Information
               </h2>
@@ -605,10 +675,10 @@ localStorage.setItem("ownerName", pharmacistName);
                   id="cds-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Section: Pharmacist In-Charge */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 Pharmacist In-Charge
               </h2>
@@ -648,10 +718,10 @@ localStorage.setItem("ownerName", pharmacistName);
                   id="pharmacist-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Section: CMEA */}
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 CMEA Certification
               </h2>
@@ -669,55 +739,69 @@ localStorage.setItem("ownerName", pharmacistName);
                   id="cmea-file"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Submit */}
             {/* Confirmation checkbox + Submit */}
-<div className="space-y-4 pt-2">
-  {/* Checkbox */}
-  <div
-    className="flex items-start gap-3 cursor-pointer group select-none"
-    onClick={() => setConfirmed((v) => !v)}
-  >
-    <div
-      className={cn(
-        "mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-150",
-        confirmed
-          ? "bg-primary border-primary"
-          : "border-border bg-input group-hover:border-muted-foreground",
-      )}
-      style={{ height: 18, width: 18 }}
-    >
-      {confirmed && (
-        <svg viewBox="0 0 10 8" fill="none" className="w-2.5 h-2">
-          <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )}
-    </div>
-    <span className="text-sm text-muted-foreground leading-relaxed">
-      I confirm that all the information provided above is{" "}
-      <span className="font-semibold text-foreground">accurate and complete</span>.
-      I understand that submitting incorrect information may affect my pharmacy registration.
-    </span>
-  </div>
+            <div className="space-y-4 pt-2">
+              {/* Checkbox */}
+              <div
+                className="flex items-start gap-3 cursor-pointer group select-none"
+                onClick={() => setConfirmed((v) => !v)}
+              >
+                <div
+                  className={cn(
+                    "mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-150",
+                    confirmed
+                      ? "bg-primary border-primary"
+                      : "border-border bg-input group-hover:border-muted-foreground",
+                  )}
+                  style={{ height: 18, width: 18 }}
+                >
+                  {confirmed && (
+                    <svg viewBox="0 0 10 8" fill="none" className="w-2.5 h-2">
+                      <path
+                        d="M1 4l3 3 5-6"
+                        stroke="white"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className="text-sm text-muted-foreground leading-relaxed">
+                  I confirm that all the information provided above is{" "}
+                  <span className="font-semibold text-foreground">
+                    accurate and complete
+                  </span>
+                  . I understand that submitting incorrect information may
+                  affect my pharmacy registration.
+                </span>
+              </div>
 
-  {/* Submit — only shows when confirmed */}
-  {confirmed && (
-    <Button
-      type="submit"
-      disabled={isSubmitting}
-      className="w-full h-12 bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all duration-200 group"
-    >
-      {isSubmitting ? "Submitting..." : "Submit Details"}
-      {!isSubmitting && (
-        <ArrowRight
-          size={16}
-          className="ml-2 group-hover:translate-x-0.5 transition-transform"
-        />
-      )}
-    </Button>
-  )}
-</div>
+              {/* Submit — only shows when confirmed */}
+              {confirmed && (
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-12 bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all duration-200 group"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Details"}
+                  {!isSubmitting && (
+                    <ArrowRight
+                      size={16}
+                      className="ml-2 group-hover:translate-x-0.5 transition-transform"
+                    />
+                  )}
+                </Button>
+              )}
+            </div>
+            {errors.general && (
+              <p className="text-sm text-red-500 text-center">
+                {errors.general}
+              </p>
+            )}
           </form>
         </div>
       </div>

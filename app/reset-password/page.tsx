@@ -10,22 +10,72 @@ import axios from "axios";
 const ResetPasswordPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState({
+    password: "",
+    confirmPassword: "",
+    general: "",
+  });
+
+  const validatePassword = (password: string) => {
+    const regex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    return regex.test(password);
+  };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+
     console.log("Password reset:", { password, confirmPassword });
+
+    // RESET ERRORS
+    setErrors({
+      password: "",
+      confirmPassword: "",
+      general: "",
+    });
+
+    let newErrors: any = {};
+
+    // VALIDATION
+    if (!password) newErrors.password = "Password is required";
+    if (!confirmPassword)
+      newErrors.confirmPassword = "Confirm password is required";
+
+    if (password && !validatePassword(password)) {
+      newErrors.password =
+        "Min 8 chars, 1 uppercase, 1 lowercase, 1 number & 1 special char";
+    }
+
+    if (password && confirmPassword && password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
     const token = new URLSearchParams(window.location.search).get("token");
 
     try {
-      const res = await axios.post("https://api.auditprorx.com/auth/reset-password", {
-        token,
-        newPassword: confirmPassword,
-      });
+      const res = await axios.post(
+        "https://api.auditprorx.com/auth/reset-password",
+        {
+          token,
+          newPassword: confirmPassword,
+        },
+      );
       console.log(res?.data);
-      alert(res?.data?.message);
+
+      setErrors((prev) => ({
+        ...prev,
+        general: res?.data?.message || "Password reset successful",
+      }));
     } catch (err) {
       console.log("error");
-      alert("Failed to reset password");
+      setErrors((prev) => ({
+        ...prev,
+        general: "Failed to reset password",
+      }));
     }
   };
 
@@ -71,6 +121,9 @@ const ResetPasswordPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
               />
+              {errors.password && (
+                <p className="text-xs text-red-500 mt-1">{errors.password}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -88,11 +141,16 @@ const ResetPasswordPage = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
               />
+              {errors.confirmPassword && (
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.confirmPassword}
+                </p>
+              )}
             </div>
 
-            {password && confirmPassword && password !== confirmPassword && (
+       {password && confirmPassword && password !== confirmPassword && (
               <p className="text-sm text-destructive">Passwords do not match</p>
-            )}
+            )} 
 
             <Button
               type="submit"
@@ -107,6 +165,11 @@ const ResetPasswordPage = () => {
                 className="ml-2 group-hover:translate-x-0.5 transition-transform"
               />
             </Button>
+            {errors.general && (
+              <p className="text-sm text-center text-green-500">
+                {errors.general}
+              </p>
+            )}
           </form>
         </div>
         <a href="/auth">

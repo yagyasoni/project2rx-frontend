@@ -10,6 +10,7 @@ import {
   ChevronRight,
   SquareStack,
   FolderOpen,
+  ClipboardPlus,
 } from "lucide-react";
 import UsersPage from "@/components/settings/UsersPage";
 // import MailingInfoPage from "@/components/settings/MailingInfoPage";
@@ -22,7 +23,7 @@ const navItems = [
   { id: 1, title: "Suppliers", icon: Package },
   { id: 2, title: "PMS", icon: SquareStack },
   { id: 3, title: "Users", icon: Users },
-  { id: 4, title: "Pharmacy Docs", icon: FolderOpen },
+  { id: 4, title: "Pharmacy", icon: ClipboardPlus },
 ];
 
 const SettingsLayout = () => {
@@ -121,7 +122,7 @@ const SettingsLayout = () => {
             {active === "Suppliers" && <SuppliersPage />}
             {active === "PMS" && <PMSPage />}
             {active === "Users" && <UsersPage />}
-            {active === "Pharmacy Docs" && <PharmacyDocs />}
+            {active === "Pharmacy" && <PharmacyDocs />}
           </main>
         </div>
       </div>
