@@ -756,6 +756,7 @@ const AuthPageInner = () => {
 
         localStorage.setItem("accessToken", res?.data?.accessToken);
         localStorage.setItem("refreshToken", res?.data?.refreshToken);
+        localStorage.setItem("userEmail", email);  // ✅ ADD THIS LINE
 
         if (!localStorage.getItem("userId")) {
           localStorage.setItem("userId", res?.data?.user?.id);
@@ -774,6 +775,7 @@ const AuthPageInner = () => {
 
     // ================= REGISTER =================
     else {
+      
       try {
         const res = await axios.post(
           "https://api.auditprorx.com/auth/register",
@@ -783,6 +785,8 @@ const AuthPageInner = () => {
         console.log(res?.data);
 
         localStorage.setItem("userId", res?.data?.user?.id);
+        localStorage.setItem("userEmail", email);  // ✅ ADD THIS LINE TOO
+        localStorage.setItem("signupName", name); 
 
         setShowOtp(true);
         // setIsLogin(true);

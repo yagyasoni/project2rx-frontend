@@ -1,5 +1,22 @@
-import "./globals.css";
+// import "./globals.css";
 
+
+// export default function RootLayout({
+//   children,
+// }: Readonly<{
+//   children: React.ReactNode;
+// }>) {
+//   return (
+//     <html lang="en">
+//       <body>
+//         {children}
+//       </body>
+//     </html>
+//   );
+// }
+
+import "./globals.css";
+import { SupplierProvider } from "@/context/SupplierContext";
 
 export default function RootLayout({
   children,
@@ -9,7 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <SupplierProvider>
+          {children}
+        </SupplierProvider>
       </body>
     </html>
   );

@@ -251,7 +251,7 @@ const PharmacyDetailsForm = () => {
       toast.success(
         "Details submitted successfully! Your pharmacy details have been saved.",
       );
-      router.push("/auth");
+      router.push("/agreements");
     } catch (err: any) {
       console.error(err);
 

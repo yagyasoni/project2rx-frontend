@@ -1260,7 +1260,7 @@ const UploadInventoryStep = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-gray-900">
-                Upload Inventory File
+                Upload PrimeRx File
               </h2>
               <p className="text-xs text-gray-500 mt-0.5">
                 Map your CSV columns to PRIMERX standard fields
