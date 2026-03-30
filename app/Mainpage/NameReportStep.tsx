@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
+import { toast } from "sonner";
 
 interface NameReportStepProps {
   auditName: string;
@@ -36,13 +37,12 @@ const NameReportStep = ({
       );
       console.log(res.data);
       localStorage.setItem("auditId", res.data.id);
-      alert("success");
+      toast("success");
       onContinue();
     } catch (err) {
-      alert("failed");
+      toast("failed");
     }
   };
-
 
   return (
     <div className="w-full max-w-xl mx-auto">

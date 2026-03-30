@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface Wholesaler {
   id: string;
@@ -430,7 +431,7 @@ const UploadWholesalersStep = ({
   const handleSubmit = async () => {
     const id = localStorage.getItem("auditId");
     if (!id) {
-      alert("Audit not found");
+      toast("Audit not found");
       return;
     }
 
@@ -510,7 +511,7 @@ const UploadWholesalersStep = ({
             : typeof data?.error === "string"
               ? data.error
               : err?.message || "Please try again.";
-      alert("Upload failed: " + message);
+      toast("Upload failed: " + message);
     }
   };
 

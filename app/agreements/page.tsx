@@ -3,8 +3,15 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  CheckCircle2, ChevronRight, FileText, PenLine,
-  Shield, Search, X, Building2, Monitor,
+  CheckCircle2,
+  ChevronRight,
+  FileText,
+  PenLine,
+  Shield,
+  Search,
+  X,
+  Building2,
+  Monitor,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -12,65 +19,164 @@ import { cn } from "@/lib/utils";
 
 // ─── Step Config ──────────────────────────────────────────────────────────────
 interface StepConfig {
-  id: number; label: string; title: string; icon: React.ReactNode;
+  id: number;
+  label: string;
+  title: string;
+  icon: React.ReactNode;
 }
 
 const STEPS: StepConfig[] = [
-  { id: 1, label: "NDA",       title: "Non-Disclosure Agreement",    icon: <Shield size={14} /> },
-  { id: 2, label: "Wholesale", title: "Wholesaler File Collection",  icon: <FileText size={14} /> },
-  { id: 3, label: "Release",   title: "Release Agreement",           icon: <FileText size={14} /> },
-  { id: 4, label: "Suppliers", title: "Add Supplier",                icon: <Building2 size={14} /> },
-  { id: 5, label: "PMS",       title: "Add PMS",                     icon: <Monitor size={14} /> },
+  {
+    id: 1,
+    label: "NDA",
+    title: "Non-Disclosure Agreement",
+    icon: <Shield size={14} />,
+  },
+  {
+    id: 2,
+    label: "Wholesale",
+    title: "Wholesaler File Collection",
+    icon: <FileText size={14} />,
+  },
+  {
+    id: 3,
+    label: "Release",
+    title: "Release Agreement",
+    icon: <FileText size={14} />,
+  },
+  {
+    id: 4,
+    label: "Suppliers",
+    title: "Add Supplier",
+    icon: <Building2 size={14} />,
+  },
+  { id: 5, label: "PMS", title: "Add PMS", icon: <Monitor size={14} /> },
 ];
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const ALL_SUPPLIERS = [
-  "340B","ABC","AKRON GENERICS","ALPINE HEALTH","ANDA","APD","API","ASTOR DRUGS",
-  "AXIA","BIORIDGE","BLUPAX","BONITA","CITYMED","DRUGZONE","EZRIRX","GENETCO",
-  "ICS DIRECT","IPC","IPD","KEYSOURCE","KINRAY","LEGACY HEALTH","MAKS PHARMA",
-  "MASTERS","MATRIX","MCKESSON","NDC DISTRIBUTORS","NETCOSTRX","OAK DRUGS",
-  "PARMED","PAYLESS","PBA HEALTH","PHARMSAVER","PRODIGY","QUALITY CARE",
-  "QUEST PHARMACEUTICAL","REAL VALUE RX","RXEED","SAVEBIGRX","SMART SOURCE",
-  "SMITH DRUGS","SPECTRUM","STERLING DISTRIBUTOR","TOPRX","TRXADE","TRUMARKER","WELLGISTICS",
+  "340B",
+  "ABC",
+  "AKRON GENERICS",
+  "ALPINE HEALTH",
+  "ANDA",
+  "APD",
+  "API",
+  "ASTOR DRUGS",
+  "AXIA",
+  "BIORIDGE",
+  "BLUPAX",
+  "BONITA",
+  "CITYMED",
+  "DRUGZONE",
+  "EZRIRX",
+  "GENETCO",
+  "ICS DIRECT",
+  "IPC",
+  "IPD",
+  "KEYSOURCE",
+  "KINRAY",
+  "LEGACY HEALTH",
+  "MAKS PHARMA",
+  "MASTERS",
+  "MATRIX",
+  "MCKESSON",
+  "NDC DISTRIBUTORS",
+  "NETCOSTRX",
+  "OAK DRUGS",
+  "PARMED",
+  "PAYLESS",
+  "PBA HEALTH",
+  "PHARMSAVER",
+  "PRODIGY",
+  "QUALITY CARE",
+  "QUEST PHARMACEUTICAL",
+  "REAL VALUE RX",
+  "RXEED",
+  "SAVEBIGRX",
+  "SMART SOURCE",
+  "SMITH DRUGS",
+  "SPECTRUM",
+  "STERLING DISTRIBUTOR",
+  "TOPRX",
+  "TRXADE",
+  "TRUMARKER",
+  "WELLGISTICS",
 ];
 
 const ALL_PMS = [
-  "PIONEERRX","BESTRX","DIGITALRX","SRS","LIBERTY","DATASCAN",
-  "RX30","PRIMERX",
+  "PIONEERRX",
+  "BESTRX",
+  "DIGITALRX",
+  "SRS",
+  "LIBERTY",
+  "DATASCAN",
+  "RX30",
+  "PRIMERX",
 ];
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
-const Navbar = ({ completed, total, progress, pharmacyEmail }: {
-  completed: number; total: number; progress: number; pharmacyEmail: string;
+const Navbar = ({
+  completed,
+  total,
+  progress,
+  pharmacyEmail,
+}: {
+  completed: number;
+  total: number;
+  progress: number;
+  pharmacyEmail: string;
 }) => (
   <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
     <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
       <div className="flex items-center gap-2.5 shrink-0">
         <div className="h-9 w-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm overflow-hidden">
-          <img src="/l.png" alt="AuditProRx" className="h-9 w-9 object-contain scale-125" />
+          <img
+            src="/l.png"
+            alt="AuditProRx"
+            className="h-9 w-9 object-contain scale-125"
+          />
         </div>
         <div className="flex flex-col leading-none">
-          <span className="font-black text-slate-900 tracking-tight" style={{ fontSize: 16, letterSpacing: "-0.04em" }}>AuditProRx</span>
-          <span className="text-[9px] text-slate-400 font-semibold tracking-[0.12em] uppercase">Agreements Portal</span>
+          <span
+            className="font-black text-slate-900 tracking-tight"
+            style={{ fontSize: 16, letterSpacing: "-0.04em" }}
+          >
+            AuditProRx
+          </span>
+          <span className="text-[9px] text-slate-400 font-semibold tracking-[0.12em] uppercase">
+            Agreements Portal
+          </span>
         </div>
       </div>
 
       <div className="hidden md:flex flex-col items-center gap-1.5 flex-1 max-w-xs">
         <div className="flex items-center justify-between w-full">
-          <span className="text-[11px] text-slate-400 font-medium">Agreement Progress</span>
-          <span className="text-[11px] font-bold text-slate-700">{completed}/{total} Completed</span>
+          <span className="text-[11px] text-slate-400 font-medium">
+            Agreement Progress
+          </span>
+          <span className="text-[11px] font-bold text-slate-700">
+            {completed}/{total} Completed
+          </span>
         </div>
         <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-          <div className="h-full rounded-full bg-emerald-500 transition-all duration-700" style={{ width: `${progress}%` }} />
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all duration-700"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
         <div className="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
-          <span className="text-xs font-bold text-slate-600">{pharmacyEmail?.[0]?.toUpperCase() || "P"}</span>
+          <span className="text-xs font-bold text-slate-600">
+            {pharmacyEmail?.[0]?.toUpperCase() || "P"}
+          </span>
         </div>
         <div className="hidden sm:flex flex-col leading-none">
-          <span className="text-[11px] font-semibold text-slate-700 max-w-[140px] truncate">{pharmacyEmail || "pharmacy@email.com"}</span>
+          <span className="text-[11px] font-semibold text-slate-700 max-w-[140px] truncate">
+            {pharmacyEmail || "pharmacy@email.com"}
+          </span>
           <span className="text-[10px] text-slate-400">Pharmacy Owner</span>
         </div>
       </div>
@@ -79,17 +185,33 @@ const Navbar = ({ completed, total, progress, pharmacyEmail }: {
 );
 
 // ─── Shared Doc Atoms ─────────────────────────────────────────────────────────
-const DocSection = ({ number, title, children }: { number: string; title: string; children: React.ReactNode }) => (
+const DocSection = ({
+  number,
+  title,
+  children,
+}: {
+  number: string;
+  title: string;
+  children: React.ReactNode;
+}) => (
   <div>
     <div className="flex items-center gap-2 mb-2.5">
-      <span className="flex items-center justify-center h-5 w-5 rounded-full bg-slate-800 text-white text-[10px] font-bold shrink-0">{number}</span>
+      <span className="flex items-center justify-center h-5 w-5 rounded-full bg-slate-800 text-white text-[10px] font-bold shrink-0">
+        {number}
+      </span>
       <h3 className="font-semibold text-slate-800 text-sm">{title}</h3>
     </div>
     <div className="pl-7">{children}</div>
   </div>
 );
 
-const DocSubSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
+const DocSubSection = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
   <div className="mb-3">
     <p className="text-xs font-semibold text-slate-700 mb-1.5">• {title}:</p>
     <div className="pl-3">{children}</div>
@@ -100,112 +222,262 @@ const FieldGrid = ({ fields }: { fields: string[] }) => (
   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
     {fields.map((f) => (
       <div key={f} className="flex items-center gap-1.5 text-xs text-slate-600">
-        <span className="h-1 w-1 rounded-full bg-slate-400 shrink-0" />{f}
+        <span className="h-1 w-1 rounded-full bg-slate-400 shrink-0" />
+        {f}
       </div>
     ))}
   </div>
 );
 
-const SigRow = ({ label, value, isSignature, isPending }: {
-  label: string; value: string; isSignature?: boolean; isPending?: boolean;
+const SigRow = ({
+  label,
+  value,
+  isSignature,
+  isPending,
+}: {
+  label: string;
+  value: string;
+  isSignature?: boolean;
+  isPending?: boolean;
 }) => (
   <div className="flex items-baseline gap-2 mb-2 text-xs">
     <span className="text-slate-400 w-16 shrink-0">{label}:</span>
     <span
-      className={cn("font-medium", isSignature && "text-slate-800 text-xl", isPending && "text-slate-400 italic", !isSignature && !isPending && "text-slate-800")}
-      style={isSignature ? { fontFamily: "'Brush Script MT','Dancing Script',cursive", letterSpacing: 1 } : {}}
-    >{value}</span>
+      className={cn(
+        "font-medium",
+        isSignature && "text-slate-800 text-xl",
+        isPending && "text-slate-400 italic",
+        !isSignature && !isPending && "text-slate-800",
+      )}
+      style={
+        isSignature
+          ? {
+              fontFamily: "'Brush Script MT','Dancing Script',cursive",
+              letterSpacing: 1,
+            }
+          : {}
+      }
+    >
+      {value}
+    </span>
   </div>
 );
 
 const Spinner = () => (
   <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="4"
+    />
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+    />
   </svg>
 );
 
 // ─── STEP 1: NDA ──────────────────────────────────────────────────────────────
-const NDAContent = ({ pharmacyName, ownerName, signatureName }: { pharmacyName: string; ownerName: string; signatureName: string }) => (
+const NDAContent = ({
+  pharmacyName,
+  ownerName,
+  signatureName,
+}: {
+  pharmacyName: string;
+  ownerName: string;
+  signatureName: string;
+}) => (
   <div className="space-y-5 text-sm leading-relaxed text-slate-700">
     <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
-      <p className="font-bold text-slate-900 text-xs uppercase tracking-widest mb-1.5">AuditProRx Non-Disclosure Agreement</p>
+      <p className="font-bold text-slate-900 text-xs uppercase tracking-widest mb-1.5">
+        AuditProRx Non-Disclosure Agreement
+      </p>
       <p className="text-slate-600 text-xs leading-relaxed">
-        This Agreement is made between <span className="font-semibold text-slate-800">AuditProRx LLC</span> ("we," "us," or "our") and{" "}
-        <span className="font-semibold text-slate-800">{pharmacyName}</span> ("you" or "your"). By signing, both parties agree to keep the information listed below strictly confidential.
+        This Agreement is made between{" "}
+        <span className="font-semibold text-slate-800">AuditProRx LLC</span>{" "}
+        ("we," "us," or "our") and{" "}
+        <span className="font-semibold text-slate-800">{pharmacyName}</span>{" "}
+        ("you" or "your"). By signing, both parties agree to keep the
+        information listed below strictly confidential.
       </p>
     </div>
     <DocSection number="1" title="Confidential Information">
-      <p className="mb-3 text-slate-600">The following information is considered confidential and is protected under this Agreement:</p>
-      <DocSubSection title="Billed Inventory (12 Fields)">
-        <FieldGrid fields={["NDC Number","Rx Number","Status","Date Filled","Drug Name","Quantity","Package Size","Primary Insurance Bin Number","Primary Insurance Paid","Secondary Insurance BinNumber","Secondary Insurance Paid","Primary Insurance PCN","Primary Insurance Group","Secondary Insurance PCN ","Secondary Insurance Group","Brand"]} />
+      <p className="mb-3 text-slate-600">
+        The following information is considered confidential and is protected
+        under this Agreement:
+      </p>
+      <DocSubSection title="Billed Inventory (16 Fields)">
+        <FieldGrid
+          fields={[
+            "NDC Number",
+            "Rx Number",
+            "Status",
+            "Date Filled",
+            "Drug Name",
+            "Quantity",
+            "Package Size",
+            "Primary Insurance Bin Number",
+            "Primary Insurance Paid",
+            "Secondary Insurance BinNumber",
+            "Secondary Insurance Paid",
+            "Primary Insurance PCN",
+            "Primary Insurance Group",
+            "Secondary Insurance PCN ",
+            "Secondary Insurance Group",
+            "Brand",
+          ]}
+        />
       </DocSubSection>
       <DocSubSection title="Purchased Invoices (6 Fields)">
-        <FieldGrid fields={["NDC Number","Invoice Date","Item Description","Quantity","Unit Price","Total Price"]} />
+        <FieldGrid
+          fields={[
+            "NDC Number",
+            "Invoice Date",
+            "Item Description",
+            "Quantity",
+            "Unit Price",
+            "Total Price",
+          ]}
+        />
       </DocSubSection>
       <DocSubSection title="All Business Communication">
-        <p className="text-slate-600 text-xs">Any communication between you (the pharmacy) and us (AuditProRx).</p>
+        <p className="text-slate-600 text-xs">
+          Any communication between you (the pharmacy) and us (AuditProRx).
+        </p>
       </DocSubSection>
     </DocSection>
     <DocSection number="2" title="Scope of Confidentiality">
-      <p className="text-slate-600">Information that is already public, independently developed without reference to this data, or received from another source without breach is not covered under this Agreement.</p>
+      <p className="text-slate-600">
+        Information that is already public, independently developed without
+        reference to this data, or received from another source without breach
+        is not covered under this Agreement.
+      </p>
     </DocSection>
     <DocSection number="3" title="Purpose and Use of the Information">
-      <p className="text-slate-600">We will use these fields only to perform the agreed-upon services (such as generating comparison reports). We will not disclose this information to anyone else without your approval.</p>
+      <p className="text-slate-600">
+        We will use these fields only to perform the agreed-upon services. We
+        will not disclose this information to anyone else without your approval.
+      </p>
     </DocSection>
     <DocSection number="4" title="Security and Confidentiality Obligations">
       <ul className="space-y-2">
-        {["All data is stored within your secure pharmacy login account, and only individuals with proper credentials may access it.",
+        {[
+          "All data is stored within your secure pharmacy login account, and only individuals with proper credentials may access it.",
           "You may delete any generated reports and uploaded data from your account at any time; if you do so, we will remove this data from our systems (unless required by law).",
           "Each party agrees to use at least the same level of care in protecting the other's confidential information as it uses for its own similar information.",
         ].map((item, i) => (
           <li key={i} className="flex gap-2.5 text-slate-600">
-            <span className="mt-0.5 h-4 w-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold flex items-center justify-center shrink-0">{i + 1}</span>
+            <span className="mt-0.5 h-4 w-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+              {i + 1}
+            </span>
             {item}
           </li>
         ))}
       </ul>
     </DocSection>
     <DocSection number="5" title="Consideration">
-      <p className="text-slate-600">In exchange for receiving and using the confidential information, both parties agree to these terms. This mutual exchange of benefits is the consideration that makes this Agreement binding.</p>
+      <p className="text-slate-600">
+        In exchange for receiving and using the confidential information, both
+        parties agree to these terms. This mutual exchange of benefits is the
+        consideration that makes this Agreement binding.
+      </p>
     </DocSection>
     <DocSection number="6" title="Term and Termination">
-      <p className="text-slate-600">This Agreement starts on the date both parties sign and remains in effect as long as we work together—and for a reasonable period afterward. Either party may request that their confidential information be returned or destroyed, and we will comply unless otherwise required by law.</p>
+      <p className="text-slate-600">
+        This Agreement starts on the date both parties sign and remains in
+        effect as long as we work together—and for a reasonable period
+        afterward. Either party may request that their confidential information
+        be returned or destroyed, and we will comply unless otherwise required
+        by law.
+      </p>
     </DocSection>
     <DocSection number="7" title="Remedies for Breach">
-      <p className="text-slate-600">If either party breaches this Agreement, the non-breaching party may seek injunctive relief (an order to stop the breach) and may recover any damages incurred as a result of the breach.</p>
+      <p className="text-slate-600">
+        If either party breaches this Agreement, the non-breaching party may
+        seek injunctive relief (an order to stop the breach) and may recover any
+        damages incurred as a result of the breach.
+      </p>
     </DocSection>
     <DocSection number="8" title="Governing Law and Dispute Resolution">
-      <p className="text-slate-600">This Agreement shall be governed by and construed in accordance with the laws of the State of New York. Any disputes arising from this Agreement shall be resolved in the state or federal courts located in New York, or through agreed arbitration in New York, ensuring both parties have a clear forum for resolution.</p>
+      <p className="text-slate-600">
+        This Agreement shall be governed by and construed in accordance with the
+        laws of the State of New York. Any disputes arising from this Agreement
+        shall be resolved in the state or federal courts located in New York, or
+        through agreed arbitration in New York, ensuring both parties have a
+        clear forum for resolution.
+      </p>
     </DocSection>
     <DocSection number="9" title="Additional Provisions">
       <div className="space-y-3">
-        {[{ term: "Entire Agreement", desc: "This document contains the entire agreement between the parties regarding the confidential information and supersedes all prior understandings or agreements." },
-          { term: "Severability", desc: "If any part of this Agreement is found to be unenforceable, the remainder will continue in full force." },
-          { term: "Amendments", desc: "This Agreement can only be modified in writing and signed by both parties." },
+        {[
+          {
+            term: "Entire Agreement",
+            desc: "This document contains the entire agreement between the parties regarding the confidential information and supersedes all prior understandings or agreements.",
+          },
+          {
+            term: "Severability",
+            desc: "If any part of this Agreement is found to be unenforceable, the remainder will continue in full force.",
+          },
+          {
+            term: "Amendments",
+            desc: "This Agreement can only be modified in writing and signed by both parties.",
+          },
         ].map(({ term, desc }) => (
           <div key={term} className="flex gap-2 text-slate-600">
-            <span className="font-semibold text-slate-800 shrink-0">{term}:</span><span>{desc}</span>
+            <span className="font-semibold text-slate-800 shrink-0">
+              {term}:
+            </span>
+            <span>{desc}</span>
           </div>
         ))}
       </div>
     </DocSection>
     <DocSection number="10" title="Signatures">
-      <p className="text-slate-600 mb-4">By signing below, both parties agree to abide by the terms of this Agreement.</p>
+      <p className="text-slate-600 mb-4">
+        By signing below, both parties agree to abide by the terms of this
+        Agreement.
+      </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">AuditProRx LLC</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+            AuditProRx LLC
+          </p>
           <SigRow label="Name" value="Mr. Fahad Mulla" />
           <SigRow label="Title" value="CEO" />
           <SigRow label="Signature" value="Fahad Mulla" isSignature />
-          <SigRow label="Date" value={new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })} />
+          <SigRow
+            label="Date"
+            value={new Date().toLocaleDateString("en-US", {
+              month: "2-digit",
+              day: "2-digit",
+              year: "numeric",
+            })}
+          />
         </div>
         <div className="rounded-xl border border-emerald-200 bg-emerald-50/30 p-4 shadow-sm">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">{pharmacyName}</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+            {pharmacyName}
+          </p>
           <SigRow label="Name" value={ownerName || "—"} />
           <SigRow label="Title" value="OWNER" />
-          <SigRow label="Signature" value={signatureName || "Pending..."} isPending={!signatureName} isSignature={!!signatureName} />
-          <SigRow label="Date" value={new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })} />
+          <SigRow
+            label="Signature"
+            value={signatureName || "Pending..."}
+            isPending={!signatureName}
+            isSignature={!!signatureName}
+          />
+          <SigRow
+            label="Date"
+            value={new Date().toLocaleDateString("en-US", {
+              month: "2-digit",
+              day: "2-digit",
+              year: "numeric",
+            })}
+          />
         </div>
       </div>
     </DocSection>
@@ -213,29 +485,92 @@ const NDAContent = ({ pharmacyName, ownerName, signatureName }: { pharmacyName: 
 );
 
 // ─── STEP 2: Wholesaler ───────────────────────────────────────────────────────
-const DOWNLOAD_ONLINE = ["KINRAY","MCKESSON","ABC","SMART SOURCE","TRXADE","EZRIRX","ANDA"];
-const ON_REQUEST_EMAIL = ["AKRON GENERICS","ALPINE HEALTH","AXIA","BIORIDGE","BLUPAX","BONITA","CITYMED","DRUGZONE","GENETCO","ICS DIRECT","IPC","IPD","KEYSOURCE","LEGACY HEALTH","MAKS PHARMA","MASTERS","MATRIX","NDC DISTRIBUTORS","NETCOSTRX","OAK DRUGS","PARMED","PAYLESS","PBA HEALTH","PHARMSAVER","PRODIGY","QUALITY CARE","QUEST PHARMACEUTICAL","REAL VALUE RX","RXEED","SAVEBIGRX","SMITH DRUGS","SPECTRUM","STERLING DISTRIBUTOR","TOPRX","TRUMARKER","WELLGISTICS"];
+const DOWNLOAD_ONLINE = [
+  "KINRAY",
+  "MCKESSON",
+  "ABC",
+  "SMART SOURCE",
+  "TRXADE",
+  "EZRIRX",
+  "ANDA",
+];
+const ON_REQUEST_EMAIL = [
+  "AKRON GENERICS",
+  "ALPINE HEALTH",
+  "AXIA",
+  "BIORIDGE",
+  "BLUPAX",
+  "BONITA",
+  "CITYMED",
+  "DRUGZONE",
+  "GENETCO",
+  "ICS DIRECT",
+  "IPC",
+  "IPD",
+  "KEYSOURCE",
+  "LEGACY HEALTH",
+  "MAKS PHARMA",
+  "MASTERS",
+  "MATRIX",
+  "NDC DISTRIBUTORS",
+  "NETCOSTRX",
+  "OAK DRUGS",
+  "PARMED",
+  "PAYLESS",
+  "PBA HEALTH",
+  "PHARMSAVER",
+  "PRODIGY",
+  "QUALITY CARE",
+  "QUEST PHARMACEUTICAL",
+  "REAL VALUE RX",
+  "RXEED",
+  "SAVEBIGRX",
+  "SMITH DRUGS",
+  "SPECTRUM",
+  "STERLING DISTRIBUTOR",
+  "TOPRX",
+  "TRUMARKER",
+  "WELLGISTICS",
+];
 
 const WholesalerContent = () => (
   <div className="space-y-5 text-sm">
     <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
-      <p className="font-bold text-slate-900 text-xs uppercase tracking-widest mb-1.5">Before proceeding with the Release Agreement</p>
-      <p className="font-semibold text-slate-800 text-sm">Would you like us to help collect your secondary wholesaler files?</p>
+      <p className="font-bold text-slate-900 text-xs uppercase tracking-widest mb-1.5">
+        Before proceeding with the Release Agreement
+      </p>
+      <p className="font-semibold text-slate-800 text-sm">
+        Would you like us to help collect your secondary wholesaler files?
+      </p>
     </div>
     <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3.5 text-xs text-slate-600 leading-relaxed">
-      We currently do this for over <span className="font-semibold text-slate-800">85% of the pharmacies</span> we work with. We do this by creating a dedicated pharmacy AuditProRx email like{" "}
-      <span className="font-bold text-slate-800 uppercase">EXAMPLEPHARMACY@AUDITPRORX.COM</span> and we use that to collect your secondary wholesalers every month.
+      We currently do this for over{" "}
+      <span className="font-semibold text-slate-800">
+        80% of the pharmacies
+      </span>{" "}
+      we work with. We do this by creating a dedicated pharmacy AuditProRx email
+      like{" "}
+      <span className="font-bold text-slate-800 uppercase">
+        EXAMPLEPHARMACY@AUDITPRORX.COM
+      </span>{" "}
+      and we use that to collect your secondary wholesalers every month.
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <div className="h-2 w-2 rounded-full bg-emerald-500" />
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Download Online</p>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            Download Online
+          </p>
         </div>
         <ul className="space-y-1.5">
           {DOWNLOAD_ONLINE.map((name) => (
-            <li key={name} className="flex items-center gap-2 text-xs text-slate-700 font-medium">
-              <span className="h-1 w-1 rounded-full bg-emerald-400 shrink-0" />{name}
+            <li
+              key={name}
+              className="flex items-center gap-2 text-xs text-slate-700 font-medium"
+            >
+              <span className="h-1 w-1 rounded-full bg-emerald-400 shrink-0" />
+              {name}
             </li>
           ))}
         </ul>
@@ -243,12 +578,18 @@ const WholesalerContent = () => (
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <div className="h-2 w-2 rounded-full bg-blue-500" />
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">On Request via Email</p>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            On Request via Email
+          </p>
         </div>
         <ul className="columns-2 space-y-1.5">
           {ON_REQUEST_EMAIL.map((name) => (
-            <li key={name} className="flex items-center gap-1.5 text-xs text-slate-700 font-medium break-inside-avoid mb-1.5">
-              <span className="h-1 w-1 rounded-full bg-blue-400 shrink-0" />{name}
+            <li
+              key={name}
+              className="flex items-center gap-1.5 text-xs text-slate-700 font-medium break-inside-avoid mb-1.5"
+            >
+              <span className="h-1 w-1 rounded-full bg-blue-400 shrink-0" />
+              {name}
             </li>
           ))}
         </ul>
@@ -258,105 +599,278 @@ const WholesalerContent = () => (
 );
 
 // ─── STEP 3: Release Agreement ────────────────────────────────────────────────
-const ReleaseAgreementContent = ({ pharmacyName, ownerName, wholesalerAccepted, signatureName }: { pharmacyName: string; ownerName: string; wholesalerAccepted: boolean; signatureName: string }) => {
-  const today = new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+const ReleaseAgreementContent = ({
+  pharmacyName,
+  ownerName,
+  wholesalerAccepted,
+  signatureName,
+}: {
+  pharmacyName: string;
+  ownerName: string;
+  wholesalerAccepted: boolean;
+  signatureName: string;
+}) => {
+  const today = new Date().toLocaleDateString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  });
   return (
     <div className="space-y-5 text-sm leading-relaxed text-slate-700">
       {wholesalerAccepted && (
         <div className="flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <CheckCircle2 size={15} className="text-emerald-600 mt-0.5 shrink-0" />
+          <CheckCircle2
+            size={15}
+            className="text-emerald-600 mt-0.5 shrink-0"
+          />
           <p className="text-xs text-emerald-800 font-medium leading-relaxed">
-            You've chosen to have AuditProRx help collect your secondary wholesaler files. This will be included in the terms of this agreement.
+            You've chosen to have AuditProRx help collect your secondary
+            wholesaler files. This will be included in the terms of this
+            agreement.
           </p>
         </div>
       )}
       <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
-        <p className="font-bold text-slate-900 text-xs uppercase tracking-widest mb-1.5">Release and Authorization Agreement</p>
-        <p className="text-slate-600 text-xs leading-relaxed">This Release and Authorization Agreement ("Agreement") is entered into by and between:</p>
+        <p className="font-bold text-slate-900 text-xs uppercase tracking-widest mb-1.5">
+          Release and Authorization Agreement
+        </p>
+        <p className="text-slate-600 text-xs leading-relaxed">
+          This Release and Authorization Agreement ("Agreement") is entered into
+          by and between:
+        </p>
         <div className="mt-2 space-y-1 text-xs text-slate-600">
-          <p>1. <span className="font-semibold text-slate-800">{pharmacyName}</span> (hereinafter referred to as "Pharmacy"), and</p>
-          <p>2. <span className="font-semibold text-slate-800">AuditProRx LLC</span>, a New York limited liability company (hereinafter referred to as "AuditProRx").</p>
+          <p>
+            1.{" "}
+            <span className="font-semibold text-slate-800">{pharmacyName}</span>{" "}
+            (hereinafter referred to as "Pharmacy"), and
+          </p>
+          <p>
+            2.{" "}
+            <span className="font-semibold text-slate-800">AuditProRx LLC</span>
+            , a New York limited liability company (hereinafter referred to as
+            "AuditProRx").
+          </p>
         </div>
-        <p className="text-xs text-slate-600 mt-2"><span className="font-semibold text-slate-800">Effective Date:</span> {today}</p>
+        <p className="text-xs text-slate-600 mt-2">
+          <span className="font-semibold text-slate-800">Effective Date:</span>{" "}
+          {today}
+        </p>
       </div>
       <DocSection number="1" title="Purpose">
-        <p className="text-slate-600">Pharmacy desires to authorize AuditProRx to act on its behalf to communicate with and obtain specific records from its pharmacy wholesaler(s). By signing this Agreement, Pharmacy grants AuditProRx the limited authority to request, receive, and review the documents outlined in Section 2, subject to the terms and conditions stated below. These records will be used to run monthly internal audits for the Pharmacy using AuditProRx's internal audit platform.</p>
+        <p className="text-slate-600">
+          Pharmacy desires to authorize AuditProRx to act on its behalf to
+          communicate with and obtain specific records from its pharmacy
+          wholesaler(s). By signing this Agreement, Pharmacy grants AuditProRx
+          the limited authority to request, receive, and review the documents
+          outlined in Section 2, subject to the terms and conditions stated
+          below. These records will be used to run monthly internal audits for
+          the Pharmacy using AuditProRx's internal audit platform.
+        </p>
       </DocSection>
       <DocSection number="2" title="Scope of Authorization">
         <div className="space-y-3 text-slate-600 text-xs">
           {[
-            { t: "Contact Pharmacy Wholesaler(s):", d: "AuditProRx is authorized to communicate with one or more of Pharmacy's designated wholesalers on behalf of Pharmacy." },
-            { t: "Request Documentation:", d: "AuditProRx is authorized to request, on a monthly, quarterly, and annual basis, the necessary statements and invoices from such wholesalers for the purpose of performing internal audits for Pharmacy." },
+            {
+              t: "Contact Pharmacy Wholesaler(s):",
+              d: "AuditProRx is authorized to communicate with one or more of Pharmacy's designated wholesalers on behalf of Pharmacy.",
+            },
+            {
+              t: "Request Documentation:",
+              d: "AuditProRx is authorized to request, on a monthly, quarterly, and annual basis, the necessary statements and invoices from such wholesalers for the purpose of performing internal audits for Pharmacy.",
+            },
           ].map(({ t, d }, i) => (
-            <div key={i}><p className="font-semibold text-slate-800 mb-1">{i + 1}. {t}</p><p className="pl-3">{d}</p></div>
+            <div key={i}>
+              <p className="font-semibold text-slate-800 mb-1">
+                {i + 1}. {t}
+              </p>
+              <p className="pl-3">{d}</p>
+            </div>
           ))}
           <div>
-            <p className="font-semibold text-slate-800 mb-1">3. Format & Required Fields:</p>
-            <p className="pl-3 mb-1.5">Pharmacy authorizes AuditProRx to request purchase invoices in <span className="font-semibold">CSV or Excel format</span> including: NDC Number, Invoice Date, Item Description, Quantity, Unit Price, Total Price.</p>
+            <p className="font-semibold text-slate-800 mb-1">
+              3. Format & Required Fields:
+            </p>
+            <p className="pl-3 mb-1.5">
+              Pharmacy authorizes AuditProRx to request purchase invoices in{" "}
+              <span className="font-semibold">CSV or Excel format</span>{" "}
+              including: NDC Number, Invoice Date, Item Description, Quantity,
+              Unit Price, Total Price.
+            </p>
           </div>
-          <div><p className="font-semibold text-slate-800 mb-1">4. Obtain and Review Records:</p><p className="pl-3">AuditProRx may receive and review these statements, invoices, and related records to assist Pharmacy with its internal audit processes.</p></div>
+          <div>
+            <p className="font-semibold text-slate-800 mb-1">
+              4. Obtain and Review Records:
+            </p>
+            <p className="pl-3">
+              AuditProRx may receive and review these statements, invoices, and
+              related records to assist Pharmacy with its internal audit
+              processes.
+            </p>
+          </div>
         </div>
       </DocSection>
       <DocSection number="3" title="Limitations of Authority">
         <div className="space-y-3 text-slate-600 text-xs">
           {[
-            { t: "No Broader Authority:", d: "AuditProRx's authority is strictly limited to requesting and receiving the specified documents. AuditProRx shall not enter into any agreements or financial obligations on behalf of Pharmacy beyond what is necessary to obtain and review the authorized documentation." },
-            { t: "Third Parties' Reliance:", d: "Pharmacy acknowledges that wholesalers and other relevant third parties may rely on this signed Agreement as evidence of AuditProRx's authority to act on Pharmacy's behalf regarding the aforementioned documents and information." },
-            { t: "Compliance with Law:", d: "AuditProRx shall comply with all applicable laws, regulations, and industry standards governing the handling of Pharmacy's confidential information." },
+            {
+              t: "No Broader Authority:",
+              d: "AuditProRx's authority is strictly limited to requesting and receiving the specified documents. AuditProRx shall not enter into any agreements or financial obligations on behalf of Pharmacy beyond what is necessary to obtain and review the authorized documentation.",
+            },
+            {
+              t: "Third Parties' Reliance:",
+              d: "Pharmacy acknowledges that wholesalers and other relevant third parties may rely on this signed Agreement as evidence of AuditProRx's authority to act on Pharmacy's behalf regarding the aforementioned documents and information.",
+            },
+            {
+              t: "Compliance with Law:",
+              d: "AuditProRx shall comply with all applicable laws, regulations, and industry standards governing the handling of Pharmacy's confidential information.",
+            },
           ].map(({ t, d }, i) => (
-            <div key={i}><p className="font-semibold text-slate-800 mb-1">{i + 1}. {t}</p><p className="pl-3">{d}</p></div>
+            <div key={i}>
+              <p className="font-semibold text-slate-800 mb-1">
+                {i + 1}. {t}
+              </p>
+              <p className="pl-3">{d}</p>
+            </div>
           ))}
         </div>
       </DocSection>
       <DocSection number="4" title="Confidentiality">
         <div className="space-y-3 text-slate-600 text-xs">
           {[
-            { t: "Protected Information:", d: "All statements, invoices, and other records obtained under this Agreement may include confidential or proprietary information about Pharmacy." },
-            { t: "Obligations:", d: "AuditProRx shall treat any information received in the course of performing services under this Agreement as confidential and shall use this information only for the limited purpose authorized by Pharmacy." },
-            { t: "Data Security:", d: "AuditProRx shall maintain administrative, technical, and physical safeguards to protect confidential information from accidental or unlawful destruction, loss, or unauthorized access." },
+            {
+              t: "Protected Information:",
+              d: "All statements, invoices, and other records obtained under this Agreement may include confidential or proprietary information about Pharmacy.",
+            },
+            {
+              t: "Obligations:",
+              d: "AuditProRx shall treat any information received in the course of performing services under this Agreement as confidential and shall use this information only for the limited purpose authorized by Pharmacy.",
+            },
+            {
+              t: "Data Security:",
+              d: "AuditProRx shall maintain administrative, technical, and physical safeguards to protect confidential information from accidental or unlawful destruction, loss, or unauthorized access.",
+            },
           ].map(({ t, d }, i) => (
-            <div key={i}><p className="font-semibold text-slate-800 mb-1">{i + 1}. {t}</p><p className="pl-3">{d}</p></div>
+            <div key={i}>
+              <p className="font-semibold text-slate-800 mb-1">
+                {i + 1}. {t}
+              </p>
+              <p className="pl-3">{d}</p>
+            </div>
           ))}
         </div>
       </DocSection>
       <DocSection number="5" title="Indemnification">
         <div className="space-y-3 text-slate-600 text-xs">
-          <div><p className="font-semibold text-slate-800 mb-1">1. Indemnification by Pharmacy:</p><p className="pl-3">Pharmacy agrees to indemnify, defend, and hold harmless AuditProRx, its officers, directors, employees, and agents from and against any and all claims, damages, liabilities, costs, and expenses arising out of or related to any misleading information provided by Pharmacy or Pharmacy's failure to obtain necessary consents to release information.</p></div>
-          <div><p className="font-semibold text-slate-800 mb-1">2. Indemnification by AuditProRx:</p><p className="pl-3">AuditProRx agrees to indemnify, defend, and hold harmless Pharmacy, its officers, directors, employees, and agents from and against any and all claims, damages, liabilities, costs, and expenses arising out of or related to AuditProRx's wrongful use or disclosure of Pharmacy's confidential information or breach of this Agreement.</p></div>
+          <div>
+            <p className="font-semibold text-slate-800 mb-1">
+              1. Indemnification by Pharmacy:
+            </p>
+            <p className="pl-3">
+              Pharmacy agrees to indemnify, defend, and hold harmless
+              AuditProRx, its officers, directors, employees, and agents from
+              and against any and all claims, damages, liabilities, costs, and
+              expenses arising out of or related to any misleading information
+              provided by Pharmacy or Pharmacy's failure to obtain necessary
+              consents to release information.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-slate-800 mb-1">
+              2. Indemnification by AuditProRx:
+            </p>
+            <p className="pl-3">
+              AuditProRx agrees to indemnify, defend, and hold harmless
+              Pharmacy, its officers, directors, employees, and agents from and
+              against any and all claims, damages, liabilities, costs, and
+              expenses arising out of or related to AuditProRx's wrongful use or
+              disclosure of Pharmacy's confidential information or breach of
+              this Agreement.
+            </p>
+          </div>
         </div>
       </DocSection>
       <DocSection number="6" title="Term and Termination">
         <div className="space-y-3 text-slate-600 text-xs">
-          <div><p className="font-semibold text-slate-800 mb-1">1. Term:</p><p className="pl-3">This Agreement shall commence on {today} and shall continue until terminated as provided herein.</p></div>
-          <div><p className="font-semibold text-slate-800 mb-1">2. Termination:</p><p className="pl-3">Either party may terminate this Agreement at any time by providing 30 days' written notice to the other party.</p></div>
-          <div><p className="font-semibold text-slate-800 mb-1">3. Survival:</p><p className="pl-3">Notwithstanding any termination of this Agreement, the obligations of confidentiality and indemnification herein shall survive the termination of this Agreement.</p></div>
+          <div>
+            <p className="font-semibold text-slate-800 mb-1">1. Term:</p>
+            <p className="pl-3">
+              This Agreement shall commence on {today} and shall continue until
+              terminated as provided herein.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-slate-800 mb-1">2. Termination:</p>
+            <p className="pl-3">
+              Either party may terminate this Agreement at any time by providing
+              30 days' written notice to the other party.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-slate-800 mb-1">3. Survival:</p>
+            <p className="pl-3">
+              Notwithstanding any termination of this Agreement, the obligations
+              of confidentiality and indemnification herein shall survive the
+              termination of this Agreement.
+            </p>
+          </div>
         </div>
       </DocSection>
       <DocSection number="7" title="Governing Law and Dispute Resolution">
-        <p className="text-slate-600">This Agreement shall be governed by and construed in accordance with the laws of the State of New York. Any dispute arising from or relating to this Agreement shall be resolved through mediation or arbitration in accordance with the rules of AAA then in effect.</p>
+        <p className="text-slate-600">
+          This Agreement shall be governed by and construed in accordance with
+          the laws of the State of New York. Any dispute arising from or
+          relating to this Agreement shall be resolved through mediation or
+          arbitration in accordance with the rules of AAA then in effect.
+        </p>
       </DocSection>
       <DocSection number="8" title="Entire Agreement and Amendments">
-        <p className="text-slate-600">This Agreement constitutes the entire understanding and agreement between the parties regarding the subject matter herein and supersedes all prior or contemporaneous understandings. No amendment to this Agreement shall be valid unless made in writing and signed by both parties.</p>
+        <p className="text-slate-600">
+          This Agreement constitutes the entire understanding and agreement
+          between the parties regarding the subject matter herein and supersedes
+          all prior or contemporaneous understandings. No amendment to this
+          Agreement shall be valid unless made in writing and signed by both
+          parties.
+        </p>
       </DocSection>
       <DocSection number="9" title="Severability">
-        <p className="text-slate-600">If any provision of this Agreement is found to be invalid, illegal, or unenforceable by a court of competent jurisdiction, the remaining provisions shall remain in full force and effect.</p>
+        <p className="text-slate-600">
+          If any provision of this Agreement is found to be invalid, illegal, or
+          unenforceable by a court of competent jurisdiction, the remaining
+          provisions shall remain in full force and effect.
+        </p>
       </DocSection>
       <DocSection number="10" title="Counterparts and Electronic Signatures">
-        <p className="text-slate-600 mb-3">This Agreement may be executed in one or more counterparts. A signed copy delivered by email or electronic signature shall have the same legal effect as delivery of an original signed copy.</p>
-        <p className="text-xs font-semibold text-slate-700 mb-4">IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date first written above.</p>
+        <p className="text-slate-600 mb-3">
+          This Agreement may be executed in one or more counterparts. A signed
+          copy delivered by email or electronic signature shall have the same
+          legal effect as delivery of an original signed copy.
+        </p>
+        <p className="text-xs font-semibold text-slate-700 mb-4">
+          IN WITNESS WHEREOF, the parties have executed this Agreement as of the
+          Effective Date first written above.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">AuditProRx LLC</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+              AuditProRx LLC
+            </p>
             <SigRow label="Name" value="Mr. Fahad Mulla" />
             <SigRow label="Title" value="CEO" />
             <SigRow label="Signature" value="Fahad Mulla" isSignature />
             <SigRow label="Date" value={today} />
           </div>
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/30 p-4 shadow-sm">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">{pharmacyName}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+              {pharmacyName}
+            </p>
             <SigRow label="Name" value={ownerName || "—"} />
             <SigRow label="Title" value="OWNER" />
-            <SigRow label="Signature" value={signatureName || "Pending..."} isPending={!signatureName} isSignature={!!signatureName} />
+            <SigRow
+              label="Signature"
+              value={signatureName || "Pending..."}
+              isPending={!signatureName}
+              isSignature={!!signatureName}
+            />
             <SigRow label="Date" value={today} />
           </div>
         </div>
@@ -366,15 +880,29 @@ const ReleaseAgreementContent = ({ pharmacyName, ownerName, wholesalerAccepted, 
 };
 
 // ─── STEP 4: Add Supplier ─────────────────────────────────────────────────────
-const SupplierStep = ({ selected, onToggle }: { selected: string[]; onToggle: (name: string) => void }) => {
+const SupplierStep = ({
+  selected,
+  onToggle,
+}: {
+  selected: string[];
+  onToggle: (name: string) => void;
+}) => {
   const [query, setQuery] = useState("");
-  const filtered = useMemo(() => ALL_SUPPLIERS.filter((s) => s.toLowerCase().includes(query.toLowerCase())), [query]);
+  const filtered = useMemo(
+    () =>
+      ALL_SUPPLIERS.filter((s) =>
+        s.toLowerCase().includes(query.toLowerCase()),
+      ),
+    [query],
+  );
 
   return (
     <div className="space-y-4">
       <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
         <p className="font-bold text-slate-900 text-sm mb-0.5">Suppliers</p>
-        <p className="text-xs text-slate-500">Please add at least one supplier to continue</p>
+        <p className="text-xs text-slate-500">
+          Please add at least one supplier to continue
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -391,17 +919,33 @@ const SupplierStep = ({ selected, onToggle }: { selected: string[]; onToggle: (n
                 placeholder="Search suppliers..."
                 className="flex-1 bg-transparent text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none"
               />
-              {query && <button onClick={() => setQuery("")}><X size={12} className="text-slate-400" /></button>}
+              {query && (
+                <button onClick={() => setQuery("")}>
+                  <X size={12} className="text-slate-400" />
+                </button>
+              )}
             </div>
           </div>
           {/* Table header */}
           <div className="grid grid-cols-[32px_1fr_48px] px-3 py-2 border-b border-slate-100 bg-slate-50">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">#</span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Supplier Name</span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Select</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              #
+            </span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Supplier Name
+            </span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
+              Select
+            </span>
           </div>
           {/* Rows */}
-          <div className="max-h-64 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#e2e8f0 transparent" }}>
+          <div
+            className="max-h-64 overflow-y-auto"
+            style={{
+              scrollbarWidth: "thin",
+              scrollbarColor: "#e2e8f0 transparent",
+            }}
+          >
             {filtered.map((name, i) => {
               const isChecked = selected.includes(name);
               return (
@@ -410,19 +954,35 @@ const SupplierStep = ({ selected, onToggle }: { selected: string[]; onToggle: (n
                   onClick={() => onToggle(name)}
                   className={cn(
                     "grid grid-cols-[32px_1fr_48px] px-3 py-2.5 cursor-pointer transition-colors border-b border-slate-50 last:border-0",
-                    isChecked ? "bg-emerald-50/60" : "hover:bg-slate-50"
+                    isChecked ? "bg-emerald-50/60" : "hover:bg-slate-50",
                   )}
                 >
                   <span className="text-[11px] text-slate-400">{i + 1}</span>
-                  <span className="text-xs font-medium text-slate-700">{name}</span>
+                  <span className="text-xs font-medium text-slate-700">
+                    {name}
+                  </span>
                   <div className="flex justify-center items-center">
-                    <div className={cn(
-                      "h-4 w-4 rounded border-2 flex items-center justify-center transition-all",
-                      isChecked ? "bg-emerald-500 border-emerald-500" : "border-slate-300"
-                    )}>
+                    <div
+                      className={cn(
+                        "h-4 w-4 rounded border-2 flex items-center justify-center transition-all",
+                        isChecked
+                          ? "bg-emerald-500 border-emerald-500"
+                          : "border-slate-300",
+                      )}
+                    >
                       {isChecked && (
-                        <svg viewBox="0 0 10 8" fill="none" className="w-2.5 h-2">
-                          <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        <svg
+                          viewBox="0 0 10 8"
+                          fill="none"
+                          className="w-2.5 h-2"
+                        >
+                          <path
+                            d="M1 4l3 3 5-6"
+                            stroke="white"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                       )}
                     </div>
@@ -431,7 +991,9 @@ const SupplierStep = ({ selected, onToggle }: { selected: string[]; onToggle: (n
               );
             })}
             {filtered.length === 0 && (
-              <div className="py-8 text-center text-xs text-slate-400">No suppliers found</div>
+              <div className="py-8 text-center text-xs text-slate-400">
+                No suppliers found
+              </div>
             )}
           </div>
         </div>
@@ -440,21 +1002,44 @@ const SupplierStep = ({ selected, onToggle }: { selected: string[]; onToggle: (n
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              Suppliers Selected {selected.length > 0 && <span className="ml-1.5 bg-emerald-100 text-emerald-700 rounded-full px-1.5 py-0.5 text-[9px]">{selected.length}</span>}
+              Suppliers Selected{" "}
+              {selected.length > 0 && (
+                <span className="ml-1.5 bg-emerald-100 text-emerald-700 rounded-full px-1.5 py-0.5 text-[9px]">
+                  {selected.length}
+                </span>
+              )}
             </p>
           </div>
-          <div className="max-h-72 overflow-y-auto p-2" style={{ scrollbarWidth: "thin", scrollbarColor: "#e2e8f0 transparent" }}>
+          <div
+            className="max-h-72 overflow-y-auto p-2"
+            style={{
+              scrollbarWidth: "thin",
+              scrollbarColor: "#e2e8f0 transparent",
+            }}
+          >
             {selected.length === 0 ? (
               <div className="py-10 text-center">
-                <p className="text-xs text-slate-400">No suppliers selected yet</p>
-                <p className="text-[11px] text-slate-300 mt-1">Select from the list on the left</p>
+                <p className="text-xs text-slate-400">
+                  No suppliers selected yet
+                </p>
+                <p className="text-[11px] text-slate-300 mt-1">
+                  Select from the list on the left
+                </p>
               </div>
             ) : (
               <ul className="space-y-1">
                 {selected.map((name) => (
-                  <li key={name} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-100">
-                    <span className="text-xs font-semibold text-emerald-800">{name}</span>
-                    <button onClick={() => onToggle(name)} className="text-emerald-400 hover:text-emerald-600 transition-colors shrink-0">
+                  <li
+                    key={name}
+                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-100"
+                  >
+                    <span className="text-xs font-semibold text-emerald-800">
+                      {name}
+                    </span>
+                    <button
+                      onClick={() => onToggle(name)}
+                      className="text-emerald-400 hover:text-emerald-600 transition-colors shrink-0"
+                    >
                       <X size={13} />
                     </button>
                   </li>
@@ -469,15 +1054,26 @@ const SupplierStep = ({ selected, onToggle }: { selected: string[]; onToggle: (n
 };
 
 // ─── STEP 5: Add PMS ──────────────────────────────────────────────────────────
-const PMSStep = ({ selected, onToggle }: { selected: string[]; onToggle: (name: string) => void }) => {
+const PMSStep = ({
+  selected,
+  onToggle,
+}: {
+  selected: string[];
+  onToggle: (name: string) => void;
+}) => {
   const [query, setQuery] = useState("");
-  const filtered = useMemo(() => ALL_PMS.filter((p) => p.toLowerCase().includes(query.toLowerCase())), [query]);
+  const filtered = useMemo(
+    () => ALL_PMS.filter((p) => p.toLowerCase().includes(query.toLowerCase())),
+    [query],
+  );
 
   return (
     <div className="space-y-4">
       <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
         <p className="font-bold text-slate-900 text-sm mb-0.5">PMS List</p>
-        <p className="text-xs text-slate-500">Please add at least one PMS to continue</p>
+        <p className="text-xs text-slate-500">
+          Please add at least one PMS to continue
+        </p>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden max-w-md mx-auto">
@@ -492,17 +1088,33 @@ const PMSStep = ({ selected, onToggle }: { selected: string[]; onToggle: (name: 
               placeholder="Search PMS..."
               className="flex-1 bg-transparent text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none"
             />
-            {query && <button onClick={() => setQuery("")}><X size={12} className="text-slate-400" /></button>}
+            {query && (
+              <button onClick={() => setQuery("")}>
+                <X size={12} className="text-slate-400" />
+              </button>
+            )}
           </div>
         </div>
         {/* Table header */}
         <div className="grid grid-cols-[32px_1fr_48px] px-3 py-2 border-b border-slate-100 bg-slate-50">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">#</span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PMS</span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Select</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            #
+          </span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            PMS
+          </span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
+            Select
+          </span>
         </div>
         {/* Rows */}
-        <div className="max-h-72 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#e2e8f0 transparent" }}>
+        <div
+          className="max-h-72 overflow-y-auto"
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor: "#e2e8f0 transparent",
+          }}
+        >
           {filtered.map((name, i) => {
             const isChecked = selected.includes(name);
             return (
@@ -511,19 +1123,31 @@ const PMSStep = ({ selected, onToggle }: { selected: string[]; onToggle: (name: 
                 onClick={() => onToggle(name)}
                 className={cn(
                   "grid grid-cols-[32px_1fr_48px] px-3 py-2.5 cursor-pointer transition-colors border-b border-slate-50 last:border-0",
-                  isChecked ? "bg-emerald-50/60" : "hover:bg-slate-50"
+                  isChecked ? "bg-emerald-50/60" : "hover:bg-slate-50",
                 )}
               >
                 <span className="text-[11px] text-slate-400">{i + 1}</span>
-                <span className="text-xs font-medium text-slate-700">{name}</span>
+                <span className="text-xs font-medium text-slate-700">
+                  {name}
+                </span>
                 <div className="flex justify-center items-center">
-                  <div className={cn(
-                    "h-4 w-4 rounded border-2 flex items-center justify-center transition-all",
-                    isChecked ? "bg-emerald-500 border-emerald-500" : "border-slate-300"
-                  )}>
+                  <div
+                    className={cn(
+                      "h-4 w-4 rounded border-2 flex items-center justify-center transition-all",
+                      isChecked
+                        ? "bg-emerald-500 border-emerald-500"
+                        : "border-slate-300",
+                    )}
+                  >
                     {isChecked && (
                       <svg viewBox="0 0 10 8" fill="none" className="w-2.5 h-2">
-                        <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        <path
+                          d="M1 4l3 3 5-6"
+                          stroke="white"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     )}
                   </div>
@@ -538,9 +1162,15 @@ const PMSStep = ({ selected, onToggle }: { selected: string[]; onToggle: (name: 
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selected.map((name) => (
-            <span key={name} className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full">
+            <span
+              key={name}
+              className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full"
+            >
               {name}
-              <button onClick={() => onToggle(name)} className="text-emerald-400 hover:text-emerald-600">
+              <button
+                onClick={() => onToggle(name)}
+                className="text-emerald-400 hover:text-emerald-600"
+              >
                 <X size={11} />
               </button>
             </span>
@@ -555,51 +1185,56 @@ const PMSStep = ({ selected, onToggle }: { selected: string[]; onToggle: (name: 
 const AgreementsPage = () => {
   const router = useRouter();
 
-  const [pharmacyName,  setPharmacyName]  = useState("Your Pharmacy");
+  const [pharmacyName, setPharmacyName] = useState("Your Pharmacy");
   const [pharmacyEmail, setPharmacyEmail] = useState("");
-  const [ownerName,     setOwnerName]     = useState("");
+  const [ownerName, setOwnerName] = useState("");
 
   useEffect(() => {
-    setPharmacyName(localStorage.getItem("pharmacyName")  || "Your Pharmacy");
-    setPharmacyEmail(localStorage.getItem("userEmail")    || "");
-    setOwnerName(localStorage.getItem("ownerName")        || "");
+    setPharmacyName(localStorage.getItem("pharmacyName") || "Your Pharmacy");
+    setPharmacyEmail(localStorage.getItem("userEmail") || "");
+    setOwnerName(localStorage.getItem("ownerName") || "");
   }, []);
 
-  const [currentStep,        setCurrentStep]        = useState(1);
-  const [completedSteps,     setCompletedSteps]     = useState<number[]>([]);
-  const [agreed,             setAgreed]             = useState(false);
-  const [signatureName,      setSignatureName]      = useState("");
-  const [isSubmitting,       setIsSubmitting]       = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [agreed, setAgreed] = useState(false);
+  const [signatureName, setSignatureName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [wholesalerAccepted, setWholesalerAccepted] = useState(false);
-  const [selectedSuppliers,  setSelectedSuppliers]  = useState<string[]>([]);
-  const [selectedPMS,        setSelectedPMS]        = useState<string[]>([]);
+  const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
+  const [selectedPMS, setSelectedPMS] = useState<string[]>([]);
   const documentRef = useRef<HTMLDivElement>(null);
 
-  const totalSteps       = STEPS.length;
-  const progress         = (completedSteps.length / totalSteps) * 100;
-  const isNDAStep        = currentStep === 1;
+  const totalSteps = STEPS.length;
+  const progress = (completedSteps.length / totalSteps) * 100;
+  const isNDAStep = currentStep === 1;
   const isWholesalerStep = currentStep === 2;
-  const isSupplierStep   = currentStep === 4;
-  const isPMSStep        = currentStep === 5;
+  const isSupplierStep = currentStep === 4;
+  const isPMSStep = currentStep === 5;
 
   const canProceed = (() => {
-    if (isNDAStep)        return agreed && signatureName.trim().length > 2;
+    if (isNDAStep) return agreed && signatureName.trim().length > 2;
     if (isWholesalerStep) return true;
-    if (isSupplierStep)   return selectedSuppliers.length > 0;
-    if (isPMSStep)        return selectedPMS.length > 0;
+    if (isSupplierStep) return selectedSuppliers.length > 0;
+    if (isPMSStep) return selectedPMS.length > 0;
     return true;
   })();
 
   const toggleSupplier = (name: string) =>
-    setSelectedSuppliers((prev) => prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name]);
+    setSelectedSuppliers((prev) =>
+      prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name],
+    );
 
   const togglePMS = (name: string) =>
-    setSelectedPMS((prev) => prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name]);
+    setSelectedPMS((prev) =>
+      prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name],
+    );
 
   const advance = async (wholesalerChoice?: boolean) => {
     setIsSubmitting(true);
     await new Promise((r) => setTimeout(r, 600));
-    if (isWholesalerStep && wholesalerChoice !== undefined) setWholesalerAccepted(wholesalerChoice);
+    if (isWholesalerStep && wholesalerChoice !== undefined)
+      setWholesalerAccepted(wholesalerChoice);
     setCompletedSteps((prev) => [...new Set([...prev, currentStep])]);
 
     if (currentStep < totalSteps) {
@@ -616,9 +1251,14 @@ const AgreementsPage = () => {
 
   const handleNext = async () => {
     if (!canProceed) {
-      if (isSupplierStep) toast.error("Please select at least one supplier to continue.");
-      else if (isPMSStep) toast.error("Please select at least one PMS to continue.");
-      else toast.error("Please check the agreement and provide your signature to continue.");
+      if (isSupplierStep)
+        toast.error("Please select at least one supplier to continue.");
+      else if (isPMSStep)
+        toast.error("Please select at least one PMS to continue.");
+      else
+        toast.error(
+          "Please check the agreement and provide your signature to continue.",
+        );
       return;
     }
     await advance();
@@ -628,16 +1268,20 @@ const AgreementsPage = () => {
 
   return (
     <div className="min-h-screen bg-[#f8f9fb]">
-      <Navbar completed={completedSteps.length} total={totalSteps} progress={progress} pharmacyEmail={pharmacyEmail} />
+      <Navbar
+        completed={completedSteps.length}
+        total={totalSteps}
+        progress={progress}
+        pharmacyEmail={pharmacyEmail}
+      />
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-
         {/* Step Pills */}
         <div className="flex items-center gap-1 mb-8 overflow-x-auto pb-2">
           {STEPS.map((step, idx) => {
             const isCompleted = completedSteps.includes(step.id);
-            const isCurrent   = currentStep === step.id;
-            const isLocked    = step.id > currentStep && !isCompleted;
+            const isCurrent = currentStep === step.id;
+            const isLocked = step.id > currentStep && !isCompleted;
             return (
               <div key={step.id} className="flex items-center shrink-0">
                 <button
@@ -645,17 +1289,32 @@ const AgreementsPage = () => {
                   disabled={isLocked}
                   className={cn(
                     "flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium transition-all duration-200",
-                    isCurrent   && "bg-slate-900 text-white shadow-md shadow-slate-900/20",
-                    isCompleted && !isCurrent && "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 cursor-pointer border border-emerald-200",
-                    isLocked    && "text-slate-300 cursor-not-allowed",
-                    !isCurrent && !isCompleted && !isLocked && "text-slate-500 hover:bg-slate-100",
+                    isCurrent &&
+                      "bg-slate-900 text-white shadow-md shadow-slate-900/20",
+                    isCompleted &&
+                      !isCurrent &&
+                      "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 cursor-pointer border border-emerald-200",
+                    isLocked && "text-slate-300 cursor-not-allowed",
+                    !isCurrent &&
+                      !isCompleted &&
+                      !isLocked &&
+                      "text-slate-500 hover:bg-slate-100",
                   )}
                 >
-                  {isCompleted && !isCurrent ? <CheckCircle2 size={13} className="text-emerald-500" /> : step.icon}
+                  {isCompleted && !isCurrent ? (
+                    <CheckCircle2 size={13} className="text-emerald-500" />
+                  ) : (
+                    step.icon
+                  )}
                   <span className="hidden sm:inline">{step.label}</span>
                   <span className="sm:hidden">{step.id}</span>
                 </button>
-                {idx < STEPS.length - 1 && <ChevronRight size={13} className="mx-0.5 text-slate-300 shrink-0" />}
+                {idx < STEPS.length - 1 && (
+                  <ChevronRight
+                    size={13}
+                    className="mx-0.5 text-slate-300 shrink-0"
+                  />
+                )}
               </div>
             );
           })}
@@ -663,14 +1322,15 @@ const AgreementsPage = () => {
 
         {/* Main Card */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-
           {/* Card Header */}
           <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between">
             <div>
               <span className="inline-block text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full mb-2">
                 Step {currentStep} of {totalSteps}
               </span>
-              <h1 className="text-lg font-bold text-slate-900">{currentStepConfig.title}</h1>
+              <h1 className="text-lg font-bold text-slate-900">
+                {currentStepConfig.title}
+              </h1>
               <p className="text-xs text-slate-400 mt-0.5">
                 {isSupplierStep || isPMSStep
                   ? "Please make your selections to continue"
@@ -688,28 +1348,68 @@ const AgreementsPage = () => {
           <div
             ref={documentRef}
             className="px-6 py-6 max-h-[55vh] overflow-y-auto"
-            style={{ scrollbarWidth: "thin", scrollbarColor: "#e2e8f0 transparent" }}
+            style={{
+              scrollbarWidth: "thin",
+              scrollbarColor: "#e2e8f0 transparent",
+            }}
           >
-            {currentStep === 1 && <NDAContent pharmacyName={pharmacyName} ownerName={ownerName} signatureName={signatureName} />}
+            {currentStep === 1 && (
+              <NDAContent
+                pharmacyName={pharmacyName}
+                ownerName={ownerName}
+                signatureName={signatureName}
+              />
+            )}
             {currentStep === 2 && <WholesalerContent />}
-            {currentStep === 3 && <ReleaseAgreementContent pharmacyName={pharmacyName} ownerName={ownerName} wholesalerAccepted={wholesalerAccepted} signatureName={signatureName} />}
-            {currentStep === 4 && <SupplierStep selected={selectedSuppliers} onToggle={toggleSupplier} />}
-            {currentStep === 5 && <PMSStep selected={selectedPMS} onToggle={togglePMS} />}
+            {currentStep === 3 && (
+              <ReleaseAgreementContent
+                pharmacyName={pharmacyName}
+                ownerName={ownerName}
+                wholesalerAccepted={wholesalerAccepted}
+                signatureName={signatureName}
+              />
+            )}
+            {currentStep === 4 && (
+              <SupplierStep
+                selected={selectedSuppliers}
+                onToggle={toggleSupplier}
+              />
+            )}
+            {currentStep === 5 && (
+              <PMSStep selected={selectedPMS} onToggle={togglePMS} />
+            )}
           </div>
 
           {/* Footer */}
           <div className="px-6 py-5 border-t border-slate-100 bg-slate-50/60 space-y-4">
-
             {/* Step 2 — Yes/No */}
             {isWholesalerStep && (
               <div className="space-y-3">
-                <p className="text-xs text-slate-500 text-center">Choose how you'd like to proceed with wholesaler file collection</p>
+                <p className="text-xs text-slate-500 text-center">
+                  Choose how you'd like to proceed with wholesaler file
+                  collection
+                </p>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button onClick={() => advance(false)} disabled={isSubmitting} variant="outline" className="h-11 font-semibold text-sm rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50">
+                  <Button
+                    onClick={() => advance(false)}
+                    disabled={isSubmitting}
+                    variant="outline"
+                    className="h-11 font-semibold text-sm rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50"
+                  >
                     {isSubmitting ? <Spinner /> : "No, thank you"}
                   </Button>
-                  <Button onClick={() => advance(true)} disabled={isSubmitting} className="h-11 font-semibold text-sm rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-md shadow-slate-900/20">
-                    {isSubmitting ? <span className="flex items-center gap-2"><Spinner /> Processing...</span> : "Yes, please"}
+                  <Button
+                    onClick={() => advance(true)}
+                    disabled={isSubmitting}
+                    className="h-11 font-semibold text-sm rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-md shadow-slate-900/20"
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <Spinner /> Processing...
+                      </span>
+                    ) : (
+                      "Yes, please"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -720,45 +1420,129 @@ const AgreementsPage = () => {
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
-                    { label: "Date",     value: new Date().toLocaleDateString("en-US") },
+                    {
+                      label: "Date",
+                      value: new Date().toLocaleDateString("en-US"),
+                    },
                     { label: "Pharmacy", value: pharmacyName },
-                    { label: "Name",     value: ownerName || "—" },
-                    { label: "Title",    value: "OWNER" },
+                    { label: "Name", value: ownerName || "—" },
+                    { label: "Title", value: "OWNER" },
                   ].map(({ label, value }) => (
-                    <div key={label} className="bg-white rounded-lg border border-slate-200 px-3 py-2.5">
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">{label}</p>
-                      <p className="text-xs font-semibold text-slate-700 truncate">{value}</p>
+                    <div
+                      key={label}
+                      className="bg-white rounded-lg border border-slate-200 px-3 py-2.5"
+                    >
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">
+                        {label}
+                      </p>
+                      <p className="text-xs font-semibold text-slate-700 truncate">
+                        {value}
+                      </p>
                     </div>
                   ))}
                 </div>
-                <div className="flex items-start gap-3 cursor-pointer group select-none" onClick={() => setAgreed((v) => !v)}>
-                  <div className={cn("mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-150", agreed ? "bg-emerald-500 border-emerald-500" : "border-slate-300 bg-white group-hover:border-slate-400")} style={{ height: 18, width: 18 }}>
-                    {agreed && <svg viewBox="0 0 10 8" fill="none" className="w-2.5 h-2"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                <div
+                  className="flex items-start gap-3 cursor-pointer group select-none"
+                  onClick={() => setAgreed((v) => !v)}
+                >
+                  <div
+                    className={cn(
+                      "mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-150",
+                      agreed
+                        ? "bg-emerald-500 border-emerald-500"
+                        : "border-slate-300 bg-white group-hover:border-slate-400",
+                    )}
+                    style={{ height: 18, width: 18 }}
+                  >
+                    {agreed && (
+                      <svg viewBox="0 0 10 8" fill="none" className="w-2.5 h-2">
+                        <path
+                          d="M1 4l3 3 5-6"
+                          stroke="white"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
                   </div>
                   <span className="text-xs text-slate-600 leading-relaxed">
-                    I have read and understood the <span className="font-semibold text-slate-800">Non-Disclosure Agreement</span>, and agree to the terms and conditions outlined above.
+                    I have read and understood the{" "}
+                    <span className="font-semibold text-slate-800">
+                      Non-Disclosure Agreement
+                    </span>
+                    , and agree to the terms and conditions outlined above.
                   </span>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-slate-600">Type your full name below to create your e-signature:</p>
+                  <p className="text-xs font-semibold text-slate-600">
+                    Type your full name below to create your e-signature:
+                  </p>
                   <div className="relative">
-                    <input type="text" value={signatureName} onChange={(e) => setSignatureName(e.target.value)} placeholder="Type your full name here..."
-                      className="w-full h-11 px-4 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-400 transition" />
+                    <input
+                      type="text"
+                      value={signatureName}
+                      onChange={(e) => setSignatureName(e.target.value)}
+                      placeholder="Type your full name here..."
+                      className="w-full h-11 px-4 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-400 transition"
+                    />
                     {signatureName && (
-                      <button type="button" onClick={(e) => { e.stopPropagation(); setSignatureName(""); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 hover:text-slate-600 font-medium">Clear</button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSignatureName("");
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 hover:text-slate-600 font-medium"
+                      >
+                        Clear
+                      </button>
                     )}
                   </div>
                   <div className="rounded-lg border border-dashed border-slate-200 bg-white h-14 px-4 flex items-center justify-between">
-                    {signatureName
-                      ? <span style={{ fontFamily: "'Brush Script MT','Dancing Script',cursive", fontSize: 26, color: "#1e293b", letterSpacing: 1 }}>{signatureName}</span>
-                      : <span className="text-xs text-slate-300">Signature preview will appear here</span>}
-                    {signatureName && <span className="text-[10px] text-slate-400 border border-slate-200 rounded px-1.5 py-0.5 ml-2 shrink-0 font-medium">e-Signature</span>}
+                    {signatureName ? (
+                      <span
+                        style={{
+                          fontFamily:
+                            "'Brush Script MT','Dancing Script',cursive",
+                          fontSize: 26,
+                          color: "#1e293b",
+                          letterSpacing: 1,
+                        }}
+                      >
+                        {signatureName}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-300">
+                        Signature preview will appear here
+                      </span>
+                    )}
+                    {signatureName && (
+                      <span className="text-[10px] text-slate-400 border border-slate-200 rounded px-1.5 py-0.5 ml-2 shrink-0 font-medium">
+                        e-Signature
+                      </span>
+                    )}
                   </div>
                 </div>
-                <Button onClick={handleNext} disabled={!canProceed || isSubmitting}
-                  className={cn("w-full h-11 font-semibold text-sm rounded-xl transition-all duration-200",
-                    canProceed ? "bg-slate-900 hover:bg-slate-800 text-white shadow-md shadow-slate-900/20" : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none")}>
-                  {isSubmitting ? <span className="flex items-center gap-2"><Spinner /> Processing...</span> : <span className="flex items-center gap-2">Proceed to Step 2 <ChevronRight size={15} /></span>}
+                <Button
+                  onClick={handleNext}
+                  disabled={!canProceed || isSubmitting}
+                  className={cn(
+                    "w-full h-11 font-semibold text-sm rounded-xl transition-all duration-200",
+                    canProceed
+                      ? "bg-slate-900 hover:bg-slate-800 text-white shadow-md shadow-slate-900/20"
+                      : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none",
+                  )}
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <Spinner /> Processing...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      Proceed to Step 2 <ChevronRight size={15} />
+                    </span>
+                  )}
                 </Button>
               </>
             )}
@@ -770,15 +1554,23 @@ const AgreementsPage = () => {
                 disabled={!canProceed || isSubmitting}
                 className={cn(
                   "w-full h-11 font-semibold text-sm rounded-xl transition-all duration-200",
-                  canProceed ? "bg-slate-900 hover:bg-slate-800 text-white shadow-md shadow-slate-900/20" : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
+                  canProceed
+                    ? "bg-slate-900 hover:bg-slate-800 text-white shadow-md shadow-slate-900/20"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none",
                 )}
               >
                 {isSubmitting ? (
-                  <span className="flex items-center gap-2"><Spinner /> Processing...</span>
+                  <span className="flex items-center gap-2">
+                    <Spinner /> Processing...
+                  </span>
                 ) : currentStep === totalSteps ? (
-                  <span className="flex items-center gap-2"><CheckCircle2 size={15} /> Complete & Continue</span>
+                  <span className="flex items-center gap-2">
+                    <CheckCircle2 size={15} /> Complete & Continue
+                  </span>
                 ) : (
-                  <span className="flex items-center gap-2">Continue <ChevronRight size={15} /></span>
+                  <span className="flex items-center gap-2">
+                    Continue <ChevronRight size={15} />
+                  </span>
                 )}
               </Button>
             )}
@@ -786,7 +1578,9 @@ const AgreementsPage = () => {
         </div>
 
         <p className="text-center text-[11px] text-slate-400 mt-6">
-          Secured by <span className="font-bold text-slate-600">AuditProRx</span> · All agreements are legally binding e-signatures
+          Secured by{" "}
+          <span className="font-bold text-slate-600">AuditProRx</span> · All
+          agreements are legally binding e-signatures
         </p>
       </div>
     </div>

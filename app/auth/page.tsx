@@ -43,7 +43,7 @@
 //     e.preventDefault();
 
 //     if (!email || !password || (!isLogin && !name) || (!isLogin && !phone)) {
-//       alert("Please fill in all required fields.");
+//       toast("Please fill in all required fields.");
 //       return;
 //     }
 
@@ -60,7 +60,7 @@
 //           localStorage.setItem("userId", res?.data?.user?.id);
 //         }
 //         localStorage.setItem("userEmail", email); // ✅ ADD THIS
-//         alert("successfully logged in");
+//         toast("successfully logged in");
 
 //         router.push("/Mainpage");
 //       } catch (err) {
@@ -68,7 +68,7 @@
 //       }
 //     } else {
 //       if (!validatePassword(password)) {
-//         alert(
+//         toast(
 //           "Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character.",
 //         );
 //         return; // Stop the execution
@@ -87,7 +87,7 @@
 //         console.log(res?.data);
 //         localStorage.setItem("userId", res?.data?.user?.id);
 //         localStorage.setItem("userEmail", email); // ✅ ADD THIS LINE
-//         alert(res?.data?.message);
+//         toast(res?.data?.message);
 //         setShowOtp(true);
 //         setIsLogin(true);
 //       } catch (err) {
@@ -107,11 +107,11 @@
 //       );
 //       console.log(res?.data);
 
-//       alert(res?.data?.message);
+//       toast(res?.data?.message);
 //       router.push("/info-page");
 //     } catch (err) {
 //       console.error("OTP verification failed:", err);
-//       alert("OTP verification failed. Please try again.");
+//       toast("OTP verification failed. Please try again.");
 //     }
 //   };
 
@@ -124,7 +124,7 @@
 //         },
 //       );
 //       console.log(res?.data);
-//       alert(res?.data?.message);
+//       toast(res?.data?.message);
 //     } catch (err) {
 //       console.error("Failed to resend OTP:", err);
 //     }
@@ -139,11 +139,11 @@
 //         { email },
 //       );
 //       console.log(res?.data);
-//       alert(res?.data?.message);
+//       toast(res?.data?.message);
 //       setForgot(false); // Close the modal on success
 //     } catch (error: any) {
 //       console.error("Forgot password failed:", error.response || error);
-//       alert("Failed to send reset link. Please try again.");
+//       toast("Failed to send reset link. Please try again.");
 //     }
 //   };
 
@@ -476,7 +476,7 @@
 //                     },
 //                   );
 //                   console.log(res.data);
-//                   alert("Google login successful");
+//                   toast("Google login successful");
 
 //                   window.location.href = "/Mainpage";
 //                 } catch (error) {
@@ -507,12 +507,12 @@
 
 //                     localStorage.setItem("accessToken", res?.data?.token);
 
-//                     alert("Google login successful");
+//                     toast("Google login successful");
 
 //                     window.location.href = "/Mainpage";
 //                   } catch (error) {
 //                     console.error("Google login failed", error);
-//                     alert("Google login failed. Please register first.");
+//                     toast("Google login failed. Please register first.");
 //                   }
 //                 }}
 //                 onError={() => {
@@ -603,6 +603,7 @@ import {
 } from "@/components/ui/dialog";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 // ─────────────────────────────────────────────────────────────
 // Inner component — reads search params
@@ -645,7 +646,7 @@ const AuthPageInner = () => {
   //   e.preventDefault();
 
   //   if (!email || !password || (!isLogin && !name) || (!isLogin && !phone)) {
-  //     alert("Please fill in all required fields.");
+  //     toast("Please fill in all required fields.");
   //     return;
   //   }
 
@@ -666,7 +667,7 @@ const AuthPageInner = () => {
   //       if (!localStorage.getItem("userId")) {
   //         localStorage.setItem("userId", res?.data?.user?.id);
   //       }
-  //       alert("successfully logged in");
+  //       toast("successfully logged in");
 
   //       router.push("/Mainpage");
   //     } catch (err) {
@@ -674,7 +675,7 @@ const AuthPageInner = () => {
   //     }
   //   } else {
   //     if (!validatePassword(password)) {
-  //       alert(
+  //       toast(
   //         "Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character.",
   //       );
   //       return; // Stop the execution
@@ -692,7 +693,7 @@ const AuthPageInner = () => {
   //       );
   //       console.log(res?.data);
   //       localStorage.setItem("userId", res?.data?.user?.id);
-  //       alert(res?.data?.message);
+  //       toast(res?.data?.message);
   //       setShowOtp(true);
   //       setIsLogin(true);
   //     } catch (err) {
@@ -783,6 +784,7 @@ const AuthPageInner = () => {
         console.log(res?.data);
 
         localStorage.setItem("userId", res?.data?.user?.id);
+        localStorage.setItem("ownerName", res?.data?.user?.name);
 
         setShowOtp(true);
         // setIsLogin(true);
@@ -826,7 +828,7 @@ const AuthPageInner = () => {
         router.push("/admin");
       } else {
         // Regular user registration OTP
-        alert(res?.data?.message);
+        toast(res?.data?.message);
         router.push("/info-page");
       }
     } catch (err) {
@@ -839,14 +841,28 @@ const AuthPageInner = () => {
     }
   };
 
+  // const resendOtp = async () => {
+  //   try {
+  //     const res = await axios.post(
+  //       "https://api.auditprorx.com/auth/resend-otp",
+  //       { email },
+  //     );
+  //     console.log(res?.data);
+  //     toast(res?.data?.message);
+  //   } catch (err) {
+  //     console.error("Failed to resend OTP:", err);
+  //   }
+  // };
+
   const resendOtp = async () => {
     try {
-      const res = await axios.post(
-        "https://api.auditprorx.com/auth/resend-otp",
-        { email },
-      );
+      const url = isLogin
+        ? "https://api.auditprorx.com/auth/admin/resend-otp"
+        : "https://api.auditprorx.com/auth/resend-otp";
+
+      const res = await axios.post(url, { email });
       console.log(res?.data);
-      alert(res?.data?.message);
+      toast(res?.data?.message);
     } catch (err) {
       console.error("Failed to resend OTP:", err);
     }
@@ -1232,7 +1248,7 @@ const AuthPageInner = () => {
                     },
                   );
                   console.log(res.data);
-                  alert("Google login successful");
+                  toast("Google login successful");
 
                   window.location.href = "/Mainpage";
                 } catch (error) {
@@ -1254,11 +1270,11 @@ const AuthPageInner = () => {
                       { credential: credentialResponse.credential },
                     );
                     localStorage.setItem("accessToken", res?.data?.token);
-                    alert("Google login successful");
+                    toast("Google login successful");
                     window.location.href = "/Mainpage";
                   } catch (error) {
                     console.error("Google login failed", error);
-                    alert("Google login failed. Please register first.");
+                    toast("Google login failed. Please register first.");
                   }
                 }}
                 onError={() => console.log("Google Login Failed")}

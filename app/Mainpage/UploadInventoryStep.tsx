@@ -409,7 +409,7 @@
 //       console.error("❌ Upload error:", err);
 //       const message =
 //         err?.response?.data?.message || err?.message || "Please try again.";
-//       alert("Upload failed: " + message);
+//       toast("Upload failed: " + message);
 //     }
 //   };
 
@@ -842,6 +842,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import axios from "axios";
+import { toast } from "sonner";
 
 interface UploadInventoryStepProps {
   inventoryFile: File | null;
@@ -1236,7 +1237,7 @@ const UploadInventoryStep = ({
       console.error("❌ Upload error:", err);
       const message =
         err?.response?.data?.message || err?.message || "Please try again.";
-      alert("Upload failed: " + message);
+      toast("Upload failed: " + message);
     }
   };
 

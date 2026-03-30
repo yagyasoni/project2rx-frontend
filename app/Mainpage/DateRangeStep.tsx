@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
 import axios from "axios";
+import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -467,7 +468,7 @@ const DateRangeStep = ({
       console.log(res.data);
       onContinue();
     } catch (err) {
-      alert("Failed to save dates. Please try again.");
+      toast("Failed to save dates. Please try again.");
     }
   };
 
