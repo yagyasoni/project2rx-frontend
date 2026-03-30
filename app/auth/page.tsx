@@ -757,6 +757,7 @@ const AuthPageInner = () => {
 
         localStorage.setItem("accessToken", res?.data?.accessToken);
         localStorage.setItem("refreshToken", res?.data?.refreshToken);
+        localStorage.setItem("userEmail", email); // ✅ ADD THIS LINE
 
         if (!localStorage.getItem("userId")) {
           localStorage.setItem("userId", res?.data?.user?.id);
@@ -784,7 +785,8 @@ const AuthPageInner = () => {
         console.log(res?.data);
 
         localStorage.setItem("userId", res?.data?.user?.id);
-        localStorage.setItem("ownerName", res?.data?.user?.name);
+        localStorage.setItem("userEmail", email); // ✅ ADD THIS LINE TOO
+        localStorage.setItem("signupName", name);
 
         setShowOtp(true);
         // setIsLogin(true);

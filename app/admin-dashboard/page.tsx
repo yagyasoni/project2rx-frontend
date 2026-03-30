@@ -45,6 +45,7 @@ interface PharmacyUser {
   role?: string;
   status?: "active" | "inactive";
   createdAt?: string;
+  pharmacyName?: string; // ✅ NEW — fetched from registration
 }
 
 // ─────────────────────────────────────────────────────────────

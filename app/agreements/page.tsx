@@ -16,6 +16,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import axios from "axios";
 
 // ─── Step Config ──────────────────────────────────────────────────────────────
 interface StepConfig {
@@ -1192,7 +1193,11 @@ const AgreementsPage = () => {
   useEffect(() => {
     setPharmacyName(localStorage.getItem("pharmacyName") || "Your Pharmacy");
     setPharmacyEmail(localStorage.getItem("userEmail") || "");
-    setOwnerName(localStorage.getItem("ownerName") || "");
+    setOwnerName(
+      localStorage.getItem("ownerName") ||
+        localStorage.getItem("signupName") || // ← ADD THIS
+        "",
+    );
   }, []);
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -1230,8 +1235,28 @@ const AgreementsPage = () => {
       prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name],
     );
 
+  // const advance = async (wholesalerChoice?: boolean) => {
+  //   setIsSubmitting(true);
   const advance = async (wholesalerChoice?: boolean) => {
     setIsSubmitting(true);
+
+    // ✅ Save selected suppliers to DB when completing Step 4
+    if (isSupplierStep && selectedSuppliers.length > 0) {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+          await axios.post(
+            `https://api.auditprorx.com/api/user-suppliers/${userId}`,
+            {
+              supplierNames: selectedSuppliers,
+            },
+          );
+          console.log("✅ Suppliers saved to DB:", selectedSuppliers);
+        }
+      } catch (err) {
+        console.error("Failed to save suppliers:", err);
+      }
+    }
     await new Promise((r) => setTimeout(r, 600));
     if (isWholesalerStep && wholesalerChoice !== undefined)
       setWholesalerAccepted(wholesalerChoice);
