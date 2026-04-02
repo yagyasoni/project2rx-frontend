@@ -57,6 +57,7 @@ api.interceptors.response.use(
       }
 
       try {
+
         const { data } = await axios.post(
           "https://api.auditprorx.com/auth/refresh-token",
           { refreshToken }
@@ -80,7 +81,6 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
-
     return Promise.reject(error);
   }
 );

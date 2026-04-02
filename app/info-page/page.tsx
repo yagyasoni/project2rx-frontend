@@ -246,7 +246,7 @@ const PharmacyDetailsForm = () => {
       );
       console.log(res?.data);
       localStorage.setItem("pharmacyName", pharmacyName);
-      localStorage.setItem("ownerName", pharmacistName);
+      // localStorage.setItem("ownerName", pharmacistName);
       // localStorage.setItem("userEmail", localStorage.getItem("userId") || "");
       toast.success(
         "Details submitted successfully! Your pharmacy details have been saved.",

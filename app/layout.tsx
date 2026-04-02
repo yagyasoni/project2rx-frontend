@@ -1,6 +1,5 @@
 // import "./globals.css";
 
-
 // export default function RootLayout({
 //   children,
 // }: Readonly<{
@@ -16,7 +15,9 @@
 // }
 
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 import { SupplierProvider } from "@/context/SupplierContext";
+import InactiveAccount from "@/components/inactiveAccount";
 
 export default function RootLayout({
   children,
@@ -26,9 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SupplierProvider>
-          {children}
-        </SupplierProvider>
+        <InactiveAccount />
+        <Toaster />
+        <SupplierProvider>{children}</SupplierProvider>
       </body>
     </html>
   );

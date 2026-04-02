@@ -9,6 +9,7 @@ import UploadWholesalersStep, {
 } from "./UploadWholesalersStep";
 import { Button } from "@/components/ui/button";
 // import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 interface Wholesaler {
   id: string;
@@ -28,7 +29,10 @@ interface AuditWizardProps {
   initialAuditId?: string | null;
 }
 
-const AuditWizard = ({ initialStep = 1, initialAuditId = null }: AuditWizardProps) => {
+const AuditWizard = ({
+  initialStep = 1,
+  initialAuditId = null,
+}: AuditWizardProps) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [auditId, setAuditId] = useState<string | null>(initialAuditId);
 
@@ -85,10 +89,7 @@ const AuditWizard = ({ initialStep = 1, initialAuditId = null }: AuditWizardProp
   };
 
   const handleSkip = () => {
-    alert({
-      title: "Audit Created",
-      description: `Your audit "${auditName}" has been created successfully.`,
-    });
+    toast(`Your audit "${auditName}" has been created successfully.`);
   };
 
   const handleAddSupplier = () => {
@@ -100,10 +101,7 @@ const AuditWizard = ({ initialStep = 1, initialAuditId = null }: AuditWizardProp
   };
 
   const handleViewAudit = () => {
-    alert({
-      title: "Audit Ready",
-      description: `Viewing audit "${auditName}"`,
-    });
+    toast(`Viewing audit "${auditName}"`);
   };
 
   return (

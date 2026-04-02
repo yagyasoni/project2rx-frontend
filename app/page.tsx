@@ -1730,7 +1730,7 @@ const Index = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <a
-                    href="#demo"
+                    href="tel:+15512296466"
                     className="group px-8 py-4 rounded-xl font-semibold flex items-center gap-2 transition-all"
                     style={{
                       background:
