@@ -47,7 +47,6 @@ const REQUIRED_FIELD_LABELS = [
   "Sec Ins Bin No. (SECINSBINNO)",
   "Sec Ins Paid (SECINSPAID)",
 ];
-
 const DisclaimerBanner = () => {
   const [expanded, setExpanded] = useState(false);
 
