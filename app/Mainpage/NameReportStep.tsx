@@ -79,7 +79,7 @@ const NameReportStep = ({
             <Label htmlFor="terms" className="text-sm text-foreground">
               I agree to the Terms of Service.{" "}
               <a
-                href="#"
+                href="/terms-of-service"
                 className="text-foreground underline font-medium hover:text-primary"
               >
                 Read more
