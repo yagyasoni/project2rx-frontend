@@ -2,156 +2,133 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import AppSidebar from "@/components/Sidebar";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  X,
-  ChevronDown,
-  RotateCw,
-  Filter,
-  Download,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Search, X, ChevronDown, RotateCw, Download, SlidersHorizontal } from "lucide-react";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Badge } from "@/components/ui/badge";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useParams, useRouter } from "next/navigation";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-interface SortRule {
-  key: keyof InventoryRow;
-  dir: "asc" | "desc";
-}
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-function SortIcon({ dir }: { dir?: "asc" | "desc" }) {
-  if (!dir)
-    return (
-      <ArrowUpDown className="w-3.5 h-3.5 ml-1.5 text-gray-400 transition-colors" />
-    );
-  if (dir === "asc")
-    return (
-      <span className="text-[11px] ml-1.5 text-emerald-600 font-bold">↑</span>
-    );
-  return (
-    <span className="text-[11px] ml-1.5 text-emerald-600 font-bold">↓</span>
-  );
-}
-
-function HeaderCell({
-  children,
-  sortKey,
-  sortRules,
-  onSort,
-}: {
-  children: React.ReactNode;
-  sortKey: keyof InventoryRow;
-  sortRules: SortRule[];
-  onSort: (key: keyof InventoryRow, e: React.MouseEvent) => void;
-}) {
-  const active = sortRules.find((r) => r.key === sortKey)?.dir;
-
-  return (
-    <div
-      onClick={(e) => onSort(sortKey, e)}
-      className="h-full px-3 py-1.5 flex items-center justify-center gap-1 cursor-pointer select-none whitespace-nowrap transition-colors hover:bg-emerald-50/50"
-    >
-      <span className="text-[11px] font-bold uppercase tracking-wide text-slate-700">
-        {children}
-      </span>
-      <SortIcon dir={active} />
-    </div>
-  );
-}
+interface SortRule { key: keyof InventoryRow; dir: "asc" | "desc"; }
 
 interface InventoryRow {
-  id: number;
-  ndc: string;
-  drugName: string;
-  rank: number;
-  pkgSize: number;
-  unit: number;
-  totalOrdered: number;
-  totalBilled: number;
-  totalShortage: number;
-  highestShortage: number;
-  cost: number;
-  amount: number;
-  horizon: number;
-  shortageHorizon: number;
-  express: number;
-  shortageExpress: number;
-  cvsCaremark: number;
-  shortageCvsCaremark: number;
-  ssc: number;
-  shortageSsc: number;
-  njMedicaid: number;
-  shortageNjMedicaid: number;
-  pdmi: number;
-  shortagePdmi: number;
-  optumrx: number;
-  shortageOptumrx: number;
-  humana: number;
-  shortageHumana: number;
+  id: number; ndc: string; drugName: string; rank: number;
+  pkgSize: number; unit: number; totalOrdered: number; totalBilled: number;
+  totalShortage: number; highestShortage: number; cost: number; amount: number;
+  // Commercial
+  horizon: number; shortageHorizon: number;
+  express: number; shortageExpress: number;
+  cvsCaremark: number; shortageCvsCaremark: number;
+  optumrx: number; shortageOptumrx: number;
+  humana: number; shortageHumana: number;
+  ssc: number; shortageSsc: number;
+  pdmi: number; shortagePdmi: number;          // PDMI moved to Commercial
+  // Medicare
+  medicare: number; shortageMedicare: number;
+  // Medicaid
+  njMedicaid: number; shortageNjMedicaid: number;
+  // Medicare + Medicaid combined
+  njBilled: number; shortageNjBilled: number;
 }
 
-interface FilterChip {
-  id: string;
+// ─── Column group types ───────────────────────────────────────────────────────
+
+type ColGroup = "base-scroll" | "commercial" | "medicare" | "medicaid" | "mAndM";
+
+interface ColDef {
+  key: keyof InventoryRow;
   label: string;
-  value: string;
+  w: number;
+  group: ColGroup;
+  dot?: string;
+  isShortage?: boolean;
 }
+
+const ALL_COLS: ColDef[] = [
+  // Base scroll
+  { key: "totalBilled",         label: "Total Billed",    w: 120, group: "base-scroll", dot: "bg-red-400" },
+  { key: "totalShortage",       label: "Total Shortage",  w: 120, group: "base-scroll", dot: "bg-amber-400", isShortage: true },
+  { key: "highestShortage",     label: "Highest Short",   w: 120, group: "base-scroll", dot: "bg-amber-400", isShortage: true },
+  { key: "cost",                label: "$ Cost",          w: 100, group: "base-scroll", dot: "bg-red-400" },
+  { key: "amount",              label: "$ Amount",        w: 110, group: "base-scroll", dot: "bg-blue-400" },
+  // Commercial (includes PDMI)
+  { key: "horizon",             label: "Horizon",         w: 110, group: "commercial" },
+  { key: "shortageHorizon",     label: "Shrt Horizon",   w: 110, group: "commercial", isShortage: true },
+  { key: "express",             label: "Express",         w: 110, group: "commercial" },
+  { key: "shortageExpress",     label: "Shrt Express",   w: 110, group: "commercial", isShortage: true },
+  { key: "cvsCaremark",         label: "Caremark",        w: 110, group: "commercial" },
+  { key: "shortageCvsCaremark", label: "Shrt Caremark",  w: 120, group: "commercial", isShortage: true },
+  { key: "optumrx",             label: "Optum",           w: 100, group: "commercial" },
+  { key: "shortageOptumrx",     label: "Shrt Optum",     w: 100, group: "commercial", isShortage: true },
+  { key: "humana",              label: "Humana",          w: 100, group: "commercial" },
+  { key: "shortageHumana",      label: "Shrt Humana",    w: 100, group: "commercial", isShortage: true },
+  { key: "ssc",                 label: "SSC",             w:  90, group: "commercial" },
+  { key: "shortageSsc",         label: "Shrt SSC",       w:  90, group: "commercial", isShortage: true },
+  { key: "pdmi",                label: "PDMI (Co-Pay)",  w: 130, group: "commercial" },
+  { key: "shortagePdmi",        label: "Shrt PDMI",      w: 110, group: "commercial", isShortage: true },
+  // Medicare
+  { key: "medicare",            label: "Medicare",        w: 120, group: "medicare" },
+  { key: "shortageMedicare",    label: "Shrt Medicare",  w: 120, group: "medicare", isShortage: true },
+  // Medicaid
+  { key: "njMedicaid",          label: "NJ Medicaid",    w: 120, group: "medicaid" },
+  { key: "shortageNjMedicaid",  label: "Shrt NJ Med",   w: 120, group: "medicaid", isShortage: true },
+  // Medicare + Medicaid combined
+  { key: "njBilled",            label: "NJ Billed",      w: 120, group: "mAndM" },
+  { key: "shortageNjBilled",    label: "Shortage",       w: 120, group: "mAndM", isShortage: true },
+];
+
+type ColKey = keyof InventoryRow;
+type VisMap = Partial<Record<ColKey, boolean>>;
+
+// ─── Sort icon ────────────────────────────────────────────────────────────────
+
+function SortIcon({ active }: { active?: "asc" | "desc" }) {
+  if (!active) return <ArrowUpDown className="w-3 h-3 shrink-0 text-slate-400" />;
+  return <span className="text-[11px] shrink-0 font-bold text-emerald-600">{active === "asc" ? "↑" : "↓"}</span>;
+}
+
+// ─── Group colours ────────────────────────────────────────────────────────────
+
+const GC = {
+  commercial: {
+    parentBg: "#dbeafe", parentColor: "#1e40af", parentBorder: "#3b82f6",
+    subBg: "#eff6ff", subColor: "#1d4ed8",
+    shrtBg: "#fef2f2", shrtColor: "#991b1b",
+    cellBorderColor: "#bfdbfe",
+  },
+  medicare: {
+    parentBg: "#dcfce7", parentColor: "#166534", parentBorder: "#22c55e",
+    subBg: "#f0fdf4", subColor: "#15803d",
+    shrtBg: "#f0fdf4", shrtColor: "#166534",
+    cellBorderColor: "#86efac",
+  },
+  medicaid: {
+    parentBg: "#ede9fe", parentColor: "#4c1d95", parentBorder: "#8b5cf6",
+    subBg: "#f5f3ff", subColor: "#6d28d9",
+    shrtBg: "#f5f3ff", shrtColor: "#6d28d9",
+    cellBorderColor: "#c4b5fd",
+  },
+  mAndM: {
+    parentBg: "#fef9c3", parentColor: "#854d0e", parentBorder: "#eab308",
+    subBg: "#fefce8", subColor: "#a16207",
+    shrtBg: "#fef2f2", shrtColor: "#991b1b",
+    cellBorderColor: "#fde68a",
+  },
+} as const;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PAGE
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export default function InventoryReportPage() {
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -159,754 +136,393 @@ export default function InventoryReportPage() {
   const [inventoryData, setInventoryData] = useState<InventoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [openExportModal, setOpenExportModal] = useState(false);
-  const [exportFormat, setExportFormat] = useState<"csv" | "excel" | "pdf">(
-    "excel",
-  );
+  const [exportFormat, setExportFormat] = useState<"csv" | "excel" | "pdf">("excel");
   const [exportScope, setExportScope] = useState<"visible" | "all">("visible");
   const [amountValue, setAmountValue] = useState<number | "">("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
-  const [activeFilters, setActiveFilters] = useState<FilterChip[]>([]);
-  const [qtyType, setQtyType] = useState<"UNIT" | "PKG SIZE" | null>(
-    "PKG SIZE",
-  );
+  const [qtyType, setQtyType] = useState<"UNIT" | "PKG SIZE" | null>("PKG SIZE");
   const [openQtyDropdown, setOpenQtyDropdown] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
-  const [openFlagDropdown, setOpenFlagDropdown] = useState(false);
-  const [flagFilters, setFlagFilters] = useState<string[]>([]);
-  const [openTagsDropdown, setOpenTagsDropdown] = useState(false);
-  const [openTagMenuId, setOpenTagMenuId] = useState<string | null>(null);
-  const [openCreateTagModal, setOpenCreateTagModal] = useState(false);
-  const [newTagName, setNewTagName] = useState("");
-  const [newTagColor, setNewTagColor] = useState("yellow");
-  const [openDrugTypeDropdown, setOpenDrugTypeDropdown] = useState(false);
-  const [drugTypes, setDrugTypes] = useState<string[]>(["ALL DRUGS"]);
-  const [costValue, setCostValue] = useState<number | "">("");
   const [openDrugSidebar, setOpenDrugSidebar] = useState(false);
   const [activeDrug, setActiveDrug] = useState<InventoryRow | null>(null);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [controlledSchedules, setControlledSchedules] = useState<string[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [auditDates, setAuditDates] = useState<any>(null);
   const [rowsPerPage, setRowsPerPage] = useState(100);
   const [currentPage, setCurrentPage] = useState(1);
-
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
-const [pendingHref, setPendingHref]         = useState<string | null>(null);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
 
-useEffect(() => {
-  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-    e.preventDefault();
-    e.returnValue = "";
-  };
-  window.addEventListener("beforeunload", handleBeforeUnload);
-  return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-}, []);
-
-const handlePopState = useRef<() => void>(() => {});
-
-const isLeavingConfirmed = useRef(false);
-
-useEffect(() => {
-  const handlePopState = () => {
-    if (isLeavingConfirmed.current) return; // allow navigation
-    window.history.pushState(null, "", window.location.href);
-    setShowLeaveDialog(true);
-    setPendingHref(null);
-  };
-  window.history.pushState(null, "", window.location.href);
-  window.addEventListener("popstate", handlePopState);
-  return () => window.removeEventListener("popstate", handlePopState);
-}, []);
-
-  const headerScrollRef = useRef<HTMLDivElement | null>(null);
   const bodyScrollRef = useRef<HTMLDivElement | null>(null);
-  const filterDropdownRef = useRef<HTMLDivElement | null>(null);
-
-  const availableTags = [
-    { id: "high-priority", label: "High Priority", color: "red" },
-    { id: "shortage-alert", label: "Shortage Alert", color: "orange" },
-    { id: "reorder-soon", label: "Reorder Soon", color: "yellow" },
-    { id: "cost-effective", label: "Cost Effective", color: "green" },
-    { id: "generic", label: "Generic", color: "blue" },
-    { id: "brand-name", label: "Brand Name", color: "purple" },
-  ];
-
-  const availablePBMs = [
-    "Horizon",
-    "Express",
-    "CVS Caremark",
-    "SSC",
-    "NJ Medicaid",
-    "PDMI",
-    "OptumRx",
-  ];
+  const filterRef = useRef<HTMLDivElement | null>(null);
+  const isLeavingConfirmed = useRef(false);
 
   const params = useParams();
   const router = useRouter();
   const auditId = params.id as string;
 
-  useEffect(() => {
-    const loadReport = async () => {
-      let progressInterval: ReturnType<typeof setInterval> | null = null;
-      try {
-        setLoading(true);
-        setLoadingProgress(0);
-        setLoadingDone(false);
-        progressInterval = setInterval(() => {
-          setLoadingProgress((prev) => {
-            if (prev >= 90) {
-              clearInterval(progressInterval!);
-              return 90;
-            }
-            return prev + Math.random() * 8 + 2;
-          });
-        }, 200);
+  // ── Visibility state ──────────────────────────────────────────────────────
 
-        const res = await fetch(
-          `https://api.auditprorx.com/api/audits/${auditId}/report`,
-        );
-        const json = await res.json();
+  const initVis: VisMap = {};
+  ALL_COLS.forEach((c) => { initVis[c.key] = true; });
+  const [vis, setVis] = useState<VisMap>(initVis);
+  const toggleVis = (k: ColKey) => setVis((p) => ({ ...p, [k]: !p[k] }));
 
-        const data = Array.isArray(json)
-          ? json
-          : Array.isArray(json.inventory)
-            ? json.inventory
-            : [];
+  const [showRank, setShowRank]       = useState(true);
+  const [showNdc, setShowNdc]         = useState(true);
+  const [showDrug, setShowDrug]       = useState(true);
+  const [showPkg, setShowPkg]         = useState(true);
+  const [showUnit, setShowUnit]       = useState(false);
+  const [showOrdered, setShowOrdered] = useState(true);
 
-        const normalized = data.map((row: any, index: number) => ({
-          id: row.id ?? index + 1,
-          ndc: row.ndc ?? "",
-          drugName: (row.drug_name ?? row.drugName ?? "")
-            .replace(/\s*\(\d{5}-\d{4}-\d{2}\).*$/, "")
-            .trim(),
-          rank: 0,
-          pkgSize: row.package_size ?? 0,
-          unit:
-            row.package_size > 0
-              ? Number(
-                  (
-                    Number(row.total_billed ?? 0) / Number(row.package_size)
-                  ).toFixed(2),
-                )
-              : 0,
-          totalOrdered: Number(row.total_ordered ?? 0),
-          totalBilled: Number(row.total_billed ?? 0),
-          totalShortage:
-            row.total_shortage !== undefined && row.total_shortage !== null
-              ? Number(row.total_shortage)
-              : Number(row.total_ordered ?? 0) - Number(row.total_billed ?? 0),
-          highestShortage: 0,
-          cost: Number(row.cost ?? 0),
-          amount: Number(row.total_amount ?? row.amount ?? 0),
-          horizon: Number(row.horizon ?? 0),
-          shortageHorizon:
-            Number(row.total_ordered ?? 0) - Number(row.horizon ?? 0),
-          express: Number(row.express ?? 0),
-          shortageExpress:
-            Number(row.total_ordered ?? 0) - Number(row.express ?? 0),
-          cvsCaremark: Number(row.cvs_caremark ?? row.cvsCaremark ?? 0),
-          shortageCvsCaremark:
-            Number(row.total_ordered ?? 0) -
-            Number(row.cvs_caremark ?? row.cvsCaremark ?? 0),
-          optumrx: Number(row.optumrx ?? 0),
-          shortageOptumrx:
-            Number(row.total_ordered ?? 0) - Number(row.optumrx ?? 0),
-          humana: Number(row.humana ?? 0),
-          shortageHumana:
-            Number(row.total_ordered ?? 0) - Number(row.humana ?? 0),
-          njMedicaid: Number(row.nj_medicaid ?? row.njMedicaid ?? 0),
-          shortageNjMedicaid:
-            Number(row.total_ordered ?? 0) -
-            Number(row.nj_medicaid ?? row.njMedicaid ?? 0),
-          ssc: Number(row.ssc ?? 0),
-          shortageSsc: Number(row.total_ordered ?? 0) - Number(row.ssc ?? 0),
-          pdmi: Number(row.pdmi ?? 0),
-          shortagePdmi: Number(row.total_ordered ?? 0) - Number(row.pdmi ?? 0),
-        }));
+  // ── Sort ──────────────────────────────────────────────────────────────────
 
-        const sortedByBilled = [...normalized].sort(
-          (a, b) => b.amount - a.amount,
-        );
-        sortedByBilled.forEach((row, index) => {
-          row.rank = index + 1;
-        });
-
-        normalized.forEach((row: any) => {
-          const shortageValues = [
-            row.shortageHorizon,
-            row.shortageExpress,
-            row.shortageCvsCaremark,
-            row.shortageOptumrx,
-            row.shortageHumana,
-            row.shortageNjMedicaid,
-            row.shortageSsc,
-            row.shortagePdmi,
-          ];
-          const mostNegative = Math.min(...shortageValues);
-          row.highestShortage = mostNegative < 0 ? mostNegative : 0;
-        });
-
-        setInventoryData(normalized);
-
-        const auditRes = await fetch(
-          `https://api.auditprorx.com/api/audits/${auditId}`,
-        );
-        const auditData = await auditRes.json();
-        setAuditDates(auditData);
-      } catch (err) {
-        console.error("Failed to load report", err);
-        setInventoryData([]);
-      } finally {
-        if (progressInterval) clearInterval(progressInterval);
-        setLoadingProgress(100);
-        setTimeout(() => {
-          setLoadingDone(true);
-          setTimeout(() => setLoading(false), 400);
-        }, 500);
-      }
-    };
-
-    if (auditId) loadReport();
-  }, [auditId]);
-
-  const supplierToColumnKey: Record<string, keyof typeof columnFilters> = {
-    Horizon: "horizon",
-    Express: "express",
-    "CVS Caremark": "cvsCaremark",
-    SSC: "ssc",
-    "NJ Medicaid": "njMedicaid",
-    PDMI: "pdmi",
-    OptumRx: "optumrx",
-  };
-
-  const [pbmFilters, setPbmFilters] = useState(availablePBMs);
-
-  const [sortRules, setSortRules] = useState<SortRule[]>([
-    { key: "totalShortage", dir: "asc" },
-  ]);
-
-  const [columnFilters, setColumnFilters] = useState({
-    rank: true,
-    ndc: true,
-    drugName: true,
-    pkgSize: true,
-    unit: false,
-    totalOrdered: true,
-    totalBilled: true,
-    totalShortage: true,
-    highestShortage: true,
-    cost: true,
-    amount: true,
-    horizon: true,
-    shortageHorizon: true,
-    express: true,
-    shortageExpress: true,
-    cvsCaremark: true,
-    shortageCvsCaremark: true,
-    ssc: true,
-    shortageSsc: true,
-    njMedicaid: true,
-    shortageNjMedicaid: true,
-    pdmi: true,
-    shortagePdmi: true,
-    optumrx: true,
-    shortageOptumrx: true,
-    humana: true,
-    shortageHumana: true,
-  });
-
-  // ─── applyQtyMode MUST be defined before paginatedData ───────────────────────
-  const applyQtyMode = (row: InventoryRow): InventoryRow => {
-    const pkg = row.pkgSize || 1;
-
-    if (qtyType === "PKG SIZE") {
-      const newTotalOrdered = row.totalOrdered * pkg;
-      const sH = Number((newTotalOrdered - row.horizon).toFixed(2));
-      const sEx = Number((newTotalOrdered - row.express).toFixed(2));
-      const sCvs = Number((newTotalOrdered - row.cvsCaremark).toFixed(2));
-      const sOpt = Number((newTotalOrdered - row.optumrx).toFixed(2));
-      const sHum = Number((newTotalOrdered - row.humana).toFixed(2));
-      const sNj = Number((newTotalOrdered - row.njMedicaid).toFixed(2));
-      const sSsc = Number((newTotalOrdered - row.ssc).toFixed(2));
-      const sPdmi = Number((newTotalOrdered - row.pdmi).toFixed(2));
-      const minShortage = Math.min(sH, sEx, sCvs, sOpt, sHum, sNj, sSsc, sPdmi);
-      return {
-        ...row,
-        totalOrdered: Number(newTotalOrdered.toFixed(2)),
-        totalShortage: Number((newTotalOrdered - row.totalBilled).toFixed(2)),
-        highestShortage: Number((minShortage < 0 ? minShortage : 0).toFixed(2)),
-        shortageHorizon: sH,
-        shortageExpress: sEx,
-        shortageCvsCaremark: sCvs,
-        shortageOptumrx: sOpt,
-        shortageHumana: sHum,
-        shortageNjMedicaid: sNj,
-        shortageSsc: sSsc,
-        shortagePdmi: sPdmi,
-      };
-    }
-
-    if (qtyType === "UNIT") {
-      const newTotalBilled = Number((row.totalBilled / pkg).toFixed(2));
-      const newHorizon = Number((row.horizon / pkg).toFixed(2));
-      const newExpress = Number((row.express / pkg).toFixed(2));
-      const newCvsCaremark = Number((row.cvsCaremark / pkg).toFixed(2));
-      const newOptumrx = Number((row.optumrx / pkg).toFixed(2));
-      const newHumana = Number((row.humana / pkg).toFixed(2));
-      const newNjMedicaid = Number((row.njMedicaid / pkg).toFixed(2));
-      const newSsc = Number((row.ssc / pkg).toFixed(2));
-      const newPdmi = Number((row.pdmi / pkg).toFixed(2));
-      const sH = Number((row.totalOrdered - newHorizon).toFixed(2));
-      const sEx = Number((row.totalOrdered - newExpress).toFixed(2));
-      const sCvs = Number((row.totalOrdered - newCvsCaremark).toFixed(2));
-      const sOpt = Number((row.totalOrdered - newOptumrx).toFixed(2));
-      const sHum = Number((row.totalOrdered - newHumana).toFixed(2));
-      const sNj = Number((row.totalOrdered - newNjMedicaid).toFixed(2));
-      const sSsc = Number((row.totalOrdered - newSsc).toFixed(2));
-      const sPdmi = Number((row.totalOrdered - newPdmi).toFixed(2));
-      const minShortage = Math.min(sH, sEx, sCvs, sOpt, sHum, sNj, sSsc, sPdmi);
-      return {
-        ...row,
-        totalBilled: newTotalBilled,
-        totalShortage: Number((row.totalOrdered - newTotalBilled).toFixed(2)),
-        highestShortage: Number((minShortage < 0 ? minShortage : 0).toFixed(2)),
-        horizon: newHorizon,
-        shortageHorizon: sH,
-        express: newExpress,
-        shortageExpress: sEx,
-        cvsCaremark: newCvsCaremark,
-        shortageCvsCaremark: sCvs,
-        optumrx: newOptumrx,
-        shortageOptumrx: sOpt,
-        humana: newHumana,
-        shortageHumana: sHum,
-        njMedicaid: newNjMedicaid,
-        shortageNjMedicaid: sNj,
-        ssc: newSsc,
-        shortageSsc: sSsc,
-        pdmi: newPdmi,
-        shortagePdmi: sPdmi,
-      };
-    }
-
-    return row;
-  };
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  const removeFilter = (chipId: string) => {
-    setActiveFilters((prev) => prev.filter((c) => c.id !== chipId));
-  };
-
-  const toggleFlagFilter = (flag: string) => {
-    setFlagFilters((prev) =>
-      prev.includes(flag) ? prev.filter((f) => f !== flag) : [...prev, flag],
-    );
-  };
-
-  const togglePBMFilter = (pbm: string) => {
-    setPbmFilters((prev) => {
-      const isOn = prev.includes(pbm);
-      const next = isOn ? prev.filter((p) => p !== pbm) : [...prev, pbm];
-      const baseKey = supplierToColumnKey[pbm];
-      if (baseKey) {
-        setColumnFilters((cols) => ({
-          ...cols,
-          [baseKey]: !isOn,
-          [`shortage${baseKey.charAt(0).toUpperCase()}${baseKey.slice(1)}`]:
-            !isOn,
-        }));
-      }
-      return next;
-    });
-  };
+  const [sortRules, setSortRules] = useState<SortRule[]>([{ key: "totalShortage", dir: "asc" }]);
 
   const handleSort = (key: keyof InventoryRow, e: React.MouseEvent) => {
-    const index = sortRules.findIndex((r) => r.key === key);
-    let newRules = [...sortRules];
-    if (index === -1) {
-      if (e.shiftKey) {
-        newRules.push({ key, dir: "asc" });
-      } else {
-        newRules = [{ key, dir: "asc" }];
-      }
-    } else {
-      const current = newRules[index];
-      if (current.dir === "asc") {
-        newRules[index] = { key, dir: "desc" };
-      } else {
-        newRules.splice(index, 1);
-      }
-    }
-    setSortRules(newRules);
+    const idx = sortRules.findIndex((r) => r.key === key);
+    let next = [...sortRules];
+    if (idx === -1) next = e.shiftKey ? [...next, { key, dir: "asc" as const }] : [{ key, dir: "asc" as const }];
+    else if (next[idx].dir === "asc") next[idx] = { key, dir: "desc" };
+    else next.splice(idx, 1);
+    setSortRules(next);
   };
 
-  const sortedData = useMemo(() => {
-    return [...inventoryData].sort((a, b) => {
-      for (const rule of sortRules) {
-        const aVal = a[rule.key];
-        const bVal = b[rule.key];
-        let cmp = 0;
-        if (typeof aVal === "number" && typeof bVal === "number") {
-          cmp = aVal - bVal;
-        } else {
-          cmp = String(aVal).localeCompare(String(bVal));
-        }
-        if (cmp !== 0) return rule.dir === "asc" ? cmp : -cmp;
+  const sortDir = (k: keyof InventoryRow) => sortRules.find((r) => r.key === k)?.dir;
+
+  // ── Leave protection ──────────────────────────────────────────────────────
+
+  useEffect(() => {
+    const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", h);
+    return () => window.removeEventListener("beforeunload", h);
+  }, []);
+
+  useEffect(() => {
+    const h = () => {
+      if (isLeavingConfirmed.current) return;
+      window.history.pushState(null, "", window.location.href);
+      setShowLeaveDialog(true);
+    };
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", h);
+    return () => window.removeEventListener("popstate", h);
+  }, []);
+
+  // ── Load data ─────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    const load = async () => {
+      let pi: ReturnType<typeof setInterval> | null = null;
+      try {
+        setLoading(true); setLoadingProgress(0); setLoadingDone(false);
+        pi = setInterval(() => setLoadingProgress((p) => p >= 90 ? (clearInterval(pi!), 90) : p + Math.random() * 8 + 2), 200);
+
+        const res = await fetch(`https://api.auditprorx.com/api/audits/${auditId}/report`);
+        const json = await res.json();
+        const data = Array.isArray(json) ? json : Array.isArray(json.inventory) ? json.inventory : [];
+
+        const norm = data.map((row: any, i: number) => {
+          const to = Number(row.total_ordered ?? 0);
+          const n = (x: any) => Number(x ?? 0);
+
+          const medicareVal    = n(row.medicare);   // new medicare field from backend
+          const njMedicaidVal  = n(row.nj_medicaid ?? row.njMedicaid);
+          const njBilledVal    = medicareVal + njMedicaidVal;
+          // Shortages calculated individually first so combined can sum them
+          const shortageMedicareVal    = to - medicareVal;
+          const shortageNjMedicaidVal  = to - njMedicaidVal;
+
+          return {
+            id: row.id ?? i + 1,
+            ndc: row.ndc ?? "",
+            drugName: (row.drug_name ?? row.drugName ?? "").replace(/\s*\(\d{5}-\d{4}-\d{2}\).*$/, "").trim(),
+            rank: 0,
+            pkgSize: row.package_size ?? 0,
+            unit: row.package_size > 0 ? Number((n(row.total_billed) / Number(row.package_size)).toFixed(2)) : 0,
+            totalOrdered: to,
+            totalBilled: n(row.total_billed),
+            totalShortage: row.total_shortage != null ? n(row.total_shortage) : to - n(row.total_billed),
+            highestShortage: 0,
+            cost: n(row.cost),
+            amount: n(row.total_amount ?? row.amount),
+            // Commercial
+            horizon: n(row.horizon),             shortageHorizon: to - n(row.horizon),
+            express: n(row.express),             shortageExpress: to - n(row.express),
+            cvsCaremark: n(row.cvs_caremark ?? row.cvsCaremark),
+            shortageCvsCaremark: to - n(row.cvs_caremark ?? row.cvsCaremark),
+            optumrx: n(row.optumrx),             shortageOptumrx: to - n(row.optumrx),
+            humana: n(row.humana),               shortageHumana: to - n(row.humana),
+            ssc: n(row.ssc),                     shortageSsc: to - n(row.ssc),
+            pdmi: n(row.pdmi),                   shortagePdmi: to - n(row.pdmi),
+            // Medicare
+            medicare: medicareVal,               shortageMedicare: shortageMedicareVal,
+            // Medicaid
+            njMedicaid: njMedicaidVal,           shortageNjMedicaid: shortageNjMedicaidVal,
+            // Medicare + Medicaid combined
+            // NJ Billed  = njMedicaid + medicare
+            // Shortage   = Shrt Medicare + Shrt NJ Medicaid  (sum of both shortages)
+            njBilled: njBilledVal,
+            shortageNjBilled: shortageMedicareVal + shortageNjMedicaidVal,
+          };
+        });
+
+        [...norm].sort((a, b) => b.amount - a.amount).forEach((r, i) => { r.rank = i + 1; });
+        norm.forEach((r: any) => {
+          const min = Math.min(
+            r.shortageHorizon, r.shortageExpress, r.shortageCvsCaremark,
+            r.shortageOptumrx, r.shortageHumana, r.shortageSsc, r.shortagePdmi,
+            r.shortageMedicare, r.shortageNjMedicaid,
+          );
+          r.highestShortage = min < 0 ? min : 0;
+        });
+
+        setInventoryData(norm);
+        const ar = await fetch(`https://api.auditprorx.com/api/audits/${auditId}`);
+        setAuditDates(await ar.json());
+      } catch (e) {
+        console.error(e); setInventoryData([]);
+      } finally {
+        if (pi) clearInterval(pi); setLoadingProgress(100);
+        setTimeout(() => { setLoadingDone(true); setTimeout(() => setLoading(false), 400); }, 500);
       }
-      return 0;
-    });
-  }, [inventoryData, sortRules]);
+    };
+    if (auditId) load();
+  }, [auditId]);
+
+  // ── applyQtyMode ──────────────────────────────────────────────────────────
+
+  const applyQtyMode = (row: InventoryRow): InventoryRow => {
+    const pkg = row.pkgSize || 1;
+    if (qtyType === "PKG SIZE") {
+      const nto = row.totalOrdered * pkg;
+      const sMed = +(nto - row.medicare).toFixed(2);
+      const sNj  = +(nto - row.njMedicaid).toFixed(2);
+      return {
+        ...row, totalOrdered: +nto.toFixed(2),
+        totalShortage: +(nto - row.totalBilled).toFixed(2),
+        shortageHorizon: +(nto - row.horizon).toFixed(2),
+        shortageExpress: +(nto - row.express).toFixed(2),
+        shortageCvsCaremark: +(nto - row.cvsCaremark).toFixed(2),
+        shortageOptumrx: +(nto - row.optumrx).toFixed(2),
+        shortageHumana: +(nto - row.humana).toFixed(2),
+        shortageSsc: +(nto - row.ssc).toFixed(2),
+        shortagePdmi: +(nto - row.pdmi).toFixed(2),
+        shortageMedicare: sMed,
+        shortageNjMedicaid: sNj,
+        njBilled: row.medicare + row.njMedicaid,
+        shortageNjBilled: +(sMed + sNj).toFixed(2),  // Shrt Medicare + Shrt NJ Medicaid
+        highestShortage: 0,
+      };
+    }
+    if (qtyType === "UNIT") {
+      const d = (v: number) => +(v / pkg).toFixed(2);
+      const nh = d(row.horizon), ne = d(row.express), nc = d(row.cvsCaremark);
+      const no = d(row.optumrx), nhu = d(row.humana), ns = d(row.ssc);
+      const np = d(row.pdmi), nm = d(row.medicare), nnj = d(row.njMedicaid);
+      const ntb = d(row.totalBilled);
+      const sMed = +(row.totalOrdered - nm).toFixed(2);
+      const sNj  = +(row.totalOrdered - nnj).toFixed(2);
+      return {
+        ...row, totalBilled: ntb, totalShortage: +(row.totalOrdered - ntb).toFixed(2),
+        horizon: nh,  shortageHorizon: +(row.totalOrdered - nh).toFixed(2),
+        express: ne,  shortageExpress: +(row.totalOrdered - ne).toFixed(2),
+        cvsCaremark: nc, shortageCvsCaremark: +(row.totalOrdered - nc).toFixed(2),
+        optumrx: no,  shortageOptumrx: +(row.totalOrdered - no).toFixed(2),
+        humana: nhu,  shortageHumana: +(row.totalOrdered - nhu).toFixed(2),
+        ssc: ns,      shortageSsc: +(row.totalOrdered - ns).toFixed(2),
+        pdmi: np,     shortagePdmi: +(row.totalOrdered - np).toFixed(2),
+        medicare: nm, shortageMedicare: sMed,
+        njMedicaid: nnj, shortageNjMedicaid: sNj,
+        njBilled: nm + nnj,
+        shortageNjBilled: +(sMed + sNj).toFixed(2),  // Shrt Medicare + Shrt NJ Medicaid
+        highestShortage: 0,
+      };
+    }
+    return row;
+  };
+
+  // ── Data pipeline ─────────────────────────────────────────────────────────
+
+  const sortedData = useMemo(() => [...inventoryData].sort((a, b) => {
+    for (const r of sortRules) {
+      const av = a[r.key], bv = b[r.key];
+      const c = typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv));
+      if (c !== 0) return r.dir === "asc" ? c : -c;
+    }
+    return 0;
+  }), [inventoryData, sortRules]);
 
   const filteredData = useMemo(() => {
-    const lowerQuery = searchQuery.toLowerCase();
-    return sortedData.filter((row) => {
-      const matchesSearch =
-        row.drugName.toLowerCase().includes(lowerQuery) ||
-        row.ndc.toLowerCase().includes(lowerQuery);
-      const matchesAmount = amountValue === "" || row.amount <= amountValue;
-      return matchesSearch && matchesAmount;
-    });
+    const q = searchQuery.toLowerCase();
+    return sortedData.filter((r) =>
+      (r.drugName.toLowerCase().includes(q) || r.ndc.toLowerCase().includes(q)) &&
+      (amountValue === "" || r.amount <= amountValue)
+    );
   }, [sortedData, searchQuery, amountValue]);
 
   const totalRows = filteredData.length;
-  const effectiveRowsPerPage =
-    rowsPerPage > 0 ? rowsPerPage : filteredData.length || 50;
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredData.length / effectiveRowsPerPage),
-  );
-  const rowOptions = [10, 20, 50, 100, totalRows].filter(
-    (v, i, arr) => v > 0 && arr.indexOf(v) === i,
-  );
+  const effRPP = rowsPerPage > 0 ? rowsPerPage : filteredData.length || 50;
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / effRPP));
+  const rowOptions = [10, 20, 50, 100, totalRows].filter((v, i, a) => v > 0 && a.indexOf(v) === i);
+  const paginatedData = filteredData.slice((currentPage - 1) * effRPP, currentPage * effRPP).map(applyQtyMode);
 
-  const paginatedData = filteredData
-    .slice(
-      (currentPage - 1) * effectiveRowsPerPage,
-      currentPage * effectiveRowsPerPage,
-    )
-    .map(applyQtyMode);
+  // ── Sticky offsets ────────────────────────────────────────────────────────
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const L_CHECKBOX = 0;
+  const L_RANK     = 44;
+  const L_NDC      = L_RANK + (showRank ? 72 : 0);
+  const L_DRUG     = L_NDC  + (showNdc  ? 140 : 0);
+  const L_PKG      = L_DRUG + (showDrug ? 240 : 0);
+  const L_UNIT     = L_PKG  + (showPkg  ? 100 : 0);
+  const L_ORDERED  = L_UNIT + (showUnit ? 100 : 0);
+
+  // ── Visible cols split by group ───────────────────────────────────────────
+
+  const visCols        = ALL_COLS.filter((c) => vis[c.key]);
+  const baseScrollCols = visCols.filter((c) => c.group === "base-scroll");
+  const commercialCols = visCols.filter((c) => c.group === "commercial");
+  const medicareCols   = visCols.filter((c) => c.group === "medicare");
+  const medicaidCols   = visCols.filter((c) => c.group === "medicaid");
+  const mAndMCols      = visCols.filter((c) => c.group === "mAndM");
+
+  // group first key (for border-left on first cell in each group)
+  const gfk = {
+    commercial: commercialCols[0]?.key,
+    medicare:   medicareCols[0]?.key,
+    medicaid:   medicaidCols[0]?.key,
+    mAndM:      mAndMCols[0]?.key,
   };
 
-  const toggleRowSelection = (id: number) => {
-    setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((rid) => rid !== id) : [...prev, id],
-    );
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedRows.length === paginatedData.length) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(paginatedData.map((r) => r.id));
-    }
-  };
-
-  const renderShortageValue = (val: number) => {
-    if (val === 0) return <span className="text-slate-400 font-medium">—</span>;
-    return (
-      <span
-        className={
-          val < 0
-            ? "text-red-600 font-semibold"
-            : "text-emerald-600 font-semibold"
-        }
-      >
-        {val}
-      </span>
-    );
-  };
-
-  // const columnWidths: Record<keyof typeof columnFilters, string> = {
-  //   rank: "w-[70px]",
-  //   ndc: "w-[110px]",
-  //   drugName: "w-[180px]",
-  //   pkgSize: "w-[80px]",
-  //   unit: "w-[80px]",
-  //   totalOrdered: "w-[110px]",
-  //   totalBilled: "w-[100px]",
-  //   totalShortage: "w-[110px]",
-  //   highestShortage: "w-[130px]",
-  //   cost: "w-[80px]",
-  //   amount: "w-[100px]",
-  //   horizon: "w-[90px]",
-  //   shortageHorizon: "w-[130px]",
-  //   express: "w-[90px]",
-  //   shortageExpress: "w-[130px]",
-  //   cvsCaremark: "w-[110px]",
-  //   shortageCvsCaremark: "w-[150px]",
-  //   ssc: "w-[80px]",
-  //   shortageSsc: "w-[110px]",
-  //   njMedicaid: "w-[100px]",
-  //   shortageNjMedicaid: "w-[120px]",
-  //   pdmi: "w-[80px]",
-  //   shortagePdmi: "w-[120px]",
-  //   optumrx: "w-[90px]",
-  //   shortageOptumrx: "w-[130px]",
-  // };
-
-  const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
-
-  const supplierColumnMap: Record<string, { key: string; width: string }> = {
-    Kinray: { key: "supplier_Kinray", width: "min-w-[140px]" },
-    McKesson: { key: "supplier_McKesson", width: "min-w-[140px]" },
-    "Real Value Rx": { key: "supplier_RealValueRx", width: "min-w-[160px]" },
-    Parmed: { key: "supplier_Parmed", width: "min-w-[140px]" },
-    Axia: { key: "supplier_Axia", width: "min-w-[120px]" },
-    Citymed: { key: "supplier_Citymed", width: "min-w-[140px]" },
-    "Legacy Health": { key: "supplier_LegacyHealth", width: "min-w-[160px]" },
-    "NDC Distributors": {
-      key: "supplier_NDCDistributors",
-      width: "min-w-[180px]",
-    },
-    TruMarker: { key: "supplier_TruMarker", width: "min-w-[140px]" },
-  };
-
-  const toggleColumn = (col: keyof typeof columnFilters) => {
-    setColumnFilters((prev) => ({ ...prev, [col]: !prev[col] }));
-  };
-
-useEffect(() => {
-  if (openExportModal || showLeaveDialog || openDrugSidebar) {
-    setSidebarCollapsed(true);
-  }
-}, [openExportModal, showLeaveDialog, openDrugSidebar]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        filterDropdownRef.current &&
-        !filterDropdownRef.current.contains(e.target as Node)
-      ) {
-        closeAllDropdowns();
-      }
+  const cellBorderStyle = (col: ColDef): React.CSSProperties => {
+    const borders: Record<string, string> = {
+      [gfk.commercial ?? ""]: GC.commercial.cellBorderColor,
+      [gfk.medicare   ?? ""]: GC.medicare.cellBorderColor,
+      [gfk.medicaid   ?? ""]: GC.medicaid.cellBorderColor,
+      [gfk.mAndM      ?? ""]: GC.mAndM.cellBorderColor,
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+    return col.key in borders && borders[col.key]
+      ? { borderLeft: `2px solid ${borders[col.key]}` }
+      : {};
+  };
+
+  // ── Misc helpers ──────────────────────────────────────────────────────────
+
+  const fmt = (d: Date) =>
+    `${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}/${d.getFullYear()}`;
+
+  const fromDate = auditDates?.inventory_start_date  ? fmt(new Date(auditDates.inventory_start_date))  : "—";
+  const toDate   = auditDates?.inventory_end_date    ? fmt(new Date(auditDates.inventory_end_date))    : "—";
+  const wsFrom   = auditDates?.wholesaler_start_date ? fmt(new Date(auditDates.wholesaler_start_date)) : "—";
+  const wsTo     = auditDates?.wholesaler_end_date   ? fmt(new Date(auditDates.wholesaler_end_date))   : "—";
+
+  const shortage = (v: number) =>
+    v === 0
+      ? <span className="text-slate-400">—</span>
+      : <span className={`font-semibold tabular-nums ${v < 0 ? "text-red-600" : "text-emerald-600"}`}>{v.toLocaleString()}</span>;
+
+  const cellVal = (col: ColDef, row: InventoryRow) => {
+    const v = row[col.key] as number;
+    if (col.isShortage) return shortage(v);
+    if (col.key === "cost")   return <span className="tabular-nums text-slate-700">${v.toFixed(2)}</span>;
+    if (col.key === "amount") return <span className="tabular-nums font-semibold text-slate-800">${v.toFixed(2)}</span>;
+    if (col.group === "medicare") return <span className="tabular-nums font-semibold text-emerald-700">{v.toLocaleString()}</span>;
+    if (col.group === "medicaid") return <span className="tabular-nums font-semibold text-purple-700">{v.toLocaleString()}</span>;
+    if (col.group === "mAndM")    return <span className="tabular-nums font-semibold text-amber-700">{v.toLocaleString()}</span>;
+    return <span className="tabular-nums text-slate-700">{v.toLocaleString()}</span>;
+  };
+
+  const toggleRow = (id: number) =>
+    setSelectedRows((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);
+  const toggleAll = () =>
+    setSelectedRows(selectedRows.length === paginatedData.length ? [] : paginatedData.map((r) => r.id));
+
+  const confirmLeave = () => {
+    isLeavingConfirmed.current = true;
+    setShowLeaveDialog(false);
+    router.push(pendingHref ?? "/ReportsPage");
+  };
 
   const handleExport = () => {
     const rows = exportScope === "visible" ? paginatedData : filteredData;
     if (!rows.length) return;
-    if (exportFormat === "csv") exportCSV(rows);
-    if (exportFormat === "excel") exportCSV(rows, "xlsx");
-    if (exportFormat === "pdf") exportPDF(rows);
+    const h = Object.keys(rows[0]);
+    const csv = [h.join(","), ...rows.map((r: any) => h.map((k) => JSON.stringify(r[k] ?? "")).join(","))].join("\n");
+    const a = Object.assign(document.createElement("a"), {
+      href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })),
+      download: "inventory-report.csv",
+    });
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setOpenExportModal(false);
   };
 
-  const exportCSV = (rows: any[], ext: "csv" | "xlsx" = "csv") => {
-    const headers = Object.keys(rows[0]);
-    const csv = [
-      headers.join(","),
-      ...rows.map((r) =>
-        headers.map((h) => JSON.stringify(r[h] ?? "")).join(","),
-      ),
-    ].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `inventory-report.${ext}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
+  useEffect(() => {
+    if (openExportModal || showLeaveDialog || openDrugSidebar) setSidebarCollapsed(true);
+  }, [openExportModal, showLeaveDialog, openDrugSidebar]);
 
-  const exportPDF = (rows: any[]) => {
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(`
-    <html>
-      <head>
-        <title>Inventory Report</title>
-        <style>
-          body { font-family: Arial; padding: 20px; }
-          table { border-collapse: collapse; width: 100%; }
-          th, td { border: 1px solid #ccc; padding: 6px; font-size: 12px; }
-          th { background: #f3f4f6; }
-        </style>
-      </head>
-      <body>
-        <h2>Inventory Report</h2>
-        <table>
-          <thead>
-            <tr>
-              ${Object.keys(rows[0])
-                .map((h) => `<th>${h}</th>`)
-                .join("")}
-            </tr>
-          </thead>
-          <tbody>
-            ${rows
-              .map(
-                (r) =>
-                  `<tr>${Object.values(r)
-                    .map((v) => `<td>${v ?? ""}</td>`)
-                    .join("")}</tr>`,
-              )
-              .join("")}
-          </tbody>
-        </table>
-        <script>window.print();</script>
-      </body>
-    </html>
-  `);
-  };
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) setOpenFilter(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
 
-  const handleDrugTypeToggle = (dtype: string) => {
-    setDrugTypes((prev) =>
-      prev.includes(dtype) ? prev.filter((d) => d !== dtype) : [...prev, dtype],
+  // ── Sub-header renderer ───────────────────────────────────────────────────
+
+  const renderSubTh = (c: ColDef) => {
+    const gc = GC[c.group as keyof typeof GC] ?? GC.commercial;
+    const bg = c.isShortage ? gc.shrtBg : gc.subBg;
+    const color = c.isShortage ? gc.shrtColor : gc.subColor;
+    const isFirst = c.key === gfk[c.group as keyof typeof gfk];
+    return (
+      <th
+        key={c.key}
+        className="cursor-pointer select-none"
+        style={{
+          position: "sticky", top: 20, zIndex: 1,
+          background: bg, color, height: 20, padding: "0 8px",
+          fontSize: 10, fontWeight: 600, textAlign: "center", whiteSpace: "nowrap",
+          borderLeft: isFirst ? `2px solid ${gc.parentBorder}` : undefined,
+        }}
+        onClick={(e) => handleSort(c.key, e)}
+      >
+        <div className="flex items-center justify-center gap-0.5">
+          {c.label}<SortIcon active={sortDir(c.key)} />
+        </div>
+      </th>
     );
   };
 
-  const colorClasses: Record<string, string> = {
-    red: "bg-red-100 text-red-800",
-    orange: "bg-orange-100 text-orange-800",
-    yellow: "bg-yellow-100 text-yellow-800",
-    green: "bg-green-100 text-green-800",
-    blue: "bg-blue-100 text-blue-800",
-    purple: "bg-purple-100 text-purple-800",
-  };
-
-  const handleCreateTag = () => {
-    setOpenCreateTagModal(false);
-    setNewTagName("");
-    setNewTagColor("yellow");
-  };
-
-  const closeAllDropdowns = () => {
-    setOpenFilter(false);
-    setOpenFlagDropdown(false);
-    setOpenTagsDropdown(false);
-    setOpenQtyDropdown(false);
-    setOpenDrugTypeDropdown(false);
-  };
-
-  const formatDate = (date: Date) => {
-    
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${month}/${day}/${year}`;
-  };
-
-  const fromDate = auditDates?.inventory_start_date
-    ? formatDate(new Date(auditDates.inventory_start_date))
-    : "—";
-  const toDate = auditDates?.inventory_end_date
-    ? formatDate(new Date(auditDates.inventory_end_date))
-    : "—";
-  const wholesalerFromDate = auditDates?.wholesaler_start_date
-    ? formatDate(new Date(auditDates.wholesaler_start_date))
-    : "—";
-  const wholesalerToDate = auditDates?.wholesaler_end_date
-    ? formatDate(new Date(auditDates.wholesaler_end_date))
-    : "—";
-
-  // ─── Sticky left offsets (must match actual rendered widths below) ────────────
-  const COL_W = {
-    checkbox: 44,
-    rank: 72,
-    ndc: 140,
-    drugName: 240,
-    pkgSize: 100,
-    unit: 100,
-  } as const;
-
-  const left = {
-    checkbox: 0,
-    rank: COL_W.checkbox,
-    ndc: COL_W.checkbox + (columnFilters.rank ? COL_W.rank : 0),
-    drugName:
-      COL_W.checkbox +
-      (columnFilters.rank ? COL_W.rank : 0) +
-      (columnFilters.ndc ? COL_W.ndc : 0),
-    pkgSize:
-      COL_W.checkbox +
-      (columnFilters.rank ? COL_W.rank : 0) +
-      (columnFilters.ndc ? COL_W.ndc : 0) +
-      (columnFilters.drugName ? COL_W.drugName : 0),
-    unit:
-      COL_W.checkbox +
-      (columnFilters.rank ? COL_W.rank : 0) +
-      (columnFilters.ndc ? COL_W.ndc : 0) +
-      (columnFilters.drugName ? COL_W.drugName : 0) +
-      (columnFilters.pkgSize ? COL_W.pkgSize : 0),
-    totalOrdered:
-      COL_W.checkbox +
-      (columnFilters.rank ? COL_W.rank : 0) +
-      (columnFilters.ndc ? COL_W.ndc : 0) +
-      (columnFilters.drugName ? COL_W.drugName : 0) +
-      (columnFilters.pkgSize ? COL_W.pkgSize : 0) +
-      (columnFilters.unit ? COL_W.unit : 0),
-  };
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  const safeNavigate = (href: string) => {
-  setPendingHref(href);
-  setShowLeaveDialog(true);
-};
-
-const confirmLeave = () => {
-  isLeavingConfirmed.current = true;
-  setShowLeaveDialog(false);
-  if (pendingHref) {
-    router.push(pendingHref);
-  } else {
-    router.push("/ReportsPage");
-  }
-};
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────
 
   return (
     <ProtectedRoute>
-      <div className="relative h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="relative h-screen w-full bg-white">
         <div className="relative h-full w-full flex overflow-hidden">
-          <div
-            className={`flex-shrink-0 relative transition-all duration-300 ease-in-out z-[130] ${
-  openExportModal || loading || showLeaveDialog || openDrugSidebar
-    ? "w-0 opacity-0 pointer-events-none"
-    : sidebarCollapsed
-      ? "w-[72px]"
-      : "w-[260px]"
-}`}
-          >
+
+          {/* Sidebar */}
+          <div className={`flex-shrink-0 transition-all duration-300 z-[130] ${
+            openExportModal || loading || showLeaveDialog || openDrugSidebar
+              ? "w-0 opacity-0 pointer-events-none"
+              : sidebarCollapsed ? "w-[72px]" : "w-[260px]"
+          }`}>
             {!openExportModal && !loading && !showLeaveDialog && !openDrugSidebar && (
-              <AppSidebar
-                sidebarOpen={!sidebarCollapsed}
-                setSidebarOpen={() => setSidebarCollapsed((v) => !v)}
-                activePanel={activePanel}
-                setActivePanel={setActivePanel}
-              />
+              <AppSidebar sidebarOpen={!sidebarCollapsed} setSidebarOpen={() => setSidebarCollapsed((v) => !v)} activePanel={activePanel} setActivePanel={setActivePanel} />
             )}
           </div>
 
+          {/* Loading overlay */}
           {loading && (
-            <div
-              className={`absolute inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-sm transition-opacity duration-400 ${
-                loadingDone ? "opacity-0 pointer-events-none" : "opacity-100"
-              }`}
-            >
+            <div className={`absolute inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-sm transition-opacity duration-400 ${loadingDone ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
               <div className="flex flex-col items-center gap-6 w-72">
                 <div className="relative">
                   <div className="h-16 w-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm">
-                    <svg
-                      className="h-8 w-8 text-emerald-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
+                    <svg className="h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
                   <div className="absolute -inset-1 rounded-[18px] border-2 border-transparent border-t-emerald-500 border-r-emerald-300 animate-spin" />
@@ -931,9 +547,7 @@ const confirmLeave = () => {
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">
-                      Loading report
-                    </span>
+                    <span className="text-xs text-slate-400">Loading report</span>
                     <span className="text-xs font-bold text-emerald-600 tabular-nums">
                       {Math.min(Math.round(loadingProgress), 100)}%
                     </span>
@@ -943,1460 +557,362 @@ const confirmLeave = () => {
             </div>
           )}
 
-          <div className="flex-1 min-w-0 relative isolate flex flex-col overflow-hidden transition-all duration-300 ease-in-out z-0">
-            {/* Header */}
-            <div className="bg-white border-b border-slate-200 shadow-sm">
-              <div className="px-9 py-4 flex items-center justify-between">
+          <div className="flex-1 min-w-0 flex flex-col overflow-hidden z-0">
+
+            {/* ── Page Header ── */}
+            <div className="bg-white border-b border-slate-200 shadow-sm flex-shrink-0">
+              <div className="px-6 py-3 flex items-center justify-between gap-4">
                 <div>
-                  <h1 className="text-lg md:text-3xl font-bold text-slate-800 tracking-wide uppercase">
-                    Inventory Report
-                  </h1>
-                  <p className="text-sm text-slate-500 mt-0.5">
-                    Comprehensive pharmaceutical inventory analytics
-                  </p>
+                  <h1 className="text-2xl font-bold text-slate-800 tracking-wide uppercase">Inventory Report</h1>
+                  <p className="text-xs text-slate-500 mt-0.5">Comprehensive pharmaceutical inventory analytics</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-4">
-                    <div className="flex flex-col gap-1 translate-y-1">
-                      <div className="text-[11px] font-bold tracking-wide text-blue-700 uppercase ml-4 -mt-5">
-                        <div className="mt-1 h-2 w-2 rounded-full bg-blue-800 -translate-x-4 translate-y-3" />
-                        Periods
-                      </div>
-                      <div className="bg-blue-50 px-4 py-3 rounded-xl border mb-1.5 border-blue-200 shadow-sm min-w-[180px]">
-                        <div className="text-xs font-semibold text-slate-900">
-                          {fromDate} – {toDate}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                      <div className="text-[11px] font-bold tracking-wide text-red-700 uppercase ml-4 -mt-5">
-                        <div className="mt-1 h-2 w-2 rounded-full bg-red-500 -translate-x-4 translate-y-3" />
-                        Inventory Dates
-                      </div>
-                      <div className="flex items-start gap-3 bg-red-50 px-4 py-1 rounded-xl border border-red-200 shadow-sm">
-                        <div className="flex items-center py-2 gap-2">
-                          <div className="text-xs font-semibold text-slate-900">
-                            {fromDate}
-                          </div>
-                          <span className="text-xs text-slate-900">–</span>
-                          <div className="text-xs font-semibold text-slate-900">
-                            {toDate}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1 -translate-y-3">
-                      <div className="text-[11px] font-bold tracking-wide text-emerald-600 uppercase ml-1">
-                        <div className="mt-1 h-2 w-2 rounded-full bg-emerald-600 -translate-x-4 translate-y-3" />
-                        Wholesaler Dates
-                      </div>
-                      <div className="flex items-start gap-3 bg-emerald-50 px-4 py-1 rounded-xl border border-emerald-200 shadow-sm">
-                        <div className="flex items-center py-2 gap-2">
-                          <div className="text-xs font-semibold text-slate-900">
-                            {wholesalerFromDate}
-                          </div>
-                          <span className="text-xs text-slate-900">–</span>
-                          <div className="text-xs font-semibold text-slate-900">
-                            {wholesalerToDate}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="bg-red-50 px-3 py-1.5 rounded-lg border border-red-200">
+                    <p className="text-[10px] font-bold text-red-700 uppercase tracking-wider">Inventory Dates</p>
+                    <p className="text-xs font-semibold text-slate-800">{fromDate} – {toDate}</p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => {
-                      setSidebarCollapsed(true);
-                      setOpenExportModal(true);
-                    }}
-                  >
-                    <Download className="h-4 w-4" />
-                    Export
+                  <div className="bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                    <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Wholesaler Dates</p>
+                    <p className="text-xs font-semibold text-slate-800">{wsFrom} – {wsTo}</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { setSidebarCollapsed(true); setOpenExportModal(true); }}>
+                    <Download className="h-3.5 w-3.5" /> Export
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                    <RotateCw className="h-4 w-4" />
-                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><RotateCw className="h-3.5 w-3.5" /></Button>
                 </div>
               </div>
             </div>
 
-            {/* Filter Bar */}
-            <div className="bg-white border-b border-slate-200">
-              <div className="px-6 py-3">
-                <div className="flex items-center gap-3 flex-wrap">
-                  {/* Search */}
-                  <div className="relative flex-1 min-w-[300px] max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                      type="text"
-                      placeholder="Search by drug name or NDC..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-10 h-10 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                    />
-                    {searchQuery && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                        onClick={() => setSearchQuery("")}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+            {/* ── Filter Bar ── z-[200] so dropdown clears table headers ── */}
+            <div className="bg-white border-b border-slate-200 flex-shrink-0" style={{ position: "relative", zIndex: 200 }}>
+              <div className="px-6 py-2.5 flex items-center gap-2.5 flex-wrap">
 
-                  {/* Columns Filter */}
-                  <div className="relative" ref={filterDropdownRef}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 border-slate-300"
-                      onClick={() => setOpenFilter(!openFilter)}
-                    >
-                      <SlidersHorizontal className="h-3.5 w-3.5" />
-                      Filter
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </Button>
-
-                    {openFilter && (
-                      <div className="absolute -left-100 top-full mt-2 w-[900px] max-w-[95vw] bg-white border border-slate-200 rounded-xl shadow-2xl z-50">
-                        <div className="flex items-center justify-between px-5 py-3 border-b">
-                          <h3 className="text-sm font-bold tracking-wide">
-                            FILTERS
-                          </h3>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setPbmFilters(availablePBMs);
-                                setFlagFilters([]);
-                              }}
-                            >
-                              Reset Filters
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => setOpenFilter(false)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-0 max-h-[70vh] overflow-y-auto">
-                          <div className="p-4 border-r">
-                            <div className="text-xs font-bold text-slate-600 mb-2">
-                              COLUMNS
-                            </div>
-                            {(
-                              [
-                                "ndc",
-                                "pkgSize",
-                                "rank",
-                                "totalOrdered",
-                                "totalBilled",
-                                "totalShortage",
-                                "highestShortage",
-                                "cost",
-                                "amount",
-                              ] as const
-                            ).map((col) => (
-                              <label
-                                key={col}
-                                className="flex items-center gap-2 py-1 text-sm"
-                              >
-                                <Checkbox
-                                  checked={columnFilters[col]}
-                                  onCheckedChange={() => toggleColumn(col)}
-                                />
-                                {col.replace(/([A-Z])/g, " $1").toUpperCase()}
-                              </label>
-                            ))}
-                          </div>
-
-                          <div className="p-4 border-r">
-                            <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
-                              <span className="h-2 w-2 rounded-full bg-red-500" />{" "}
-                              BILLED
-                            </div>
-                            {availablePBMs.map((pbm) => (
-                              <label
-                                key={pbm}
-                                className="flex items-center gap-2 py-1 text-sm"
-                              >
-                                <Checkbox
-                                  checked={pbmFilters.includes(pbm)}
-                                  onCheckedChange={() => togglePBMFilter(pbm)}
-                                />
-                                {pbm}
-                              </label>
-                            ))}
-                          </div>
-
-                          <div className="p-4">
-                            <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mb-2">
-                              <span className="h-2 w-2 rounded-full bg-emerald-600" />{" "}
-                              SUPPLIERS
-                            </div>
-                            {Object.keys(supplierColumnMap).map((s) => (
-                              <label
-                                key={s}
-                                className="flex items-center gap-2 py-1 text-sm"
-                              >
-                                <Checkbox
-                                  checked={selectedSuppliers.includes(s)}
-                                  onCheckedChange={() =>
-                                    setSelectedSuppliers((prev) =>
-                                      prev.includes(s)
-                                        ? prev.filter((x) => x !== s)
-                                        : [...prev, s],
-                                    )
-                                  }
-                                />
-                                {s}
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* QTY Type */}
-                  <DropdownMenu
-                    open={openQtyDropdown}
-                    onOpenChange={setOpenQtyDropdown}
-                  >
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 border-slate-300 translate-x-2"
-                      >
-                        QTY
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuCheckboxItem
-                        checked={qtyType === "UNIT"}
-                        onCheckedChange={() => {
-                          setQtyType("UNIT");
-                          setColumnFilters((prev) => ({
-                            ...prev,
-                            unit: false,
-                            pkgSize: true,
-                          }));
-                        }}
-                      >
-                        UNIT
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem
-                        checked={qtyType === "PKG SIZE"}
-                        onCheckedChange={() => {
-                          setQtyType("PKG SIZE");
-                          setColumnFilters((prev) => ({
-                            ...prev,
-                            unit: false,
-                            pkgSize: true,
-                          }));
-                        }}
-                      >
-                        PKG SIZE
-                      </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* Drug Type (hidden) */}
-                  <DropdownMenu
-                    open={openDrugTypeDropdown}
-                    onOpenChange={setOpenDrugTypeDropdown}
-                  >
-                    <DropdownMenuTrigger asChild>
-                      <span />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuCheckboxItem
-                        checked={drugTypes.includes("ALL DRUGS")}
-                        onCheckedChange={() =>
-                          handleDrugTypeToggle("ALL DRUGS")
-                        }
-                      >
-                        ALL DRUGS
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem
-                        checked={drugTypes.includes("BRAND")}
-                        onCheckedChange={() => handleDrugTypeToggle("BRAND")}
-                      >
-                        BRAND
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem
-                        checked={drugTypes.includes("GENERIC")}
-                        onCheckedChange={() => handleDrugTypeToggle("GENERIC")}
-                      >
-                        GENERIC
-                      </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* Max Cost */}
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Max Cost"
-                      value={costValue}
-                      onChange={(e) =>
-                        setCostValue(Number(e.target.value) || "")
-                      }
-                      className="w-[110px] h-8 border-slate-300"
-                    />
-                  </div>
-
-                  {/* Max Amount */}
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Max Amount"
-                      value={amountValue}
-                      onChange={(e) =>
-                        setAmountValue(Number(e.target.value) || "")
-                      }
-                      className="w-[120px] h-8 border-slate-300"
-                    />
-                  </div>
-
-                  {/* Rows per page */}
-                  <Select
-                    value={String(rowsPerPage)}
-                    onValueChange={(v) => setRowsPerPage(Number(v))}
-                  >
-                    <SelectTrigger className="w-[120px] h-8 border-slate-300">
-                      <SelectValue
-                        placeholder={`Rows: ${rowsPerPage}/${totalRows}`}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {rowOptions.map((n) => (
-                        <SelectItem key={n} value={String(n)}>
-                          {n === totalRows ? `All (${totalRows})` : n}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {(activeFilters.length > 0 || costValue !== "") && (
-                <div className="px-6 pb-4 flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-medium text-slate-600">
-                    Active filters:
-                  </span>
-                  {activeFilters.map((chip) => (
-                    <Badge
-                      key={chip.id}
-                      variant="secondary"
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-                    >
-                      <span className="text-xs font-medium">{chip.label}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-3.5 w-3.5 p-0 hover:bg-transparent"
-                        onClick={() => removeFilter(chip.id)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                  {costValue !== "" && (
-                    <Badge
-                      variant="secondary"
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-                    >
-                      <span className="text-xs font-medium">
-                        Cost: ${costValue}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-3.5 w-3.5 p-0 hover:bg-transparent"
-                        onClick={() => setCostValue("")}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
+                {/* Search */}
+                <div className="relative flex-1 min-w-[240px] max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <Input
+                    placeholder="Search drug name or NDC..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-8 text-sm border-slate-300"
+                  />
+                  {searchQuery && (
+                    <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setSearchQuery("")}>
+                      <X className="h-3.5 w-3.5 text-slate-400" />
+                    </button>
                   )}
                 </div>
-              )}
+
+                {/* Columns filter */}
+                <div className="relative" ref={filterRef}>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs border-slate-300" onClick={() => setOpenFilter(!openFilter)}>
+                    <SlidersHorizontal className="h-3.5 w-3.5" /> Columns <ChevronDown className="h-3 w-3" />
+                  </Button>
+
+                  {openFilter && (
+                    <div
+                      className="absolute left-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl"
+                      style={{ width: 860, maxWidth: "95vw", zIndex: 9999 }}
+                    >
+                      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
+                        <span className="text-xs font-bold tracking-wide text-slate-600 uppercase">Column Visibility</span>
+                        <button onClick={() => setOpenFilter(false)}><X className="h-4 w-4 text-slate-400" /></button>
+                      </div>
+
+                      <div className="grid grid-cols-5 divide-x divide-slate-100 max-h-[70vh] overflow-y-auto">
+
+                        {/* Base */}
+                        <div className="p-3">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Base</p>
+                          {([
+                            ["Rank", showRank, setShowRank],
+                            ["NDC", showNdc, setShowNdc],
+                            ["Drug Name", showDrug, setShowDrug],
+                            ["Pkg Size", showPkg, setShowPkg],
+                            ["Unit", showUnit, setShowUnit],
+                            ["Total Ordered", showOrdered, setShowOrdered],
+                          ] as [string, boolean, React.Dispatch<React.SetStateAction<boolean>>][]).map(([label, val, set]) => (
+                            <label key={label} className="flex items-center gap-1.5 py-0.5 text-xs cursor-pointer">
+                              <Checkbox checked={val} onCheckedChange={() => set((v) => !v)} className="h-3 w-3" />
+                              {label}
+                            </label>
+                          ))}
+                          <div className="border-t border-slate-100 mt-2 pt-2">
+                            {ALL_COLS.filter((c) => c.group === "base-scroll").map((c) => (
+                              <label key={c.key} className="flex items-center gap-1.5 py-0.5 text-xs cursor-pointer">
+                                <Checkbox checked={!!vis[c.key]} onCheckedChange={() => toggleVis(c.key)} className="h-3 w-3" />
+                                {c.label}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Commercial */}
+                        <div className="p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: GC.commercial.parentColor }}>
+                            Commercial
+                          </p>
+                          {ALL_COLS.filter((c) => c.group === "commercial").map((c) => (
+                            <label key={c.key} className="flex items-center gap-1.5 py-0.5 text-xs cursor-pointer">
+                              <Checkbox checked={!!vis[c.key]} onCheckedChange={() => toggleVis(c.key)} className="h-3 w-3" />
+                              {c.label}
+                            </label>
+                          ))}
+                        </div>
+
+                        {/* Medicare */}
+                        <div className="p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: GC.medicare.parentColor }}>
+                            Medicare
+                          </p>
+                          {ALL_COLS.filter((c) => c.group === "medicare").map((c) => (
+                            <label key={c.key} className="flex items-center gap-1.5 py-0.5 text-xs cursor-pointer">
+                              <Checkbox checked={!!vis[c.key]} onCheckedChange={() => toggleVis(c.key)} className="h-3 w-3" />
+                              {c.label}
+                            </label>
+                          ))}
+                        </div>
+
+                        {/* Medicaid */}
+                        <div className="p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: GC.medicaid.parentColor }}>
+                            Medicaid
+                          </p>
+                          {ALL_COLS.filter((c) => c.group === "medicaid").map((c) => (
+                            <label key={c.key} className="flex items-center gap-1.5 py-0.5 text-xs cursor-pointer">
+                              <Checkbox checked={!!vis[c.key]} onCheckedChange={() => toggleVis(c.key)} className="h-3 w-3" />
+                              {c.label}
+                            </label>
+                          ))}
+                        </div>
+
+                        {/* Medicare + Medicaid */}
+                        <div className="p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: GC.mAndM.parentColor }}>
+                            Medicare + Medicaid
+                          </p>
+                          {ALL_COLS.filter((c) => c.group === "mAndM").map((c) => (
+                            <label key={c.key} className="flex items-center gap-1.5 py-0.5 text-xs cursor-pointer">
+                              <Checkbox checked={!!vis[c.key]} onCheckedChange={() => toggleVis(c.key)} className="h-3 w-3" />
+                              {c.label}
+                            </label>
+                          ))}
+                        </div>
+
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* QTY */}
+                <DropdownMenu open={openQtyDropdown} onOpenChange={setOpenQtyDropdown}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs border-slate-300">
+                      QTY: {qtyType ?? "—"} <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36">
+                    <DropdownMenuCheckboxItem checked={qtyType === "UNIT"} onCheckedChange={() => { setQtyType("UNIT"); setShowUnit(false); setShowPkg(true); }}>UNIT</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={qtyType === "PKG SIZE"} onCheckedChange={() => { setQtyType("PKG SIZE"); setShowUnit(false); setShowPkg(true); }}>PKG SIZE</DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Input type="number" placeholder="Max Amount" value={amountValue} onChange={(e) => setAmountValue(Number(e.target.value) || "")} className="w-[110px] h-8 text-xs border-slate-300" />
+
+                <Select value={String(rowsPerPage)} onValueChange={(v) => setRowsPerPage(Number(v))}>
+                  <SelectTrigger className="w-[100px] h-8 text-xs border-slate-300"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {rowOptions.map((n) => <SelectItem key={n} value={String(n)}>{n === totalRows ? `All (${n})` : n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+
+              </div>
             </div>
 
-            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-              TABLE SECTION
-          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+            {/* ══════════════════════════════════════════════════
+                TABLE
+            ══════════════════════════════════════════════════ */}
+
             <style jsx global>{`
-              /* ── thin, styled scrollbar ── */
-              .inv-scroll::-webkit-scrollbar {
-                height: 5px;
-                width: 5px;
-              }
-              .inv-scroll::-webkit-scrollbar-track {
-                background: transparent;
-              }
-              .inv-scroll::-webkit-scrollbar-thumb {
-                background: #cbd5e1;
-                border-radius: 99px;
-              }
-              .inv-scroll::-webkit-scrollbar-thumb:hover {
-                background: #94a3b8;
-              }
+              .isc::-webkit-scrollbar{height:4px;width:4px}
+              .isc::-webkit-scrollbar-track{background:transparent}
+              .isc::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
 
-              /* ── header borders ── */
-              thead th {
-                border-bottom: 2px solid #cbd5e1;
-              }
+              .srow td{transition:background 60ms ease}
+              .srow:hover td{background:#f0fdf8!important}
+              .srow.sel td{background:#eff6ff!important}
+              .srow.even td{background:#f8fafc}
+              .srow.even:hover td{background:#f0fdf8!important}
 
-              /* NON-sticky header right borders */
-              thead th:not(.sticky-col):not(.sticky-last) {
-                border-right: 1px solid #cbd5e1;
-              }
-              thead th:last-child {
-                border-right: none;
-              }
+              th.sc,td.sc{box-shadow:inset -1px 0 0 0 #e2e8f0}
+              th.sl,td.sl{box-shadow:inset -1px 0 0 0 #e2e8f0,4px 0 8px -2px rgba(0,0,0,0.1)}
 
-              /* ── body cell borders ── */
-              tbody td {
-                border-bottom: 1px solid #e2e8f0;
-              }
+              tbody td{border-bottom:1px solid #e2e8f0;border-right:1px solid #f1f5f9}
+              tbody td:last-child{border-right:none}
+              thead th{border-right:1px solid #e2e8f0}
+              thead th:last-child{border-right:none}
 
-              /* NON-sticky body right borders */
-              tbody td:not(.sticky-col):not(.sticky-last) {
-                border-right: 1px solid #e2e8f0;
-              }
-              tbody td:last-child {
-                border-right: none;
-              }
-
-              /* ── STICKY col right border — uses inset shadow, survives scroll ── */
-              thead th.sticky-col {
-                box-shadow: inset -1px 0 0 0 #cbd5e1;
-              }
-              tbody td.sticky-col {
-                box-shadow: inset -1px 0 0 0 #e2e8f0;
-              }
-
-              /* ── last sticky col: border + drop shadow divider ── */
-              thead th.sticky-last {
-                box-shadow:
-                  inset -1px 0 0 0 #cbd5e1,
-                  4px 0 10px -3px rgba(0, 0, 0, 0.1);
-              }
-              tbody td.sticky-last {
-                box-shadow:
-                  inset -1px 0 0 0 #e2e8f0,
-                  4px 0 10px -3px rgba(0, 0, 0, 0.1);
-              }
-
-              /* ── row hover ── */
-              .inv-row td {
-                transition: background-color 80ms ease;
-              }
-              .inv-row:hover td {
-                background-color: #f0fdf8 !important;
-              }
-              .inv-row.is-selected td {
-                background-color: #eff6ff !important;
-              }
-              .inv-row.is-selected:hover td {
-                background-color: #dbeafe !important;
-              }
-              .inv-row.has-shortage:hover td {
-                background-color: #fff5f5 !important;
-              }
-              /* zebra */
-              .inv-row.even-row td {
-                background-color: #f8fafc;
-              }
-              .inv-row.even-row:hover td {
-                background-color: #f0fdf8 !important;
-              }
-
-              /* ── Force table layout to respect exact widths ── */
-              .inv-table {
-                table-layout: fixed;
-              }
+              thead tr:nth-child(1) th{top:0}
+              thead tr:nth-child(2) th{top:20px;border-bottom:2px solid #cbd5e1}
+              thead tr:nth-child(1) th{border-bottom:none}
             `}</style>
 
-            <div className="flex-1 bg-white relative overflow-hidden flex flex-col min-w-0 z-20 w-full">
-              <div
-                ref={bodyScrollRef}
-                className="flex-1 overflow-auto min-w-0 relative z-0 inv-scroll"
-              >
-                <table
-                  className="w-full border-separate border-spacing-0 text-sm inv-table"
-                  style={{ minWidth: "max-content" }}
-                >
-                  {/* ═══════════ HEADER ═══════════ */}
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <div ref={bodyScrollRef} className="flex-1 overflow-auto isc">
+                <table style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: "max-content", width: "100%" }}>
+
+                  {/* colgroup */}
+                  <colgroup>
+                    <col style={{ width: 44, minWidth: 44 }} />
+                    {showRank    && <col style={{ width: 72,  minWidth: 72  }} />}
+                    {showNdc     && <col style={{ width: 140, minWidth: 140 }} />}
+                    {showDrug    && <col style={{ width: 240, minWidth: 240 }} />}
+                    {showPkg     && <col style={{ width: 100, minWidth: 100 }} />}
+                    {showUnit    && <col style={{ width: 100, minWidth: 100 }} />}
+                    {showOrdered && <col style={{ width: 140, minWidth: 140 }} />}
+                    {visCols.map((c) => <col key={c.key} style={{ width: c.w, minWidth: c.w }} />)}
+                  </colgroup>
+
+                  {/* ══ THEAD ══ */}
                   <thead>
-                    <tr className="bg-slate-50">
-                      {/* ── Checkbox ── */}
-                      <th
-                        className="sticky top-0 z-[110] bg-slate-50 h-11 px-3 text-center sticky-col"
-                        style={{
-                          left: left.checkbox,
-                          width: COL_W.checkbox,
-                          minWidth: COL_W.checkbox,
-                          maxWidth: COL_W.checkbox,
-                        }}
-                      >
-                        <Checkbox
-                          checked={
-                            selectedRows.length === paginatedData.length &&
-                            paginatedData.length > 0
-                          }
-                          onCheckedChange={toggleSelectAll}
-                          className="h-3.5 w-3.5"
-                        />
+
+                    {/* ROW 1 */}
+                    <tr style={{ background: "#f8fafc" }}>
+
+                      {/* Sticky base cols — all rowspan=2 */}
+                      <th rowSpan={2} className="sticky z-[110] sc" style={{ left: L_CHECKBOX, width: 44, background: "#f8fafc", padding: "0 12px", textAlign: "center" }}>
+                        <Checkbox checked={selectedRows.length === paginatedData.length && paginatedData.length > 0} onCheckedChange={toggleAll} className="h-3.5 w-3.5" />
                       </th>
 
-                      {/* ── Rank ── */}
-                      {columnFilters.rank && (
-                        <th
-                          className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none sticky-col"
-                          style={{
-                            left: left.rank,
-                            width: COL_W.rank,
-                            minWidth: COL_W.rank,
-                            maxWidth: COL_W.rank,
-                          }}
-                          onClick={(e) => handleSort("rank", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1 h-full px-2 hover:bg-emerald-50/60 transition-colors">
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Rank
-                            </span>
-                            <SortIcon
-                              dir={sortRules.find((r) => r.key === "rank")?.dir}
-                            />
+                      {showRank && (
+                        <th rowSpan={2} className="sticky z-[110] sc" style={{ left: L_RANK, width: 72, background: "#f8fafc", cursor: "pointer" }} onClick={(e) => handleSort("rank", e)}>
+                          <div className="flex items-center justify-center gap-1 px-2 h-full hover:bg-emerald-50/60">
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Rank</span>
+                            <SortIcon active={sortDir("rank")} />
                           </div>
                         </th>
                       )}
 
-                      {/* ── NDC ── */}
-                      {columnFilters.ndc && (
-                        <th
-                          className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none sticky-col"
-                          style={{
-                            left: left.ndc,
-                            width: COL_W.ndc,
-                            minWidth: COL_W.ndc,
-                            maxWidth: COL_W.ndc,
-                          }}
-                          onClick={(e) => handleSort("ndc", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1 h-full px-2 hover:bg-emerald-50/60 transition-colors">
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              NDC
-                            </span>
-                            <SortIcon
-                              dir={sortRules.find((r) => r.key === "ndc")?.dir}
-                            />
+                      {showNdc && (
+                        <th rowSpan={2} className="sticky z-[110] sc" style={{ left: L_NDC, width: 140, background: "#f8fafc", cursor: "pointer" }} onClick={(e) => handleSort("ndc", e)}>
+                          <div className="flex items-center justify-center gap-1 px-2 h-full hover:bg-emerald-50/60">
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">NDC</span>
+                            <SortIcon active={sortDir("ndc")} />
                           </div>
                         </th>
                       )}
 
-                      {/* ── Drug Name ── */}
-                      {columnFilters.drugName && (
-                        <th
-                          className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none text-left sticky-col"
-                          style={{
-                            left: left.drugName,
-                            width: COL_W.drugName,
-                            minWidth: COL_W.drugName,
-                            maxWidth: COL_W.drugName,
-                          }}
-                          onClick={(e) => handleSort("drugName", e)}
-                        >
-                          <div className="flex items-center gap-1 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Drug Name
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "drugName")?.dir
-                              }
-                            />
+                      {showDrug && (
+                        <th rowSpan={2} className="sticky z-[110] sc" style={{ left: L_DRUG, width: 240, background: "#f8fafc", textAlign: "left", cursor: "pointer" }} onClick={(e) => handleSort("drugName", e)}>
+                          <div className="flex items-center gap-1 px-3 h-full hover:bg-emerald-50/60">
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Drug Name</span>
+                            <SortIcon active={sortDir("drugName")} />
                           </div>
                         </th>
                       )}
 
-                      {/* ── Pkg Size ── */}
-                      {columnFilters.pkgSize && (
-                        <th
-                          className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none sticky-col"
-                          style={{
-                            left: left.pkgSize,
-                            width: COL_W.pkgSize,
-                            minWidth: COL_W.pkgSize,
-                            maxWidth: COL_W.pkgSize,
-                          }}
-                          onClick={(e) => handleSort("pkgSize", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1 h-full px-2 hover:bg-emerald-50/60 transition-colors">
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Pkg
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "pkgSize")?.dir
-                              }
-                            />
+                      {showPkg && (
+                        <th rowSpan={2} className="sticky z-[110] sc" style={{ left: L_PKG, width: 100, background: "#f8fafc", cursor: "pointer" }} onClick={(e) => handleSort("pkgSize", e)}>
+                          <div className="flex items-center justify-center gap-1 px-2 h-full hover:bg-emerald-50/60">
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">PKG</span>
+                            <SortIcon active={sortDir("pkgSize")} />
                           </div>
                         </th>
                       )}
 
-                      {/* ── Unit ── */}
-                      {columnFilters.unit && (
-                        <th
-                          className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none sticky-col"
-                          style={{
-                            left: left.unit,
-                            width: COL_W.unit,
-                            minWidth: COL_W.unit,
-                            maxWidth: COL_W.unit,
-                          }}
-                          onClick={(e) => handleSort("unit", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1 h-full px-2 hover:bg-emerald-50/60 transition-colors">
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Unit
-                            </span>
-                            <SortIcon
-                              dir={sortRules.find((r) => r.key === "unit")?.dir}
-                            />
+                      {showUnit && (
+                        <th rowSpan={2} className="sticky z-[110] sc" style={{ left: L_UNIT, width: 100, background: "#f8fafc", cursor: "pointer" }} onClick={(e) => handleSort("unit", e)}>
+                          <div className="flex items-center justify-center gap-1 px-2 h-full hover:bg-emerald-50/60">
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Unit</span>
+                            <SortIcon active={sortDir("unit")} />
                           </div>
                         </th>
                       )}
 
-                      {/* ── Total Ordered — last sticky col ── */}
-                      {columnFilters.totalOrdered && (
-                        <th
-                          className="sticky top-0 z-[110] bg-slate-50 h-11 cursor-pointer select-none sticky-last"
-                          style={{
-                            left: left.totalOrdered,
-                            width: 140,
-                            minWidth: 140,
-                            maxWidth: 140,
-                          }}
-                          onClick={(e) => handleSort("totalOrdered", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
+                      {showOrdered && (
+                        <th rowSpan={2} className="sticky z-[110] sl" style={{ left: L_ORDERED, width: 140, background: "#f8fafc", cursor: "pointer" }} onClick={(e) => handleSort("totalOrdered", e)}>
+                          <div className="flex items-center justify-center gap-1.5 px-2 h-full hover:bg-emerald-50/60">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Total Ordered
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "totalOrdered")
-                                  ?.dir
-                              }
-                            />
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Total Ordered</span>
+                            <SortIcon active={sortDir("totalOrdered")} />
                           </div>
                         </th>
                       )}
 
-                      {/* ── Scrollable column headers ── */}
-                      {columnFilters.totalBilled && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 140 }}
-                          onClick={(e) => handleSort("totalBilled", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Total Billed
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "totalBilled")
-                                  ?.dir
-                              }
-                            />
+                      {/* Base scroll — rowspan 2 */}
+                      {baseScrollCols.map((c) => (
+                        <th key={c.key} rowSpan={2} className="sticky z-50" style={{ background: "#f8fafc", cursor: "pointer" }} onClick={(e) => handleSort(c.key, e)}>
+                          <div className="flex items-center justify-center gap-1 px-3 h-full hover:bg-emerald-50/60 whitespace-nowrap">
+                            {c.dot && <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${c.dot}`} />}
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">{c.label}</span>
+                            <SortIcon active={sortDir(c.key)} />
                           </div>
                         </th>
-                      )}
-                      {columnFilters.totalShortage && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 140 }}
-                          onClick={(e) => handleSort("totalShortage", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Total Shortage
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "totalShortage")
-                                  ?.dir
-                              }
-                            />
-                          </div>
+                      ))}
+
+                      {/* Group parent headers — zIndex:1 stays behind sticky-left cols */}
+                      {commercialCols.length > 0 && (
+                        <th colSpan={commercialCols.length} className="text-center" style={{ position: "sticky", top: 0, zIndex: 1, background: GC.commercial.parentBg, color: GC.commercial.parentColor, borderLeft: `2px solid ${GC.commercial.parentBorder}`, fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", height: 20, padding: 0 }}>
+                          Commercial
                         </th>
                       )}
-                      {columnFilters.highestShortage && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 150 }}
-                          onClick={(e) => handleSort("highestShortage", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Highest Shortage
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find(
-                                  (r) => r.key === "highestShortage",
-                                )?.dir
-                              }
-                            />
-                          </div>
+                      {medicareCols.length > 0 && (
+                        <th colSpan={medicareCols.length} className="text-center" style={{ position: "sticky", top: 0, zIndex: 1, background: GC.medicare.parentBg, color: GC.medicare.parentColor, borderLeft: `2px solid ${GC.medicare.parentBorder}`, fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", height: 20, padding: 0 }}>
+                          Medicare
                         </th>
                       )}
-                      {columnFilters.cost && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 110 }}
-                          onClick={(e) => handleSort("cost", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              $ Cost
-                            </span>
-                            <SortIcon
-                              dir={sortRules.find((r) => r.key === "cost")?.dir}
-                            />
-                          </div>
+                      {medicaidCols.length > 0 && (
+                        <th colSpan={medicaidCols.length} className="text-center" style={{ position: "sticky", top: 0, zIndex: 1, background: GC.medicaid.parentBg, color: GC.medicaid.parentColor, borderLeft: `2px solid ${GC.medicaid.parentBorder}`, fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", height: 20, padding: 0 }}>
+                          Medicaid
                         </th>
                       )}
-                      {columnFilters.amount && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 120 }}
-                          onClick={(e) => handleSort("amount", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              $ Amount
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "amount")?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.horizon && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 140 }}
-                          onClick={(e) => handleSort("horizon", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Horizon Health
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "horizon")?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.shortageHorizon && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 150 }}
-                          onClick={(e) => handleSort("shortageHorizon", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Shrt Horizon
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find(
-                                  (r) => r.key === "shortageHorizon",
-                                )?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.express && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 140 }}
-                          onClick={(e) => handleSort("express", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Express Scripts
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "express")?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.shortageExpress && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 150 }}
-                          onClick={(e) => handleSort("shortageExpress", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Shrt Express
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find(
-                                  (r) => r.key === "shortageExpress",
-                                )?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.pdmi && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 180 }}
-                          onClick={(e) => handleSort("pdmi", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              PDMI (CO-PAY)
-                            </span>
-                            <SortIcon
-                              dir={sortRules.find((r) => r.key === "pdmi")?.dir}
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.shortagePdmi && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 150 }}
-                          onClick={(e) => handleSort("shortagePdmi", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Shrt PDMI
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "shortagePdmi")
-                                  ?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.optumrx && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 120 }}
-                          onClick={(e) => handleSort("optumrx", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              OptumRx
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "optumrx")?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.shortageOptumrx && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 150 }}
-                          onClick={(e) => handleSort("shortageOptumrx", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Shrt OptumRx
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find(
-                                  (r) => r.key === "shortageOptumrx",
-                                )?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.cvsCaremark && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 140 }}
-                          onClick={(e) => handleSort("cvsCaremark", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              CVS Caremark
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "cvsCaremark")
-                                  ?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.shortageCvsCaremark && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 180 }}
-                          onClick={(e) => handleSort("shortageCvsCaremark", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Shrt CVS Caremark
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find(
-                                  (r) => r.key === "shortageCvsCaremark",
-                                )?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.ssc && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 120 }}
-                          onClick={(e) => handleSort("ssc", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Billed SSC
-                            </span>
-                            <SortIcon
-                              dir={sortRules.find((r) => r.key === "ssc")?.dir}
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.shortageSsc && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 140 }}
-                          onClick={(e) => handleSort("shortageSsc", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Shrt SSC
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "shortageSsc")
-                                  ?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.njMedicaid && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 130 }}
-                          onClick={(e) => handleSort("njMedicaid", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              NJ Medicaid
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "njMedicaid")
-                                  ?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.shortageNjMedicaid && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 170 }}
-                          onClick={(e) => handleSort("shortageNjMedicaid", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Shrt NJ Medicaid
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find(
-                                  (r) => r.key === "shortageNjMedicaid",
-                                )?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.humana && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 130 }}
-                          onClick={(e) => handleSort("humana", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Humana
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find((r) => r.key === "humana")?.dir
-                              }
-                            />
-                          </div>
-                        </th>
-                      )}
-                      {columnFilters.shortageHumana && (
-                        <th
-                          className="sticky top-0 z-50 bg-slate-50 h-11 cursor-pointer select-none whitespace-nowrap"
-                          style={{ minWidth: 160 }}
-                          onClick={(e) => handleSort("shortageHumana", e)}
-                        >
-                          <div className="flex items-center justify-center gap-1.5 h-full px-3 hover:bg-emerald-50/60 transition-colors">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              Shrt Humana
-                            </span>
-                            <SortIcon
-                              dir={
-                                sortRules.find(
-                                  (r) => r.key === "shortageHumana",
-                                )?.dir
-                              }
-                            />
-                          </div>
+                      {mAndMCols.length > 0 && (
+                        <th colSpan={mAndMCols.length} className="text-center" style={{ position: "sticky", top: 0, zIndex: 1, background: GC.mAndM.parentBg, color: GC.mAndM.parentColor, borderLeft: `2px solid ${GC.mAndM.parentBorder}`, fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", height: 20, padding: 0 }}>
+                          Medicare + Medicaid
                         </th>
                       )}
                     </tr>
+
+                    {/* ROW 2: sub-labels */}
+                    <tr style={{ background: "#f8fafc" }}>
+                      {[...commercialCols, ...medicareCols, ...medicaidCols, ...mAndMCols].map(renderSubTh)}
+                    </tr>
+
                   </thead>
 
-                  {/* ═══════════ BODY ═══════════ */}
+                  {/* ══ TBODY ══ */}
                   <tbody>
-                    {paginatedData.map((row, rowIndex) => {
-                      const isSelected = selectedRows.includes(row.id);
-                      const hasShortage = row.totalShortage < 0;
-                      const isEven = rowIndex % 2 === 1;
-                      const baseBg = isSelected
-                        ? "#eff6ff"
-                        : isEven
-                          ? "#f8fafc"
-                          : "#ffffff";
+                    {paginatedData.map((row, ri) => {
+                      const isSel  = selectedRows.includes(row.id);
+                      const isEven = ri % 2 === 1;
+                      const bg     = isSel ? "#eff6ff" : isEven ? "#f8fafc" : "#ffffff";
 
                       return (
                         <tr
                           key={row.id}
-                          className={[
-                            "inv-row cursor-pointer",
-                            isSelected ? "is-selected" : "",
-                            hasShortage ? "has-shortage" : "",
-                            isEven ? "even-row" : "",
-                          ].join(" ")}
-                          style={{ height: 38 }}
-                          onClick={() => {
-                            setActiveDrug(row);
-                            setOpenDrugSidebar(true);
-                          }}
+                          className={`srow cursor-pointer ${isSel ? "sel" : ""} ${isEven ? "even" : ""}`}
+                          style={{ height: 36 }}
+                          onClick={() => { setActiveDrug(row); setOpenDrugSidebar(true); }}
                         >
-                          {/* Checkbox */}
-                          <td
-                            className="sticky z-20 px-3 text-center sticky-col"
-                            style={{
-                              left: left.checkbox,
-                              width: COL_W.checkbox,
-                              minWidth: COL_W.checkbox,
-                              maxWidth: COL_W.checkbox,
-                              backgroundColor: baseBg,
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => toggleRowSelection(row.id)}
-                              className="h-3.5 w-3.5"
-                            />
+                          <td className="sticky z-20 sc" style={{ left: L_CHECKBOX, width: 44, background: bg, textAlign: "center", padding: "0 12px" }} onClick={(e) => e.stopPropagation()}>
+                            <Checkbox checked={isSel} onCheckedChange={() => toggleRow(row.id)} className="h-3.5 w-3.5" />
                           </td>
+                          {showRank    && <td className="sticky z-20 sc" style={{ left: L_RANK, width: 72, background: bg, textAlign: "center", padding: "0 8px" }}><span className="text-xs text-slate-500 tabular-nums font-medium">{row.rank}</span></td>}
+                          {showNdc     && <td className="sticky z-20 sc" style={{ left: L_NDC,  width: 140, background: bg, textAlign: "center", padding: "0 8px" }}><span className="text-[11px] font-mono text-slate-500 tracking-tight">{row.ndc}</span></td>}
+                          {showDrug    && (
+                            <td className="sticky z-20 sc" style={{ left: L_DRUG, width: 240, background: bg, textAlign: "left", padding: "0 12px" }}>
+                              <span className="text-xs font-semibold text-slate-800 truncate block max-w-[220px]" title={row.drugName}>{row.drugName}</span>
+                            </td>
+                          )}
+                          {showPkg     && <td className="sticky z-20 sc" style={{ left: L_PKG,  width: 100, background: bg, textAlign: "right", padding: "0 10px" }}><span className="text-xs text-slate-600 tabular-nums">{row.pkgSize}</span></td>}
+                          {showUnit    && <td className="sticky z-20 sc" style={{ left: L_UNIT, width: 100, background: bg, textAlign: "right", padding: "0 10px" }}><span className="text-xs text-slate-600 tabular-nums">{row.unit}</span></td>}
+                          {showOrdered && <td className="sticky z-20 sl" style={{ left: L_ORDERED, width: 140, background: bg, textAlign: "right", padding: "0 12px" }}><span className="text-xs font-bold text-slate-800 tabular-nums">{row.totalOrdered.toLocaleString()}</span></td>}
 
-                          {/* Rank */}
-                          {columnFilters.rank && (
-                            <td
-                              className="sticky z-20 px-2 text-center sticky-col"
-                              style={{
-                                left: left.rank,
-                                width: COL_W.rank,
-                                minWidth: COL_W.rank,
-                                maxWidth: COL_W.rank,
-                                backgroundColor: baseBg,
-                              }}
-                            >
-                              <span className="text-[12px] text-slate-600 tabular-nums font-medium">
-                                {row.rank}
-                              </span>
+                          {visCols.map((c) => (
+                            <td key={c.key} style={{ textAlign: "right", padding: "0 10px", ...cellBorderStyle(c) }}>
+                              <span className="text-xs">{cellVal(c, row)}</span>
                             </td>
-                          )}
-
-                          {/* NDC */}
-                          {columnFilters.ndc && (
-                            <td
-                              className="sticky z-20 px-3 text-center sticky-col"
-                              style={{
-                                left: left.ndc,
-                                width: COL_W.ndc,
-                                minWidth: COL_W.ndc,
-                                maxWidth: COL_W.ndc,
-                                backgroundColor: baseBg,
-                              }}
-                            >
-                              <span className="text-[11px] font-mono text-slate-500 tabular-nums tracking-tight">
-                                {row.ndc}
-                              </span>
-                            </td>
-                          )}
-
-                          {/* Drug Name */}
-                          {columnFilters.drugName && (
-                            <td
-                              className="sticky z-20 px-3 text-left sticky-col"
-                              style={{
-                                left: left.drugName,
-                                width: COL_W.drugName,
-                                minWidth: COL_W.drugName,
-                                maxWidth: COL_W.drugName,
-                                backgroundColor: baseBg,
-                              }}
-                            >
-                              <span
-                                className="text-[12px] font-semibold text-slate-800 truncate block max-w-[220px]"
-                                title={row.drugName}
-                              >
-                                {row.drugName}
-                              </span>
-                            </td>
-                          )}
-
-                          {/* Pkg Size */}
-                          {columnFilters.pkgSize && (
-                            <td
-                              className="sticky z-20 px-3 text-right sticky-col"
-                              style={{
-                                left: left.pkgSize,
-                                width: COL_W.pkgSize,
-                                minWidth: COL_W.pkgSize,
-                                maxWidth: COL_W.pkgSize,
-                                backgroundColor: baseBg,
-                              }}
-                            >
-                              <span className="text-[12px] text-slate-600 tabular-nums">
-                                {row.pkgSize}
-                              </span>
-                            </td>
-                          )}
-
-                          {/* Unit */}
-                          {columnFilters.unit && (
-                            <td
-                              className="sticky z-20 px-3 text-right sticky-col"
-                              style={{
-                                left: left.unit,
-                                width: COL_W.unit,
-                                minWidth: COL_W.unit,
-                                maxWidth: COL_W.unit,
-                                backgroundColor: baseBg,
-                              }}
-                            >
-                              <span className="text-[12px] text-slate-600 tabular-nums">
-                                {row.unit}
-                              </span>
-                            </td>
-                          )}
-
-                          {/* Total Ordered — last sticky */}
-                          {columnFilters.totalOrdered && (
-                            <td
-                              className="sticky z-20 px-3 text-right sticky-last"
-                              style={{
-                                left: left.totalOrdered,
-                                width: 140,
-                                minWidth: 140,
-                                maxWidth: 140,
-                                backgroundColor: baseBg,
-                              }}
-                            >
-                              <span className="text-[12px] font-semibold text-slate-800 tabular-nums">
-                                {row.totalOrdered.toLocaleString()}
-                              </span>
-                            </td>
-                          )}
-
-                          {/* ── Scrollable data cells ── */}
-                          {columnFilters.totalBilled && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 140 }}
-                            >
-                              <span className="text-[12px] text-slate-700 tabular-nums">
-                                {row.totalBilled.toLocaleString()}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.totalShortage && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 140 }}
-                            >
-                              <span className="text-[12px] tabular-nums">
-                                {renderShortageValue(row.totalShortage)}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.highestShortage && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 150 }}
-                            >
-                              <span className="text-[12px] tabular-nums">
-                                {renderShortageValue(row.highestShortage)}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.cost && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 110 }}
-                            >
-                              <span className="text-[12px] text-slate-700 tabular-nums">
-                                ${row.cost.toFixed(2)}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.amount && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 120 }}
-                            >
-                              <span className="text-[12px] font-semibold text-slate-800 tabular-nums">
-                                ${row.amount.toFixed(2)}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.horizon && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 140 }}
-                            >
-                              <span className="text-[12px] text-slate-600 tabular-nums">
-                                {row.horizon}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.shortageHorizon && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 150 }}
-                            >
-                              <span className="text-[12px] tabular-nums">
-                                {renderShortageValue(row.shortageHorizon)}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.express && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 140 }}
-                            >
-                              <span className="text-[12px] text-slate-600 tabular-nums">
-                                {row.express}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.shortageExpress && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 150 }}
-                            >
-                              <span className="text-[12px] tabular-nums">
-                                {renderShortageValue(row.shortageExpress)}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.pdmi && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 180 }}
-                            >
-                              <span className="text-[12px] text-slate-600 tabular-nums">
-                                {row.pdmi}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.shortagePdmi && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 150 }}
-                            >
-                              <span className="text-[12px] tabular-nums">
-                                {renderShortageValue(row.shortagePdmi)}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.optumrx && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 120 }}
-                            >
-                              <span className="text-[12px] text-slate-600 tabular-nums">
-                                {row.optumrx}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.shortageOptumrx && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 150 }}
-                            >
-                              <span className="text-[12px] tabular-nums">
-                                {renderShortageValue(row.shortageOptumrx)}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.cvsCaremark && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 140 }}
-                            >
-                              <span className="text-[12px] text-slate-600 tabular-nums">
-                                {row.cvsCaremark}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.shortageCvsCaremark && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 180 }}
-                            >
-                              <span className="text-[12px] tabular-nums">
-                                {renderShortageValue(row.shortageCvsCaremark)}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.ssc && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 120 }}
-                            >
-                              <span className="text-[12px] text-slate-600 tabular-nums">
-                                {row.ssc}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.shortageSsc && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 140 }}
-                            >
-                              <span className="text-[12px] tabular-nums">
-                                {renderShortageValue(row.shortageSsc)}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.njMedicaid && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 130 }}
-                            >
-                              <span className="text-[12px] text-slate-600 tabular-nums">
-                                {row.njMedicaid}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.shortageNjMedicaid && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 170 }}
-                            >
-                              <span className="text-[12px] tabular-nums">
-                                {renderShortageValue(row.shortageNjMedicaid)}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.humana && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 130 }}
-                            >
-                              <span className="text-[12px] text-slate-600 tabular-nums">
-                                {row.humana}
-                              </span>
-                            </td>
-                          )}
-                          {columnFilters.shortageHumana && (
-                            <td
-                              className="border-r border-slate-100 px-3 text-right"
-                              style={{ minWidth: 160 }}
-                            >
-                              <span className="text-[12px] tabular-nums">
-                                {renderShortageValue(row.shortageHumana)}
-                              </span>
-                            </td>
-                          )}
+                          ))}
                         </tr>
                       );
                     })}
@@ -2404,262 +920,121 @@ const confirmLeave = () => {
                 </table>
               </div>
 
-              {/* ── Pagination ── */}
-              <div className="border-t border-slate-200 bg-white px-5 py-3 flex items-center justify-between z-30 shrink-0">
-                <div className="text-xs text-slate-500">
-                  Showing{" "}
-                  <span className="font-semibold text-slate-700">
-                    {filteredData.length === 0
-                      ? 0
-                      : (currentPage - 1) * effectiveRowsPerPage + 1}
-                  </span>
-                  {" – "}
-                  <span className="font-semibold text-slate-700">
-                    {Math.min(
-                      currentPage * effectiveRowsPerPage,
-                      filteredData.length,
-                    )}
-                  </span>
-                  {" of "}
-                  <span className="font-semibold text-slate-700">
-                    {filteredData.length}
-                  </span>{" "}
-                  results
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="h-8 px-3 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    ← Prev
-                  </button>
-                  <div className="flex items-center gap-1">
-                    {(() => {
-                      const pages: number[] = [];
-                      const delta = 2;
-                      const lp = Math.max(2, currentPage - delta);
-                      const rp = Math.min(totalPages - 1, currentPage + delta);
-                      pages.push(1);
-                      if (lp > 2) pages.push(-1);
-                      for (let i = lp; i <= rp; i++) pages.push(i);
-                      if (rp < totalPages - 1) pages.push(-2);
-                      if (totalPages > 1) pages.push(totalPages);
-                      return pages.map((page, idx) =>
-                        page < 0 ? (
-                          <span
-                            key={`e${idx}`}
-                            className="px-1 text-slate-400 text-xs"
-                          >
-                            …
-                          </span>
-                        ) : (
-                          <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={`h-8 w-8 text-xs font-semibold rounded-lg transition-colors ${
-                              currentPage === page
-                                ? "bg-emerald-600 text-white shadow-sm"
-                                : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        ),
-                      );
-                    })()}
-                  </div>
-                  <button
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(p + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="h-8 px-3 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Next →
-                  </button>
+              {/* Pagination */}
+              <div className="border-t border-slate-200 bg-white px-5 py-2.5 flex items-center justify-between flex-shrink-0 z-30">
+                <span className="text-xs text-slate-500">
+                  Showing <b className="text-slate-700">{filteredData.length === 0 ? 0 : (currentPage - 1) * effRPP + 1}</b>
+                  –<b className="text-slate-700">{Math.min(currentPage * effRPP, filteredData.length)}</b>
+                  {" "}of <b className="text-slate-700">{filteredData.length}</b>
+                </span>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1} className="h-7 px-2.5 rounded-lg border border-slate-200 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40">← Prev</button>
+                  {(() => {
+                    const pages: number[] = []; const d = 2;
+                    const lp = Math.max(2, currentPage - d); const rp = Math.min(totalPages - 1, currentPage + d);
+                    pages.push(1); if (lp > 2) pages.push(-1);
+                    for (let i = lp; i <= rp; i++) pages.push(i);
+                    if (rp < totalPages - 1) pages.push(-2);
+                    if (totalPages > 1) pages.push(totalPages);
+                    return pages.map((p, i) => p < 0
+                      ? <span key={`e${i}`} className="px-1 text-slate-400 text-xs">…</span>
+                      : <button key={p} onClick={() => setCurrentPage(p)} className={`h-7 w-7 text-xs font-semibold rounded-lg ${currentPage === p ? "bg-emerald-600 text-white" : "border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>{p}</button>
+                    );
+                  })()}
+                  <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className="h-7 px-2.5 rounded-lg border border-slate-200 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40">Next →</button>
                 </div>
               </div>
             </div>
-            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-              END TABLE SECTION
-          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
 
             {/* Export Modal */}
             <Dialog open={openExportModal} onOpenChange={setOpenExportModal}>
               <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-bold">
-                    Export Report
-                  </DialogTitle>
-                  <DialogDescription>
-                    Choose your preferred format and scope for the export
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-6 py-4">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-slate-900">
-                      Export Format
-                    </Label>
-                    <RadioGroup
-                      value={exportFormat}
-                      onValueChange={(v) => setExportFormat(v as any)}
-                    >
-                      {["csv", "excel", "pdf"].map((fmt) => (
-                        <div
-                          key={fmt}
-                          className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
-                        >
-                          <RadioGroupItem value={fmt} id={fmt} />
-                          <Label
-                            htmlFor={fmt}
-                            className="flex-1 cursor-pointer font-medium capitalize"
-                          >
-                            {fmt}
-                          </Label>
+                <DialogHeader><DialogTitle className="text-xl font-bold">Export Report</DialogTitle><DialogDescription>Choose format and scope</DialogDescription></DialogHeader>
+                <div className="space-y-5 py-3">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Format</Label>
+                    <RadioGroup value={exportFormat} onValueChange={(v) => setExportFormat(v as any)}>
+                      {["csv","excel","pdf"].map((f) => (
+                        <div key={f} className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50">
+                          <RadioGroupItem value={f} id={f} /><Label htmlFor={f} className="cursor-pointer capitalize font-medium">{f}</Label>
                         </div>
                       ))}
                     </RadioGroup>
                   </div>
-                  <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-slate-900">
-                      Export Scope
-                    </Label>
-                    <RadioGroup
-                      value={exportScope}
-                      onValueChange={(v) => setExportScope(v as any)}
-                    >
-                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
-                        <RadioGroupItem value="visible" id="visible" />
-                        <Label
-                          htmlFor="visible"
-                          className="flex-1 cursor-pointer font-medium"
-                        >
-                          Visible Rows Only
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
-                        <RadioGroupItem value="all" id="all" />
-                        <Label
-                          htmlFor="all"
-                          className="flex-1 cursor-pointer font-medium"
-                        >
-                          All Data
-                        </Label>
-                      </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Scope</Label>
+                    <RadioGroup value={exportScope} onValueChange={(v) => setExportScope(v as any)}>
+                      <div className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50"><RadioGroupItem value="visible" id="vis" /><Label htmlFor="vis" className="cursor-pointer font-medium">Visible Rows</Label></div>
+                      <div className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50"><RadioGroupItem value="all" id="all" /><Label htmlFor="all" className="cursor-pointer font-medium">All Data</Label></div>
                     </RadioGroup>
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setOpenExportModal(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleExport}
-                    className="bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    Export
-                  </Button>
+                  <Button variant="outline" onClick={() => setOpenExportModal(false)}>Cancel</Button>
+                  <Button onClick={handleExport} className="bg-emerald-600 hover:bg-emerald-700">Export</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
 
-            {/* Drug Details Sidebar */}
+            {/* Drug Sidebar */}
             <Sheet open={openDrugSidebar} onOpenChange={setOpenDrugSidebar}>
-              <SheetContent className="w-[450px] sm:w-[540px] bg-gradient-to-br from-white to-slate-50">
+              <SheetContent className="w-[440px] sm:w-[520px]">
                 <SheetHeader>
-                  <SheetTitle className="text-xl font-bold text-slate-900">
-                    Drug Details
-                  </SheetTitle>
-                  <SheetDescription className="text-sm text-slate-600">
-                    {activeDrug ? activeDrug.drugName : "No drug selected"}
-                  </SheetDescription>
+                  <SheetTitle className="text-lg font-bold">Drug Details</SheetTitle>
+                  <SheetDescription>{activeDrug?.drugName}</SheetDescription>
                 </SheetHeader>
                 {activeDrug && (
-                  <div className="mt-8 space-y-5">
-                    <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        NDC
-                      </Label>
-                      <p className="text-base font-mono font-semibold text-slate-900 mt-1">
-                        {activeDrug.ndc}
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          Package Size
-                        </Label>
-                        <p className="text-lg font-bold text-slate-900 mt-1">
-                          {activeDrug.pkgSize}
-                        </p>
+                  <div className="mt-6 space-y-3">
+                    {([
+                      ["NDC", activeDrug.ndc],
+                      ["Pkg Size", activeDrug.pkgSize],
+                      ["Total Ordered", activeDrug.totalOrdered.toLocaleString()],
+                      ["Total Billed", activeDrug.totalBilled.toLocaleString()],
+                      ["Cost", `$${activeDrug.cost.toFixed(2)}`],
+                      ["Amount", `$${activeDrug.amount.toFixed(2)}`],
+                    ] as [string, string | number][]).map(([l, v]) => (
+                      <div key={l} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{l}</p>
+                        <p className="text-sm font-semibold text-slate-800 mt-0.5">{v}</p>
                       </div>
-                      <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          Cost
-                        </Label>
-                        <p className="text-lg font-bold text-emerald-700 mt-1">
-                          ${activeDrug.cost.toFixed(2)}
-                        </p>
+                    ))}
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Shortage</p>
+                      <p className="text-sm font-semibold mt-0.5">{shortage(activeDrug.totalShortage)}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                        <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Medicare</p>
+                        <p className="text-sm font-semibold text-emerald-800 mt-0.5">{activeDrug.medicare.toLocaleString()}</p>
                       </div>
-                    </div>
-                    <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        Total Ordered
-                      </Label>
-                      <p className="text-lg font-bold text-slate-900 mt-1">
-                        {activeDrug.totalOrdered.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        Total Billed
-                      </Label>
-                      <p className="text-lg font-bold text-slate-900 mt-1">
-                        {activeDrug.totalBilled.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        Total Shortage
-                      </Label>
-                      <p className="text-lg font-bold mt-1">
-                        {renderShortageValue(activeDrug.totalShortage)}
-                      </p>
+                      <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                        <p className="text-[10px] font-bold text-purple-700 uppercase tracking-wider">NJ Medicaid</p>
+                        <p className="text-sm font-semibold text-purple-800 mt-0.5">{activeDrug.njMedicaid.toLocaleString()}</p>
+                      </div>
+                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 col-span-2">
+                        <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">NJ Billed (Medicare + Medicaid)</p>
+                        <p className="text-sm font-semibold text-amber-800 mt-0.5">{activeDrug.njBilled.toLocaleString()}</p>
+                      </div>
                     </div>
                   </div>
                 )}
               </SheetContent>
             </Sheet>
+
+            {/* Leave Dialog */}
             <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
               <AlertDialogContent className="max-w-md">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-lg font-bold text-slate-900">
-                    Leave this page?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription className="text-sm text-slate-500 mt-1">
-                    You are viewing an active inventory report. Any unsaved filters or selections will be lost if you leave.
-                  </AlertDialogDescription>
+                  <AlertDialogTitle>Leave this page?</AlertDialogTitle>
+                  <AlertDialogDescription>Unsaved filters and selections will be lost.</AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter className="gap-2 mt-2">
-                  <AlertDialogCancel
-                    onClick={() => setShowLeaveDialog(false)}
-                    className="border-slate-200 text-slate-600 hover:bg-slate-50"
-                  >
-                    Stay on page
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={confirmLeave}
-                    className="bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    Yes, leave
-                  </AlertDialogAction>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setShowLeaveDialog(false)}>Stay</AlertDialogCancel>
+                  <AlertDialogAction onClick={confirmLeave} className="bg-red-600 hover:bg-red-700 text-white">Yes, leave</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+
           </div>
         </div>
       </div>
