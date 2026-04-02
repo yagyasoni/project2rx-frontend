@@ -159,7 +159,7 @@ export default function Sidebar({
           {sidebarOpen && <span className="ml-3">Bin Search</span>}
         </Link>
 
-        <Link href="/tickets" className={navClass("/tickets")}>
+        <Link href="/coming-soon" className={navClass("/tickets")}>
           <Ticket className="w-5 h-5" />
           {sidebarOpen && (
             <div className="flex justify-between w-full ml-3">
@@ -171,7 +171,7 @@ export default function Sidebar({
           )}
         </Link>
 
-        <Link href="/how-to" className={navClass("/how-to")}>
+        <Link href="/coming-soon" className={navClass("/how-to")}>
           <HelpCircle className="w-5 h-5" />
           {sidebarOpen && <span className="ml-3">How To</span>}
         </Link>
