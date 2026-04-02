@@ -17,13 +17,24 @@ import {
   UserStar,
   LayoutDashboard,
   FileSpreadsheet,
+  Info,
+  ListStart,
+  MessageSquareReply,
+  LogOut,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import axios from "axios";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/admin-dashboard" },
   { title: "Suppliers", icon: Package, path: "/supplier-mappings" },
   { title: "Master Sheet", icon: FileSpreadsheet, path: "/master-sheet" },
+  {
+    title: "Master Sheet Queue",
+    icon: ListStart,
+    path: "/master-sheet-queue",
+  },
+  { title: "Feedbacks", icon: MessageSquareReply, path: "/feedbacks" },
 ];
 
 type Popup = "support" | "account" | "settings" | null;
@@ -33,6 +44,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [openPopup, setOpenPopup] = useState<Popup>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const router = useRouter();
 
   const toggle = (name: Popup) =>
@@ -58,6 +70,22 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      // Revoke refresh token on server
+      await axios.post("https://api.auditprorx.com/auth/logout", {
+        refreshToken,
+      });
+    } catch {
+      // Even if API fails, still clear local storage and redirect
+    } finally {
+      localStorage.clear();
+      router.push("/auth");
+    }
+  };
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
@@ -89,7 +117,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           </div>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1 ml-1.5 hover:bg-muted rounded transition-colors text-gray-foreground bg-muted"
+            className="cursor-pointer p-1 ml-1.5 hover:bg-muted rounded transition-colors text-gray-foreground bg-muted"
           >
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
@@ -138,15 +166,15 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                   : "text-gray-foreground hover:bg-muted/60 hover:text-foreground"
               }`}
             >
-              <LifeBuoy size={18} className="shrink-0" />
+              <Info size={18} className="cursor-pointer shrink-0" />
               {!collapsed && (
                 <>
-                  <span className="ml-3 flex-1 text-left">
-                    Customer Support
+                  <span className="ml-3 flex-1 text-left cursor-pointer">
+                    Admin Support
                   </span>
                   <ChevronDown
                     size={14}
-                    className={`transition-transform ${openPopup === "support" ? "rotate-180" : ""}`}
+                    className={`cursor-pointer transition-transform ${openPopup === "support" ? "rotate-180" : ""}`}
                   />
                 </>
               )}
@@ -160,9 +188,9 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                   </span>
                   <button
                     onClick={() => setOpenPopup(null)}
-                    className="text-gray-foreground hover:text-foreground"
+                    className="text-gray-foreground hover:text-foreground cursor-pointer"
                   >
-                    <X size={14} />
+                    <X className="cursor-pointer" size={14} />
                   </button>
                 </div>
                 <div className="flex items-center gap-3">
@@ -227,44 +255,20 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           </div> */}
 
           {/* Settings */}
-          {/* <div className="relative">
+          <div className="relative">
             <button
-              onClick={() => toggle("settings")}
-              className={`w-full flex items-center ${
+              onClick={() => setShowLogoutConfirm(true)}
+              className={`cursor-pointer w-full flex items-center ${
                 collapsed ? "px-2 justify-center" : "px-4"
-              } py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                openPopup === "settings"
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-              }`}
+              } py-3 rounded-lg text-sm font-semibold transition-all duration-200 "text-gray-foreground hover:bg-muted/60 hover:text-foreground"
+              `}
             >
-              <Settings size={18} className="shrink-0" />
+              <LogOut size={18} className="cursor-pointer shrink-0" />
               {!collapsed && (
-                <>
-                  <span className="ml-3 flex-1 text-left">Settings</span>
-                  <ChevronDown
-                    size={14}
-                    className={`transition-transform ${openPopup === "settings" ? "rotate-180" : ""}`}
-                  />
-                </>
+                <span className="ml-3 flex-1 text-left">Logout</span>
               )}
             </button>
-
-            {openPopup === "settings" && !collapsed && (
-              <div className="mx-2 mb-2 bg-muted/50 rounded-lg border border-border overflow-hidden">
-                <button
-                  onClick={() => {
-                    setOpenPopup(null);
-                    router.push("/settings");
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-xs text-muted-foreground hover:bg-muted transition-colors"
-                >
-                  <Settings size={14} />
-                  Settings
-                </button>
-              </div>
-            )}
-          </div> */}
+          </div>
 
           {/* Hard Refresh */}
           <button
@@ -273,8 +277,12 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
               collapsed ? "px-2 justify-center" : "px-4"
             } py-3 text-gray-foreground hover:bg-muted/60 hover:text-foreground rounded-lg text-sm font-semibold transition-all duration-200`}
           >
-            <RefreshCw size={18} className="shrink-0" />
-            {!collapsed && <span className="ml-3">Hard Refresh</span>}
+            <RefreshCw size={18} className="cursor-pointer shrink-0" />
+            {!collapsed && (
+              <span className="cursor-pointer cursor-pointer ml-3">
+                Hard Refresh
+              </span>
+            )}
           </button>
 
           {/* Version */}
@@ -283,9 +291,11 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
               collapsed ? "px-2 justify-center" : "px-4"
             } py-2 text-gray-foreground/50`}
           >
-            <GitBranch size={14} className="shrink-0" />
+            <GitBranch size={14} className="cursor-pointer shrink-0" />
             {!collapsed && (
-              <span className="ml-3 text-[11px] font-medium">Version 1.0</span>
+              <span className="ml-3 text-[11px] font-medium cursor-pointer">
+                Version 1.2
+              </span>
             )}
           </div>
         </div>
@@ -295,6 +305,38 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       <main className="flex-1 h-full overflow-y-auto scrollbar-hide p-8">
         {children}
       </main>
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-xl bg-card border border-border p-6 shadow-lg text-center">
+            <h2 className="text-lg font-semibold text-foreground">
+              Confirm Logout
+            </h2>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              Are you sure you want to log out?
+            </p>
+
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="cursor-pointer flex-1 py-2 rounded-lg border border-border text-sm hover:bg-muted"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  handleLogout();
+                }}
+                className="cursor-pointer flex-1 py-2 rounded-lg bg-destructive text-white text-sm hover:opacity-90"
+              >
+                Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

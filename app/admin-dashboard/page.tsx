@@ -21,6 +21,7 @@ import {
   Clock,
   Check,
   X,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,17 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import AdminLayout from "@/components/adminLayout";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // ─────────────────────────────────────────────────────────────
 // CONFIG
@@ -103,6 +115,10 @@ export default function AdminDashboard() {
   const [fetchError, setFetchError] = useState("");
   const [now, setNow] = useState<Date | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
+  const [deleteUserDialog, setDeleteUserDialog] = useState<PharmacyUser | null>(
+    null,
+  );
+  const [deletingUser, setDeletingUser] = useState(false);
 
   useEffect(() => {
     setNow(new Date());
@@ -118,6 +134,11 @@ export default function AdminDashboard() {
       await axios.put(`${API_BASE}/auth/user-status/${user.id}`, {
         status: newStatus,
       });
+
+      localStorage.setItem("status", newStatus);
+
+      // ✅ THEN notify listeners
+      window.dispatchEvent(new Event("storage"));
       setUsers((prev) =>
         prev.map((u) => (u.id === user.id ? { ...u, status: newStatus } : u)),
       );
@@ -213,6 +234,31 @@ export default function AdminDashboard() {
     const d = u.createdAt ? new Date(u.createdAt) : null;
     return d && d.getMonth() === new Date().getMonth();
   }).length;
+
+  const handleConfirmDeleteUser = async () => {
+    if (!deleteUserDialog) return;
+
+    const userId = deleteUserDialog.id;
+
+    setDeletingUser(true);
+
+    try {
+      await axios.delete(`${API_BASE}/admin/users/${userId}`);
+
+      // ✅ Remove from UI
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+
+      // ✅ Clear selection
+      setSelected(null);
+
+      toast.success("User deleted successfully");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to delete user");
+    } finally {
+      setDeletingUser(false);
+      setDeleteUserDialog(null);
+    }
+  };
 
   return (
     <AdminLayout>
@@ -311,7 +357,7 @@ export default function AdminDashboard() {
               <div className="w-full lg:w-[55%] rounded-lg border border-border overflow-hidden">
                 <div
                   className="overflow-auto"
-                  style={{ maxHeight: "calc(100vh - 180px)" }}
+                  style={{ maxHeight: "calc(100vh - 140px)" }}
                 >
                   <table className="min-w-full divide-y divide-border">
                     <thead className="bg-muted sticky top-0 z-10">
@@ -592,7 +638,10 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Footer Button */}
-                    <div className="px-5 py-4 border-t border-border">
+                    {/* <div className="px-5 py-4 flex-col gap-2 border-t border-border">
+                      <p className="text-center text-[10px] text-muted-foreground mt-2">
+                        Redirects directly to /Mainpage with a fresh session
+                      </p>
                       <Button
                         onClick={() => handleViewPharmacy(selected)}
                         disabled={!!impersonating}
@@ -610,7 +659,52 @@ export default function AdminDashboard() {
                           </>
                         )}
                       </Button>
-                      <p className="text-center text-[10px] text-muted-foreground mt-2">
+
+                      <Button
+                        // onClick={() => handleDeleteUser(selected)}
+                        variant="destructive"
+                        className="w-full h-10 text-xs font-semibold gap-2"
+                      >
+                        <Trash2 size={14} />
+                        Delete User Permanently
+                      </Button>
+                    </div> */}
+                    <div className="px-5 py-4 border-t border-border space-y-2">
+                      {/* Buttons Row */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* OPEN BUTTON */}
+                        <Button
+                          onClick={() => handleViewPharmacy(selected)}
+                          disabled={!!impersonating}
+                          className="cursor-pointer h-10 bg-foreground text-background hover:bg-foreground/90 font-semibold text-xs gap-2"
+                          size="sm"
+                        >
+                          {impersonating === selected.id ? (
+                            <>
+                              <Loader2 size={14} className="animate-spin" />
+                              Opening…
+                            </>
+                          ) : (
+                            <>
+                              <LogIn size={14} />
+                              Open
+                            </>
+                          )}
+                        </Button>
+
+                        {/* DELETE BUTTON */}
+                        <Button
+                          onClick={() => setDeleteUserDialog(selected)}
+                          variant="destructive"
+                          className="cursor-pointer h-10 text-xs font-semibold gap-2"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </Button>
+                      </div>
+
+                      {/* Footer Text */}
+                      <p className="text-center text-[10px] text-muted-foreground">
                         Redirects directly to /Mainpage with a fresh session
                       </p>
                     </div>
@@ -636,6 +730,63 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+      <AlertDialog
+        open={!!deleteUserDialog}
+        onOpenChange={() => !deletingUser && setDeleteUserDialog(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle size={16} className="text-destructive" />
+              Delete User Permanently
+            </AlertDialogTitle>
+
+            <AlertDialogDescription className="text-xs leading-relaxed">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {deleteUserDialog?.name}
+              </span>
+              ?
+              <br />
+              <br />
+              ⚠️ This action will permanently remove:
+              <ul className="list-disc pl-4 mt-2 space-y-1">
+                <li>User account</li>
+                <li>Pharmacy details</li>
+                <li>Audit records</li>
+                <li>Inventory & wholesaler data</li>
+                <li>All linked system data</li>
+              </ul>
+              <br />
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={deletingUser}
+              className="cursor-pointer text-xs h-9"
+            >
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={handleConfirmDeleteUser}
+              disabled={deletingUser}
+              className="cursor-pointer text-xs h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingUser ? (
+                <>
+                  <Loader2 size={13} className="animate-spin" />
+                  Deleting…
+                </>
+              ) : (
+                "Yes, Delete User"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }

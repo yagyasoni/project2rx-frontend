@@ -316,7 +316,7 @@ const SupplierMappingPage = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 px-6">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-border">
           <div>

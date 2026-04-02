@@ -106,7 +106,7 @@ export default function Sidebar({
       const refreshToken = localStorage.getItem("refreshToken");
 
       // Revoke refresh token on server
-      await api.post("/logout", { refreshToken });
+      await api.post("/auth/logout", { refreshToken });
     } catch {
       // Even if API fails, still clear local storage and redirect
     } finally {

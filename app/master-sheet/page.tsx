@@ -92,6 +92,11 @@ export default function ExcelEditorModal({
   const [searchCol, setSearchCol] = useState<string>("pbm_name");
   const [deletedIds, setDeletedIds] = useState<number[]>([]);
   const [dirtyRows, setDirtyRows] = useState<Set<number>>(new Set());
+  const [confirmEditCell, setConfirmEditCell] = useState<{
+    r: number;
+    c: number;
+    value: CellValue;
+  } | null>(null);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -231,6 +236,37 @@ export default function ExcelEditorModal({
     }
   };
 
+  const downloadCSV = () => {
+    if (!data) return;
+
+    const headers = data.headers;
+    const rows = data.rows;
+
+    const escapeCSV = (val: any) => {
+      if (val === null || val === undefined) return "";
+      const str = String(val);
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const csvContent = [
+      headers.map(escapeCSV).join(","), // header row
+      ...rows.map((row) => row.map(escapeCSV).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${data.sheetName || "data"}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <AdminLayout>
       <div
@@ -341,6 +377,15 @@ export default function ExcelEditorModal({
               className="h-8 gap-1.5"
             >
               <PlusSquare size={13} /> Add Row
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={downloadCSV}
+              className="h-8 gap-1.5 cursor-pointer"
+            >
+              <FileSpreadsheet size={13} />
+              Download CSV
             </Button>
             <Button
               size="sm"
@@ -466,9 +511,17 @@ export default function ExcelEditorModal({
                           return (
                             <td
                               key={ci}
-                              onClick={() =>
-                                !isId && activateCell(globalVisIdx, ci, cell)
-                              }
+                              // onClick={() =>
+                              //   !isId && activateCell(globalVisIdx, ci, cell)
+                              // }
+                              onClick={() => {
+                                if (isId) return;
+                                setConfirmEditCell({
+                                  r: globalVisIdx,
+                                  c: ci,
+                                  value: cell,
+                                });
+                              }}
                               style={{ width: cfg.width, minWidth: cfg.width }}
                               className={`px-3.5 py-2 border-b border-r border-border text-xs whitespace-nowrap transition-colors ${
                                 isActive
@@ -603,6 +656,47 @@ export default function ExcelEditorModal({
           </div>
         </div>
       </div>
+      {confirmEditCell && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-xl shadow-xl p-5 w-[320px]">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="text-yellow-500" size={18} />
+              <h3 className="text-sm font-semibold text-foreground">
+                Enable Editing?
+              </h3>
+            </div>
+
+            <p className="text-xs text-muted-foreground mb-4">
+              Do you want to edit this cell value?
+            </p>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmEditCell(null)}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                size="sm"
+                className="bg-foreground text-background"
+                onClick={() => {
+                  activateCell(
+                    confirmEditCell.r,
+                    confirmEditCell.c,
+                    confirmEditCell.value,
+                  );
+                  setConfirmEditCell(null);
+                }}
+              >
+                Yes, Edit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

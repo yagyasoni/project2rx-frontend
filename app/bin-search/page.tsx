@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import axios from "axios";
 
 type BinEntry = {
   bin: string;
@@ -16640,11 +16641,30 @@ export default function BinSearch() {
   const handleFeedbackSubmit = async () => {
     if (!feedback.subject || !feedback.message) return;
 
-    // API call (optional)
-    console.log("Feedback:", feedback);
+    try {
+      const userId = localStorage.getItem("userId");
 
-    setFeedbackSuccess("Feedback sent successfully!");
-    setFeedback({ subject: "", message: "" });
+      const res = await axios.post(
+        "https://api.auditprorx.com/admin/feedbacks",
+        {
+          user_id: userId || null, // ✅ safe fallback
+          subject: feedback.subject,
+          message: feedback.message,
+        },
+      );
+      console.log(res?.data);
+
+      setFeedbackSuccess("Feedback sent successfully!");
+      setFeedback({ subject: "", message: "" });
+    } catch (error: any) {
+      console.error("Feedback error:", error);
+
+      const msg =
+        error?.response?.data?.message ||
+        "Failed to send feedback. Please try again.";
+
+      setFeedbackSuccess(msg);
+    }
   };
 
   return (

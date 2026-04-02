@@ -857,20 +857,22 @@ interface UploadInventoryStepProps {
 // ── Disclaimer Banner ──────────────────────────────────────────────────────────
 
 const REQUIRED_FIELD_LABELS = [
-  "Rx Number",
-  "Date Filled",
-  "Drug Name",
-  "Quantity",
-  "Primary Insurance Bin Number",
-  "Primary Insurance Paid",
-  "Ndc Number",
-  "Status",
-  "Package Size",
-  "Secondary Insurance Bin Number",
-  "Secondary Insurance Paid",
-  "Brand",
-  "Primary Insurance PCN",
-  "Primary Insurance Group",
+  "Rx Number (RXNO)",
+  "Date Filled (DATEF)",
+  "Drug Name (DRUGNAME)",
+  "Ndc Number (NDC)",
+  "Quantity (QUANT)",
+  "Package Size (PACKAGESIZE)",
+  "Brand (BRAND)",
+  "Status (STATUS)",
+
+  "Pr Ins Bin No. (PRINSBINNO)",
+  "Pr Ins Pcn (PRINSPCN)",
+  "Pr Ins Group (PRINSPATGROUP)",
+  "Pr Ins Paid (PRINSPAID)",
+
+  "Sec Ins Bin No. (SECINSBINNO)",
+  "Sec Ins Paid (SECINSPAID)",
 ];
 
 const DisclaimerBanner = () => {
