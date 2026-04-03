@@ -1,27 +1,3 @@
-// "use client";
-
-// import { useRouter } from "next/navigation";
-// import { useEffect, ReactNode } from "react";
-
-// interface Props {
-//   children: ReactNode;
-// }
-
-// export default function ProtectedRoute({ children }: Props) {
-//   const router = useRouter();
-
-//   useEffect(() => {
-//     const user = localStorage.getItem("userId");
-
-//     if (!user) {
-//       alert("You must be registered in to access this page.");
-//       router.push("/auth");
-//     }
-//   }, []);
-
-//   return <>{children}</>;
-// }
-
 "use client";
 
 import { useEffect, useState, ReactNode } from "react";
