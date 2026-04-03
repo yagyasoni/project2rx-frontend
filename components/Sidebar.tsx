@@ -67,10 +67,14 @@ export default function Sidebar({
       } catch (err) {
         console.log("error");
          setAccountName(localStorage.getItem("pharmacyName") || "Account Name");
-        
       }
     };
-    pharmacy();
+    const cached = localStorage.getItem("pharmacyName");
+  if (cached) {
+    setAccountName(cached); // ✅ use cached, skip API call
+  } else {
+    pharmacy(); // ✅ only fetch if nothing cached
+  }
   }, []);
 
   const [openPopup, setOpenPopup] = useState<Popup>(null);

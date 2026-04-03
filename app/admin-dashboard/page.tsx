@@ -212,8 +212,8 @@ export default function AdminDashboard() {
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("userId", user.id);
       localStorage.setItem("userEmail", user.email);
-      // localStorage.setItem("userName", user.name);                          
-    localStorage.setItem("pharmacyName", user.pharmacyName || user.name); 
+      localStorage.removeItem("pharmacyName");                        
+    // localStorage.setItem("pharmacyName", user.pharmacyName || user.name); 
       router.push("/Mainpage");
     } catch {
       toast.error("Impersonation failed. Please try again.");
