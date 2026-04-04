@@ -1274,6 +1274,240 @@ const AgreementsPage = () => {
     setIsSubmitting(false);
   };
 
+  const handleDownloadNDA = async () => {
+  const { jsPDF } = await import("jspdf");
+  const today = new Date().toLocaleDateString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  });
+
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 50;
+  const contentWidth = pageWidth - margin * 2;
+  let y = 50;
+
+  const checkPageBreak = (needed = 20) => {
+    if (y + needed > pageHeight - 50) {
+      doc.addPage();
+      y = 50;
+    }
+  };
+
+  const drawLine = () => {
+    checkPageBreak(10);
+    doc.setDrawColor(220, 220, 220);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 12;
+  };
+
+  const addText = (
+    text: string,
+    size: number,
+    bold = false,
+    color: [number, number, number] = [30, 30, 30],
+    indent = 0,
+  ) => {
+    doc.setFontSize(size);
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(text, contentWidth - indent);
+    lines.forEach((line: string) => {
+      checkPageBreak(size + 6);
+      doc.text(line, margin + indent, y);
+      y += size + 6;
+    });
+  };
+
+  const addSection = (num: string, title: string, body: string) => {
+    checkPageBreak(40);
+    y += 6;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(15, 15, 15);
+    doc.text(`${num}. ${title.toUpperCase()}`, margin, y);
+    y += 16;
+    addText(body, 9, false, [80, 80, 80], 10);
+    y += 4;
+  };
+
+  // ── Header ──────────────────────────────────────────────────────────────────
+  // Dark header bar
+  doc.setFillColor(15, 15, 15);
+  doc.roundedRect(margin, y - 10, contentWidth, 52, 6, 6, "F");
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(255, 255, 255);
+  doc.text("NON-DISCLOSURE AGREEMENT", margin + 16, y + 14);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(180, 180, 180);
+  doc.text("AuditProRx LLC  ·  Confidential & Legally Binding", margin + 16, y + 30);
+  y += 62;
+
+  // Meta info row
+  doc.setFillColor(248, 249, 251);
+  doc.roundedRect(margin, y, contentWidth, 36, 4, 4, "F");
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(120, 120, 120);
+  const cols = [
+    { label: "PHARMACY", value: pharmacyName },
+    { label: "OWNER", value: ownerName || "—" },
+    { label: "DATE", value: today },
+  ];
+  cols.forEach((col, i) => {
+    const x = margin + 12 + i * (contentWidth / 3);
+    doc.text(col.label, x, y + 13);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(30, 30, 30);
+    doc.text(col.value, x, y + 26);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(120, 120, 120);
+  });
+  y += 48;
+
+  // Intro
+  addText(
+    `This Agreement is made between AuditProRx LLC ("we," "us," or "our") and ${pharmacyName} ("you" or "your"). By signing, both parties agree to keep the information listed below strictly confidential.`,
+    9, false, [80, 80, 80],
+  );
+  y += 4;
+  drawLine();
+
+  // ── Sections ────────────────────────────────────────────────────────────────
+  addSection("1", "Confidential Information",
+    "The following information is considered confidential and is protected under this Agreement:\n\n• Billed Inventory (16 Fields): NDC Number, Rx Number, Status, Date Filled, Drug Name, Quantity, Package Size, Primary Insurance Bin Number, Primary Insurance Paid, Secondary Insurance BinNumber, Secondary Insurance Paid, Primary Insurance PCN, Primary Insurance Group, Secondary Insurance PCN, Secondary Insurance Group, Brand.\n\n• Purchased Invoices (6 Fields): NDC Number, Invoice Date, Item Description, Quantity, Unit Price, Total Price.\n\n• All Business Communication between you (the pharmacy) and us (AuditProRx)."
+  );
+
+  addSection("2", "Scope of Confidentiality",
+    "Information that is already public, independently developed without reference to this data, or received from another source without breach is not covered under this Agreement."
+  );
+
+  addSection("3", "Purpose and Use of the Information",
+    "We will use these fields only to perform the agreed-upon services. We will not disclose this information to anyone else without your approval."
+  );
+
+  addSection("4", "Security and Confidentiality Obligations",
+    "1. All data is stored within your secure pharmacy login account, and only individuals with proper credentials may access it.\n2. You may delete any generated reports and uploaded data from your account at any time; if you do so, we will remove this data from our systems (unless required by law).\n3. Each party agrees to use at least the same level of care in protecting the other's confidential information as it uses for its own similar information."
+  );
+
+  addSection("5", "Consideration",
+    "In exchange for receiving and using the confidential information, both parties agree to these terms. This mutual exchange of benefits is the consideration that makes this Agreement binding."
+  );
+
+  addSection("6", "Term and Termination",
+    "This Agreement starts on the date both parties sign and remains in effect as long as we work together—and for a reasonable period afterward. Either party may request that their confidential information be returned or destroyed, and we will comply unless otherwise required by law."
+  );
+
+  addSection("7", "Remedies for Breach",
+    "If either party breaches this Agreement, the non-breaching party may seek injunctive relief (an order to stop the breach) and may recover any damages incurred as a result of the breach."
+  );
+
+  addSection("8", "Governing Law and Dispute Resolution",
+    "This Agreement shall be governed by and construed in accordance with the laws of the State of New York. Any disputes arising from this Agreement shall be resolved in the state or federal courts located in New York, or through agreed arbitration in New York."
+  );
+
+  addSection("9", "Additional Provisions",
+    "Entire Agreement: This document contains the entire agreement between the parties regarding the confidential information and supersedes all prior understandings or agreements.\n\nSeverability: If any part of this Agreement is found to be unenforceable, the remainder will continue in full force.\n\nAmendments: This Agreement can only be modified in writing and signed by both parties."
+  );
+
+  // ── Signatures ──────────────────────────────────────────────────────────────
+  checkPageBreak(180);
+  y += 8;
+  drawLine();
+  addText("10. SIGNATURES", 10, true, [15, 15, 15]);
+  addText("By signing below, both parties agree to abide by the terms of this Agreement.", 9, false, [80, 80, 80]);
+  y += 10;
+
+  const sigBoxW = (contentWidth - 16) / 2;
+  const sigBoxH = 110;
+
+  // AuditProRx box
+  doc.setFillColor(248, 249, 251);
+  doc.setDrawColor(220, 220, 220);
+  doc.roundedRect(margin, y, sigBoxW, sigBoxH, 4, 4, "FD");
+
+  // Pharmacy box
+  doc.setFillColor(240, 253, 244);
+  doc.setDrawColor(167, 243, 208);
+  doc.roundedRect(margin + sigBoxW + 16, y, sigBoxW, sigBoxH, 4, 4, "FD");
+
+  // AuditProRx sig content
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(120, 120, 120);
+  doc.text("AUDITPRORX LLC", margin + 12, y + 16);
+
+  const sigRows = [
+    { label: "Name", value: "Mr. Fahad Mulla" },
+    { label: "Title", value: "CEO" },
+    { label: "Date", value: today },
+  ];
+  sigRows.forEach((row, i) => {
+    const rowY = y + 30 + i * 18;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(150, 150, 150);
+    doc.text(row.label + ":", margin + 12, rowY);
+    doc.setTextColor(30, 30, 30);
+    doc.text(row.value, margin + 44, rowY);
+  });
+
+  // Fahad signature (cursive-style)
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bolditalic");
+  doc.setTextColor(30, 30, 30);
+  doc.text("Fahad Mulla", margin + 12, y + 88);
+
+  // Pharmacy sig content
+  const px = margin + sigBoxW + 28;
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(120, 120, 120);
+  doc.text(pharmacyName.toUpperCase().slice(0, 30), px, y + 16);
+
+  const pharmRows = [
+    { label: "Name", value: ownerName || "—" },
+    { label: "Title", value: "OWNER" },
+    { label: "Date", value: today },
+  ];
+  pharmRows.forEach((row, i) => {
+    const rowY = y + 30 + i * 18;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(150, 150, 150);
+    doc.text(row.label + ":", px, rowY);
+    doc.setTextColor(30, 30, 30);
+    doc.text(row.value, px + 32, rowY);
+  });
+
+  // Pharmacy signature
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bolditalic");
+  doc.setTextColor(15, 100, 60);
+  doc.text(signatureName, px, y + 88);
+
+  y += sigBoxH + 16;
+
+  // ── Footer ──────────────────────────────────────────────────────────────────
+  const totalPages = (doc.internal as any).getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(180, 180, 180);
+    doc.text(
+      `Secured by AuditProRx  ·  Legally binding e-signature  ·  Page ${i} of ${totalPages}`,
+      pageWidth / 2,
+      pageHeight - 24,
+      { align: "center" },
+    );
+  }
+
+  doc.save(`NDA_${pharmacyName.replace(/\s+/g, "_")}_${today.replace(/\//g, "-")}.pdf`);
+};
+
   const handleNext = async () => {
     if (!canProceed) {
       if (isSupplierStep)
@@ -1549,6 +1783,20 @@ const AgreementsPage = () => {
                     )}
                   </div>
                 </div>
+
+               {/* ADD THIS — download button shown only after signing */}
+{signatureName.trim().length > 2 && agreed && (
+  <button
+    onClick={handleDownloadNDA}
+    className="w-full h-10 flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-all"
+  >
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+    Download NDA
+  </button>
+)}
+
                 <Button
                   onClick={handleNext}
                   disabled={!canProceed || isSubmitting}
