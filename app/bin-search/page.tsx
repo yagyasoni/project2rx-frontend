@@ -16668,7 +16668,7 @@ export default function BinSearch() {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute role="user">
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar
           sidebarOpen={sidebarOpen}

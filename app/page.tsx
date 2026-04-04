@@ -68,6 +68,8 @@ import {
   Workflow,
 } from "lucide-react";
 import Link from "next/link";
+import { createCheckoutSession } from "@/components/checkoutSession";
+import { Button } from "@/components/ui/button";
 
 /* ─── Animated counter ─── */
 
@@ -149,6 +151,11 @@ const Index = () => {
     "Testimonials",
     "Contact",
   ];
+
+  const handleSubscribe = async () => {
+    const data = await createCheckoutSession(1, "test@example.com");
+    window.location.href = data.url;
+  };
 
   // Color palette - Silver/Gray accent with black gradients
   const accentColor = "hsl(210 15% 60%)"; // Silver-gray
@@ -1484,47 +1491,50 @@ const Index = () => {
             </p>
           </AnimatedSection>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-1 gap-6 max-w-5xl mx-auto">
             {[
-              {
-                name: "Starter",
-                price: "Free",
-                period: "/mo",
-                desc: "Start with core audit workflows",
-                features: [
-                  "Up to 2 audits/mo",
-                  "Basic audit insights",
-                  "Email support",
-                  "14-day free trial",
-                ],
-                highlighted: false,
-              },
+              // {
+              //   name: "Starter",
+              //   price: "Free",
+              //   period: "/mo",
+              //   desc: "Start with core audit workflows",
+              //   features: [
+              //     "Up to 2 audits/mo",
+              //     "Basic audit insights",
+              //     "Email support",
+              //     "14-day free trial",
+              //   ],
+              //   highlighted: false,
+              // },
               {
                 name: "Professional",
-                price: "$199",
-                period: "/mo",
-                desc: "Tools for efficient audit management",
+                price: "$99",
+                period: "/month",
+                desc: "Comprehensive audit and inventory intelligence for pharmacy operations",
                 features: [
-                  "Unlimited audits",
-                  "Advanced analytics",
-                  "Priority support",
-                  "Export & reporting tools",
+                  "7-day full access free trial",
+                  "Unlimited inventory & supplier audits",
+                  // "Advanced analytics and reporting dashboards",
+                  "Real-time data validation and insights",
+                  "Priority email support",
+                  "Secure export and compliance-ready reports",
+                  "Seamless subscription management via Stripe",
                 ],
                 highlighted: true,
               },
-              {
-                name: "Enterprise",
-                price: "Custom",
-                period: "",
-                desc: "Scalable for complex operations",
-                features: [
-                  "Everything in Professional",
-                  "Dedicated support",
-                  "Custom workflows",
-                  "Advanced compliance controls",
-                ],
-                highlighted: false,
-              },
+              // {
+              //   name: "Enterprise",
+              //   price: "Custom",
+              //   period: "",
+              //   desc: "Scalable for complex operations",
+              //   features: [
+              //     "Everything in Professional",
+              //     "Dedicated support",
+              //     "Custom workflows",
+              //     "Advanced compliance controls",
+              //   ],
+              //   highlighted: false,
+              // },
             ].map((plan, i) => (
               <AnimatedSection key={plan.name} delay={i * 0.1}>
                 <div
@@ -1538,6 +1548,7 @@ const Index = () => {
                       : "hsl(0 0% 20%)",
                   }}
                 >
+                  {/* Badge */}
                   {plan.highlighted && (
                     <div
                       className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-semibold"
@@ -1546,66 +1557,92 @@ const Index = () => {
                       Most Popular
                     </div>
                   )}
-                  <h3
-                    className="font-display text-lg font-semibold mb-1"
-                    style={{ color: textLight }}
-                  >
-                    {plan.name}
-                  </h3>
-                  <p
-                    className="text-xs mb-4"
-                    style={{ color: "hsl(0 0% 75%)" }}
-                  >
-                    {plan.desc}
-                  </p>
-                  <div className="mb-6">
-                    <span
-                      className="font-display text-4xl font-bold"
+
+                  {/* HEADER */}
+                  <div className="mb-6 text-center">
+                    <h3
+                      className="font-display text-lg font-semibold"
                       style={{ color: textLight }}
                     >
-                      {plan.price}
-                    </span>
-                    <span
-                      className="text-sm"
-                      style={{ color: "hsl(0 0% 60%)" }}
+                      {plan.name}
+                    </h3>
+
+                    <p
+                      className="text-xs mt-1 max-w-xs mx-auto"
+                      style={{ color: "hsl(0 0% 75%)" }}
                     >
-                      {plan.period}
-                    </span>
+                      {plan.desc}
+                    </p>
                   </div>
-                  <ul className="space-y-2.5 mb-8 flex-1">
+
+                  {/* PRICE BLOCK */}
+                  <div className="mb-6 text-center">
+                    <div className="flex items-end justify-center gap-1">
+                      <span
+                        className="font-display text-4xl font-bold"
+                        style={{ color: textLight }}
+                      >
+                        {plan.price}
+                      </span>
+                      <span
+                        className="text-sm mb-1"
+                        style={{ color: "hsl(0 0% 60%)" }}
+                      >
+                        {plan.period}
+                      </span>
+                    </div>
+
+                    {/* subtle divider */}
+                    <div className="mt-4 h-px w-12 mx-auto bg-white/10" />
+                  </div>
+
+                  {/* FEATURES (2-COLUMN GRID) */}
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-4 mb-8 flex-1">
                     {plan.features.map((f) => (
                       <li
                         key={f}
-                        className="flex items-center gap-2 text-sm"
+                        className="flex items-start gap-2 text-sm leading-snug"
                         style={{ color: textLight }}
                       >
                         <CheckCircle2
-                          className="w-3.5 h-3.5 flex-shrink-0"
+                          className="w-4 h-4 mt-[2px] flex-shrink-0"
                           style={{ color: accentColor }}
-                        />{" "}
-                        {f}
+                        />
+                        <span className="opacity-90">{f}</span>
                       </li>
                     ))}
                   </ul>
-                  <a
-                    href="tel:+15512296466"
-                    className={`block text-center py-3 rounded-lg text-sm font-semibold transition-all`}
-                    style={
-                      plan.highlighted
-                        ? {
-                            background:
-                              "linear-gradient(135deg, hsl(0 0% 95%), hsl(0 0% 85%))",
-                            color: textDark,
-                          }
-                        : {
-                            borderWidth: "1px",
-                            borderColor: "hsl(0 0% 30%)",
-                            color: textLight,
-                          }
-                    }
-                  >
-                    {plan.price === "Custom" ? "Contact Sales" : "Get Started"}
-                  </a>
+
+                  {/* CTA */}
+                  <div className="mt-auto">
+                    <Button
+                      onClick={handleSubscribe}
+                      className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all"
+                      style={
+                        plan.highlighted
+                          ? {
+                              background:
+                                "linear-gradient(135deg, hsl(0 0% 95%), hsl(0 0% 85%))",
+                              color: textDark,
+                            }
+                          : {
+                              borderWidth: "1px",
+                              borderColor: "hsl(0 0% 30%)",
+                              color: textLight,
+                            }
+                      }
+                    >
+                      Start Free Trial
+                    </Button>
+
+                    {/* Subtext */}
+                    <p
+                      className="text-[11px] text-center mt-2 opacity-60"
+                      style={{ color: textLight }}
+                    >
+                      No charges during trial • Cancel anytime
+                    </p>
+                  </div>
                 </div>
               </AnimatedSection>
             ))}

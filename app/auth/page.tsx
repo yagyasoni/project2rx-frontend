@@ -106,6 +106,8 @@ const AuthPageInner = () => {
         });
 
         console.log(res?.data);
+        console.log(res?.data?.user?.role);
+        localStorage.setItem("role", res?.data?.user?.role);
 
         if (res?.data?.requiresOtp) {
           setShowOtp(true);

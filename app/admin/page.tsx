@@ -65,7 +65,7 @@ const Welcome = () => {
   }, [router]);
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute role="admin">
       <div className="min-h-screen bg-foreground flex items-center justify-center overflow-hidden relative">
         {/* Subtle grid */}
         <div

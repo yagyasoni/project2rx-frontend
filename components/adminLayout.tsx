@@ -59,6 +59,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       setActive(current.title);
     }
   }, [pathname]);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -89,7 +90,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute role="admin">
       <div className="h-screen flex bg-background overflow-hidden">
         {/* Sidebar */}
         {/* <aside

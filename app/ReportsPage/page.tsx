@@ -23,8 +23,8 @@ type FilterType = "all" | "inventory" | "aberrant" | "optum";
 
 export default function ReportsPage() {
   const [deleteModal, setDeleteModal] = useState(false);
-const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
-const [deletingReportName, setDeletingReportName] = useState("");
+  const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
+  const [deletingReportName, setDeletingReportName] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [reportsData, setReportsData] = useState<Report[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
@@ -33,7 +33,10 @@ const [deletingReportName, setDeletingReportName] = useState("");
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [editModal, setEditModal] = useState(false);
   const [editingReport, setEditingReport] = useState<any>(null);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const [editForm, setEditForm] = useState({
     inventory_start_date: "",
     inventory_end_date: "",
@@ -62,32 +65,36 @@ const [deletingReportName, setDeletingReportName] = useState("");
   };
 
   const handleDelete = async () => {
-  if (!deletingReportId) return;
-  try {
-    await axios.delete(`https://api.auditprorx.com/api/audits/${deletingReportId}`);
-    setReportsData((prev) => prev.filter((r) => r.id !== deletingReportId));
-  } catch (e) {
-    console.error("Delete failed:", e);
-    alert("Delete failed. Check backend logs.");
-  } finally {
-    setDeleteModal(false);
-    setDeletingReportId(null);
-    setDeletingReportName("");
-    setActiveMenu(null);
-  }
-};
+    if (!deletingReportId) return;
+    try {
+      await axios.delete(
+        `https://api.auditprorx.com/api/audits/${deletingReportId}`,
+      );
+      setReportsData((prev) => prev.filter((r) => r.id !== deletingReportId));
+    } catch (e) {
+      console.error("Delete failed:", e);
+      alert("Delete failed. Check backend logs.");
+    } finally {
+      setDeleteModal(false);
+      setDeletingReportId(null);
+      setDeletingReportName("");
+      setActiveMenu(null);
+    }
+  };
 
   const handleEdit = (report: Report) => {
     setEditingReport(report);
-    axios.get(`https://api.auditprorx.com/api/audits/${report.id}`).then((res) => {
-      const a = res.data;
-      setEditForm({
-        inventory_start_date: a.inventory_start_date?.slice(0, 10) ?? "",
-        inventory_end_date: a.inventory_end_date?.slice(0, 10) ?? "",
-        wholesaler_start_date: a.wholesaler_start_date?.slice(0, 10) ?? "",
-        wholesaler_end_date: a.wholesaler_end_date?.slice(0, 10) ?? "",
+    axios
+      .get(`https://api.auditprorx.com/api/audits/${report.id}`)
+      .then((res) => {
+        const a = res.data;
+        setEditForm({
+          inventory_start_date: a.inventory_start_date?.slice(0, 10) ?? "",
+          inventory_end_date: a.inventory_end_date?.slice(0, 10) ?? "",
+          wholesaler_start_date: a.wholesaler_start_date?.slice(0, 10) ?? "",
+          wholesaler_end_date: a.wholesaler_end_date?.slice(0, 10) ?? "",
+        });
       });
-    });
     setEditModal(true);
     setActiveMenu(null);
   };
@@ -140,18 +147,18 @@ const [deletingReportName, setDeletingReportName] = useState("");
   };
 
   const mapStatus = (s?: string | null): Report["status"] => {
-  const v = (s || "").toLowerCase();
-  if (v === "ready") return "Ready";
-  if (v === "started") return "Started";
-  return "Started";
-};
+    const v = (s || "").toLowerCase();
+    if (v === "ready") return "Ready";
+    if (v === "started") return "Started";
+    return "Started";
+  };
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoadingReports(true);
         const res = await api.get("/api/audits");
-        
+
         const rows = res.data as any[];
         const mapped: Report[] = rows.map((a) => ({
           id: a.id,
@@ -189,7 +196,7 @@ const [deletingReportName, setDeletingReportName] = useState("");
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute role="user">
       <Suspense fallback={<Loading />}>
         <div className="flex h-screen bg-white">
           <Sidebar
@@ -298,14 +305,14 @@ const [deletingReportName, setDeletingReportName] = useState("");
                         </td>
                         <td className="px-4 py-2">
                           <span
-  className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-    report.status === "Ready"
-      ? "bg-green-100 text-green-700"
-      : "bg-amber-100 text-amber-700"
-  }`}
->
-  {report.status}
-</span>
+                            className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                              report.status === "Ready"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
+                            {report.status}
+                          </span>
                         </td>
                         <td className="px-4 py-1.5 text-sm text-gray-600">
                           {report.inventoryDates}
@@ -328,27 +335,29 @@ const [deletingReportName, setDeletingReportName] = useState("");
                           {report.createdDate}
                         </td>
                         <td className="px-4 py-2">
-  <div className="relative">
-    <button
-      onClick={(e) => {
-        if (activeMenu === report.id) {
-          setActiveMenu(null);
-          setMenuPosition(null);
-        } else {
-          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-          setMenuPosition({
-            top: rect.bottom + 4,
-            left: rect.right - 176, // 176 = w-44 = 11rem
-          });
-          setActiveMenu(report.id);
-        }
-      }}
-      className="p-1 hover:bg-gray-200 rounded transition-colors"
-    >
-      <MoreVertical className="w-4 h-4 text-gray-600" />
-    </button>
-  </div>
-</td>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                if (activeMenu === report.id) {
+                                  setActiveMenu(null);
+                                  setMenuPosition(null);
+                                } else {
+                                  const rect = (
+                                    e.currentTarget as HTMLElement
+                                  ).getBoundingClientRect();
+                                  setMenuPosition({
+                                    top: rect.bottom + 4,
+                                    left: rect.right - 176, // 176 = w-44 = 11rem
+                                  });
+                                  setActiveMenu(report.id);
+                                }
+                              }}
+                              className="p-1 hover:bg-gray-200 rounded transition-colors"
+                            >
+                              <MoreVertical className="w-4 h-4 text-gray-600" />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -356,66 +365,77 @@ const [deletingReportName, setDeletingReportName] = useState("");
               </div>
             </div>
             {activeMenu && menuPosition && (
-  <>
-    <div className="fixed inset-0 z-40" onClick={() => { setActiveMenu(null); setMenuPosition(null); }} />
-    <div
-      className="fixed w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
-      style={{
-        top: menuPosition.top + 176 > window.innerHeight
-          ? menuPosition.top - 176 - 8
-          : menuPosition.top,
-        left: menuPosition.left,
-      }}
-    >
-      <button
-        onClick={() => {
-          const report = reportsData.find((r) => r.id === activeMenu);
-          if (report) handleEdit(report);
-        }}
-        className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors rounded-t-lg"
-      >
-        Edit
-      </button>
-      <button
-        onClick={() => {
-          const id = activeMenu;
-          setActiveMenu(null);
-          setMenuPosition(null);
-          window.location.href = `/Mainpage?auditId=${id}&step=inventory`;
-        }}
-        className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
-      >
-        InventoryFiles
-      </button>
-      <button
-        onClick={() => {
-          const id = activeMenu;
-          setActiveMenu(null);
-          setMenuPosition(null);
-          window.location.href = `/Mainpage?auditId=${id}&step=wholesaler`;
-        }}
-        className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
-      >
-        SupplierFiles
-      </button>
-      <button
-        onClick={() => {
-          const report = reportsData.find((r) => r.id === activeMenu);
-          if (report) {
-            setDeletingReportId(report.id);
-            setDeletingReportName(report.auditName);
-            setDeleteModal(true);
-          }
-          setActiveMenu(null);
-          setMenuPosition(null);
-        }}
-        className="w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 transition-colors border-t border-gray-200 rounded-b-lg"
-      >
-        Delete
-      </button>
-    </div>
-  </>
-)}
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => {
+                    setActiveMenu(null);
+                    setMenuPosition(null);
+                  }}
+                />
+                <div
+                  className="fixed w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                  style={{
+                    top:
+                      menuPosition.top + 176 > window.innerHeight
+                        ? menuPosition.top - 176 - 8
+                        : menuPosition.top,
+                    left: menuPosition.left,
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      const report = reportsData.find(
+                        (r) => r.id === activeMenu,
+                      );
+                      if (report) handleEdit(report);
+                    }}
+                    className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors rounded-t-lg"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      const id = activeMenu;
+                      setActiveMenu(null);
+                      setMenuPosition(null);
+                      window.location.href = `/Mainpage?auditId=${id}&step=inventory`;
+                    }}
+                    className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    InventoryFiles
+                  </button>
+                  <button
+                    onClick={() => {
+                      const id = activeMenu;
+                      setActiveMenu(null);
+                      setMenuPosition(null);
+                      window.location.href = `/Mainpage?auditId=${id}&step=wholesaler`;
+                    }}
+                    className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    SupplierFiles
+                  </button>
+                  <button
+                    onClick={() => {
+                      const report = reportsData.find(
+                        (r) => r.id === activeMenu,
+                      );
+                      if (report) {
+                        setDeletingReportId(report.id);
+                        setDeletingReportName(report.auditName);
+                        setDeleteModal(true);
+                      }
+                      setActiveMenu(null);
+                      setMenuPosition(null);
+                    }}
+                    className="w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 transition-colors border-t border-gray-200 rounded-b-lg"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
           </main>
         </div>
 
@@ -534,44 +554,56 @@ const [deletingReportName, setDeletingReportName] = useState("");
         )}
 
         {deleteModal && (
-  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center backdrop-blur-sm">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 flex flex-col items-center text-center">
-      <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
-        <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-        </svg>
-      </div>
-      <h3 className="text-lg font-bold text-gray-900 mb-1">Delete Report</h3>
-      <p className="text-sm text-gray-500 mb-1">
-        Are you sure you want to delete this report?
-      </p>
-      <p className="text-xs text-gray-400 bg-gray-100 rounded-lg px-3 py-1.5 mb-1 font-semibold truncate max-w-full">
-        {deletingReportName}
-      </p>
-      <p className="text-[11px] text-red-400 mb-5">
-        This will permanently remove all data, files, and records.
-      </p>
-      <div className="flex gap-3 w-full">
-        <button
-          onClick={() => {
-            setDeleteModal(false);
-            setDeletingReportId(null);
-            setDeletingReportName("");
-          }}
-          className="flex-1 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleDelete}
-          className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors"
-        >
-          Yes, Delete
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 flex flex-col items-center text-center">
+              <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
+                <svg
+                  className="w-7 h-7 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">
+                Delete Report
+              </h3>
+              <p className="text-sm text-gray-500 mb-1">
+                Are you sure you want to delete this report?
+              </p>
+              <p className="text-xs text-gray-400 bg-gray-100 rounded-lg px-3 py-1.5 mb-1 font-semibold truncate max-w-full">
+                {deletingReportName}
+              </p>
+              <p className="text-[11px] text-red-400 mb-5">
+                This will permanently remove all data, files, and records.
+              </p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => {
+                    setDeleteModal(false);
+                    setDeletingReportId(null);
+                    setDeletingReportName("");
+                  }}
+                  className="flex-1 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors"
+                >
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </Suspense>
     </ProtectedRoute>
   );

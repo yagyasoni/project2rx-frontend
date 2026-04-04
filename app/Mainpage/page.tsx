@@ -87,7 +87,7 @@ export default function BatchRxDashboard() {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute role="user">
       <Suspense fallback={<Loading />}>
         <div className="flex h-screen bg-background">
           {/* Sidebar */}
