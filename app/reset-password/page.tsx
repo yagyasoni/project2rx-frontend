@@ -58,7 +58,7 @@ const ResetPasswordPage = () => {
 
     try {
       const res = await axios.post(
-        "https://api.auditprorx.com/auth/reset-password",
+        "http://localhost:5000/auth/reset-password",
         {
           token,
           newPassword: confirmPassword,

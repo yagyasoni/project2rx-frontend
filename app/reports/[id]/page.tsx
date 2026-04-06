@@ -103,6 +103,31 @@ interface InventoryRow {
   shortageNjBilled: number;
 }
 
+interface RxLine {
+  rx_number: string;
+  date_filled: string;
+  quantity: number;
+  type: string;
+  pri_bin: string;
+  pri_pcn: string;
+  pri_group: string;
+  pri_insurance: string;
+  pri_paid: number;
+  sec_bin: string;
+  sec_pcn: string;
+  sec_group: string;
+  sec_insurance: string;
+  sec_paid: number;
+  is_outside_date_range: boolean;
+}
+
+interface OrderLine {
+  type: string;
+  date_ordered: string;
+  quantity: number;
+  is_outside_date_range: boolean;
+}
+
 // ─── Column group types ───────────────────────────────────────────────────────
 
 type ColGroup =
@@ -164,7 +189,7 @@ const ALL_COLS: ColDef[] = [
   { key: "horizon", label: "Horizon", w: 110, group: "commercial" },
   {
     key: "shortageHorizon",
-    label: "Shrt Horizon",
+    label: "Short Horizon",
     w: 110,
     group: "commercial",
     isShortage: true,
@@ -172,7 +197,7 @@ const ALL_COLS: ColDef[] = [
   { key: "express", label: "Express", w: 110, group: "commercial" },
   {
     key: "shortageExpress",
-    label: "Shrt Express",
+    label: "Short Express",
     w: 110,
     group: "commercial",
     isShortage: true,
@@ -180,7 +205,7 @@ const ALL_COLS: ColDef[] = [
   { key: "cvsCaremark", label: "Caremark", w: 110, group: "commercial" },
   {
     key: "shortageCvsCaremark",
-    label: "Shrt Caremark",
+    label: "Short Caremark",
     w: 120,
     group: "commercial",
     isShortage: true,
@@ -188,7 +213,7 @@ const ALL_COLS: ColDef[] = [
   { key: "optumrx", label: "Optum", w: 100, group: "commercial" },
   {
     key: "shortageOptumrx",
-    label: "Shrt Optum",
+    label: "Short Optum",
     w: 100,
     group: "commercial",
     isShortage: true,
@@ -196,7 +221,7 @@ const ALL_COLS: ColDef[] = [
   { key: "humana", label: "Humana", w: 100, group: "commercial" },
   {
     key: "shortageHumana",
-    label: "Shrt Humana",
+    label: "Short Humana",
     w: 100,
     group: "commercial",
     isShortage: true,
@@ -204,7 +229,7 @@ const ALL_COLS: ColDef[] = [
   { key: "ssc", label: "SSC", w: 90, group: "commercial" },
   {
     key: "shortageSsc",
-    label: "Shrt SSC",
+    label: "Short SSC",
     w: 90,
     group: "commercial",
     isShortage: true,
@@ -212,7 +237,7 @@ const ALL_COLS: ColDef[] = [
   { key: "pdmi", label: "PDMI (Co-Pay)", w: 130, group: "commercial" },
   {
     key: "shortagePdmi",
-    label: "Shrt PDMI",
+    label: "Short PDMI",
     w: 110,
     group: "commercial",
     isShortage: true,
@@ -221,7 +246,7 @@ const ALL_COLS: ColDef[] = [
   { key: "medicare", label: "Medicare", w: 120, group: "medicare" },
   {
     key: "shortageMedicare",
-    label: "Shrt Medicare",
+    label: "Short Medicare",
     w: 120,
     group: "medicare",
     isShortage: true,
@@ -230,7 +255,7 @@ const ALL_COLS: ColDef[] = [
   { key: "njMedicaid", label: "NJ Medicaid", w: 120, group: "medicaid" },
   {
     key: "shortageNjMedicaid",
-    label: "Shrt NJ Med",
+    label: "Short NJ Med",
     w: 120,
     group: "medicaid",
     isShortage: true,
@@ -337,6 +362,23 @@ export default function InventoryReportPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
+
+  const [openBilledSidebar, setOpenBilledSidebar] = useState(false);
+const [billedDrug, setBilledDrug] = useState<InventoryRow | null>(null);
+const [rxLines, setRxLines] = useState<RxLine[]>([]);
+const [rxLoading, setRxLoading] = useState(false);
+const [rxTab, setRxTab] = useState<"current" | "outside">("current");
+const [rxFilters, setRxFilters] = useState<string[]>([]);
+const [showRxFilters, setShowRxFilters] = useState(false);
+const [openOrderedSidebar, setOpenOrderedSidebar] = useState(false);
+const [orderedDrug, setOrderedDrug] = useState<InventoryRow | null>(null);
+const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
+const [orderLoading, setOrderLoading] = useState(false);
+const [orderTab, setOrderTab] = useState<"current" | "outside">("current");
+const [orderFilters, setOrderFilters] = useState<string[]>([]);
+const [showOrderFilters, setShowOrderFilters] = useState(false);
+const [openShortageSidebar, setOpenShortageSidebar] = useState(false);
+const [shortageDrug, setShortageDrug] = useState<InventoryRow | null>(null);
 
   const bodyScrollRef = useRef<HTMLDivElement | null>(null);
   const filterRef = useRef<HTMLDivElement | null>(null);
@@ -543,22 +585,30 @@ export default function InventoryReportPage() {
       const nto = row.totalOrdered * pkg;
       const sMed = +(nto - row.medicare).toFixed(2);
       const sNj = +(nto - row.njMedicaid).toFixed(2);
+      const sHorizon = +(nto - row.horizon).toFixed(2);
+      const sExpress = +(nto - row.express).toFixed(2);
+      const sCvs = +(nto - row.cvsCaremark).toFixed(2);
+      const sOptum = +(nto - row.optumrx).toFixed(2);
+      const sHumana = +(nto - row.humana).toFixed(2);
+      const sSsc = +(nto - row.ssc).toFixed(2);
+      const sPdmi = +(nto - row.pdmi).toFixed(2);
+      const minPkg = Math.min(sHorizon, sExpress, sCvs, sOptum, sHumana, sSsc, sPdmi, sMed, sNj);
       return {
         ...row,
         totalOrdered: +nto.toFixed(2),
         totalShortage: +(nto - row.totalBilled).toFixed(2),
-        shortageHorizon: +(nto - row.horizon).toFixed(2),
-        shortageExpress: +(nto - row.express).toFixed(2),
-        shortageCvsCaremark: +(nto - row.cvsCaremark).toFixed(2),
-        shortageOptumrx: +(nto - row.optumrx).toFixed(2),
-        shortageHumana: +(nto - row.humana).toFixed(2),
-        shortageSsc: +(nto - row.ssc).toFixed(2),
-        shortagePdmi: +(nto - row.pdmi).toFixed(2),
+        shortageHorizon: sHorizon,
+        shortageExpress: sExpress,
+        shortageCvsCaremark: sCvs,
+        shortageOptumrx: sOptum,
+        shortageHumana: sHumana,
+        shortageSsc: sSsc,
+        shortagePdmi: sPdmi,
         shortageMedicare: sMed,
         shortageNjMedicaid: sNj,
         njBilled: row.medicare + row.njMedicaid,
-        shortageNjBilled: +(sMed + sNj).toFixed(2), // Shrt Medicare + Shrt NJ Medicaid
-        highestShortage: 0,
+        shortageNjBilled: +(sMed + sNj).toFixed(2),
+        highestShortage: minPkg < 0 ? minPkg : 0,
       };
     }
     if (qtyType === "UNIT") {
@@ -575,31 +625,39 @@ export default function InventoryReportPage() {
       const ntb = d(row.totalBilled);
       const sMed = +(row.totalOrdered - nm).toFixed(2);
       const sNj = +(row.totalOrdered - nnj).toFixed(2);
+      const uSH = +(row.totalOrdered - nh).toFixed(2);
+      const uSE = +(row.totalOrdered - ne).toFixed(2);
+      const uSC = +(row.totalOrdered - nc).toFixed(2);
+      const uSO = +(row.totalOrdered - no).toFixed(2);
+      const uSHu = +(row.totalOrdered - nhu).toFixed(2);
+      const uSS = +(row.totalOrdered - ns).toFixed(2);
+      const uSP = +(row.totalOrdered - np).toFixed(2);
+      const minUnit = Math.min(uSH, uSE, uSC, uSO, uSHu, uSS, uSP, sMed, sNj);
       return {
         ...row,
         totalBilled: ntb,
         totalShortage: +(row.totalOrdered - ntb).toFixed(2),
         horizon: nh,
-        shortageHorizon: +(row.totalOrdered - nh).toFixed(2),
+        shortageHorizon: uSH,
         express: ne,
-        shortageExpress: +(row.totalOrdered - ne).toFixed(2),
+        shortageExpress: uSE,
         cvsCaremark: nc,
-        shortageCvsCaremark: +(row.totalOrdered - nc).toFixed(2),
+        shortageCvsCaremark: uSC,
         optumrx: no,
-        shortageOptumrx: +(row.totalOrdered - no).toFixed(2),
+        shortageOptumrx: uSO,
         humana: nhu,
-        shortageHumana: +(row.totalOrdered - nhu).toFixed(2),
+        shortageHumana: uSHu,
         ssc: ns,
-        shortageSsc: +(row.totalOrdered - ns).toFixed(2),
+        shortageSsc: uSS,
         pdmi: np,
-        shortagePdmi: +(row.totalOrdered - np).toFixed(2),
+        shortagePdmi: uSP,
         medicare: nm,
         shortageMedicare: sMed,
         njMedicaid: nnj,
         shortageNjMedicaid: sNj,
         njBilled: nm + nnj,
-        shortageNjBilled: +(sMed + sNj).toFixed(2), // Shrt Medicare + Shrt NJ Medicaid
-        highestShortage: 0,
+        shortageNjBilled: +(sMed + sNj).toFixed(2),
+        highestShortage: minUnit < 0 ? minUnit : 0,
       };
     }
     return row;
@@ -607,9 +665,12 @@ export default function InventoryReportPage() {
 
   // ── Data pipeline ─────────────────────────────────────────────────────────
 
+  // Transform first so sorting operates on the same values that are displayed
+  const transformedData = useMemo(() => inventoryData.map(applyQtyMode), [inventoryData, qtyType]);
+
   const sortedData = useMemo(
     () =>
-      [...inventoryData].sort((a, b) => {
+      [...transformedData].sort((a, b) => {
         for (const r of sortRules) {
           const av = a[r.key],
             bv = b[r.key];
@@ -621,7 +682,7 @@ export default function InventoryReportPage() {
         }
         return 0;
       }),
-    [inventoryData, sortRules],
+    [transformedData, sortRules],
   );
 
   const filteredData = useMemo(() => {
@@ -640,9 +701,7 @@ export default function InventoryReportPage() {
   const rowOptions = [10, 20, 50, 100, totalRows].filter(
     (v, i, a) => v > 0 && a.indexOf(v) === i,
   );
-  const paginatedData = filteredData
-    .slice((currentPage - 1) * effRPP, currentPage * effRPP)
-    .map(applyQtyMode);
+  const paginatedData = filteredData.slice((currentPage - 1) * effRPP, currentPage * effRPP);
 
   // ── Sticky offsets ────────────────────────────────────────────────────────
 
@@ -765,6 +824,91 @@ export default function InventoryReportPage() {
     router.push(pendingHref ?? "/ReportsPage");
   };
 
+  // ADD AFTER:
+const handleOpenBilledSidebar = async (row: InventoryRow, e: React.MouseEvent) => {
+  e.stopPropagation();
+  setBilledDrug(row);
+  setOpenBilledSidebar(true);
+  setRxLines([]);
+  setRxLoading(true);
+  setRxTab("current");
+  setRxFilters([]);
+  try {
+    const res = await fetch(
+      `http://localhost:5000/api/audits/${auditId}/inventory-detail/${encodeURIComponent(row.ndc)}`
+    );
+    const json = await res.json();
+    console.log("🔍 Drug detail API response:", json); // ← check this in browser console
+    
+    const lines = Array.isArray(json) ? json : 
+                  Array.isArray(json.lines) ? json.lines :
+                  Array.isArray(json.data) ? json.data :
+                  Array.isArray(json.records) ? json.records : [];
+
+    // Normalize field names — backend might use different casing
+    const normalized: RxLine[] = lines.map((r: any) => ({
+      rx_number:             r.rx_number ?? r.rxNumber ?? r.rxno ?? r.RXNO ?? "",
+      date_filled:           r.date_filled ?? r.dateFilled ?? r.datef ?? r.DATEF ?? "",
+      quantity:              Number(r.quantity ?? r.qty ?? r.quant ?? r.QUANT ?? 0),
+      type:                  r.type ?? r.source ?? "PRIMERX",
+      pri_bin:               r.pri_bin ?? r.primary_bin ?? r.prinsbinno ?? r.PRINSBINNO ?? "",
+      pri_pcn:               r.pri_pcn ?? r.primary_pcn ?? r.priinspcn ?? r.PRIINSPCN ?? "",
+      pri_group:             r.pri_group ?? r.primary_group ?? r.priinspatgroup ?? r.PRIINSPATGROUP ?? "",
+      pri_insurance:         r.pri_insurance ?? r.primary_insurance ?? r.pbm_name ?? r.pbm ?? "",
+      pri_paid:              Number(r.pri_paid ?? r.primary_paid ?? r.prinspaid ?? r.PRINSPAID ?? 0),
+      sec_bin:               r.sec_bin ?? r.secondary_bin ?? r.secinsbinno ?? r.SECINSBINNO ?? "",
+      sec_pcn:               r.sec_pcn ?? r.secondary_pcn ?? "",
+      sec_group:             r.sec_group ?? r.secondary_group ?? "",
+      sec_insurance:         r.sec_insurance ?? r.secondary_insurance ?? "",
+      sec_paid:              Number(r.sec_paid ?? r.secondary_paid ?? r.secinspaid ?? r.SECINSPAID ?? 0),
+      is_outside_date_range: r.is_outside_date_range ?? r.outside_date_range ?? false,
+    }));
+
+    console.log("✅ Normalized lines:", normalized);
+    setRxLines(normalized);
+  } catch (err) {
+    console.error("❌ Failed to fetch drug detail:", err);
+    setRxLines([]);
+  } finally {
+    setRxLoading(false);
+  }
+};
+
+const handleOpenOrderedSidebar = async (row: InventoryRow, e: React.MouseEvent) => {
+  e.stopPropagation();
+  setOrderedDrug(row);
+  setOpenOrderedSidebar(true);
+  setOrderLines([]);
+  setOrderLoading(true);
+  setOrderTab("current");
+  setOrderFilters([]);
+  try {
+    const res = await fetch(
+      `http://localhost:5000/api/audits/${auditId}/wholesaler-detail/${encodeURIComponent(row.ndc)}`
+    );
+    const json = await res.json();
+    const lines = Array.isArray(json) ? json : [];
+    const normalized: OrderLine[] = lines.map((r: any) => ({
+      type: r.type ?? r.wholesaler_name ?? "MCKESSON",
+      date_ordered: r.date_ordered ?? r.date ?? "",
+      quantity: Number(r.quantity ?? 0),
+      is_outside_date_range: false,
+    }));
+    setOrderLines(normalized);
+  } catch (err) {
+    console.error("Failed to fetch wholesaler detail:", err);
+    setOrderLines([]);
+  } finally {
+    setOrderLoading(false);
+  }
+};
+
+const handleOpenShortageSidebar = (row: InventoryRow, e: React.MouseEvent) => {
+  e.stopPropagation();
+  setShortageDrug(row);
+  setOpenShortageSidebar(true);
+};
+
   const handleExport = () => {
     const rows = exportScope === "visible" ? paginatedData : filteredData;
     if (!rows.length) return;
@@ -845,7 +989,7 @@ export default function InventoryReportPage() {
           {/* Sidebar */}
           <div
             className={`flex-shrink-0 transition-all duration-300 z-[130] ${
-              openExportModal || loading || showLeaveDialog || openDrugSidebar
+              openExportModal || loading || showLeaveDialog || openDrugSidebar || openBilledSidebar || openOrderedSidebar || openShortageSidebar
                 ? "w-0 opacity-0 pointer-events-none"
                 : sidebarCollapsed
                   ? "w-[72px]"
@@ -855,7 +999,8 @@ export default function InventoryReportPage() {
             {!openExportModal &&
               !loading &&
               !showLeaveDialog &&
-              !openDrugSidebar && (
+              !openDrugSidebar &&
+              !openBilledSidebar && (
                 <AppSidebar
                   sidebarOpen={!sidebarCollapsed}
                   setSidebarOpen={() => setSidebarCollapsed((v) => !v)}
@@ -1759,8 +1904,23 @@ export default function InventoryReportPage() {
                                 padding: "0 10px",
                                 ...cellBorderStyle(c),
                               }}
+                              onClick={
+                                c.key === "totalBilled"
+                                  ? (e) => handleOpenBilledSidebar(row, e)
+                                  : c.key === "totalShortage"
+                                    ? (e) => handleOpenShortageSidebar(row, e)
+                                    : undefined
+                              }
                             >
-                              <span className="text-xs">{cellVal(c, row)}</span>
+                              <span
+                                className={`text-xs ${
+                                  c.key === "totalBilled" || c.key === "totalShortage"
+                                    ? "cursor-pointer hover:text-blue-600 hover:underline"
+                                    : ""
+                                }`}
+                              >
+                                {cellVal(c, row)}
+                              </span>
                             </td>
                           ))}
                         </tr>
@@ -1988,6 +2148,657 @@ export default function InventoryReportPage() {
                 )}
               </SheetContent>
             </Sheet>
+             
+{/* ── Total Billed Sidebar ── */}
+{openBilledSidebar && billedDrug && (
+  <>
+    {/* Backdrop */}
+    <div
+      className="fixed inset-0 bg-black/30 z-[200]"
+      onClick={() => { setOpenBilledSidebar(false); setShowRxFilters(false); }}
+    />
+
+    {/* Right Panel */}
+    <div
+      className="fixed top-0 right-0 h-full z-[210] flex flex-col bg-white"
+      style={{ width: "50%", maxWidth: "100vw", boxShadow: "-4px 0 24px rgba(0,0,0,0.15)" }}
+    >
+      {/* ── Top Bar ── */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => { setOpenBilledSidebar(false); setShowRxFilters(false); }}
+            className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-red-500 shrink-0" />
+            <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">Total Billed</span>
+          </div>
+        </div>
+
+        {/* Filter button + dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowRxFilters((v) => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+              showRxFilters
+                ? "bg-slate-900 text-white border-slate-900"
+                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            Filter
+          </button>
+
+          {showRxFilters && (
+            <div
+              className="absolute right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-[220]"
+              style={{ width: 280 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Filters</span>
+                <div className="flex items-center gap-2">
+                  {rxFilters.length > 0 && (
+                    <button onClick={() => setRxFilters([])} className="text-[11px] font-semibold text-slate-500 hover:text-red-500">
+                      Clear
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowRxFilters(false)}
+                    className="h-5 w-5 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div className="px-4 pt-3 pb-1 flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
+                <span className="text-[11px] font-bold text-slate-700">Billed</span>
+              </div>
+              <div className="px-4 pb-4 max-h-[400px] overflow-y-auto">
+                {[
+                  "EXPRESS SCRIPTS",
+                  "OPTUMRX",
+                  "CVS CAREMARK",
+                  "CASH",
+                  "SS&C (FORMERLY HUMANA, ARGUS, AND DST)",
+                  "HORIZON HEALTH",
+                  "NJ MEDICAID",
+                  "CAPITALRX",
+                  "CHANGE HEALTHCARE",
+                  "PDMI (CO-PAY CARD)",
+                  "MCKESSON HDS (CO-PAY CARD)",
+                  "SAVRX",
+                  "ELIXIR",
+                  "MEDIMPACT",
+                  "NAVITUS",
+                  "VIATRIS (CO-PAY CARD)",
+                  "ABARCA",
+                  "RXSENSE",
+                  "PREVI",
+                ].map((name) => (
+                  <label
+                    key={name}
+                    className="flex items-center gap-2.5 py-2 cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1 border-b border-slate-50 last:border-0"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={rxFilters.includes(name)}
+                      onChange={() => setRxFilters(prev =>
+                        prev.includes(name) ? prev.filter(x => x !== name) : [...prev, name]
+                      )}
+                      className="h-4 w-4 shrink-0 rounded border-slate-300"
+                      style={{ accentColor: "#1e293b" }}
+                    />
+                    <span className="text-[12px] text-slate-700 font-medium leading-tight">{name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Info Bar ── */}
+      <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex-shrink-0">
+        {(() => {
+          const current = rxLines.filter(r => !r.is_outside_date_range);
+          const priTotal = current.reduce((s, r) => s + (r.pri_paid ?? 0), 0);
+          const secTotal = current.reduce((s, r) => s + (r.sec_paid ?? 0), 0);
+
+          const items = [
+            { label: "NDC", value: billedDrug.ndc, mono: true },
+            { label: "Drug Name", value: billedDrug.drugName, bold: true },
+            { label: "Total QTY", value: billedDrug.totalBilled.toLocaleString(), bold: true },
+            ...(rxLines.length > 0 ? [
+              { label: "Total Primary Amount", value: `$${priTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, bold: true },
+              { label: "Total Secondary Amount", value: `$${secTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, bold: true },
+            ] : []),
+          ];
+
+          return (
+            <div className="flex items-start gap-8 flex-wrap">
+              {items.map((item) => (
+                <div key={item.label} className="min-w-0">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{item.label}</p>
+                  <p className={`text-[14px] tabular-nums truncate ${
+                    item.mono ? "font-mono text-slate-600" : ""
+                  } ${item.bold ? "font-bold text-slate-900" : "text-slate-700"}`}>
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* ── Tabs ── */}
+      <div className="flex items-center gap-2 px-5 py-2.5 border-b border-slate-200 bg-white flex-shrink-0">
+        {(["current", "outside"] as const).map((tab) => {
+          const count = tab === "current"
+            ? rxLines.filter(r => !r.is_outside_date_range).length
+            : rxLines.filter(r => r.is_outside_date_range).length;
+          const isActive = rxTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => setRxTab(tab)}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                isActive
+                  ? "bg-slate-900 text-white border-slate-900"
+                  : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
+              }`}
+            >
+              {tab === "current" ? "Current Date Range" : "Outside Date Range"}
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                isActive ? "bg-white text-slate-900" : "bg-slate-100 text-slate-600"
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Table ── */}
+      <div className="flex-1 overflow-auto">
+        {rxLoading ? (
+          <div className="flex items-center justify-center h-48 gap-3">
+            <div className="h-5 w-5 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+            <span className="text-sm text-slate-400 font-medium">Loading prescriptions...</span>
+          </div>
+        ) : (() => {
+          const activeLines = rxLines.filter(r =>
+            rxTab === "current" ? !r.is_outside_date_range : r.is_outside_date_range
+          );
+          const filtered = rxFilters.length > 0
+            ? activeLines.filter(r => rxFilters.includes(r.pri_insurance))
+            : activeLines;
+
+          if (filtered.length === 0) {
+            return (
+              <div className="flex flex-col items-center justify-center h-48 gap-2">
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-1">
+                  <Search className="w-4 h-4 text-slate-400" />
+                </div>
+                <p className="text-sm font-semibold text-slate-500">No records found</p>
+                <p className="text-xs text-slate-400">
+                  {rxLines.length === 0 ? "No prescription data available" : "Try adjusting filters"}
+                </p>
+              </div>
+            );
+          }
+
+          const cols = [
+  { key: "#",             w: 30,  align: "center" as const },
+  { key: "TYPE",          w: 70,  align: "left" as const },
+  { key: "RX NUMBER",     w: 85,  align: "left" as const },
+  { key: "DATE",          w: 85,  align: "left" as const },
+  { key: "QTY",           w: 45,  align: "right" as const },
+  { key: "PRI BIN",       w: 65,  align: "left" as const },
+  { key: "PRI PCN",       w: 65,  align: "left" as const },
+  { key: "PRI GROUP",     w: 75,  align: "left" as const },
+  { key: "PRI INSURANCE", w: 180, align: "left" as const },
+  { key: "SEC BIN",       w: 65,  align: "left" as const },
+];
+
+          return (
+            <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "max-content" }}>
+              <thead>
+                <tr style={{ position: "sticky", top: 0, zIndex: 10, background: "#fff" }}>
+                  {cols.map((col) => (
+  <th
+    key={col.key}
+    style={{
+      padding: "7px 6px",
+      textAlign: col.key === "#" ? "center" : "left",
+      fontSize: 10, fontWeight: 700,
+      color: "#64748b",
+      letterSpacing: "0.06em",
+      textTransform: "uppercase",
+      whiteSpace: "nowrap",
+      background: "#fff",
+      borderBottom: "2px solid #e2e8f0",
+    }}
+  >
+    {col.key === "SHORTAGE" ? (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+        <span style={{ height: 6, width: 6, borderRadius: "50%", background: "#f59e0b" }} />
+        {col.key}
+      </span>
+    ) : col.key === "TOTAL ORDERED" ? (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+        <span style={{ height: 6, width: 6, borderRadius: "50%", background: "#10b981" }} />
+        {col.key}
+      </span>
+    ) : col.key}
+  </th>
+))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((rx, i) => (
+                  <tr
+                    key={i}
+                    style={{ borderBottom: "1px solid #f1f5f9" }}
+                    className="hover:bg-slate-50/60 transition-colors"
+                  >
+                    <td style={{ padding: "8px 10px", fontSize: 12, color: "#94a3b8", fontWeight: 500, textAlign: "center" }}>
+                      {i + 1}
+                    </td>
+                    <td style={{ padding: "8px 10px" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <span style={{ height: 7, width: 7, borderRadius: "50%", background: "#ef4444", flexShrink: 0 }} />
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#1e293b" }}>{rx.type || "PRIMERX"}</span>
+                      </span>
+                    </td>
+                    <td style={{ padding: "8px 10px", fontSize: 12, fontFamily: "ui-monospace, monospace", color: "#334155", fontWeight: 500 }}>
+                      {rx.rx_number || "—"}
+                    </td>
+                    <td style={{ padding: "8px 10px", fontSize: 12, color: "#334155", whiteSpace: "nowrap" }}>
+                      {rx.date_filled
+                        ? new Date(rx.date_filled).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })
+                        : "—"}
+                    </td>
+                    <td style={{ padding: "8px 10px", fontSize: 12, fontWeight: 600, color: "#1e293b", textAlign: "right" }}>
+                      {rx.quantity}
+                    </td>
+                    <td style={{ padding: "8px 10px", fontSize: 12, fontFamily: "ui-monospace, monospace", color: "#475569" }}>
+                      {rx.pri_bin || "—"}
+                    </td>
+                    <td style={{ padding: "8px 10px", fontSize: 12, fontFamily: "ui-monospace, monospace", color: "#475569" }}>
+                      {rx.pri_pcn || "—"}
+                    </td>
+                    <td style={{ padding: "8px 10px", fontSize: 12, fontFamily: "ui-monospace, monospace", color: "#475569" }}>
+                      {rx.pri_group || "—"}
+                    </td>
+                    <td style={{ padding: "8px 10px", fontSize: 12, whiteSpace: "nowrap" }}>
+                      {rx.pri_insurance ? (
+                        <span>
+                          <span style={{ fontWeight: 600, color: "#1e293b" }}>{rx.pri_insurance}</span>
+                          {rx.pri_paid > 0 && (
+                            <span style={{ color: "#059669", fontWeight: 700, marginLeft: 6 }}>
+                              ${rx.pri_paid.toFixed(2)}
+                            </span>
+                          )}
+                        </span>
+                      ) : "—"}
+                    </td>
+                    <td style={{ padding: "8px 10px", fontSize: 12, fontFamily: "ui-monospace, monospace", color: "#475569" }}>
+                    {rx.sec_bin || "—"}
+                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+        })()}
+      </div>
+    </div>
+  </>
+)}
+
+{/* ── Total Ordered Sidebar ── */}
+{openOrderedSidebar && orderedDrug && (
+  <>
+    <div
+      className="fixed inset-0 bg-black/30 z-[200]"
+      onClick={() => { setOpenOrderedSidebar(false); setShowOrderFilters(false); }}
+    />
+
+    <div
+      className="fixed top-0 right-0 h-full z-[210] flex flex-col bg-white"
+      style={{ width: "40%", maxWidth: "100vw", boxShadow: "-4px 0 24px rgba(0,0,0,0.15)" }}
+    >
+      {/* Top Bar */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => { setOpenOrderedSidebar(false); setShowOrderFilters(false); }}
+            className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shrink-0" />
+            <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">Total Ordered</span>
+          </div>
+        </div>
+
+        <div className="relative">
+          <button
+            onClick={() => setShowOrderFilters((v) => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+              showOrderFilters
+                ? "bg-slate-900 text-white border-slate-900"
+                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            Filter
+          </button>
+
+          {showOrderFilters && (
+            <div
+              className="absolute right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-[220]"
+              style={{ width: 260 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Filters</span>
+                <div className="flex items-center gap-2">
+                  {orderFilters.length > 0 && (
+                    <button onClick={() => setOrderFilters([])} className="text-[11px] font-semibold text-slate-500 hover:text-red-500">
+                      Clear
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowOrderFilters(false)}
+                    className="h-5 w-5 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div className="px-4 pt-3 pb-1 flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-[11px] font-bold text-slate-700">Ordered</span>
+              </div>
+              <div className="px-4 pb-4 max-h-[400px] overflow-y-auto">
+                {[
+                  "MCKESSON",
+                  "CARDINAL HEALTH",
+                  "AMERISOURCEBERGEN",
+                  "HD SMITH",
+                  "MORRIS & DICKSON",
+                  "ANDA",
+                  "OTHER",
+                ].map((name) => (
+                  <label
+                    key={name}
+                    className="flex items-center gap-2.5 py-2 cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1 border-b border-slate-50 last:border-0"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={orderFilters.includes(name)}
+                      onChange={() => setOrderFilters(prev =>
+                        prev.includes(name) ? prev.filter(x => x !== name) : [...prev, name]
+                      )}
+                      className="h-4 w-4 shrink-0 rounded border-slate-300"
+                      style={{ accentColor: "#1e293b" }}
+                    />
+                    <span className="text-[12px] text-slate-700 font-medium leading-tight">{name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Info Bar */}
+      <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex-shrink-0">
+        <div className="flex items-start gap-8 flex-wrap">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">NDC</p>
+            <p className="text-[14px] tabular-nums font-mono text-slate-600">{orderedDrug.ndc}</p>
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Drug Name</p>
+            <p className="text-[14px] font-bold text-slate-900 truncate">{orderedDrug.drugName}</p>
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total QTY</p>
+            <p className="text-[14px] font-bold text-slate-900 tabular-nums">{orderedDrug.totalOrdered.toLocaleString()}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-2 px-5 py-2.5 border-b border-slate-200 bg-white flex-shrink-0">
+        {(["current", "outside"] as const).map((tab) => {
+          const count = tab === "current"
+            ? orderLines.filter(r => !r.is_outside_date_range).length
+            : orderLines.filter(r => r.is_outside_date_range).length;
+          const isActive = orderTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => setOrderTab(tab)}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                isActive
+                  ? "bg-slate-900 text-white border-slate-900"
+                  : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
+              }`}
+            >
+              {tab === "current" ? "Current Date Range" : "Outside Date Range"}
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                isActive ? "bg-white text-slate-900" : "bg-slate-100 text-slate-600"
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Table */}
+      <div className="flex-1 overflow-auto">
+        {orderLoading ? (
+          <div className="flex items-center justify-center h-48 gap-3">
+            <div className="h-5 w-5 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+            <span className="text-sm text-slate-400 font-medium">Loading orders...</span>
+          </div>
+        ) : (() => {
+          const activeLines = orderLines.filter(r =>
+            orderTab === "current" ? !r.is_outside_date_range : r.is_outside_date_range
+          );
+          const filtered = orderFilters.length > 0
+            ? activeLines.filter(r => orderFilters.includes(r.type?.toUpperCase()))
+            : activeLines;
+
+          if (filtered.length === 0) {
+            return (
+              <div className="flex flex-col items-center justify-center h-48 gap-2">
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-1">
+                  <Search className="w-4 h-4 text-slate-400" />
+                </div>
+                <p className="text-sm font-semibold text-slate-500">No records found</p>
+                <p className="text-xs text-slate-400">
+                  {orderLines.length === 0 ? "No order data available" : "Try adjusting filters"}
+                </p>
+              </div>
+            );
+          }
+
+          return (
+           <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
+  <colgroup>
+    <col style={{ width: "6%" }} />
+    <col style={{ width: "30%" }} />
+    <col style={{ width: "32%" }} />
+    <col style={{ width: "32%" }} />
+  </colgroup>
+  <thead>
+    <tr style={{ position: "sticky", top: 0, zIndex: 10, background: "#fff" }}>
+      <th style={{ padding: "7px 6px", textAlign: "center", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0", borderRight: "1px solid #e2e8f0" }}>#</th>
+      <th style={{ padding: "7px 6px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0", borderRight: "1px solid #e2e8f0" }}>TYPE</th>
+      <th style={{ padding: "7px 6px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0", borderRight: "1px solid #e2e8f0" }}>DATE</th>
+      <th style={{ padding: "7px 6px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0" }}>QTY</th>
+    </tr>
+  </thead>
+  <tbody>
+    {filtered.map((order, i) => (
+      <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }} className="hover:bg-slate-50/60 transition-colors">
+        <td style={{ padding: "6px 6px", fontSize: 12, color: "#94a3b8", fontWeight: 500, textAlign: "center", borderRight: "1px solid #f1f5f9" }}>{i + 1}</td>
+        <td style={{ padding: "6px 6px", fontSize: 12, fontWeight: 600, color: "#1e293b", textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", borderRight: "1px solid #f1f5f9" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <span style={{ height: 7, width: 7, borderRadius: "50%", background: "#10b981", flexShrink: 0 }} />
+            {order.type || "MCKESSON"}
+          </span>
+        </td>
+        <td style={{ padding: "6px 6px", fontSize: 12, color: "#334155", textAlign: "left", borderRight: "1px solid #f1f5f9" }}>
+          {order.date_ordered ? new Date(order.date_ordered).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }) : "—"}
+        </td>
+        <td style={{ padding: "6px 6px", fontSize: 12, fontWeight: 600, color: "#1e293b", textAlign: "left" }}>
+          {Number(order.quantity).toFixed(2)}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+          );
+        })()}
+      </div>
+    </div>
+  </>
+)}
+
+{/* ── Total Shortage Sidebar ── */}
+{openShortageSidebar && shortageDrug && (
+  <>
+    <div
+      className="fixed inset-0 bg-black/30 z-[200]"
+      onClick={() => setOpenShortageSidebar(false)}
+    />
+
+    <div
+      className="fixed top-0 right-0 h-full z-[210] flex flex-col bg-white"
+      style={{ width: "40%", maxWidth: "100vw", boxShadow: "-4px 0 24px rgba(0,0,0,0.15)" }}
+    >
+      {/* Top Bar */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setOpenShortageSidebar(false)}
+            className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shrink-0" />
+            <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">Total Shortage</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Info Bar */}
+      <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex-shrink-0">
+        <div className="flex items-start gap-8 flex-wrap">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">NDC</p>
+            <p className="text-[14px] tabular-nums font-mono text-slate-600">{shortageDrug.ndc}</p>
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Drug Name</p>
+            <p className="text-[14px] font-bold text-slate-900 truncate">{shortageDrug.drugName}</p>
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Billed QTY</p>
+            <p className="text-[14px] font-bold text-slate-900 tabular-nums">{shortageDrug.totalBilled.toLocaleString()}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="flex-1 overflow-auto">
+        {(() => {
+          const pbmRows = [
+            { name: "OPTUMRX",                          billed: shortageDrug.optumrx,    shortage: shortageDrug.shortageOptumrx },
+            { name: "EXPRESS SCRIPTS",                   billed: shortageDrug.express,    shortage: shortageDrug.shortageExpress },
+            { name: "CVS CAREMARK",                      billed: shortageDrug.cvsCaremark, shortage: shortageDrug.shortageCvsCaremark },
+            { name: "SS&C (FORMERLY HUMANA, ARGUS, AND DST)", billed: shortageDrug.humana, shortage: shortageDrug.shortageHumana },
+            { name: "NJ MEDICAID",                       billed: shortageDrug.njMedicaid, shortage: shortageDrug.shortageNjMedicaid },
+            { name: "MCKESSON HDS (CO-PAY CARD)",        billed: shortageDrug.pdmi,       shortage: shortageDrug.shortagePdmi },
+            { name: "HORIZON",                           billed: shortageDrug.horizon,    shortage: shortageDrug.shortageHorizon },
+            { name: "SSC",                               billed: shortageDrug.ssc,        shortage: shortageDrug.shortageSsc },
+            { name: "MEDICARE",                          billed: shortageDrug.medicare,   shortage: shortageDrug.shortageMedicare },
+          ].filter(r => r.billed > 0 || r.shortage < 0);
+
+          if (pbmRows.length === 0) {
+            return (
+              <div className="flex flex-col items-center justify-center h-48 gap-2">
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-1">
+                  <Search className="w-4 h-4 text-slate-400" />
+                </div>
+                <p className="text-sm font-semibold text-slate-500">No shortage data</p>
+              </div>
+            );
+          }
+
+          return (
+            <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
+  <colgroup>
+    <col style={{ width: "3%" }} />
+    <col style={{ width: "22%" }} />
+    <col style={{ width: "15%" }} />
+    <col style={{ width: "15%" }} />
+    <col style={{ width: "15%" }} />
+  </colgroup>
+  <thead>
+    <tr style={{ position: "sticky", top: 0, zIndex: 10, background: "#fff" }}>
+      <th style={{ padding: "7px 6px", textAlign: "center", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0" }}>#</th>
+      <th style={{ padding: "7px 6px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0" }}>INSURANCE</th>
+      <th style={{ padding: "7px 6px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <span style={{ height: 6, width: 6, borderRadius: "50%", background: "#10b981" }} />TOTAL ORDERED
+        </span>
+      </th>
+      <th style={{ padding: "7px 6px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0" }}>
+  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+    <span style={{ height: 6, width: 6, borderRadius: "50%", background: "#ef4444" }} />BILLED
+  </span>
+</th>
+      <th style={{ padding: "7px 6px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <span style={{ height: 6, width: 6, borderRadius: "50%", background: "#f59e0b" }} />SHORTAGE
+        </span>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {pbmRows.map((row, i) => (
+      <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }} className="hover:bg-slate-50/60 transition-colors">
+        <td style={{ padding: "7px 6px", fontSize: 12, color: "#94a3b8", fontWeight: 500, textAlign: "center" }}>{i + 1}</td>
+        <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 600, color: "#1e293b", textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.name}</td>
+        <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 500, color: "#475569", textAlign: "left" }}>{shortageDrug.totalOrdered.toLocaleString()}</td>
+        <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 600, color: "#1e293b", textAlign: "left" }}>{row.billed.toLocaleString()}</td>
+        <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 700, textAlign: "left", color: row.shortage < 0 ? "#dc2626" : row.shortage === 0 ? "#94a3b8" : "#059669" }}>{row.shortage === 0 ? "—" : row.shortage.toLocaleString()}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+          );
+        })()}
+      </div>
+    </div>
+  </>
+)}
+
 
             {/* Leave Dialog */}
             <AlertDialog

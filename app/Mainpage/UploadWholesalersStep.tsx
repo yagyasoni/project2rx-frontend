@@ -259,7 +259,7 @@ const UploadWholesalersStep = ({
 useEffect(() => {
   const auditId = localStorage.getItem("auditId");
   if (!auditId) return;
-  axios.get(`https://api.auditprorx.com/api/audits/${auditId}/wholesaler-files`).then((res) => {
+  axios.get(`http://localhost:5000/api/audits/${auditId}/wholesaler-files`).then((res) => {
     if (res.data?.length > 0) setExistingWholesalerFiles(res.data);
   }).catch(() => {});
 }, []);
@@ -386,7 +386,7 @@ useEffect(() => {
         // ✅ Step 1: Try to fetch admin mapping from DB
         try {
           const res = await axios.get(
-             `https://api.auditprorx.com/api/supplier-mapping-by-name/${encodeURIComponent(wholesaler.name)}`
+             `http://localhost:5000/api/supplier-mapping-by-name/${encodeURIComponent(wholesaler.name)}`
           );
 
           if (res.data?.mappings) {
@@ -484,7 +484,7 @@ useEffect(() => {
 
     try {
       const res = await axios.post(
-        `https://api.auditprorx.com/api/audits/${id}/wholesalers`,
+        `http://localhost:5000/api/audits/${id}/wholesalers`,
         formData,
       );
       clearInterval(intervalRef.current!);

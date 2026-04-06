@@ -39,7 +39,7 @@ import AdminLayout from "@/components/adminLayout";
 // ─────────────────────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────────────────────
-const API_BASE = "https://api.auditprorx.com";
+const API_BASE = "http://localhost:5000";
 
 type CellValue = string | null;
 

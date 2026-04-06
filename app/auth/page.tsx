@@ -100,7 +100,7 @@ const AuthPageInner = () => {
     // ================= LOGIN =================
     if (isLogin) {
       try {
-        const res = await axios.post("https://api.auditprorx.com/auth/login", {
+        const res = await axios.post("http://localhost:5000/auth/login", {
           email,
           password,
         });
@@ -114,9 +114,11 @@ const AuthPageInner = () => {
           return;
         }
 
-        localStorage.setItem("accessToken", res?.data?.accessToken);
-        localStorage.setItem("refreshToken", res?.data?.refreshToken);
-        localStorage.setItem("userEmail", email); // ✅ ADD THIS LINE
+        localStorage.removeItem("pharmacyName");
+localStorage.removeItem("pharmacyNameFor");
+localStorage.setItem("accessToken", res?.data?.accessToken);
+localStorage.setItem("refreshToken", res?.data?.refreshToken);
+localStorage.setItem("userEmail", email);
 
         if (!localStorage.getItem("userId")) {
           localStorage.setItem("userId", res?.data?.user?.id);
@@ -140,7 +142,7 @@ const AuthPageInner = () => {
     else {
       try {
         const res = await axios.post(
-          "https://api.auditprorx.com/auth/register",
+          "http://localhost:5000/auth/register",
           { name, email, phone, password },
         );
 
@@ -178,8 +180,8 @@ const AuthPageInner = () => {
     try {
       // isLogin true = came from admin login OTP, false = came from registration OTP
       const url = isLogin
-        ? "https://api.auditprorx.com/auth/admin/verify-otp"
-        : "https://api.auditprorx.com/auth/verify-otp";
+        ? "http://localhost:5000/auth/admin/verify-otp"
+        : "http://localhost:5000/auth/verify-otp";
 
       const res = await axios.post(url, { email, otp });
       console.log(res?.data);
@@ -208,7 +210,7 @@ const AuthPageInner = () => {
   // const resendOtp = async () => {
   //   try {
   //     const res = await axios.post(
-  //       "https://api.auditprorx.com/auth/resend-otp",
+  //       "http://localhost:5000/auth/resend-otp",
   //       { email },
   //     );
   //     console.log(res?.data);
@@ -221,8 +223,8 @@ const AuthPageInner = () => {
   const resendOtp = async () => {
     try {
       const url = isLogin
-        ? "https://api.auditprorx.com/auth/admin/resend-otp"
-        : "https://api.auditprorx.com/auth/resend-otp";
+        ? "http://localhost:5000/auth/admin/resend-otp"
+        : "http://localhost:5000/auth/resend-otp";
 
       const res = await axios.post(url, { email });
       console.log(res?.data);
@@ -251,7 +253,7 @@ const AuthPageInner = () => {
 
     try {
       const res = await axios.post(
-        "https://api.auditprorx.com/auth/forgot-password",
+        "http://localhost:5000/auth/forgot-password",
         { email },
       );
       console.log(res?.data);
@@ -606,7 +608,7 @@ const AuthPageInner = () => {
               onSuccess={async (credentialResponse) => {
                 try {
                   const res = await axios.post(
-                    "https://api.auditprorx.com/auth/google",
+                    "http://localhost:5000/auth/google",
                     {
                       credential: credentialResponse.credential,
                     },
@@ -630,7 +632,7 @@ const AuthPageInner = () => {
                 onSuccess={async (credentialResponse) => {
                   try {
                     const res = await axios.post(
-                      "https://api.auditprorx.com/auth/google",
+                      "http://localhost:5000/auth/google",
                       { credential: credentialResponse.credential },
                     );
                     localStorage.setItem("accessToken", res?.data?.token);

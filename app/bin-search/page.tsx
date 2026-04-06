@@ -16645,7 +16645,7 @@ export default function BinSearch() {
       const userId = localStorage.getItem("userId");
 
       const res = await axios.post(
-        "https://api.auditprorx.com/admin/feedbacks",
+        "http://localhost:5000/admin/feedbacks",
         {
           user_id: userId || null, // ✅ safe fallback
           subject: feedback.subject,

@@ -161,7 +161,7 @@ export default function Feedback() {
     try {
       if (!silent) setLoading(true);
 
-      const res = await axios.get("https://api.auditprorx.com/admin/feedbacks");
+      const res = await axios.get("http://localhost:5000/admin/feedbacks");
 
       const rows = res?.data?.feedbacks ?? [];
 
@@ -239,7 +239,7 @@ export default function Feedback() {
     setDeleting(true);
 
     try {
-      await axios.delete(`https://api.auditprorx.com/admin/feedbacks/${id}`);
+      await axios.delete(`http://localhost:5000/admin/feedbacks/${id}`);
       await fetchFeedbacks();
 
       setDeletedCount((c) => c + 1);
