@@ -61,7 +61,7 @@ const MasterSheetQueue = () => {
     setLoading(true);
     try {
       const res = await axios.get(
-        "http://localhost:5000/admin/master-sheet-queue",
+        "https://api.auditprorx.com/admin/master-sheet-queue",
       );
 
       const formatted = res.data.rows.map((r: any) => ({
@@ -74,7 +74,7 @@ const MasterSheetQueue = () => {
       setFetchedRows(formatted);
       // 🔹 Fetch stats
       const statsRes = await axios.get(
-        "http://localhost:5000/admin/master-sheet-queue/stats",
+        "https://api.auditprorx.com/admin/master-sheet-queue/stats",
       );
 
       setStats({
@@ -119,7 +119,7 @@ const MasterSheetQueue = () => {
 
       // 🔹 Step 1: Update PBM + payer_type
       await axios.put(
-        `http://localhost:5000/admin/master-sheet-queue/${row.id}`,
+        `https://api.auditprorx.com/admin/master-sheet-queue/${row.id}`,
         {
           pbm_name: selection.pbmName,
           payer_type: selection.payerType,
@@ -128,12 +128,12 @@ const MasterSheetQueue = () => {
 
       // 🔹 Step 2: Add to master_sheet
       await axios.post(
-        `http://localhost:5000/admin/master-sheet-queue/${row.id}/add`,
+        `https://api.auditprorx.com/admin/master-sheet-queue/${row.id}/add`,
       );
 
       setAddedIds((prev) => new Set(prev).add(row.id));
       await axios
-        .get("http://localhost:5000/admin/master-sheet-queue/stats")
+        .get("https://api.auditprorx.com/admin/master-sheet-queue/stats")
         .then((statsRes) => {
           setStats({
             total: Number(statsRes.data.total || 0),

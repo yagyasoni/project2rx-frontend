@@ -187,7 +187,7 @@ const UploadInventoryStep = ({
 useEffect(() => {
   const auditId = localStorage.getItem("auditId");
   if (!auditId) return;
-  axios.get(`http://localhost:5000/api/audits/${auditId}/inventory-files`).then((res) => {
+  axios.get(`https://api.auditprorx.com/api/audits/${auditId}/inventory-files`).then((res) => {
   if (res.data?.length > 0) setExistingFileName(res.data[0].file_name);
 }).catch(() => {})
 }, []);
@@ -402,7 +402,7 @@ useEffect(() => {
       console.log("⬆️ Starting upload...");
 
       const res = await axios.post(
-       `http://localhost:5000/api/audits/${id}/inventory`,
+       `https://api.auditprorx.com/api/audits/${id}/inventory`,
         formData,
       );
 

@@ -201,7 +201,7 @@ const DisclaimerBanner = () => {
             <p className="text-[11px] text-amber-700 leading-relaxed">
               <span className="font-semibold">Important:</span> After uploading
               each file, verify all required columns are correctly mapped before
-              clicking <span className="font-semibold">View Audit</span>.
+              clicking <span className="font-semibold">Upload</span>.
             </p>
           </div>
         </div>
@@ -259,7 +259,7 @@ const UploadWholesalersStep = ({
 useEffect(() => {
   const auditId = localStorage.getItem("auditId");
   if (!auditId) return;
-  axios.get(`http://localhost:5000/api/audits/${auditId}/wholesaler-files`).then((res) => {
+  axios.get(`https://api.auditprorx.com/api/audits/${auditId}/wholesaler-files`).then((res) => {
     if (res.data?.length > 0) setExistingWholesalerFiles(res.data);
   }).catch(() => {});
 }, []);
@@ -386,7 +386,7 @@ useEffect(() => {
         // ✅ Step 1: Try to fetch admin mapping from DB
         try {
           const res = await axios.get(
-             `http://localhost:5000/api/supplier-mapping-by-name/${encodeURIComponent(wholesaler.name)}`
+             `https://api.auditprorx.com/api/supplier-mapping-by-name/${encodeURIComponent(wholesaler.name)}`
           );
 
           if (res.data?.mappings) {
@@ -484,7 +484,7 @@ useEffect(() => {
 
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/audits/${id}/wholesalers`,
+        `https://api.auditprorx.com/api/audits/${id}/wholesalers`,
         formData,
       );
       clearInterval(intervalRef.current!);
@@ -644,7 +644,7 @@ const handleDelete = (id: string) => {
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${wholesaler.file ? "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50" : "bg-gray-900 text-white hover:bg-gray-800"}`}
                       >
                         <Upload className="w-3 h-3" />
-                        {wholesaler.file ? "Replace" : "Upload"}
+                        {wholesaler.file ? "Replace" : "Browse"}
                       </span>
                       <input
                         id={`wholesaler-${wholesaler.id}`}
@@ -781,16 +781,17 @@ const handleDelete = (id: string) => {
           </button>
           <div className="flex items-center gap-2">
             <Link href="/ReportsPage">
-              <button className="px-4 py-2 text-xs font-semibold text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors">
-                Skip
+              <button className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors">
+                <Eye className="w-3.5 h-3.5" />
+                View Report
               </button>
             </Link>
             <button
               onClick={handleSubmit}
               className="flex items-center gap-2 px-5 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm"
             >
-              <Eye className="w-3.5 h-3.5" />
-              View Audit
+              <Upload className="w-3.5 h-3.5" />
+              Upload
             </button>
           </div>
         </div>

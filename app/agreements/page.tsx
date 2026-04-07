@@ -1246,7 +1246,7 @@ const AgreementsPage = () => {
         const userId = localStorage.getItem("userId");
         if (userId) {
           await axios.post(
-            `http://localhost:5000
+            `https://api.auditprorx.com
 /api/user-suppliers/${userId}`,
             {
               supplierNames: selectedSuppliers,

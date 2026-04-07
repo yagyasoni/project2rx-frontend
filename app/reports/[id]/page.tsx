@@ -464,9 +464,7 @@ const [shortageDrug, setShortageDrug] = useState<InventoryRow | null>(null);
           200,
         );
 
-        const res = await fetch(
-          `https://api.auditprorx.com/api/audits/${auditId}/report`,
-        );
+        const res = await fetch(`https://api.auditprorx.com/api/audits/${auditId}/report`);
         const json = await res.json();
         const data = Array.isArray(json)
           ? json
@@ -558,9 +556,7 @@ const [shortageDrug, setShortageDrug] = useState<InventoryRow | null>(null);
         });
 
         setInventoryData(norm);
-        const ar = await fetch(
-          `https://api.auditprorx.com/api/audits/${auditId}`,
-        );
+        const ar = await fetch(`https://api.auditprorx.com/api/audits/${auditId}`);
         setAuditDates(await ar.json());
       } catch (e) {
         console.error(e);
@@ -835,7 +831,7 @@ const handleOpenBilledSidebar = async (row: InventoryRow, e: React.MouseEvent) =
   setRxFilters([]);
   try {
     const res = await fetch(
-      `http://localhost:5000/api/audits/${auditId}/inventory-detail/${encodeURIComponent(row.ndc)}`
+      `https://api.auditprorx.com/api/audits/${auditId}/inventory-detail/${encodeURIComponent(row.ndc)}`
     );
     const json = await res.json();
     console.log("🔍 Drug detail API response:", json); // ← check this in browser console
@@ -884,7 +880,7 @@ const handleOpenOrderedSidebar = async (row: InventoryRow, e: React.MouseEvent) 
   setOrderFilters([]);
   try {
     const res = await fetch(
-      `http://localhost:5000/api/audits/${auditId}/wholesaler-detail/${encodeURIComponent(row.ndc)}`
+      `https://api.auditprorx.com/api/audits/${auditId}/wholesaler-detail/${encodeURIComponent(row.ndc)}`
     );
     const json = await res.json();
     const lines = Array.isArray(json) ? json : [];
@@ -1907,14 +1903,14 @@ const handleOpenShortageSidebar = (row: InventoryRow, e: React.MouseEvent) => {
                               onClick={
                                 c.key === "totalBilled"
                                   ? (e) => handleOpenBilledSidebar(row, e)
-                                  : c.key === "totalShortage"
+                                  : c.key === "totalShortage" || c.key === "highestShortage"
                                     ? (e) => handleOpenShortageSidebar(row, e)
                                     : undefined
                               }
                             >
                               <span
                                 className={`text-xs ${
-                                  c.key === "totalBilled" || c.key === "totalShortage"
+                                  c.key === "totalBilled" || c.key === "totalShortage" || c.key === "highestShortage"
                                     ? "cursor-pointer hover:text-blue-600 hover:underline"
                                     : ""
                                 }`}
@@ -2335,9 +2331,14 @@ const handleOpenShortageSidebar = (row: InventoryRow, e: React.MouseEvent) => {
           const activeLines = rxLines.filter(r =>
             rxTab === "current" ? !r.is_outside_date_range : r.is_outside_date_range
           );
-          const filtered = rxFilters.length > 0
+          const filtered = (rxFilters.length > 0
             ? activeLines.filter(r => rxFilters.includes(r.pri_insurance))
-            : activeLines;
+            : activeLines
+          ).sort((a, b) => {
+            const da = a.date_filled ? new Date(a.date_filled).getTime() : 0;
+            const db = b.date_filled ? new Date(b.date_filled).getTime() : 0;
+            return db - da;
+          });
 
           if (filtered.length === 0) {
             return (
