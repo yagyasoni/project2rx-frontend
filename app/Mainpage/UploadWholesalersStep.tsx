@@ -224,7 +224,7 @@ const UploadWholesalersStep = ({
   const [selectedInDrawer, setSelectedInDrawer] = useState<string[]>([]);
   const [drawerSearch, setDrawerSearch] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);
-
+const [uploadedIds, setUploadedIds] = useState<Set<string>>(new Set());
   // Auto-populate wholesaler list from user's DB selections on mount
   useEffect(() => {
     if (!loading && selectedSuppliers.length > 0 && wholesalers.length === 0) {
@@ -373,6 +373,11 @@ useEffect(() => {
     const file = event.target.files?.[0] || null;
     const wholesaler = wholesalers.find((w) => w.id === id);
     setWholesalers(wholesalers.map((w) => (w.id === id ? { ...w, file } : w)));
+    setUploadedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
 
     if (file && wholesaler) {
       const reader = new FileReader();
@@ -436,7 +441,7 @@ useEffect(() => {
     }
 
     for (const w of wholesalers) {
-      if (!w.file) continue;
+      if (!w.file || uploadedIds.has(w.id)) continue;
       const mapping = wholesalerFieldMappings[w.id] || {};
       const missing = WHOLESALER_REQUIRED_FIELDS.filter(
         (f) => !mapping[f.key],
@@ -450,23 +455,30 @@ useEffect(() => {
     }
 
     const formData = new FormData();
-    const metadata: {
-      field: string;
-      wholesaler_name: string;
-      headerMapping: Record<string, string>;
-    }[] = [];
+const metadata: {
+  field: string;
+  wholesaler_name: string;
+  headerMapping: Record<string, string>;
+}[] = [];
 
-    wholesalers.forEach((w) => {
-      if (w.file) {
-        const fieldName = w.name.toLowerCase().replace(/\s+/g, "");
-        metadata.push({
-          field: fieldName,
-          wholesaler_name: w.name,
-          headerMapping: wholesalerFieldMappings[w.id] || {},
-        });
-        formData.append(fieldName, w.file);
-      }
+const newUploads: string[] = [];
+wholesalers.forEach((w) => {
+  if (w.file && !uploadedIds.has(w.id)) {
+    const fieldName = w.name.toLowerCase().replace(/\s+/g, "");
+    metadata.push({
+      field: fieldName,
+      wholesaler_name: w.name,
+      headerMapping: wholesalerFieldMappings[w.id] || {},
     });
+    formData.append(fieldName, w.file);
+    newUploads.push(w.id);
+  }
+});
+
+if (newUploads.length === 0) {
+  toast("All files have already been uploaded. Add a new supplier or replace a file to upload.");
+  return;
+}
 
     formData.append("metadata", JSON.stringify(metadata));
 
@@ -490,9 +502,14 @@ useEffect(() => {
       clearInterval(intervalRef.current!);
       setUploadProgress(100);
       setTimeout(() => {
-        setIsUploading(false);
-        setUploadSuccess(true);
-      }, 500);
+  setIsUploading(false);
+  setUploadSuccess(true);
+  setUploadedIds((prev) => {
+    const next = new Set(prev);
+    newUploads.forEach((id) => next.add(id));
+    return next;
+  });
+}, 500);
       console.log(res.data);
     } catch (err: any) {
       clearInterval(intervalRef.current!);
