@@ -21,6 +21,7 @@ import {
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { createCheckoutSession } from "@/components/checkoutSession";
 
 // ─────────────────────────────────────────────────────────────
 // Inner component — reads search params
@@ -191,9 +192,25 @@ const AuthPageInner = () => {
         localStorage.setItem("userId", res?.data?.user?.id);
         router.push("/admin");
       } else {
-        // Regular user registration OTP
+        // ✅ User verified
         toast(res?.data?.message);
-        router.push("/info-page");
+
+        const userId = localStorage.getItem("userId");
+        // const email = localStorage.getItem("userEmail");
+
+        try {
+          console.log("Creating Stripe checkout session for email:", email);
+          const checkout = await createCheckoutSession(userId, email);
+
+          // Optional UX
+          toast("Redirecting to secure payment...");
+
+          // 🔥 Redirect to Stripe (ONLY THIS)
+          window.location.href = checkout.url;
+        } catch (err) {
+          console.error("Stripe checkout failed:", err);
+          toast("Something went wrong while redirecting to payment");
+        }
       }
     } catch (err) {
       console.error("OTP verification failed:", err);

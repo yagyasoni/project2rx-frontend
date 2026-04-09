@@ -330,6 +330,14 @@ export default function InventoryReportPage() {
   const [openFilter, setOpenFilter] = useState(false);
   const [openDrugSidebar, setOpenDrugSidebar] = useState(false);
   const [activeDrug, setActiveDrug] = useState<InventoryRow | null>(null);
+  // ADD this alongside the existing state variables
+  const [activeSidebar, setActiveSidebar] = useState<"ndc" | "drug" | null>(
+    null,
+  );
+  const [drugDetail, setDrugDetail] = useState<any>(null);
+  const [drugDetailLoading, setDrugDetailLoading] = useState(false);
+  const [outsideRange, setOutsideRange] = useState(false);
+  const [includeBilled, setIncludeBilled] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [auditDates, setAuditDates] = useState<any>(null);
@@ -763,6 +771,27 @@ export default function InventoryReportPage() {
     isLeavingConfirmed.current = true;
     setShowLeaveDialog(false);
     router.push(pendingHref ?? "/ReportsPage");
+  };
+
+  const fetchDrugDetail = async (
+    ndc: string,
+    outside: boolean,
+    billed: boolean,
+  ) => {
+    setDrugDetailLoading(true);
+    setDrugDetail(null);
+    try {
+      const res = await fetch(
+        `https://api.auditprorx.com/api/audits/${auditId}/drug-detail/${encodeURIComponent(ndc)}?outside_range=${outside}&include_billed=${billed}`,
+      );
+      const data = await res.json();
+      console.log(data);
+      setDrugDetail(data);
+    } catch (e) {
+      console.error("fetchDrugDetail error:", e);
+    } finally {
+      setDrugDetailLoading(false);
+    }
   };
 
   const handleExport = () => {
@@ -1629,10 +1658,10 @@ export default function InventoryReportPage() {
                           key={row.id}
                           className={`srow cursor-pointer ${isSel ? "sel" : ""} ${isEven ? "even" : ""}`}
                           style={{ height: 36 }}
-                          onClick={() => {
-                            setActiveDrug(row);
-                            setOpenDrugSidebar(true);
-                          }}
+                          // onClick={() => {
+                          //   setActiveDrug(row);
+                          //   setOpenDrugSidebar(true);
+                          // }}
                         >
                           <td
                             className="sticky z-20 sc"
@@ -1677,6 +1706,12 @@ export default function InventoryReportPage() {
                                 textAlign: "center",
                                 padding: "0 8px",
                               }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveDrug(row);
+                                setActiveSidebar("ndc");
+                                setOpenDrugSidebar(true);
+                              }}
                             >
                               <span className="text-[11px] font-mono text-slate-500 tracking-tight">
                                 {row.ndc}
@@ -1692,6 +1727,21 @@ export default function InventoryReportPage() {
                                 background: bg,
                                 textAlign: "left",
                                 padding: "0 12px",
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveDrug(row);
+                                setActiveSidebar("drug");
+                                setOutsideRange(false);
+                                setIncludeBilled(false);
+                                setDrugDetail(null);
+                                setOpenDrugSidebar(true);
+                                // fetchDrugDetail(row.ndc, false, false);
+                                fetchDrugDetail(
+                                  row.ndc,
+                                  outsideRange,
+                                  includeBilled,
+                                );
                               }}
                             >
                               <span
@@ -1912,79 +1962,386 @@ export default function InventoryReportPage() {
             </Dialog>
 
             {/* Drug Sidebar */}
-            <Sheet open={openDrugSidebar} onOpenChange={setOpenDrugSidebar}>
-              <SheetContent className="w-[440px] sm:w-[520px]">
-                <SheetHeader>
-                  <SheetTitle className="text-lg font-bold">
-                    Drug Details
-                  </SheetTitle>
-                  <SheetDescription>{activeDrug?.drugName}</SheetDescription>
-                </SheetHeader>
-                {activeDrug && (
-                  <div className="mt-6 space-y-3">
-                    {(
-                      [
-                        ["NDC", activeDrug.ndc],
-                        ["Pkg Size", activeDrug.pkgSize],
-                        [
-                          "Total Ordered",
-                          activeDrug.totalOrdered.toLocaleString(),
-                        ],
-                        [
-                          "Total Billed",
-                          activeDrug.totalBilled.toLocaleString(),
-                        ],
-                        ["Cost", `$${activeDrug.cost.toFixed(2)}`],
-                        ["Amount", `$${activeDrug.amount.toFixed(2)}`],
-                      ] as [string, string | number][]
-                    ).map(([l, v]) => (
-                      <div
-                        key={l}
-                        className="p-3 bg-slate-50 rounded-lg border border-slate-200"
-                      >
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          {l}
+
+            <Sheet
+              open={openDrugSidebar}
+              // onOpenChange={(o) => {
+              //   setOpenDrugSidebar(o);
+              //   if (!o) setActiveSidebar(null);
+              // }}
+              onOpenChange={(o) => {
+                setOpenDrugSidebar(o);
+                if (!o) {
+                  setActiveSidebar(null);
+                  setDrugDetail(null);
+                  setOutsideRange(false);
+                  setIncludeBilled(false);
+                }
+              }}
+            >
+              <SheetContent className="w-[480px] sm:w-[540px] overflow-y-auto">
+                {/* ── NDC LOOKUP drawer ── */}
+                {activeSidebar === "ndc" && activeDrug && (
+                  <>
+                    <SheetHeader className="pb-4 border-b border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <SheetTitle className="text-sm font-bold uppercase tracking-widest text-slate-500">
+                          NDC Lookup
+                        </SheetTitle>
+                      </div>
+                    </SheetHeader>
+                    <div className="mt-5 space-y-5">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                          NDC Number
                         </p>
-                        <p className="text-sm font-semibold text-slate-800 mt-0.5">
-                          {v}
+                        <p className="text-sm font-mono font-semibold text-slate-800">
+                          {activeDrug.ndc}
                         </p>
                       </div>
-                    ))}
-                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Total Shortage
-                      </p>
-                      <p className="text-sm font-semibold mt-0.5">
-                        {shortage(activeDrug.totalShortage)}
-                      </p>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                          Drug Name
+                        </p>
+                        <p className="text-sm font-semibold text-slate-800">
+                          {activeDrug.drugName}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">
+                          Package Size Quantity
+                        </p>
+                        <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden">
+                          <thead>
+                            <tr className="bg-slate-50">
+                              <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                Source
+                              </th>
+                              <th className="px-3 py-2 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                Package Size Qty
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-t border-slate-100">
+                              <td className="px-3 py-2.5">
+                                <span className="flex items-center gap-2">
+                                  <span className="h-2 w-2 rounded-full bg-slate-400 shrink-0" />
+                                  <span className="text-slate-600">
+                                    Medispan
+                                  </span>
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-right text-slate-400">
+                                N/A
+                              </td>
+                            </tr>
+                            <tr className="border-t border-slate-100">
+                              <td className="px-3 py-2.5">
+                                <span className="flex items-center gap-2">
+                                  <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
+                                  <span className="text-slate-600">FDB</span>
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-right font-semibold text-slate-800">
+                                {activeDrug.pkgSize > 0
+                                  ? activeDrug.pkgSize.toLocaleString()
+                                  : "N/A"}
+                              </td>
+                            </tr>
+                            <tr className="border-t border-slate-100">
+                              <td className="px-3 py-2.5">
+                                <span className="flex items-center gap-2">
+                                  <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                                  <span className="text-slate-600">FDA</span>
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-right text-slate-400">
+                                N/A
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                        <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
-                          Medicare
-                        </p>
-                        <p className="text-sm font-semibold text-emerald-800 mt-0.5">
-                          {activeDrug.medicare.toLocaleString()}
-                        </p>
+                  </>
+                )}
+
+                {/* ── DRUG NAME drawer ── */}
+                {/* ── DRUG NAME drawer ── */}
+                {activeSidebar === "drug" && activeDrug && (
+                  <>
+                    <SheetHeader className="pb-4 border-b border-slate-100">
+                      <SheetTitle className="text-base font-bold text-slate-800">
+                        {activeDrug.drugName}
+                      </SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-5 space-y-5">
+                      {/* Top info: NDC | Drug Name | Total QTY */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                            NDC
+                          </p>
+                          <p className="text-xs font-mono font-semibold text-slate-700 break-all">
+                            {activeDrug.ndc}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                            Drug Name
+                          </p>
+                          <p
+                            className="text-xs font-semibold text-slate-700 truncate"
+                            title={activeDrug.drugName}
+                          >
+                            {activeDrug.drugName}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                            Total QTY
+                          </p>
+                          <p className="text-xs font-bold text-slate-800 tabular-nums">
+                            {drugDetail
+                              ? drugDetail.total_qty.toLocaleString()
+                              : drugDetailLoading
+                                ? "…"
+                                : activeDrug.totalOrdered.toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                        <p className="text-[10px] font-bold text-purple-700 uppercase tracking-wider">
-                          NJ Medicaid
-                        </p>
-                        <p className="text-sm font-semibold text-purple-800 mt-0.5">
-                          {activeDrug.njMedicaid.toLocaleString()}
-                        </p>
+
+                      {/* Date range bar — real dates from API */}
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 space-y-2">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          <span>Start</span>
+                          <span>End</span>
+                        </div>
+                        <div className="relative h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                          <div className="absolute inset-0 bg-emerald-400 rounded-full" />
+                        </div>
+                        <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                          <span>
+                            {drugDetail?.audit?.wholesaler_start_date
+                              ? fmt(
+                                  new Date(
+                                    drugDetail.audit.wholesaler_start_date,
+                                  ),
+                                )
+                              : wsFrom}
+                          </span>
+                          <span>
+                            {drugDetail?.audit?.wholesaler_end_date
+                              ? fmt(
+                                  new Date(
+                                    drugDetail.audit.wholesaler_end_date,
+                                  ),
+                                )
+                              : wsTo}
+                          </span>
+                        </div>
                       </div>
-                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 col-span-2">
-                        <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
-                          NJ Billed (Medicare + Medicaid)
-                        </p>
-                        <p className="text-sm font-semibold text-amber-800 mt-0.5">
-                          {activeDrug.njBilled.toLocaleString()}
-                        </p>
+
+                      {/* Tabs: Current / Outside date range */}
+                      <div className="flex gap-0 border-b border-slate-200">
+                        <button
+                          className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors ${
+                            !outsideRange
+                              ? "text-emerald-700 border-emerald-500"
+                              : "text-slate-500 border-transparent hover:text-slate-700"
+                          }`}
+                          onClick={() => {
+                            if (outsideRange) {
+                              setOutsideRange(false);
+                              fetchDrugDetail(
+                                activeDrug.ndc,
+                                false,
+                                includeBilled,
+                              );
+                            }
+                          }}
+                        >
+                          Current Date Range
+                          {!outsideRange && drugDetail && (
+                            <span className="ml-1.5 bg-emerald-100 text-emerald-700 rounded-full px-1.5 py-0.5 text-[10px] font-bold">
+                              {
+                                drugDetail.rows.filter(
+                                  (r: any) => r.source === "wholesaler",
+                                ).length
+                              }
+                            </span>
+                          )}
+                        </button>
+                        <button
+                          className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors ${
+                            outsideRange
+                              ? "text-emerald-700 border-emerald-500"
+                              : "text-slate-500 border-transparent hover:text-slate-700"
+                          }`}
+                          onClick={() => {
+                            if (!outsideRange) {
+                              setOutsideRange(true);
+                              fetchDrugDetail(
+                                activeDrug.ndc,
+                                true,
+                                includeBilled,
+                              );
+                            }
+                          }}
+                        >
+                          Outside Date Range
+                          {outsideRange && drugDetail && (
+                            <span className="ml-1.5 bg-slate-100 text-slate-600 rounded-full px-1.5 py-0.5 text-[10px] font-bold">
+                              {
+                                drugDetail.rows.filter(
+                                  (r: any) => r.source === "wholesaler",
+                                ).length
+                              }
+                            </span>
+                          )}
+                        </button>
                       </div>
+
+                      {/* Include Billed checkbox */}
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="includeBilled"
+                          checked={includeBilled}
+                          onCheckedChange={(checked) => {
+                            const next = !!checked;
+                            setIncludeBilled(next);
+                            fetchDrugDetail(activeDrug.ndc, outsideRange, next);
+                          }}
+                          className="h-3.5 w-3.5"
+                        />
+                        <label
+                          htmlFor="includeBilled"
+                          className="text-xs font-medium text-slate-600 cursor-pointer select-none"
+                        >
+                          Include Billed
+                        </label>
+                      </div>
+
+                      {/* Wholesaler rows table */}
+                      {drugDetailLoading ? (
+                        <div className="flex items-center justify-center py-10">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="h-6 w-6 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+                            <p className="text-xs text-slate-400">
+                              Loading wholesaler data…
+                            </p>
+                          </div>
+                        </div>
+                      ) : drugDetail ? (
+                        <div className="rounded-lg border border-slate-200 overflow-hidden">
+                          <div className="overflow-x-auto max-h-[380px] overflow-y-auto">
+                            <table
+                              className="w-full text-xs"
+                              style={{
+                                borderCollapse: "separate",
+                                borderSpacing: 0,
+                              }}
+                            >
+                              <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                  <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider w-8">
+                                    #
+                                  </th>
+                                  <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    Type
+                                  </th>
+                                  <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    Date
+                                  </th>
+                                  <th className="px-3 py-2 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    QTY
+                                  </th>
+                                  <th className="px-3 py-2 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    RT
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {drugDetail.rows.length === 0 ? (
+                                  <tr>
+                                    <td
+                                      colSpan={5}
+                                      className="px-3 py-10 text-center text-slate-400 text-xs"
+                                    >
+                                      No wholesaler data for this NDC
+                                    </td>
+                                  </tr>
+                                ) : (
+                                  drugDetail.rows.map((r: any) => (
+                                    <tr
+                                      key={`${r.source}-${r.index}`}
+                                      className={`border-t border-slate-100 hover:bg-slate-50 transition-colors ${r.source === "inventory" ? "bg-blue-50/30" : ""}`}
+                                    >
+                                      <td className="px-3 py-2 text-slate-400 tabular-nums text-[11px]">
+                                        {r.index}
+                                      </td>
+                                      <td className="px-3 py-2">
+                                        <span className="flex items-center gap-1.5">
+                                          <span
+                                            className={`h-2 w-2 rounded-full shrink-0 ${r.source === "inventory" ? "bg-blue-400" : "bg-emerald-500"}`}
+                                          />
+                                          <span className="font-semibold text-slate-700 uppercase text-[10px] tracking-wide">
+                                            {r.type}
+                                          </span>
+                                        </span>
+                                      </td>
+                                      <td className="px-3 py-2 text-slate-600 whitespace-nowrap tabular-nums">
+                                        {r.invoice_date
+                                          ? fmt(new Date(r.invoice_date))
+                                          : "—"}
+                                      </td>
+                                      <td className="px-3 py-2 text-right font-semibold text-slate-800 tabular-nums">
+                                        {Number(r.quantity).toLocaleString()}
+                                      </td>
+                                      <td className="px-3 py-2 text-right font-bold text-emerald-600 tabular-nums">
+                                        {Number(r.rt).toLocaleString()}
+                                      </td>
+                                    </tr>
+                                  ))
+                                )}
+                              </tbody>
+                              {drugDetail.rows.length > 0 && (
+                                <tfoot className="sticky bottom-0 border-t-2 border-slate-300 bg-slate-50">
+                                  <tr>
+                                    <td
+                                      colSpan={3}
+                                      className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider"
+                                    >
+                                      Total
+                                    </td>
+                                    <td className="px-3 py-2 text-right font-bold text-slate-800 tabular-nums text-xs">
+                                      {drugDetail.rows
+                                        .reduce(
+                                          (s: number, r: any) => s + r.quantity,
+                                          0,
+                                        )
+                                        .toLocaleString()}
+                                    </td>
+                                    <td className="px-3 py-2 text-right font-bold text-emerald-600 tabular-nums text-xs">
+                                      {drugDetail.rows[
+                                        drugDetail.rows.length - 1
+                                      ].rt.toLocaleString()}
+                                    </td>
+                                  </tr>
+                                </tfoot>
+                              )}
+                            </table>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-10 text-center text-xs text-slate-400">
+                          No data available
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  </>
                 )}
               </SheetContent>
             </Sheet>

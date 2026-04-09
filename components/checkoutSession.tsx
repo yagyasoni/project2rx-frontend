@@ -1,14 +1,14 @@
-export const createCheckoutSession = async (userId: number, email: string) => {
-  const res = await fetch(
+// "use client";
+import axios from "axios";
+
+export const createCheckoutSession = async (userId: any, email: string) => {
+  const res = await axios.post(
     "https://api.auditprorx.com/pay/create-checkout-session",
     {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ userId, email }),
+      userId,
+      email,
     },
   );
 
-  return res.json();
+  return res.data;
 };
