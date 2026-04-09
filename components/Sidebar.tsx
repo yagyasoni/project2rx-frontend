@@ -58,23 +58,26 @@ export default function Sidebar({
           },
         });
         console.log(res.data);
-        localStorage.setItem(
-          "pharmacyName",
-          res?.data?.pharmacy?.pharmacy_name,
-        );
-        setAccountName(res?.data?.pharmacy?.pharmacy_name || "Account Name");
-        // setAccountName(localStorage.getItem("pharmacyName") || "Account Name");
+        localStorage.setItem("pharmacyName", res?.data?.pharmacy?.pharmacy_name);
+localStorage.setItem("pharmacyNameFor", localStorage.getItem("userEmail") || "");
+setAccountName(res?.data?.pharmacy?.pharmacy_name || "Account Name");
+        
       } catch (err) {
         console.log("error");
          setAccountName(localStorage.getItem("pharmacyName") || "Account Name");
       }
     };
-    const cached = localStorage.getItem("pharmacyName");
-  if (cached) {
-    setAccountName(cached); // ✅ use cached, skip API call
-  } else {
-    pharmacy(); // ✅ only fetch if nothing cached
-  }
+    const cachedEmail = localStorage.getItem("userEmail");
+const cachedPharmacyFor = localStorage.getItem("pharmacyNameFor");
+const cached = localStorage.getItem("pharmacyName");
+
+if (cached && cachedPharmacyFor === cachedEmail) {
+  setAccountName(cached);
+} else {
+  localStorage.removeItem("pharmacyName");
+  localStorage.removeItem("pharmacyNameFor");
+}
+pharmacy();
   }, []);
 
   const [openPopup, setOpenPopup] = useState<Popup>(null);

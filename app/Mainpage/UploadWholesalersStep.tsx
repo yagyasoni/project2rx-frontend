@@ -201,7 +201,7 @@ const DisclaimerBanner = () => {
             <p className="text-[11px] text-amber-700 leading-relaxed">
               <span className="font-semibold">Important:</span> After uploading
               each file, verify all required columns are correctly mapped before
-              clicking <span className="font-semibold">View Audit</span>.
+              clicking <span className="font-semibold">Upload</span>.
             </p>
           </div>
         </div>
@@ -224,7 +224,7 @@ const UploadWholesalersStep = ({
   const [selectedInDrawer, setSelectedInDrawer] = useState<string[]>([]);
   const [drawerSearch, setDrawerSearch] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);
-
+const [uploadedIds, setUploadedIds] = useState<Set<string>>(new Set());
   // Auto-populate wholesaler list from user's DB selections on mount
   useEffect(() => {
     if (!loading && selectedSuppliers.length > 0 && wholesalers.length === 0) {
@@ -373,6 +373,11 @@ useEffect(() => {
     const file = event.target.files?.[0] || null;
     const wholesaler = wholesalers.find((w) => w.id === id);
     setWholesalers(wholesalers.map((w) => (w.id === id ? { ...w, file } : w)));
+    setUploadedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
 
     if (file && wholesaler) {
       const reader = new FileReader();
@@ -436,7 +441,7 @@ useEffect(() => {
     }
 
     for (const w of wholesalers) {
-      if (!w.file) continue;
+      if (!w.file || uploadedIds.has(w.id)) continue;
       const mapping = wholesalerFieldMappings[w.id] || {};
       const missing = WHOLESALER_REQUIRED_FIELDS.filter(
         (f) => !mapping[f.key],
@@ -450,23 +455,30 @@ useEffect(() => {
     }
 
     const formData = new FormData();
-    const metadata: {
-      field: string;
-      wholesaler_name: string;
-      headerMapping: Record<string, string>;
-    }[] = [];
+const metadata: {
+  field: string;
+  wholesaler_name: string;
+  headerMapping: Record<string, string>;
+}[] = [];
 
-    wholesalers.forEach((w) => {
-      if (w.file) {
-        const fieldName = w.name.toLowerCase().replace(/\s+/g, "");
-        metadata.push({
-          field: fieldName,
-          wholesaler_name: w.name,
-          headerMapping: wholesalerFieldMappings[w.id] || {},
-        });
-        formData.append(fieldName, w.file);
-      }
+const newUploads: string[] = [];
+wholesalers.forEach((w) => {
+  if (w.file && !uploadedIds.has(w.id)) {
+    const fieldName = w.name.toLowerCase().replace(/\s+/g, "");
+    metadata.push({
+      field: fieldName,
+      wholesaler_name: w.name,
+      headerMapping: wholesalerFieldMappings[w.id] || {},
     });
+    formData.append(fieldName, w.file);
+    newUploads.push(w.id);
+  }
+});
+
+if (newUploads.length === 0) {
+  toast("All files have already been uploaded. Add a new supplier or replace a file to upload.");
+  return;
+}
 
     formData.append("metadata", JSON.stringify(metadata));
 
@@ -490,9 +502,14 @@ useEffect(() => {
       clearInterval(intervalRef.current!);
       setUploadProgress(100);
       setTimeout(() => {
-        setIsUploading(false);
-        setUploadSuccess(true);
-      }, 500);
+  setIsUploading(false);
+  setUploadSuccess(true);
+  setUploadedIds((prev) => {
+    const next = new Set(prev);
+    newUploads.forEach((id) => next.add(id));
+    return next;
+  });
+}, 500);
       console.log(res.data);
     } catch (err: any) {
       clearInterval(intervalRef.current!);
@@ -644,7 +661,7 @@ const handleDelete = (id: string) => {
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${wholesaler.file ? "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50" : "bg-gray-900 text-white hover:bg-gray-800"}`}
                       >
                         <Upload className="w-3 h-3" />
-                        {wholesaler.file ? "Replace" : "Upload"}
+                        {wholesaler.file ? "Replace" : "Browse"}
                       </span>
                       <input
                         id={`wholesaler-${wholesaler.id}`}
@@ -781,16 +798,17 @@ const handleDelete = (id: string) => {
           </button>
           <div className="flex items-center gap-2">
             <Link href="/ReportsPage">
-              <button className="px-4 py-2 text-xs font-semibold text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors">
-                Skip
+              <button className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors">
+                <Eye className="w-3.5 h-3.5" />
+                View Report
               </button>
             </Link>
             <button
               onClick={handleSubmit}
               className="flex items-center gap-2 px-5 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm"
             >
-              <Eye className="w-3.5 h-3.5" />
-              View Audit
+              <Upload className="w-3.5 h-3.5" />
+              Upload
             </button>
           </div>
         </div>

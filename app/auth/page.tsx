@@ -115,9 +115,11 @@ const AuthPageInner = () => {
           return;
         }
 
-        localStorage.setItem("accessToken", res?.data?.accessToken);
-        localStorage.setItem("refreshToken", res?.data?.refreshToken);
-        localStorage.setItem("userEmail", email); // ✅ ADD THIS LINE
+        localStorage.removeItem("pharmacyName");
+localStorage.removeItem("pharmacyNameFor");
+localStorage.setItem("accessToken", res?.data?.accessToken);
+localStorage.setItem("refreshToken", res?.data?.refreshToken);
+localStorage.setItem("userEmail", email);
 
         if (!localStorage.getItem("userId")) {
           localStorage.setItem("userId", res?.data?.user?.id);
