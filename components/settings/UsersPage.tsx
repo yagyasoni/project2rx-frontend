@@ -8,7 +8,7 @@ import api from "@/lib/api";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 
-const userId = localStorage.getItem("userId");
+// const userId = localStorage.getItem("userId");
 
 const UsersPage = () => {
   const [search, setSearch] = useState("");
@@ -72,6 +72,7 @@ const UsersPage = () => {
   );
   useEffect(() => {
     const handleSelectUser = async () => {
+      const userId = localStorage.getItem("userId");
       setSubLoading(true);
 
       try {
@@ -237,6 +238,7 @@ const UsersPage = () => {
                           {/* ✅ CANCEL BUTTON (AVAILABLE EVEN WITHOUT ID) */}
                           <Button
                             onClick={async () => {
+                              const userId = localStorage.getItem("userId");
                               try {
                                 await axios.post(
                                   `https://api.auditprorx.com/pay/cancel-subscription`,
@@ -285,6 +287,7 @@ const UsersPage = () => {
                               subscription.status === "past_due") && (
                               <Button
                                 onClick={async () => {
+                                  const userId = localStorage.getItem("userId");
                                   try {
                                     await axios.post(
                                       `https://api.auditprorx.com/pay/cancel-subscription`,
