@@ -126,7 +126,7 @@ const SupplierMappingPage = () => {
     const fetchSuppliers = async () => {
       try {
         const res = await axios.get(
-          `${process.env.API_BASE_URL}/api/suppliers`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers`,
         );
 
         setSuppliers(res.data);
@@ -159,7 +159,7 @@ const SupplierMappingPage = () => {
 
     try {
       const res = await axios.post(
-        `${process.env.API_BASE_URL}/api/suppliers`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers`,
         {
           name: newSupplierName.trim(),
         },
@@ -180,7 +180,9 @@ const SupplierMappingPage = () => {
     // if (!ok) return;
 
     try {
-      await axios.delete(`${process.env.API_BASE_URL}/api/suppliers/${id}`);
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers/${id}`,
+      );
 
       setSuppliers((prev) => prev.filter((s) => s.id !== id));
 
@@ -206,7 +208,7 @@ const SupplierMappingPage = () => {
 
     try {
       const res = await axios.get(
-        `${process.env.API_BASE_URL}/api/supplier-mapping/${supplier.id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/supplier-mapping/${supplier.id}`,
       );
 
       const data = res.data;
@@ -283,7 +285,7 @@ const SupplierMappingPage = () => {
 
     try {
       const res = await axios.post(
-        `${process.env.API_BASE_URL}/api/supplier-mapping`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/supplier-mapping`,
         {
           supplier_id: selectedSupplier.id,
           mappings: cleanMappings,

@@ -457,7 +457,7 @@ const DateRangeStep = ({
     try {
       const id = localStorage.getItem("auditId");
       const res = await axios.patch(
-        `${process.env.API_BASE_URL}/api/audits/${id}/dates`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/dates`,
         {
           inventory_start_date: formatDate(inventoryStartDate),
           inventory_end_date: formatDate(inventoryEndDate),

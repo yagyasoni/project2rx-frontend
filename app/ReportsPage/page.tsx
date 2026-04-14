@@ -64,7 +64,7 @@
 //   const handleDelete = async () => {
 //   if (!deletingReportId) return;
 //   try {
-//     await axios.delete(`${process.env.API_BASE_URL}/api/audits/${deletingReportId}`);
+//     await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${deletingReportId}`);
 //     setReportsData((prev) => prev.filter((r) => r.id !== deletingReportId));
 //   } catch (e) {
 //     console.error("Delete failed:", e);
@@ -79,7 +79,7 @@
 
 //   const handleEdit = (report: Report) => {
 //     setEditingReport(report);
-//     axios.get(`${process.env.API_BASE_URL}/api/audits/${report.id}`).then((res) => {
+//     axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${report.id}`).then((res) => {
 //       const a = res.data;
 //       setEditForm({
 //         inventory_start_date: a.inventory_start_date?.slice(0, 10) ?? "",
@@ -96,7 +96,7 @@
 //     if (!editingReport) return;
 //     try {
 //       await axios.patch(
-//         `${process.env.API_BASE_URL}/api/audits/${editingReport.id}/dates`,
+//         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${editingReport.id}/dates`,
 //         editForm,
 //       );
 //       setReportsData((prev) =>
@@ -663,7 +663,7 @@ export default function ReportsPage() {
     if (!deletingReportId) return;
     try {
       await axios.delete(
-        `${process.env.API_BASE_URL}/api/audits/${deletingReportId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${deletingReportId}`,
       );
       setReportsData((prev) => prev.filter((r) => r.id !== deletingReportId));
     } catch (e) {
@@ -680,7 +680,7 @@ export default function ReportsPage() {
   const handleEdit = (report: Report) => {
     setEditingReport(report);
     axios
-      .get(`${process.env.API_BASE_URL}/api/audits/${report.id}`)
+      .get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${report.id}`)
       .then((res) => {
         const a = res.data;
         setEditForm({
@@ -698,7 +698,7 @@ export default function ReportsPage() {
     if (!editingReport) return;
     try {
       await axios.patch(
-        `${process.env.API_BASE_URL}/api/audits/${editingReport.id}/dates`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${editingReport.id}/dates`,
         editForm,
       );
       setReportsData((prev) =>

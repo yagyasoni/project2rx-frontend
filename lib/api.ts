@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: `${process.env.API_BASE_URL}`,
+  baseURL: `${process.env.NEXT_PUBLIC_API_BASE_URL}`,
 });
 
 // Attach access token to every request automatically
@@ -59,7 +59,7 @@ api.interceptors.response.use(
       try {
 
         const { data } = await axios.post(
-          `${process.env.API_BASE_URL}/auth/refresh-token`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh-token`,
           { refreshToken }
         );
 

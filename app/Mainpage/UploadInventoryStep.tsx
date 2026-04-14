@@ -191,7 +191,9 @@ const UploadInventoryStep = ({
     const auditId = localStorage.getItem("auditId");
     if (!auditId) return;
     axios
-      .get(`${process.env.API_BASE_URL}/api/audits/${auditId}/inventory-files`)
+      .get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/inventory-files`,
+      )
       .then((res) => {
         if (res.data?.length > 0) setExistingFileName(res.data[0].file_name);
       })
@@ -415,7 +417,7 @@ const UploadInventoryStep = ({
       console.log("⬆️ Starting upload...");
 
       const res = await axios.post(
-        `${process.env.API_BASE_URL}/api/audits/${id}/inventory`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/inventory`,
         formData,
       );
 

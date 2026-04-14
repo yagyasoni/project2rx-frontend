@@ -162,7 +162,7 @@ export default function Feedback() {
       if (!silent) setLoading(true);
 
       const res = await axios.get(
-        `${process.env.API_BASE_URL}/admin/feedbacks`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/feedbacks`,
       );
 
       const rows = res?.data?.feedbacks ?? [];
@@ -241,7 +241,9 @@ export default function Feedback() {
     setDeleting(true);
 
     try {
-      await axios.delete(`${process.env.API_BASE_URL}/admin/feedbacks/${id}`);
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/feedbacks/${id}`,
+      );
       await fetchFeedbacks();
 
       setDeletedCount((c) => c + 1);

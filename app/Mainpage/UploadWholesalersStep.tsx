@@ -268,7 +268,9 @@ const UploadWholesalersStep = ({
     const auditId = localStorage.getItem("auditId");
     if (!auditId) return;
     axios
-      .get(`${process.env.API_BASE_URL}/api/audits/${auditId}/wholesaler-files`)
+      .get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/wholesaler-files`,
+      )
       .then((res) => {
         if (res.data?.length > 0) setExistingWholesalerFiles(res.data);
       })
@@ -402,7 +404,7 @@ const UploadWholesalersStep = ({
         // ✅ Step 1: Try to fetch admin mapping from DB
         try {
           const res = await axios.get(
-            `${process.env.API_BASE_URL}/api/supplier-mapping-by-name/${encodeURIComponent(wholesaler.name)}`,
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/supplier-mapping-by-name/${encodeURIComponent(wholesaler.name)}`,
           );
 
           if (res.data?.mappings) {
@@ -509,7 +511,7 @@ const UploadWholesalersStep = ({
 
     try {
       const res = await axios.post(
-        `${process.env.API_BASE_URL}/api/audits/${id}/wholesalers`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/wholesalers`,
         formData,
       );
       clearInterval(intervalRef.current!);

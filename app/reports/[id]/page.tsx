@@ -538,7 +538,7 @@ export default function InventoryReportPage() {
     setDrugDetail(null);
     try {
       const res = await fetch(
-        `${process.env.API_BASE_URL}/api/audits/${auditId}/drug-detail/${encodeURIComponent(ndc)}?outside_range=${outside}&include_billed=${billed}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/drug-detail/${encodeURIComponent(ndc)}?outside_range=${outside}&include_billed=${billed}`,
       );
       const data = await res.json();
       setDrugDetail(data);
@@ -604,7 +604,7 @@ export default function InventoryReportPage() {
         );
 
         const res = await fetch(
-          `${process.env.API_BASE_URL}/api/audits/${auditId}/report`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/report`,
         );
         const json = await res.json();
         const data = Array.isArray(json)
@@ -707,7 +707,7 @@ export default function InventoryReportPage() {
 
         setInventoryData(norm);
         const ar = await fetch(
-          `${process.env.API_BASE_URL}/api/audits/${auditId}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}`,
         );
         setAuditDates(await ar.json());
       } catch (e) {
@@ -1044,7 +1044,7 @@ export default function InventoryReportPage() {
     setRxFilters([]);
     try {
       const res = await fetch(
-        `${process.env.API_BASE_URL}/api/audits/${auditId}/inventory-detail/${encodeURIComponent(row.ndc)}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/inventory-detail/${encodeURIComponent(row.ndc)}`,
       );
       const json = await res.json();
       console.log("🔍 Drug detail API response:", json); // ← check this in browser console
@@ -1114,7 +1114,7 @@ export default function InventoryReportPage() {
     setOrderFilters([]);
     try {
       const res = await fetch(
-        `${process.env.API_BASE_URL}/api/audits/${auditId}/wholesaler-detail/${encodeURIComponent(row.ndc)}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/wholesaler-detail/${encodeURIComponent(row.ndc)}`,
       );
       const json = await res.json();
       const lines = Array.isArray(json) ? json : [];
