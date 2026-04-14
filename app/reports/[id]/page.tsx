@@ -998,22 +998,6 @@ const TAG_COLORS = [
     router.push(pendingHref ?? "/ReportsPage");
   };
 
-  const fetchDrugDetail = async (ndc: string, outside: boolean, billed: boolean) => {
-  setDrugDetailLoading(true);
-  setDrugDetail(null);
-  try {
-    const res = await fetch(
-      `https://api.auditprorx.com/api/audits/${auditId}/drug-detail/${encodeURIComponent(ndc)}?outside_range=${outside}&include_billed=${billed}`,
-    );
-    const data = await res.json();
-    setDrugDetail(data);
-  } catch (e) {
-    console.error("fetchDrugDetail error:", e);
-  } finally {
-    setDrugDetailLoading(false);
-  }
-};
-
   // ADD AFTER:
   const handleOpenBilledSidebar = async (
     row: InventoryRow,
@@ -2236,12 +2220,12 @@ const TAG_COLORS = [
                         <tr
                           key={row.id}
                           className={`srow cursor-pointer ${isSel ? "sel" : ""} ${isEven ? "even" : ""}`}
-                          style={{ height: 36 }}
+                          style={{ height: 36 , minHeight: 36 }}
                           onClick={() => {
                             setActiveDrug(row);
                             setOpenDrugSidebar(true);
                           }}
-                          style={{ minHeight: 36 }}
+                          // style={{ minHeight: 36 }}
                           // onClick={() => { setActiveDrug(row); setOpenDrugSidebar(true); }}
                         >
                           <td
@@ -3228,233 +3212,18 @@ const TAG_COLORS = [
             )}
 
             {/* ── Total Billed Sidebar ── */}
-            {openBilledSidebar && billedDrug && (
-              <>
+            {/* {openBilledSidebar && billedDrug && ( */}
+              {/* // <> */}
                 {/* Backdrop */}
-                <div
+                {/* <div
                   className="fixed inset-0 bg-black/30 z-[200]"
                   onClick={() => {
                     setOpenBilledSidebar(false);
                     setShowRxFilters(false);
                   }}
-                />
-{/* Drug Sidebar — NDC */}
-{openDrugSidebar && activeSidebar === "ndc" && activeDrug && (
-  <>
-    <div className="fixed inset-0 bg-black/30 z-[200]" onClick={() => { setOpenDrugSidebar(false); setActiveSidebar(null); }} />
-    <div className="fixed top-0 right-0 h-full z-[210] flex flex-col bg-white" style={{ width: "35%", maxWidth: "100vw", boxShadow: "-4px 0 24px rgba(0,0,0,0.15)" }}>
-      {/* Top Bar */}
-      <div className="flex items-center gap-2.5 px-5 py-3 border-b border-slate-100 flex-shrink-0">
-        <button onClick={() => { setOpenDrugSidebar(false); setActiveSidebar(null); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
-          <X className="w-4 h-4" />
-        </button>
-        <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shrink-0" />
-        <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">NDC Lookup</span>
-      </div>
+                /> */}
 
-      {/* Info Bar */}
-      <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex-shrink-0">
-        <div className="flex items-start gap-8 flex-wrap">
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">NDC Number</p>
-            <p className="text-[14px] font-mono font-bold text-slate-900 tabular-nums">{activeDrug.ndc}</p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Drug Name</p>
-            <p className="text-[14px] font-bold text-slate-900 truncate">{activeDrug.drugName}</p>
-          </div>
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto px-5 py-5">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Package Size Quantity</p>
-        <table style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
-              <th style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" }}>Source</th>
-              <th style={{ padding: "8px 12px", textAlign: "right", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" }}>Package Size Qty</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              { label: "Medispan", dot: "#94a3b8", val: null },
-              { label: "FDB",      dot: "#f59e0b", val: activeDrug.pkgSize > 0 ? activeDrug.pkgSize.toLocaleString() : null },
-              { label: "FDA",      dot: "#10b981", val: null },
-            ].map(({ label, dot, val }) => (
-              <tr key={label} style={{ borderBottom: "1px solid #f1f5f9" }} className="hover:bg-slate-50/60 transition-colors">
-                <td style={{ padding: "10px 12px", fontSize: 12 }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ height: 8, width: 8, borderRadius: "50%", background: dot, flexShrink: 0 }} />
-                    <span style={{ fontWeight: 600, color: "#1e293b" }}>{label}</span>
-                  </span>
-                </td>
-                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: val ? "#1e293b" : "#94a3b8", textAlign: "right" }}>
-                  {val ?? "N/A"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </>
-)}
-
-{/* Drug Sidebar — Drug Name / Wholesaler Detail */}
-{openDrugSidebar && activeSidebar === "drug" && activeDrug && (
-  <>
-    <div className="fixed inset-0 bg-black/30 z-[200]" onClick={() => { setOpenDrugSidebar(false); setActiveSidebar(null); setDrugDetail(null); setOutsideRange(false); setIncludeBilled(false); }} />
-    <div className="fixed top-0 right-0 h-full z-[210] flex flex-col bg-white" style={{ width: "45%", maxWidth: "100vw", boxShadow: "-4px 0 24px rgba(0,0,0,0.15)" }}>
-
-      {/* Top Bar */}
-      <div className="flex items-center gap-2.5 px-5 py-3 border-b border-slate-100 flex-shrink-0">
-        <button onClick={() => { setOpenDrugSidebar(false); setActiveSidebar(null); setDrugDetail(null); setOutsideRange(false); setIncludeBilled(false); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
-          <X className="w-4 h-4" />
-        </button>
-        <span className="h-2.5 w-2.5 rounded-full bg-blue-500 shrink-0" />
-        <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">Wholesaler Detail</span>
-      </div>
-
-      {/* Info Bar */}
-      <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex-shrink-0">
-        <div className="flex items-start gap-8 flex-wrap">
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">NDC</p>
-            <p className="text-[14px] tabular-nums font-mono font-bold text-slate-900">{activeDrug.ndc}</p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Drug Name</p>
-            <p className="text-[14px] font-bold text-slate-900 truncate">{activeDrug.drugName}</p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total QTY</p>
-            <p className="text-[14px] font-bold text-slate-900 tabular-nums">
-              {drugDetail ? drugDetail.total_qty.toLocaleString() : drugDetailLoading ? "…" : activeDrug.totalOrdered.toLocaleString()}
-            </p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Date Range</p>
-            <p className="text-[14px] font-bold text-slate-900 tabular-nums">
-              {drugDetail?.audit?.wholesaler_start_date ? fmt(new Date(drugDetail.audit.wholesaler_start_date)) : wsFrom}
-              {" – "}
-              {drugDetail?.audit?.wholesaler_end_date ? fmt(new Date(drugDetail.audit.wholesaler_end_date)) : wsTo}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center gap-2 px-5 py-2.5 border-b border-slate-200 bg-white flex-shrink-0">
-        {(["current", "outside"] as const).map((tab) => {
-          const isActive = tab === "current" ? !outsideRange : outsideRange;
-          return (
-            <button
-              key={tab}
-              onClick={() => { const next = tab === "outside"; setOutsideRange(next); fetchDrugDetail(activeDrug.ndc, next, includeBilled); }}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all border ${isActive ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"}`}
-            >
-              {tab === "current" ? "Current Date Range" : "Outside Date Range"}
-            </button>
-          );
-        })}
-        <label className="flex items-center gap-2 ml-2 cursor-pointer select-none">
-          <Checkbox
-            id="includeBilled2"
-            checked={includeBilled}
-            onCheckedChange={(checked) => { const next = !!checked; setIncludeBilled(next); fetchDrugDetail(activeDrug.ndc, outsideRange, next); }}
-            className="h-3.5 w-3.5"
-          />
-          <span className="text-xs font-medium text-slate-600">Include Billed</span>
-        </label>
-      </div>
-
-      {/* Table */}
-      <div className="flex-1 overflow-auto">
-        {drugDetailLoading ? (
-          <div className="flex items-center justify-center h-48 gap-3">
-            <div className="h-5 w-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-            <span className="text-sm text-slate-400 font-medium">Loading wholesaler data…</span>
-          </div>
-        ) : !drugDetail ? (
-          <div className="flex flex-col items-center justify-center h-48 gap-2">
-            <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-1">
-              <Search className="w-4 h-4 text-slate-400" />
-            </div>
-            <p className="text-sm font-semibold text-slate-500">No data available</p>
-          </div>
-        ) : drugDetail.rows.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 gap-2">
-            <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-1">
-              <Search className="w-4 h-4 text-slate-400" />
-            </div>
-            <p className="text-sm font-semibold text-slate-500">No wholesaler data for this NDC</p>
-          </div>
-        ) : (
-          <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
-            <colgroup>
-              <col style={{ width: "6%" }} />
-              <col style={{ width: "25%" }} />
-              <col style={{ width: "30%" }} />
-              <col style={{ width: "20%" }} />
-              <col style={{ width: "19%" }} />
-            </colgroup>
-            <thead>
-              <tr style={{ position: "sticky", top: 0, zIndex: 10, background: "#fff", borderBottom: "2px solid #e2e8f0" }}>
-                <th style={{ padding: "7px 6px", textAlign: "center", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff" }}>#</th>
-                <th style={{ padding: "7px 6px", textAlign: "left",   fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff" }}>TYPE</th>
-                <th style={{ padding: "7px 6px", textAlign: "left",   fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff" }}>DATE</th>
-                <th style={{ padding: "7px 6px", textAlign: "right",  fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff" }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ height: 6, width: 6, borderRadius: "50%", background: "#10b981" }} />QTY
-                  </span>
-                </th>
-                <th style={{ padding: "7px 6px", textAlign: "right",  fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff" }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ height: 6, width: 6, borderRadius: "50%", background: "#3b82f6" }} />RT
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {drugDetail.rows.map((r: any, i: number) => (
-                <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }} className="hover:bg-slate-50/60 transition-colors">
-                  <td style={{ padding: "7px 6px", fontSize: 12, color: "#94a3b8", fontWeight: 500, textAlign: "center" }}>{r.index}</td>
-                  <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 600, color: "#1e293b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ height: 7, width: 7, borderRadius: "50%", background: r.source === "inventory" ? "#60a5fa" : "#10b981", flexShrink: 0 }} />
-                      {r.type}
-                    </span>
-                  </td>
-                  <td style={{ padding: "7px 6px", fontSize: 12, color: "#334155" }}>
-                    {r.invoice_date ? new Date(r.invoice_date).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }) : "—"}
-                  </td>
-                  <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 600, color: "#1e293b", textAlign: "right" }}>
-                    {Number(r.quantity).toLocaleString()}
-                  </td>
-                  <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 700, color: "#059669", textAlign: "right" }}>
-                    {Number(r.rt).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot style={{ position: "sticky", bottom: 0, borderTop: "2px solid #cbd5e1", background: "#f8fafc" }}>
-              <tr>
-                <td colSpan={3} style={{ padding: "7px 6px", fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</td>
-                <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 700, color: "#1e293b", textAlign: "right" }}>
-                  {drugDetail.rows.reduce((s: number, r: any) => s + r.quantity, 0).toLocaleString()}
-                </td>
-                <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 700, color: "#059669", textAlign: "right" }}>
-                  {drugDetail.rows[drugDetail.rows.length - 1].rt.toLocaleString()}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        )}
-      </div>
-    </div>
-  </>
-)}
              
 {/* ── Total Billed Sidebar ── */}
 {openBilledSidebar && billedDrug && (
