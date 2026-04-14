@@ -91,18 +91,21 @@ export default function InactiveAccount() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const updateStatus = () => {
-      const s = localStorage.getItem("status");
-      setStatus(s);
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    const fetchStatus = async () => {
+      try {
+        const res = await axios.get(`https://api.auditprorx.com/auth/users`);
+        const users = res.data;
+        const currentUser = users.find((u: any) => u.id === userId);
+        if (currentUser) setStatus(currentUser.status);
+      } catch (err) {
+        console.error("Failed to fetch user status:", err);
+      }
     };
 
-    updateStatus();
-
-    window.addEventListener("storage", updateStatus);
-
-    return () => {
-      window.removeEventListener("storage", updateStatus);
-    };
+    fetchStatus(); // on mount
   }, []);
 
   // ✅ FETCH SUBSCRIPTION STATUS

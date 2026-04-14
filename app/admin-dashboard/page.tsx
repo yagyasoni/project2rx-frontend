@@ -431,15 +431,12 @@ export default function AdminDashboard() {
             </div>
 
             {/* Two-column layout: Table + Detail */}
-            <div
-              className="flex flex-col lg:flex-row gap-5"
-              // style={{ minHeight: 460 }}
-            >
+            <div className="flex flex-col lg:flex-row gap-5 h-[calc(102vh)]">
               {/* LEFT — Users Table */}
-              <div className="w-full lg:w-[55%] rounded-lg border border-border overflow-hidden">
+              <div className="w-full lg:w-[55%] rounded-lg border border-border overflow-hidden flex flex-col">
+                {" "}
                 <div
-                  className="overflow-auto max-h-[103vh]"
-                  // style={{ maxHeight: "calc(105vh - 15px)" }}
+                  className="overflow-auto max-h-screen" // style={{ maxHeight: "calc(105vh - 15px)" }}
                 >
                   <table className="min-w-full divide-y divide-border">
                     <thead className="bg-muted sticky top-0 z-10">
@@ -708,9 +705,21 @@ export default function AdminDashboard() {
                             {!subscription.stripe_subscription_id ? (
                               <div className="rounded-lg border border-gray-300 bg-gray-50 p-3 space-y-2">
                                 <div>
-                                  <h3 className="text-xs font-semibold text-foreground mb-3">
-                                    Subscription Control
-                                  </h3>
+                                  <div className="text-xs justify-between flex font-semibold text-foreground mb-2">
+                                    <span> Subscription Control </span>
+
+                                    <span className="text-destructive">
+                                      {" "}
+                                      {subscription && (
+                                        <div className="text-[10px] text-muted-foreground">
+                                          Current:{" "}
+                                          <span className="font-semibold text-foreground">
+                                            {subscription.status}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </span>
+                                  </div>
 
                                   {subLoading ? (
                                     <p className="text-xs text-muted-foreground">
@@ -748,14 +757,14 @@ export default function AdminDashboard() {
                                       </Button>
 
                                       {/* CURRENT STATUS DISPLAY */}
-                                      {subscription && (
+                                      {/* {subscription && (
                                         <div className="text-[10px] text-muted-foreground">
                                           Current:{" "}
                                           <span className="font-semibold text-foreground">
                                             {subscription.status}
                                           </span>
                                         </div>
-                                      )}
+                                      )} */}
                                     </div>
                                   )}
                                 </div>
@@ -817,9 +826,21 @@ export default function AdminDashboard() {
                         ) : (
                           <div className="rounded-lg border border-gray-300 bg-gray-50 p-3 space-y-2">
                             <div>
-                              <h3 className="text-xs font-semibold text-foreground mb-3">
-                                Subscription Control
-                              </h3>
+                              <div className="text-xs justify-between flex font-semibold text-foreground mb-2">
+                                <span> Subscription Control </span>
+
+                                <span className="text-destructive">
+                                  {" "}
+                                  {subscription && (
+                                    <div className="text-[10px] text-muted-foreground">
+                                      Current:{" "}
+                                      <span className="font-semibold text-foreground">
+                                        {subscription.status}
+                                      </span>
+                                    </div>
+                                  )}
+                                </span>
+                              </div>
 
                               {subLoading ? (
                                 <p className="text-xs text-muted-foreground">
@@ -852,14 +873,6 @@ export default function AdminDashboard() {
                                   </Button>
 
                                   {/* CURRENT STATUS DISPLAY */}
-                                  {subscription && (
-                                    <div className="text-[10px] text-muted-foreground">
-                                      Current:{" "}
-                                      <span className="font-semibold text-foreground">
-                                        {subscription.status}
-                                      </span>
-                                    </div>
-                                  )}
                                 </div>
                               )}
                             </div>
@@ -885,8 +898,9 @@ export default function AdminDashboard() {
                                 <strong className="text-foreground">
                                   {selected.name}
                                 </strong>{" "}
-                                and opens their management portal directly — no
-                                password required.
+                                - no password required
+                                {/* and opens their management portal directly — no
+                                password required. */}
                               </div>
                             </div>
                           </div>
@@ -966,9 +980,9 @@ export default function AdminDashboard() {
                       </div>
 
                       {/* Footer Text */}
-                      <p className="text-center text-[10px] text-muted-foreground">
+                      {/* <p className="text-center text-[10px] text-muted-foreground">
                         Redirects directly to /Mainpage with a fresh session
-                      </p>
+                      </p> */}
                     </div>
                   </>
                 ) : (
