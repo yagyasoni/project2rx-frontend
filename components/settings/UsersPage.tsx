@@ -5,6 +5,10 @@ import { MoreHorizontal, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import axios from "axios";
+import { Button } from "@/components/ui/button";
+
+// const userId = localStorage.getItem("userId");
 
 const UsersPage = () => {
   const [search, setSearch] = useState("");
@@ -20,6 +24,9 @@ const UsersPage = () => {
       status: "Active" as const,
     },
   ]);
+
+  const [subscription, setSubscription] = useState<any>(null);
+  const [subLoading, setSubLoading] = useState(false);
 
   useEffect(() => {
     const user = async () => {
@@ -63,6 +70,70 @@ const UsersPage = () => {
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase()),
   );
+  useEffect(() => {
+    const handleSelectUser = async () => {
+      const userId = localStorage.getItem("userId");
+      setSubLoading(true);
+
+      try {
+        if (!userId) {
+          throw new Error("Invalid user ID");
+        }
+
+        const res = await axios.get(
+          `https://api.auditprorx.com/pay/subscription/${userId}`,
+        );
+
+        console.log("Subscription API response:", res.data);
+
+        // ✅ SAFE ACCESS
+        const sub = res?.data?.subscription ?? null;
+
+        setSubscription(sub);
+      } catch (err: any) {
+        console.error("❌ Failed to fetch subscription:", err);
+
+        // ✅ Better UX instead of silent fail
+        toast.error("Failed to fetch subscription");
+
+        setSubscription(null);
+      } finally {
+        setSubLoading(false);
+      }
+    };
+
+    handleSelectUser();
+  }, []);
+
+  // const handleSelectUser = async () => {
+  //   setSubLoading(true);
+
+  //   try {
+  //     if (!userId) {
+  //       throw new Error("Invalid user ID");
+  //     }
+
+  //     const res = await axios.get(
+  //       `https://api.auditprorx.com/pay/subscription/${userId}`,
+  //     );
+
+  //     console.log("Subscription API response:", res.data);
+
+  //     // ✅ SAFE ACCESS
+  //     const sub = res?.data?.subscription ?? null;
+
+  //     setSubscription(sub);
+  //   } catch (err: any) {
+  //     console.error("❌ Failed to fetch subscription:", err);
+
+  //     // ✅ Better UX instead of silent fail
+  //     toast.error("Failed to fetch subscription");
+
+  //     setSubscription(null);
+  //   } finally {
+  //     setSubLoading(false);
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -138,18 +209,127 @@ const UsersPage = () => {
               </div>
             </div>
 
-            {/* <div className="flex justify-between border-b border-border pb-2">
-              <span className="text-muted-foreground">Role :</span>
+            <div className="flex justify-between border-b border-border pb-4">
+              <span className="text-muted-foreground">
+                Payment Information :
+              </span>
               <div className="flex items-center gap-2">
-                <span className="text-foreground font-medium">{user.role}</span>
-                <button
-                  onClick={() => copyToClipboard(user.role, "Role")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Copy size={14} />
-                </button>
+                {/* <span className="text-foreground font-medium"> */}
+                <div className="text-foreground font-medium">
+                  {/* <h3 className="text-xs font-semibold text-foreground mb-3">
+                      Payment Information
+                    </h3> */}
+
+                  {subLoading ? (
+                    <p className="text-xs text-muted-foreground">Loading...</p>
+                  ) : subscription ? (
+                    <div className="space-y-2">
+                      {/* 🔥 CASE 1: SUBSCRIPTION NOT YET SYNCED (WEBHOOK DELAY) */}
+                      {!subscription.stripe_subscription_id ? (
+                        <div className="rounded-lg border border-gray-300 bg-gray-50 p-3 space-y-2">
+                          <p className="text-xs text-gray-700 font-medium">
+                            Trial started successfully
+                          </p>
+                          <p className="text-[10px] text-gray-600">
+                            Subscription is syncing with Stripe. You can still
+                            cancel it.
+                          </p>
+
+                          {/* ✅ CANCEL BUTTON (AVAILABLE EVEN WITHOUT ID) */}
+                          <Button
+                            onClick={async () => {
+                              const userId = localStorage.getItem("userId");
+                              try {
+                                await axios.post(
+                                  `https://api.auditprorx.com/pay/cancel-subscription`,
+                                  {
+                                    userId: userId,
+                                  },
+                                );
+
+                                toast.success(
+                                  "Subscription will be canceled after period ends",
+                                );
+                                window.location.reload();
+                              } catch {
+                                toast.error("Failed to cancel subscription");
+                              }
+                            }}
+                            variant="destructive"
+                            className="w-full text-xs"
+                          >
+                            Cancel Subscription
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          {/* ✅ STATUS */}
+                          <div className="flex-col-2 rounded-lg border border-border p-3">
+                            <div className="text-[10px] text-muted-foreground">
+                              Status :{" "}
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                  subscription.status === "active"
+                                    ? "bg-green-100 text-green-700"
+                                    : subscription.status === "trialing"
+                                      ? "bg-blue-100 text-blue-700"
+                                      : subscription.status === "past_due"
+                                        ? "bg-yellow-100 text-yellow-700"
+                                        : "bg-red-100 text-red-700"
+                                }`}
+                              >
+                                {subscription.status}
+                              </span>
+                            </div>
+
+                            {(subscription.status === "active" ||
+                              subscription.status === "trialing" ||
+                              subscription.status === "past_due") && (
+                              <Button
+                                onClick={async () => {
+                                  const userId = localStorage.getItem("userId");
+                                  try {
+                                    await axios.post(
+                                      `https://api.auditprorx.com/pay/cancel-subscription`,
+                                      {
+                                        userId: userId,
+                                      },
+                                    );
+
+                                    toast.success(
+                                      "Subscription will be canceled",
+                                    );
+                                    window.location.reload();
+                                  } catch {
+                                    toast.error(
+                                      "Failed to cancel subscription",
+                                    );
+                                  }
+                                }}
+                                variant="destructive"
+                                className="w-full mt-2 text-xs"
+                              >
+                                Cancel Subscription
+                              </Button>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-gray-300 bg-gray-50 p-3 space-y-2">
+                      <p className="text-xs text-gray-700 font-medium">
+                        No subscription found
+                      </p>
+                      <p className="text-[10px] text-gray-600">
+                        Please contact support for further assistance
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {/* </span> */}
               </div>
-            </div> */}
+            </div>
 
             {/* Footer */}
             <div className="flex items-center gap-2 pt-2">

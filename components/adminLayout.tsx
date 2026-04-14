@@ -21,6 +21,7 @@ import {
   ListStart,
   MessageSquareReply,
   LogOut,
+  Search,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
@@ -36,6 +37,7 @@ const navItems = [
     path: "/master-sheet-queue",
   },
   { title: "Feedbacks", icon: MessageSquareReply, path: "/feedbacks" },
+  { title: "Drug Search", icon: Search, path: "/drug-search" },
 ];
 
 type Popup = "support" | "account" | "settings" | null;

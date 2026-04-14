@@ -21,6 +21,7 @@ import {
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { createCheckoutSession } from "@/components/checkoutSession";
 
 // ─────────────────────────────────────────────────────────────
 // Inner component — reads search params
@@ -115,10 +116,10 @@ const AuthPageInner = () => {
         }
 
         localStorage.removeItem("pharmacyName");
-localStorage.removeItem("pharmacyNameFor");
-localStorage.setItem("accessToken", res?.data?.accessToken);
-localStorage.setItem("refreshToken", res?.data?.refreshToken);
-localStorage.setItem("userEmail", email);
+        localStorage.removeItem("pharmacyNameFor");
+        localStorage.setItem("accessToken", res?.data?.accessToken);
+        localStorage.setItem("refreshToken", res?.data?.refreshToken);
+        localStorage.setItem("userEmail", email);
 
         if (!localStorage.getItem("userId")) {
           localStorage.setItem("userId", res?.data?.user?.id);
@@ -193,9 +194,26 @@ localStorage.setItem("userEmail", email);
         localStorage.setItem("userId", res?.data?.user?.id);
         router.push("/admin");
       } else {
-        // Regular user registration OTP
+        // ✅ User verified
         toast(res?.data?.message);
         router.push("/info-page");
+
+        // const userId = localStorage.getItem("userId");
+        // // const email = localStorage.getItem("userEmail");
+
+        // try {
+        //   console.log("Creating Stripe checkout session for email:", email);
+        //   const checkout = await createCheckoutSession(userId, email);
+
+        //   // Optional UX
+        //   toast("Redirecting to secure payment...");
+
+        //   // 🔥 Redirect to Stripe (ONLY THIS)
+        //   window.location.href = checkout.url;
+        // } catch (err) {
+        //   console.error("Stripe checkout failed:", err);
+        //   toast("Something went wrong while redirecting to payment");
+        // }
       }
     } catch (err) {
       console.error("OTP verification failed:", err);
@@ -206,19 +224,6 @@ localStorage.setItem("userEmail", email);
       return;
     }
   };
-
-  // const resendOtp = async () => {
-  //   try {
-  //     const res = await axios.post(
-  //       "https://api.auditprorx.com/auth/resend-otp",
-  //       { email },
-  //     );
-  //     console.log(res?.data);
-  //     toast(res?.data?.message);
-  //   } catch (err) {
-  //     console.error("Failed to resend OTP:", err);
-  //   }
-  // };
 
   const resendOtp = async () => {
     try {

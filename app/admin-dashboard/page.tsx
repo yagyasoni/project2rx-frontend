@@ -119,6 +119,10 @@ export default function AdminDashboard() {
     null,
   );
   const [deletingUser, setDeletingUser] = useState(false);
+  const [subscription, setSubscription] = useState<any>(null);
+  const [subLoading, setSubLoading] = useState(false);
+  const [subStatus, setSubStatus] = useState("inactive");
+  const [updatingSub, setUpdatingSub] = useState(false);
 
   useEffect(() => {
     setNow(new Date());
@@ -212,9 +216,10 @@ export default function AdminDashboard() {
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("userId", user.id);
       localStorage.setItem("userEmail", user.email);
-      localStorage.removeItem("pharmacyName");                        
-    // localStorage.setItem("pharmacyName", user.pharmacyName || user.name); 
-      router.push("/Mainpage");
+      localStorage.removeItem("pharmacyName");
+      window.open("/Mainpage", "_blank");
+      // localStorage.setItem("pharmacyName", user.pharmacyName || user.name);
+      // router.push("/Mainpage");
     } catch {
       toast.error("Impersonation failed. Please try again.");
     } finally {
@@ -259,6 +264,81 @@ export default function AdminDashboard() {
     } finally {
       setDeletingUser(false);
       setDeleteUserDialog(null);
+    }
+  };
+
+  // const handleSelectUser = async (user: PharmacyUser) => {
+  //   setSelected(user);
+  //   setSubLoading(true);
+
+  //   try {
+  //     if (!user?.id) {
+  //       throw new Error("Invalid user ID");
+  //     }
+
+  //     const res = await axios.get(`${API_BASE}/pay/subscription/${user.id}`);
+
+  //     console.log("Subscription API response:", res.data);
+
+  //     // ✅ SAFE ACCESS
+  //     const sub = res?.data?.subscription ?? null;
+
+  //     setSubscription(sub);
+  //   } catch (err: any) {
+  //     console.error("❌ Failed to fetch subscription:", err);
+
+  //     // ✅ Better UX instead of silent fail
+  //     toast.error("Failed to fetch subscription");
+
+  //     setSubscription(null);
+  //   } finally {
+  //     setSubLoading(false);
+  //   }
+  // };
+
+  const handleSelectUser = async (user: PharmacyUser) => {
+    setSelected(user);
+    setSubLoading(true);
+
+    try {
+      const res = await axios.get(`${API_BASE}/pay/subscription/${user.id}`);
+      const sub = res?.data?.subscription ?? null;
+
+      setSubscription(sub);
+
+      // ✅ SET DROPDOWN VALUE
+      if (sub?.status) {
+        setSubStatus(sub.status);
+      } else {
+        setSubStatus("inactive"); // default
+      }
+    } catch (err) {
+      toast.error("Failed to fetch subscription");
+      setSubscription(null);
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
+  const handleUpdateSubscriptionStatus = async () => {
+    if (!selected) return;
+
+    try {
+      setUpdatingSub(true);
+
+      await axios.post(`${API_BASE}/pay/admin/update-subscription`, {
+        userId: selected.id,
+        status: subStatus,
+      });
+
+      toast.success("Subscription status updated");
+
+      // ✅ REFRESH DATA
+      handleSelectUser(selected);
+    } catch {
+      toast.error("Failed to update subscription");
+    } finally {
+      setUpdatingSub(false);
     }
   };
 
@@ -351,15 +431,12 @@ export default function AdminDashboard() {
             </div>
 
             {/* Two-column layout: Table + Detail */}
-            <div
-              className="flex flex-col lg:flex-row gap-5"
-              style={{ minHeight: 460 }}
-            >
+            <div className="flex flex-col lg:flex-row gap-5 h-[calc(102vh)]">
               {/* LEFT — Users Table */}
-              <div className="w-full lg:w-[55%] rounded-lg border border-border overflow-hidden">
+              <div className="w-full lg:w-[55%] rounded-lg border border-border overflow-hidden flex flex-col">
+                {" "}
                 <div
-                  className="overflow-auto"
-                  style={{ maxHeight: "calc(100vh - 140px)" }}
+                  className="overflow-auto max-h-screen" // style={{ maxHeight: "calc(105vh - 15px)" }}
                 >
                   <table className="min-w-full divide-y divide-border">
                     <thead className="bg-muted sticky top-0 z-10">
@@ -418,81 +495,88 @@ export default function AdminDashboard() {
                           </td>
                         </tr>
                       ) : (
-                        filtered.map((user, index) => {
-                          const isSelected = selected?.id === user.id;
-                          return (
-                            <tr
-                              key={user.id || index}
-                              onClick={() => setSelected(user)}
-                              className={`cursor-pointer transition-colors ${
-                                isSelected ? "bg-muted/60" : "hover:bg-muted/30"
-                              }`}
-                            >
-                              <td className="px-4 py-3 text-xs text-muted-foreground font-medium">
-                                {index + 1}
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2.5">
-                                  <div
-                                    className={`w-8 h-8 rounded-md shrink-0 flex items-center justify-center text-xs font-semibold ${
-                                      isSelected
-                                        ? "bg-foreground text-background"
-                                        : "bg-muted text-muted-foreground"
-                                    }`}
-                                  >
-                                    {avatarChar(user.name)}
-                                  </div>
-                                  <div>
-                                    <span className="text-xs font-semibold text-foreground">
-                                      {user.name}
-                                    </span>
-                                    <div className="flex items-center gap-1 mt-0.5">
-                                      <Mail
-                                        size={10}
-                                        className="text-muted-foreground"
-                                      />
-                                      <span className="text-[10px] text-muted-foreground truncate max-w-[160px]">
-                                        {user.email}
+                        filtered
+                          .filter(
+                            (user) => user.email !== "drugdroprx@gmail.com",
+                          )
+                          .map((user, index) => {
+                            const isSelected = selected?.id === user.id;
+                            return (
+                              <tr
+                                key={user.id || index}
+                                // onClick={() => setSelected(user)}
+                                onClick={() => handleSelectUser(user)}
+                                className={`cursor-pointer transition-colors ${
+                                  isSelected
+                                    ? "bg-muted/60"
+                                    : "hover:bg-muted/30"
+                                }`}
+                              >
+                                <td className="px-4 py-3 text-xs text-muted-foreground font-medium">
+                                  {index + 1}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-2.5">
+                                    <div
+                                      className={`w-8 h-8 rounded-md shrink-0 flex items-center justify-center text-xs font-semibold ${
+                                        isSelected
+                                          ? "bg-foreground text-background"
+                                          : "bg-muted text-muted-foreground"
+                                      }`}
+                                    >
+                                      {avatarChar(user.name)}
+                                    </div>
+                                    <div>
+                                      <span className="text-xs font-semibold text-foreground">
+                                        {user.name}
                                       </span>
+                                      <div className="flex items-center gap-1 mt-0.5">
+                                        <Mail
+                                          size={10}
+                                          className="text-muted-foreground"
+                                        />
+                                        <span className="text-[10px] text-muted-foreground truncate max-w-[160px]">
+                                          {user.email}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              </td>
-                              <td className="px-2 py-3">
-                                <div className="flex items-center gap-1">
-                                  <Phone
-                                    size={10}
-                                    className="text-muted-foreground"
-                                  />
-                                  <span className="text-xs text-muted-foreground">
-                                    {user.phone}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-2 py-3">
-                                <span
-                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                                    user.status === "active"
-                                      ? "bg-emerald/15 text-emerald"
-                                      : "bg-destructive/10 text-destructive"
-                                  }`}
-                                >
-                                  {/* {user.status === "active" ? (
+                                </td>
+                                <td className="px-2 py-3">
+                                  <div className="flex items-center gap-1">
+                                    <Phone
+                                      size={10}
+                                      className="text-muted-foreground"
+                                    />
+                                    <span className="text-xs text-muted-foreground">
+                                      {user.phone}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-2 py-3">
+                                  <span
+                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                      user.status === "active"
+                                        ? "bg-emerald/15 text-emerald"
+                                        : "bg-destructive/10 text-destructive"
+                                    }`}
+                                  >
+                                    {/* {user.status === "active" ? (
                                     <Check size={9} />
                                   ) : (
                                     <X size={9} />
                                   )} */}
-                                  {user.status === "active"
-                                    ? "Active"
-                                    : "Inactive"}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-xs text-muted-foreground">
-                                {formatDate(user.createdAt)}
-                              </td>
-                            </tr>
-                          );
-                        })
+                                    {user.status === "active"
+                                      ? "Active"
+                                      : "Inactive"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-xs text-muted-foreground">
+                                  {formatDate(user.createdAt)}
+                                </td>
+                              </tr>
+                            );
+                          })
                       )}
                     </tbody>
                   </table>
@@ -500,7 +584,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* RIGHT — Detail Panel */}
-              <div className="flex-1 rounded-lg border border-border bg-card flex flex-col overflow-hidden">
+              <div className="flex-1 rounded-lg border border-border bg-card flex flex-col">
                 {selected ? (
                   <>
                     {/* Detail Header */}
@@ -539,7 +623,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Detail Body */}
-                    <div className="flex-1 overflow-auto p-5 space-y-5">
+                    <div className="flex-1 p-5 space-y-5">
                       {/* User Information */}
                       <div>
                         <h3 className="text-xs font-semibold text-foreground mb-3">
@@ -606,6 +690,195 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
+                      <div>
+                        <h3 className="text-xs font-semibold text-foreground mb-3">
+                          Payment Information
+                        </h3>
+
+                        {subLoading ? (
+                          <p className="text-xs text-muted-foreground">
+                            Loading...
+                          </p>
+                        ) : subscription ? (
+                          <div className="space-y-2">
+                            {/* 🔥 CASE 1: SUBSCRIPTION NOT YET SYNCED (WEBHOOK DELAY) */}
+                            {!subscription.stripe_subscription_id ? (
+                              <div className="rounded-lg border border-gray-300 bg-gray-50 p-3 space-y-2">
+                                <div>
+                                  <div className="text-xs justify-between flex font-semibold text-foreground mb-2">
+                                    <span> Subscription Control </span>
+
+                                    <span className="text-destructive">
+                                      {" "}
+                                      {subscription && (
+                                        <div className="text-[10px] text-muted-foreground">
+                                          Current:{" "}
+                                          <span className="font-semibold text-foreground">
+                                            {subscription.status}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </span>
+                                  </div>
+
+                                  {subLoading ? (
+                                    <p className="text-xs text-muted-foreground">
+                                      Loading...
+                                    </p>
+                                  ) : (
+                                    <div className="space-y-3">
+                                      {/* STATUS DROPDOWN */}
+                                      <select
+                                        className="w-full border p-2 rounded text-xs"
+                                        value={subStatus}
+                                        onChange={(e) =>
+                                          setSubStatus(e.target.value)
+                                        }
+                                      >
+                                        {/* <option value="trialing">
+                                          Trialing
+                                        </option> */}
+                                        <option value="active">Active</option>
+
+                                        <option value="inactive">
+                                          Inactive
+                                        </option>
+                                      </select>
+
+                                      {/* UPDATE BUTTON */}
+                                      <Button
+                                        onClick={handleUpdateSubscriptionStatus}
+                                        disabled={updatingSub}
+                                        className="w-full text-xs"
+                                      >
+                                        {updatingSub
+                                          ? "Updating..."
+                                          : "Update Status"}
+                                      </Button>
+
+                                      {/* CURRENT STATUS DISPLAY */}
+                                      {/* {subscription && (
+                                        <div className="text-[10px] text-muted-foreground">
+                                          Current:{" "}
+                                          <span className="font-semibold text-foreground">
+                                            {subscription.status}
+                                          </span>
+                                        </div>
+                                      )} */}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                {/* ✅ STATUS */}
+                                <div className="flex-col-2 rounded-lg border border-border p-3">
+                                  <div className="text-[10px] text-muted-foreground">
+                                    Status :{" "}
+                                    <span
+                                      className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                        subscription.status === "active"
+                                          ? "bg-green-100 text-green-700"
+                                          : subscription.status === "trialing"
+                                            ? "bg-blue-100 text-blue-700"
+                                            : subscription.status === "past_due"
+                                              ? "bg-yellow-100 text-yellow-700"
+                                              : "bg-red-100 text-red-700"
+                                      }`}
+                                    >
+                                      {subscription.status}
+                                    </span>
+                                  </div>
+
+                                  {(subscription.status === "active" ||
+                                    subscription.status === "trialing" ||
+                                    subscription.status === "past_due") && (
+                                    <Button
+                                      onClick={async () => {
+                                        try {
+                                          await axios.post(
+                                            `${API_BASE}/pay/cancel-subscription`,
+                                            {
+                                              userId: selected.id,
+                                            },
+                                          );
+
+                                          toast.success(
+                                            "Subscription will be canceled",
+                                          );
+                                          handleSelectUser(selected);
+                                        } catch {
+                                          toast.error(
+                                            "Failed to cancel subscription",
+                                          );
+                                        }
+                                      }}
+                                      variant="destructive"
+                                      className="w-full mt-2 text-xs"
+                                    >
+                                      Cancel Subscription
+                                    </Button>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="rounded-lg border border-gray-300 bg-gray-50 p-3 space-y-2">
+                            <div>
+                              <div className="text-xs justify-between flex font-semibold text-foreground mb-2">
+                                <span> Subscription Control </span>
+
+                                <span className="text-destructive">
+                                  {" "}
+                                  {subscription && (
+                                    <div className="text-[10px] text-muted-foreground">
+                                      Current:{" "}
+                                      <span className="font-semibold text-foreground">
+                                        {subscription.status}
+                                      </span>
+                                    </div>
+                                  )}
+                                </span>
+                              </div>
+
+                              {subLoading ? (
+                                <p className="text-xs text-muted-foreground">
+                                  Loading...
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {/* STATUS DROPDOWN */}
+                                  <select
+                                    className="w-full border p-2 rounded text-xs"
+                                    value={subStatus}
+                                    onChange={(e) =>
+                                      setSubStatus(e.target.value)
+                                    }
+                                  >
+                                    {/* <option value="trialing">Trialing</option> */}
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                  </select>
+
+                                  {/* UPDATE BUTTON */}
+                                  <Button
+                                    onClick={handleUpdateSubscriptionStatus}
+                                    disabled={updatingSub}
+                                    className="w-full text-xs"
+                                  >
+                                    {updatingSub
+                                      ? "Updating..."
+                                      : "Update Status"}
+                                  </Button>
+
+                                  {/* CURRENT STATUS DISPLAY */}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       {/* Portal Access */}
                       <div>
                         <h3 className="text-xs font-semibold text-foreground mb-3">
@@ -625,8 +898,9 @@ export default function AdminDashboard() {
                                 <strong className="text-foreground">
                                   {selected.name}
                                 </strong>{" "}
-                                and opens their management portal directly — no
-                                password required.
+                                - no password required
+                                {/* and opens their management portal directly — no
+                                password required. */}
                               </div>
                             </div>
                           </div>
@@ -706,9 +980,9 @@ export default function AdminDashboard() {
                       </div>
 
                       {/* Footer Text */}
-                      <p className="text-center text-[10px] text-muted-foreground">
+                      {/* <p className="text-center text-[10px] text-muted-foreground">
                         Redirects directly to /Mainpage with a fresh session
-                      </p>
+                      </p> */}
                     </div>
                   </>
                 ) : (
