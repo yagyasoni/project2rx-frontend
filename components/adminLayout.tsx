@@ -37,7 +37,7 @@ const navItems = [
     path: "/master-sheet-queue",
   },
   { title: "Feedbacks", icon: MessageSquareReply, path: "/feedbacks" },
-  { title: "Drug Search", icon: Search, path: "/drug-search" },
+  // { title: "Drug Search", icon: Search, path: "/drug-search" },
 ];
 
 type Popup = "support" | "account" | "settings" | null;
