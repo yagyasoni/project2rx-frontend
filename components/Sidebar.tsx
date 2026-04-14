@@ -180,10 +180,10 @@ pharmacy();
           )}
         </Link>
 
-        <Link href="/coming-soon" className={navClass("/how-to")}>
-          <HelpCircle className="w-5 h-5" />
-          {sidebarOpen && <span className="ml-3">How To</span>}
-        </Link>
+        <Link href="/how-to" className={navClass("/how-to")}>
+  <HelpCircle className="w-5 h-5" />
+  {sidebarOpen && <span className="ml-3">How To</span>}
+</Link>
       </nav>
 
       {/* BOTTOM */}

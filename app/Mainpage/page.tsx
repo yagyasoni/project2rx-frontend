@@ -66,15 +66,10 @@ export default function BatchRxDashboard() {
     const auditId = searchParams.get("auditId");
     const step = searchParams.get("step");
 
-    if (auditId && step === "inventory") {
+    if (auditId && (step === "inventory" || step === "wholesaler")) {
+      localStorage.setItem("auditId", auditId);
       setInitialAuditId(auditId);
-      setInitialStep(3);
-      setView(true);
-    }
-
-    if (auditId && step === "wholesaler") {
-      setInitialAuditId(auditId);
-      setInitialStep(4);
+      setInitialStep(step === "inventory" ? 3 : 4);
       setView(true);
     }
   }, [searchParams]);

@@ -178,7 +178,7 @@
 
 // export default AuditWizard;
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, ArrowLeft } from "lucide-react";
 import StepIndicator from "./StepIndicator";
 import NameReportStep from "./NameReportStep";
@@ -214,6 +214,10 @@ const AuditWizard = ({
 }: AuditWizardProps) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [auditId, setAuditId] = useState<string | null>(initialAuditId);
+
+  useEffect(() => {
+    if (initialAuditId) localStorage.setItem("auditId", initialAuditId);
+  }, [initialAuditId]);
 
   // Step 1 state
   const [auditName, setAuditName] = useState("");
