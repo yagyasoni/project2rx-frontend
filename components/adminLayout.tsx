@@ -80,7 +80,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       const refreshToken = localStorage.getItem("refreshToken");
 
       // Revoke refresh token on server
-      await axios.post("https://api.auditprorx.com/auth/logout", {
+      await axios.post(`${process.env.API_BASE_URL}/auth/logout`, {
         refreshToken,
       });
     } catch {

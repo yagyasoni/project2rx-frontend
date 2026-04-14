@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://api.auditprorx.com",
+  baseURL: `${process.env.API_BASE_URL}`,
 });
 
 // Attach access token to every request automatically
@@ -59,7 +59,7 @@ api.interceptors.response.use(
       try {
 
         const { data } = await axios.post(
-          "https://api.auditprorx.com/auth/refresh-token",
+          `${process.env.API_BASE_URL}/auth/refresh-token`,
           { refreshToken }
         );
 

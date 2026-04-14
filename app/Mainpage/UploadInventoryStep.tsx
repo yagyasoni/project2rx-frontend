@@ -187,13 +187,16 @@ const UploadInventoryStep = ({
 
   const [existingFileName, setExistingFileName] = useState<string | null>(null);
 
-useEffect(() => {
-  const auditId = localStorage.getItem("auditId");
-  if (!auditId) return;
-  axios.get(`https://api.auditprorx.com/api/audits/${auditId}/inventory-files`).then((res) => {
-  if (res.data?.length > 0) setExistingFileName(res.data[0].file_name);
-}).catch(() => {})
-}, []);
+  useEffect(() => {
+    const auditId = localStorage.getItem("auditId");
+    if (!auditId) return;
+    axios
+      .get(`${process.env.API_BASE_URL}/api/audits/${auditId}/inventory-files`)
+      .then((res) => {
+        if (res.data?.length > 0) setExistingFileName(res.data[0].file_name);
+      })
+      .catch(() => {});
+  }, []);
 
   // ── ORIGINAL — untouched ───────────────────────────────────────────────────
 
@@ -246,7 +249,14 @@ useEffect(() => {
       "date",
       "datef",
     ], // ← added "datef"
-    drugName: ["drugname", "drug_name", "drug", "productname", "product","drgname"],
+    drugName: [
+      "drugname",
+      "drug_name",
+      "drug",
+      "productname",
+      "product",
+      "drgname",
+    ],
     quantity: ["quantity", "qty", "rxquantity", "rx_qty", "quant"], // ← added "quant"
     packageSize: ["packagesize", "package_size", "pkgsize", "pkg_size"],
     primaryInsuranceBinNumber: [
@@ -405,7 +415,7 @@ useEffect(() => {
       console.log("⬆️ Starting upload...");
 
       const res = await axios.post(
-       `https://api.auditprorx.com/api/audits/${id}/inventory`,
+        `${process.env.API_BASE_URL}/api/audits/${id}/inventory`,
         formData,
       );
 
@@ -461,7 +471,8 @@ useEffect(() => {
           {/* Drop Zone */}
           <div
             className={`relative rounded-xl border-2 border-dashed transition-all ${
-              inventoryFile || existingFileName ? "border-emerald-300 bg-emerald-50/40"
+              inventoryFile || existingFileName
+                ? "border-emerald-300 bg-emerald-50/40"
                 : "border-gray-300 bg-gray-50/50 hover:border-gray-400 hover:bg-gray-50"
             }`}
           >
@@ -481,34 +492,34 @@ useEffect(() => {
               </div>
               <div className="flex-1 min-w-0">
                 {inventoryFile ? (
-  <>
-    <p className="text-sm font-semibold text-emerald-800 truncate">
-      {inventoryFile.name}
-    </p>
-    <p className="text-xs text-emerald-600 mt-0.5">
-      {headers.length} columns detected · {mappedCount}/
-      {totalRequired} mapped
-    </p>
-  </>
-) : existingFileName ? (
-  <>
-    <p className="text-sm font-semibold text-emerald-800 truncate">
-      {existingFileName}
-    </p>
-    <p className="text-xs text-emerald-600 mt-0.5">
-      Previously uploaded · Click Replace to update
-    </p>
-  </>
-) : (
-  <>
-    <p className="text-sm font-semibold text-gray-700">
-      Choose a CSV file
-    </p>
-    <p className="text-xs text-gray-400 mt-0.5">
-      Only .CSV format accepted
-    </p>
-  </>
-)}
+                  <>
+                    <p className="text-sm font-semibold text-emerald-800 truncate">
+                      {inventoryFile.name}
+                    </p>
+                    <p className="text-xs text-emerald-600 mt-0.5">
+                      {headers.length} columns detected · {mappedCount}/
+                      {totalRequired} mapped
+                    </p>
+                  </>
+                ) : existingFileName ? (
+                  <>
+                    <p className="text-sm font-semibold text-emerald-800 truncate">
+                      {existingFileName}
+                    </p>
+                    <p className="text-xs text-emerald-600 mt-0.5">
+                      Previously uploaded · Click Replace to update
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold text-gray-700">
+                      Choose a CSV file
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Only .CSV format accepted
+                    </p>
+                  </>
+                )}
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 {inventoryFile && (

@@ -101,7 +101,7 @@ const AuthPageInner = () => {
     // ================= LOGIN =================
     if (isLogin) {
       try {
-        const res = await axios.post("https://api.auditprorx.com/auth/login", {
+        const res = await axios.post(`${process.env.API_BASE_URL}/auth/login`, {
           email,
           password,
         });
@@ -143,7 +143,7 @@ const AuthPageInner = () => {
     else {
       try {
         const res = await axios.post(
-          "https://api.auditprorx.com/auth/register",
+          `${process.env.API_BASE_URL}/auth/register`,
           { name, email, phone, password },
         );
 
@@ -181,8 +181,8 @@ const AuthPageInner = () => {
     try {
       // isLogin true = came from admin login OTP, false = came from registration OTP
       const url = isLogin
-        ? "https://api.auditprorx.com/auth/admin/verify-otp"
-        : "https://api.auditprorx.com/auth/verify-otp";
+        ? `${process.env.API_BASE_URL}/auth/admin/verify-otp`
+        : `${process.env.API_BASE_URL}/auth/verify-otp`;
 
       const res = await axios.post(url, { email, otp });
       console.log(res?.data);
@@ -228,8 +228,8 @@ const AuthPageInner = () => {
   const resendOtp = async () => {
     try {
       const url = isLogin
-        ? "https://api.auditprorx.com/auth/admin/resend-otp"
-        : "https://api.auditprorx.com/auth/resend-otp";
+        ? `${process.env.API_BASE_URL}/auth/admin/resend-otp`
+        : `${process.env.API_BASE_URL}/auth/resend-otp`;
 
       const res = await axios.post(url, { email });
       console.log(res?.data);
@@ -258,7 +258,7 @@ const AuthPageInner = () => {
 
     try {
       const res = await axios.post(
-        "https://api.auditprorx.com/auth/forgot-password",
+        `${process.env.API_BASE_URL}/auth/forgot-password`,
         { email },
       );
       console.log(res?.data);

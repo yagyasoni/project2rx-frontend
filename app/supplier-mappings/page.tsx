@@ -125,7 +125,9 @@ const SupplierMappingPage = () => {
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const res = await axios.get("https://api.auditprorx.com/api/suppliers");
+        const res = await axios.get(
+          `${process.env.API_BASE_URL}/api/suppliers`,
+        );
 
         setSuppliers(res.data);
 
@@ -156,9 +158,12 @@ const SupplierMappingPage = () => {
     if (!newSupplierName.trim()) return;
 
     try {
-      const res = await axios.post("https://api.auditprorx.com/api/suppliers", {
-        name: newSupplierName.trim(),
-      });
+      const res = await axios.post(
+        `${process.env.API_BASE_URL}/api/suppliers`,
+        {
+          name: newSupplierName.trim(),
+        },
+      );
 
       setSuppliers((prev) => [...prev, res.data]);
       setNewSupplierName("");
@@ -175,7 +180,7 @@ const SupplierMappingPage = () => {
     // if (!ok) return;
 
     try {
-      await axios.delete(`https://api.auditprorx.com/api/suppliers/${id}`);
+      await axios.delete(`${process.env.API_BASE_URL}/api/suppliers/${id}`);
 
       setSuppliers((prev) => prev.filter((s) => s.id !== id));
 
@@ -201,7 +206,7 @@ const SupplierMappingPage = () => {
 
     try {
       const res = await axios.get(
-        `https://api.auditprorx.com/api/supplier-mapping/${supplier.id}`,
+        `${process.env.API_BASE_URL}/api/supplier-mapping/${supplier.id}`,
       );
 
       const data = res.data;
@@ -278,7 +283,7 @@ const SupplierMappingPage = () => {
 
     try {
       const res = await axios.post(
-        "https://api.auditprorx.com/api/supplier-mapping",
+        `${process.env.API_BASE_URL}/api/supplier-mapping`,
         {
           supplier_id: selectedSupplier.id,
           mappings: cleanMappings,

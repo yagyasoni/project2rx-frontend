@@ -96,7 +96,7 @@ export default function InactiveAccount() {
 
     const fetchStatus = async () => {
       try {
-        const res = await axios.get(`https://api.auditprorx.com/auth/users`);
+        const res = await axios.get(`${process.env.API_BASE_URL}/auth/users`);
         const users = res.data;
         const currentUser = users.find((u: any) => u.id === userId);
         if (currentUser) setStatus(currentUser.status);
@@ -120,7 +120,7 @@ export default function InactiveAccount() {
         }
 
         const res = await axios.get(
-          `https://api.auditprorx.com/pay/subscription/${userId}`,
+          `${process.env.API_BASE_URL}/pay/subscription/${userId}`,
         );
         const data = res.data;
 

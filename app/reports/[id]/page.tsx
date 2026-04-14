@@ -402,11 +402,13 @@ export default function InventoryReportPage() {
   const [openFilter, setOpenFilter] = useState(false);
   const [openDrugSidebar, setOpenDrugSidebar] = useState(false);
   const [activeDrug, setActiveDrug] = useState<InventoryRow | null>(null);
-  const [activeSidebar, setActiveSidebar] = useState<"ndc" | "drug" | null>(null);
-const [drugDetail, setDrugDetail] = useState<any>(null);
-const [drugDetailLoading, setDrugDetailLoading] = useState(false);
-const [outsideRange, setOutsideRange] = useState(false);
-const [includeBilled, setIncludeBilled] = useState(false);
+  const [activeSidebar, setActiveSidebar] = useState<"ndc" | "drug" | null>(
+    null,
+  );
+  const [drugDetail, setDrugDetail] = useState<any>(null);
+  const [drugDetailLoading, setDrugDetailLoading] = useState(false);
+  const [outsideRange, setOutsideRange] = useState(false);
+  const [includeBilled, setIncludeBilled] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [auditDates, setAuditDates] = useState<any>(null);
@@ -416,58 +418,86 @@ const [includeBilled, setIncludeBilled] = useState(false);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   const [openBilledSidebar, setOpenBilledSidebar] = useState(false);
-const [billedDrug, setBilledDrug] = useState<InventoryRow | null>(null);
-const [rxLines, setRxLines] = useState<RxLine[]>([]);
-const [rxLoading, setRxLoading] = useState(false);
-const [rxTab, setRxTab] = useState<"current" | "outside">("current");
-const [rxFilters, setRxFilters] = useState<string[]>([]);
-const [showRxFilters, setShowRxFilters] = useState(false);
-const [openOrderedSidebar, setOpenOrderedSidebar] = useState(false);
-const [orderedDrug, setOrderedDrug] = useState<InventoryRow | null>(null);
-const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
-const [orderLoading, setOrderLoading] = useState(false);
-const [orderTab, setOrderTab] = useState<"current" | "outside">("current");
-const [orderFilters, setOrderFilters] = useState<string[]>([]);
-const [showOrderFilters, setShowOrderFilters] = useState(false);
-const [openShortageSidebar, setOpenShortageSidebar] = useState(false);
-const [shortageDrug, setShortageDrug] = useState<InventoryRow | null>(null);
+  const [billedDrug, setBilledDrug] = useState<InventoryRow | null>(null);
+  const [rxLines, setRxLines] = useState<RxLine[]>([]);
+  const [rxLoading, setRxLoading] = useState(false);
+  const [rxTab, setRxTab] = useState<"current" | "outside">("current");
+  const [rxFilters, setRxFilters] = useState<string[]>([]);
+  const [showRxFilters, setShowRxFilters] = useState(false);
+  const [openOrderedSidebar, setOpenOrderedSidebar] = useState(false);
+  const [orderedDrug, setOrderedDrug] = useState<InventoryRow | null>(null);
+  const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderTab, setOrderTab] = useState<"current" | "outside">("current");
+  const [orderFilters, setOrderFilters] = useState<string[]>([]);
+  const [showOrderFilters, setShowOrderFilters] = useState(false);
+  const [openShortageSidebar, setOpenShortageSidebar] = useState(false);
+  const [shortageDrug, setShortageDrug] = useState<InventoryRow | null>(null);
 
-// Notes sidebar
-const [openNotesSidebar, setOpenNotesSidebar] = useState(false);
-const [notesDrug, setNotesDrug] = useState<InventoryRow | null>(null);
-const [noteText, setNoteText] = useState("");
-const [notesMap, setNotesMap] = useState<Record<string, string>>({});
-const [notesSaved, setNotesSaved] = useState(false);
+  // Notes sidebar
+  const [openNotesSidebar, setOpenNotesSidebar] = useState(false);
+  const [notesDrug, setNotesDrug] = useState<InventoryRow | null>(null);
+  const [noteText, setNoteText] = useState("");
+  const [notesMap, setNotesMap] = useState<Record<string, string>>({});
+  const [notesSaved, setNotesSaved] = useState(false);
 
-// Drug name search filter
-const [drugNameFilter, setDrugNameFilter] = useState<string | null>(null);
+  // Drug name search filter
+  const [drugNameFilter, setDrugNameFilter] = useState<string | null>(null);
 
-// Tags system
-interface Tag { id: string; name: string; color: string; }
-const [tags, setTags] = useState<Tag[]>([
-  { id: "1", name: "Caremark", color: "#22c55e" },
-  { id: "2", name: "OXY OPTUM", color: "#3b82f6" },
-  { id: "3", name: "ORDERED", color: "#f97316" },
-  { id: "4", name: "Review", color: "#8b5cf6" },
-]);
-const [rowTags, setRowTags] = useState<Record<number, string[]>>({}); // rowId -> tagIds[]
-const [openTagsDropdown, setOpenTagsDropdown] = useState(false);
-const [activeTagFilters, setActiveTagFilters] = useState<string[]>([]);
-const [tagMenuOpen, setTagMenuOpen] = useState<string | null>(null); // tagId with open 3-dot menu
-const [tagModal, setTagModal] = useState<{ mode: "create" | "edit"; tag?: Tag } | null>(null);
-const [tagModalName, setTagModalName] = useState("");
-const [tagModalColor, setTagModalColor] = useState("#22c55e");
-const tagsDropdownRef = useRef<HTMLDivElement | null>(null);
-const [tagMenuPos, setTagMenuPos] = useState<{ x: number; y: number } | null>(null);
-const [rowTagMenuOpen, setRowTagMenuOpen] = useState<number | null>(null); // rowId
-const [rowTagMenuPos, setRowTagMenuPos] = useState<{ x: number; y: number } | null>(null);
+  // Tags system
+  interface Tag {
+    id: string;
+    name: string;
+    color: string;
+  }
+  const [tags, setTags] = useState<Tag[]>([
+    { id: "1", name: "Caremark", color: "#22c55e" },
+    { id: "2", name: "OXY OPTUM", color: "#3b82f6" },
+    { id: "3", name: "ORDERED", color: "#f97316" },
+    { id: "4", name: "Review", color: "#8b5cf6" },
+  ]);
+  const [rowTags, setRowTags] = useState<Record<number, string[]>>({}); // rowId -> tagIds[]
+  const [openTagsDropdown, setOpenTagsDropdown] = useState(false);
+  const [activeTagFilters, setActiveTagFilters] = useState<string[]>([]);
+  const [tagMenuOpen, setTagMenuOpen] = useState<string | null>(null); // tagId with open 3-dot menu
+  const [tagModal, setTagModal] = useState<{
+    mode: "create" | "edit";
+    tag?: Tag;
+  } | null>(null);
+  const [tagModalName, setTagModalName] = useState("");
+  const [tagModalColor, setTagModalColor] = useState("#22c55e");
+  const tagsDropdownRef = useRef<HTMLDivElement | null>(null);
+  const [tagMenuPos, setTagMenuPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const [rowTagMenuOpen, setRowTagMenuOpen] = useState<number | null>(null); // rowId
+  const [rowTagMenuPos, setRowTagMenuPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
-const TAG_COLORS = [
-  "#22c55e","#eab308","#f97316","#ef4444","#ec4899",
-  "#a855f7","#8b5cf6","#3b82f6","#06b6d4","#14b8a6",
-  "#84cc16","#f59e0b","#10b981","#6366f1","#e11d48",
-  "#7c3aed","#0ea5e9","#64748b","#1e293b","#000000",
-];
+  const TAG_COLORS = [
+    "#22c55e",
+    "#eab308",
+    "#f97316",
+    "#ef4444",
+    "#ec4899",
+    "#a855f7",
+    "#8b5cf6",
+    "#3b82f6",
+    "#06b6d4",
+    "#14b8a6",
+    "#84cc16",
+    "#f59e0b",
+    "#10b981",
+    "#6366f1",
+    "#e11d48",
+    "#7c3aed",
+    "#0ea5e9",
+    "#64748b",
+    "#1e293b",
+    "#000000",
+  ];
 
   const bodyScrollRef = useRef<HTMLDivElement | null>(null);
   const filterRef = useRef<HTMLDivElement | null>(null);
@@ -508,7 +538,7 @@ const TAG_COLORS = [
     setDrugDetail(null);
     try {
       const res = await fetch(
-        `https://api.auditprorx.com/api/audits/${auditId}/drug-detail/${encodeURIComponent(ndc)}?outside_range=${outside}&include_billed=${billed}`,
+        `${process.env.API_BASE_URL}/api/audits/${auditId}/drug-detail/${encodeURIComponent(ndc)}?outside_range=${outside}&include_billed=${billed}`,
       );
       const data = await res.json();
       setDrugDetail(data);
@@ -574,7 +604,7 @@ const TAG_COLORS = [
         );
 
         const res = await fetch(
-          `https://api.auditprorx.com/api/audits/${auditId}/report`,
+          `${process.env.API_BASE_URL}/api/audits/${auditId}/report`,
         );
         const json = await res.json();
         const data = Array.isArray(json)
@@ -591,9 +621,9 @@ const TAG_COLORS = [
           const njMedicaidVal = n(row.nj_medicaid ?? row.njMedicaid);
           const njBilledVal = medicareVal + njMedicaidVal;
           // Shortages calculated individually first so combined can sum them
-          const shortageMedicareVal    = to - medicareVal;
-          const shortageNjMedicaidVal  = to - njMedicaidVal;
-          
+          const shortageMedicareVal = to - medicareVal;
+          const shortageNjMedicaidVal = to - njMedicaidVal;
+
           return {
             id: row.id ?? i + 1,
             ndc: row.ndc ?? "",
@@ -677,7 +707,7 @@ const TAG_COLORS = [
 
         setInventoryData(norm);
         const ar = await fetch(
-          `https://api.auditprorx.com/api/audits/${auditId}`,
+          `${process.env.API_BASE_URL}/api/audits/${auditId}`,
         );
         setAuditDates(await ar.json());
       } catch (e) {
@@ -846,10 +876,12 @@ const TAG_COLORS = [
   const filteredData = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return sortedData.filter((r) => {
-      const matchesSearch = r.drugName.toLowerCase().includes(q) || r.ndc.toLowerCase().includes(q);
+      const matchesSearch =
+        r.drugName.toLowerCase().includes(q) || r.ndc.toLowerCase().includes(q);
       const matchesAmount = amountValue === "" || r.amount <= amountValue;
-      const matchesTags = activeTagFilters.length === 0 || 
-        activeTagFilters.some(tid => (rowTags[r.id] ?? []).includes(tid));
+      const matchesTags =
+        activeTagFilters.length === 0 ||
+        activeTagFilters.some((tid) => (rowTags[r.id] ?? []).includes(tid));
       return matchesSearch && matchesAmount && matchesTags;
     });
   }, [sortedData, searchQuery, amountValue, activeTagFilters, rowTags]);
@@ -1012,7 +1044,7 @@ const TAG_COLORS = [
     setRxFilters([]);
     try {
       const res = await fetch(
-        `https://api.auditprorx.com/api/audits/${auditId}/inventory-detail/${encodeURIComponent(row.ndc)}`,
+        `${process.env.API_BASE_URL}/api/audits/${auditId}/inventory-detail/${encodeURIComponent(row.ndc)}`,
       );
       const json = await res.json();
       console.log("🔍 Drug detail API response:", json); // ← check this in browser console
@@ -1082,7 +1114,7 @@ const TAG_COLORS = [
     setOrderFilters([]);
     try {
       const res = await fetch(
-        `https://api.auditprorx.com/api/audits/${auditId}/wholesaler-detail/${encodeURIComponent(row.ndc)}`,
+        `${process.env.API_BASE_URL}/api/audits/${auditId}/wholesaler-detail/${encodeURIComponent(row.ndc)}`,
       );
       const json = await res.json();
       const lines = Array.isArray(json) ? json : [];
@@ -1137,7 +1169,8 @@ const TAG_COLORS = [
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(e.target as Node)) setOpenFilter(false);
+      if (filterRef.current && !filterRef.current.contains(e.target as Node))
+        setOpenFilter(false);
     };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
@@ -1145,7 +1178,10 @@ const TAG_COLORS = [
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (tagsDropdownRef.current && !tagsDropdownRef.current.contains(e.target as Node)) {
+      if (
+        tagsDropdownRef.current &&
+        !tagsDropdownRef.current.contains(e.target as Node)
+      ) {
         setOpenTagsDropdown(false);
         setTagMenuOpen(null);
       }
@@ -1158,7 +1194,10 @@ const TAG_COLORS = [
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (rowTagMenuRef.current && !rowTagMenuRef.current.contains(e.target as Node)) {
+      if (
+        rowTagMenuRef.current &&
+        !rowTagMenuRef.current.contains(e.target as Node)
+      ) {
         setRowTagMenuOpen(null);
         setRowTagMenuPos(null);
       }
@@ -1214,14 +1253,35 @@ const TAG_COLORS = [
       >
         <div className="relative h-full w-full flex overflow-hidden">
           {/* Sidebar */}
-          <div className={`flex-shrink-0 transition-all duration-300 z-[130] ${
-            openExportModal || loading || showLeaveDialog || openDrugSidebar || openBilledSidebar || openOrderedSidebar || openShortageSidebar || !!tagModal
-              ? "w-0 opacity-0 pointer-events-none"
-              : sidebarCollapsed ? "w-[72px]" : "w-[260px]"
-          }`}>
-            {!openExportModal && !loading && !showLeaveDialog && !openDrugSidebar && !openBilledSidebar && !openNotesSidebar && (
-              <AppSidebar sidebarOpen={!sidebarCollapsed} setSidebarOpen={() => setSidebarCollapsed((v) => !v)} activePanel={activePanel} setActivePanel={setActivePanel} />
-            )}
+          <div
+            className={`flex-shrink-0 transition-all duration-300 z-[130] ${
+              openExportModal ||
+              loading ||
+              showLeaveDialog ||
+              openDrugSidebar ||
+              openBilledSidebar ||
+              openOrderedSidebar ||
+              openShortageSidebar ||
+              !!tagModal
+                ? "w-0 opacity-0 pointer-events-none"
+                : sidebarCollapsed
+                  ? "w-[72px]"
+                  : "w-[260px]"
+            }`}
+          >
+            {!openExportModal &&
+              !loading &&
+              !showLeaveDialog &&
+              !openDrugSidebar &&
+              !openBilledSidebar &&
+              !openNotesSidebar && (
+                <AppSidebar
+                  sidebarOpen={!sidebarCollapsed}
+                  setSidebarOpen={() => setSidebarCollapsed((v) => !v)}
+                  activePanel={activePanel}
+                  setActivePanel={setActivePanel}
+                />
+              )}
           </div>
 
           {/* Loading overlay */}
@@ -1343,7 +1403,13 @@ const TAG_COLORS = [
                     className="pl-9 h-8 text-sm border-slate-300"
                   />
                   {searchQuery && (
-                    <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => { setSearchQuery(""); setDrugNameFilter(null); }}>
+                    <button
+                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setDrugNameFilter(null);
+                      }}
+                    >
                       <X className="h-3.5 w-3.5 text-slate-400" />
                     </button>
                   )}
@@ -1624,10 +1690,26 @@ const TAG_COLORS = [
                     variant="outline"
                     size="sm"
                     className={`h-8 gap-1.5 text-xs border-slate-300 ${activeTagFilters.length > 0 ? "border-emerald-400 text-emerald-700 bg-emerald-50" : ""}`}
-                    onClick={() => { setOpenTagsDropdown(v => !v); setTagMenuOpen(null); }}
+                    onClick={() => {
+                      setOpenTagsDropdown((v) => !v);
+                      setTagMenuOpen(null);
+                    }}
                   >
                     {/* Tag icon */}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                      <line x1="7" y1="7" x2="7.01" y2="7" />
+                    </svg>
                     Tags
                     {activeTagFilters.length > 0 && (
                       <span className="ml-0.5 bg-emerald-600 text-white rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none">
@@ -1645,10 +1727,17 @@ const TAG_COLORS = [
                     >
                       {/* Header */}
                       <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
-                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Tags</span>
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Tags
+                        </span>
                         <div className="flex items-center gap-2">
                           {activeTagFilters.length > 0 && (
-                            <button onClick={() => setActiveTagFilters([])} className="text-[11px] font-semibold text-slate-400 hover:text-red-500">Clear</button>
+                            <button
+                              onClick={() => setActiveTagFilters([])}
+                              className="text-[11px] font-semibold text-slate-400 hover:text-red-500"
+                            >
+                              Clear
+                            </button>
                           )}
                           <button
                             onClick={() => {
@@ -1660,9 +1749,13 @@ const TAG_COLORS = [
                             }}
                             className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg transition-colors"
                           >
-                            <span className="text-base leading-none">+</span> Create Tag
+                            <span className="text-base leading-none">+</span>{" "}
+                            Create Tag
                           </button>
-                          <button onClick={() => setOpenTagsDropdown(false)} className="h-5 w-5 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+                          <button
+                            onClick={() => setOpenTagsDropdown(false)}
+                            className="h-5 w-5 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                          >
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -1671,11 +1764,17 @@ const TAG_COLORS = [
                       {/* Tag list */}
                       <div className="py-2 max-h-[400px] overflow-y-auto">
                         {tags.length === 0 ? (
-                          <div className="px-4 py-6 text-center text-xs text-slate-400">No tags yet. Create one!</div>
+                          <div className="px-4 py-6 text-center text-xs text-slate-400">
+                            No tags yet. Create one!
+                          </div>
                         ) : (
                           tags.map((tag) => {
-                            const count = Object.values(rowTags).filter(ids => ids.includes(tag.id)).length;
-                            const isFilterActive = activeTagFilters.includes(tag.id);
+                            const count = Object.values(rowTags).filter((ids) =>
+                              ids.includes(tag.id),
+                            ).length;
+                            const isFilterActive = activeTagFilters.includes(
+                              tag.id,
+                            );
                             return (
                               <div
                                 key={tag.id}
@@ -1685,21 +1784,32 @@ const TAG_COLORS = [
                                 <input
                                   type="checkbox"
                                   checked={isFilterActive}
-                                  onChange={() => setActiveTagFilters(prev =>
-                                    prev.includes(tag.id) ? prev.filter(x => x !== tag.id) : [...prev, tag.id]
-                                  )}
+                                  onChange={() =>
+                                    setActiveTagFilters((prev) =>
+                                      prev.includes(tag.id)
+                                        ? prev.filter((x) => x !== tag.id)
+                                        : [...prev, tag.id],
+                                    )
+                                  }
                                   className="h-4 w-4 rounded border-slate-300 shrink-0 cursor-pointer"
                                   style={{ accentColor: tag.color }}
                                 />
                                 {/* Tag pill */}
                                 <span
                                   className="flex-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold"
-                                  style={{ background: tag.color + "22", color: tag.color, border: `1px solid ${tag.color}55` }}
+                                  style={{
+                                    background: tag.color + "22",
+                                    color: tag.color,
+                                    border: `1px solid ${tag.color}55`,
+                                  }}
                                 >
                                   {tag.name}
                                   <span
                                     className="ml-auto inline-flex items-center justify-center h-4 w-4 rounded-full text-[10px] font-bold"
-                                    style={{ background: tag.color, color: "#fff" }}
+                                    style={{
+                                      background: tag.color,
+                                      color: "#fff",
+                                    }}
                                   >
                                     {count}
                                   </span>
@@ -1707,10 +1817,25 @@ const TAG_COLORS = [
                                 {/* 3-dot menu */}
                                 <div className="relative">
                                   <button
-                                    onClick={(e) => { e.stopPropagation(); setTagMenuOpen(prev => prev === tag.id ? null : tag.id); }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setTagMenuOpen((prev) =>
+                                        prev === tag.id ? null : tag.id,
+                                      );
+                                    }}
                                     className="h-6 w-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100"
                                   >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="14"
+                                      height="14"
+                                      viewBox="0 0 24 24"
+                                      fill="currentColor"
+                                    >
+                                      <circle cx="12" cy="5" r="1.5" />
+                                      <circle cx="12" cy="12" r="1.5" />
+                                      <circle cx="12" cy="19" r="1.5" />
+                                    </svg>
                                   </button>
                                   {tagMenuOpen === tag.id && (
                                     <div
@@ -1727,18 +1852,37 @@ const TAG_COLORS = [
                                         }}
                                         className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-t-xl transition-colors"
                                       >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="13"
+                                          height="13"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg>
                                         Edit
                                       </button>
                                       <div className="border-t border-slate-100" />
                                       <button
                                         onClick={() => {
-                                          setTags(prev => prev.filter(t => t.id !== tag.id));
-                                          setActiveTagFilters(prev => prev.filter(x => x !== tag.id));
-                                          setRowTags(prev => {
+                                          setTags((prev) =>
+                                            prev.filter((t) => t.id !== tag.id),
+                                          );
+                                          setActiveTagFilters((prev) =>
+                                            prev.filter((x) => x !== tag.id),
+                                          );
+                                          setRowTags((prev) => {
                                             const next = { ...prev };
-                                            Object.keys(next).forEach(k => {
-                                              next[Number(k)] = next[Number(k)].filter(x => x !== tag.id);
+                                            Object.keys(next).forEach((k) => {
+                                              next[Number(k)] = next[
+                                                Number(k)
+                                              ].filter((x) => x !== tag.id);
                                             });
                                             return next;
                                           });
@@ -1746,7 +1890,23 @@ const TAG_COLORS = [
                                         }}
                                         className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 rounded-b-xl transition-colors"
                                       >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="13"
+                                          height="13"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <polyline points="3 6 5 6 21 6" />
+                                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                          <path d="M10 11v6" />
+                                          <path d="M14 11v6" />
+                                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                        </svg>
                                         Delete
                                       </button>
                                     </div>
@@ -1761,7 +1921,13 @@ const TAG_COLORS = [
                   )}
                 </div>
 
-                <Input type="number" placeholder="Max Amount" value={amountValue} onChange={(e) => setAmountValue(Number(e.target.value) || "")} className="w-[110px] h-8 text-xs border-slate-300" />
+                <Input
+                  type="number"
+                  placeholder="Max Amount"
+                  value={amountValue}
+                  onChange={(e) => setAmountValue(Number(e.target.value) || "")}
+                  className="w-[110px] h-8 text-xs border-slate-300"
+                />
 
                 <Select
                   value={String(rowsPerPage)}
@@ -2220,7 +2386,7 @@ const TAG_COLORS = [
                         <tr
                           key={row.id}
                           className={`srow cursor-pointer ${isSel ? "sel" : ""} ${isEven ? "even" : ""}`}
-                          style={{ height: 36 , minHeight: 36 }}
+                          style={{ height: 36, minHeight: 36 }}
                           onClick={() => {
                             setActiveDrug(row);
                             setOpenDrugSidebar(true);
@@ -2245,133 +2411,309 @@ const TAG_COLORS = [
                               className="h-3.5 w-3.5"
                             />
                           </td>
-                          {showRank    && <td className="sticky z-20 sc" style={{ left: L_RANK, width: 72, background: bg, textAlign: "center", padding: "0 8px" }}><span className="text-xs text-slate-500 tabular-nums font-medium">{row.rank}</span></td>}
-                         {showNdc && (
-  <td
-    className="sticky z-20 sc"
-    style={{ left: L_NDC, width: 140, background: bg, textAlign: "center", padding: "2px 8px", verticalAlign: "middle" }}
-  >
-    <div className="flex items-center gap-1">
-      <button
-        title="Copy NDC"
-        onClick={(e) => {
-          e.stopPropagation();
-          navigator.clipboard.writeText(row.ndc);
-          const btn = e.currentTarget;
-          btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-          setTimeout(() => {
-            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
-          }, 1200);
-        }}
-        className="p-0.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 shrink-0"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      </button>
-      <span className="text-[11px] font-mono text-slate-500 tracking-tight truncate flex-1">{row.ndc}</span>
-      {/* 3-dot tag button */}
-      <button
-        title="Tag options"
-        onClick={(e) => {
-          e.stopPropagation();
-          if (rowTagMenuOpen === row.id) { setRowTagMenuOpen(null); setRowTagMenuPos(null); return; }
-          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-          setRowTagMenuPos({ x: rect.left, y: rect.bottom });
-          setRowTagMenuOpen(row.id);
-        }}
-        className="p-0.5 rounded text-slate-600 hover:text-slate-800 hover:bg-slate-100 shrink-0 ml-auto"
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="#334155"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
-      </button>
-    </div>
-  </td>
-)}
+                          {showRank && (
+                            <td
+                              className="sticky z-20 sc"
+                              style={{
+                                left: L_RANK,
+                                width: 72,
+                                background: bg,
+                                textAlign: "center",
+                                padding: "0 8px",
+                              }}
+                            >
+                              <span className="text-xs text-slate-500 tabular-nums font-medium">
+                                {row.rank}
+                              </span>
+                            </td>
+                          )}
+                          {showNdc && (
+                            <td
+                              className="sticky z-20 sc"
+                              style={{
+                                left: L_NDC,
+                                width: 140,
+                                background: bg,
+                                textAlign: "center",
+                                padding: "2px 8px",
+                                verticalAlign: "middle",
+                              }}
+                            >
+                              <div className="flex items-center gap-1">
+                                <button
+                                  title="Copy NDC"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(row.ndc);
+                                    const btn = e.currentTarget;
+                                    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+                                    setTimeout(() => {
+                                      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+                                    }, 1200);
+                                  }}
+                                  className="p-0.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 shrink-0"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="11"
+                                    height="11"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <rect
+                                      x="9"
+                                      y="9"
+                                      width="13"
+                                      height="13"
+                                      rx="2"
+                                      ry="2"
+                                    />
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                  </svg>
+                                </button>
+                                <span className="text-[11px] font-mono text-slate-500 tracking-tight truncate flex-1">
+                                  {row.ndc}
+                                </span>
+                                {/* 3-dot tag button */}
+                                <button
+                                  title="Tag options"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (rowTagMenuOpen === row.id) {
+                                      setRowTagMenuOpen(null);
+                                      setRowTagMenuPos(null);
+                                      return;
+                                    }
+                                    const rect = (
+                                      e.currentTarget as HTMLElement
+                                    ).getBoundingClientRect();
+                                    setRowTagMenuPos({
+                                      x: rect.left,
+                                      y: rect.bottom,
+                                    });
+                                    setRowTagMenuOpen(row.id);
+                                  }}
+                                  className="p-0.5 rounded text-slate-600 hover:text-slate-800 hover:bg-slate-100 shrink-0 ml-auto"
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="13"
+                                    height="13"
+                                    viewBox="0 0 24 24"
+                                    fill="#334155"
+                                  >
+                                    <circle cx="12" cy="5" r="1.8" />
+                                    <circle cx="12" cy="12" r="1.8" />
+                                    <circle cx="12" cy="19" r="1.8" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          )}
                           {showDrug && (
-  <td
-    className="sticky z-20 sc"
-    style={{ left: L_DRUG, width: 240, background: bg, textAlign: "left", padding: "0 8px 0 12px" }}
-  >
-    <div className="flex items-center gap-1">
-      {/* Tag pills in drug name cell */}
-      {(rowTags[row.id] ?? []).map(tid => {
-        const t = tags.find(x => x.id === tid);
-        if (!t) return null;
-        return (
-          <span
-            key={tid}
-            className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold whitespace-nowrap"
-            style={{ background: t.color + "22", color: t.color, border: `1px solid ${t.color}55` }}
-          >
-            {t.name}
-          </span>
-        );
-      })}
-      <div className="flex items-center gap-0.5 shrink-0">
-        {/* Search by drug name */}
-        <button
-          title="Search by drug name"
-          onClick={(e) => {
-            e.stopPropagation();
-            setDrugNameFilter(prev => prev === row.drugName ? null : row.drugName);
-            setSearchQuery(row.drugName);
-          }}
-          className="p-0.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </button>
-        {/* Copy drug name */}
-        <button
-          title="Copy drug name"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigator.clipboard.writeText(row.drugName);
-            const btn = e.currentTarget;
-            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-            setTimeout(() => {
-              btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
-            }, 1200);
-          }}
-          className="p-0.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        </button>
-        {/* Add note */}
-        <button
-          title="Add note"
-          onClick={(e) => {
-            e.stopPropagation();
-            setNotesDrug(row);
-            setNoteText(notesMap[row.ndc] ?? "");
-            setNotesSaved(false);
-            setOpenNotesSidebar(true);
-          }}
-          className={`p-0.5 rounded hover:bg-amber-50 ${notesMap[row.ndc] ? "text-amber-500" : "text-slate-400 hover:text-amber-500"}`}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-      </div>
-      <span
-        className="text-xs font-semibold text-slate-800 truncate cursor-pointer hover:text-emerald-700"
-        title={row.drugName}
-        onClick={(e) => {
-          e.stopPropagation();
-          setActiveDrug(row);
-          setActiveSidebar("drug");
-          setOutsideRange(false);
-          setIncludeBilled(false);
-          setDrugDetail(null);
-          setOpenDrugSidebar(true);
-          fetchDrugDetail(row.ndc, false, false);
-        }}
-      >
-        {row.drugName}
-      </span>
-    </div>
-  </td>
-)}
-                          {showPkg     && <td className="sticky z-20 sc" style={{ left: L_PKG,  width: 100, background: bg, textAlign: "right", padding: "0 10px" }}><span className="text-xs text-slate-600 tabular-nums">{row.pkgSize}</span></td>}
-                          {showUnit    && <td className="sticky z-20 sc" style={{ left: L_UNIT, width: 100, background: bg, textAlign: "right", padding: "0 10px" }}><span className="text-xs text-slate-600 tabular-nums">{row.unit}</span></td>}
-                          {showOrdered && <td className="sticky z-20 sl" style={{ left: L_ORDERED, width: 140, background: bg, textAlign: "right", padding: "0 12px" }} onClick={(e) => handleOpenOrderedSidebar(row, e)}><span className="text-xs font-bold text-slate-800 tabular-nums cursor-pointer">{row.totalOrdered.toLocaleString()}</span></td>}
+                            <td
+                              className="sticky z-20 sc"
+                              style={{
+                                left: L_DRUG,
+                                width: 240,
+                                background: bg,
+                                textAlign: "left",
+                                padding: "0 8px 0 12px",
+                              }}
+                            >
+                              <div className="flex items-center gap-1">
+                                {/* Tag pills in drug name cell */}
+                                {(rowTags[row.id] ?? []).map((tid) => {
+                                  const t = tags.find((x) => x.id === tid);
+                                  if (!t) return null;
+                                  return (
+                                    <span
+                                      key={tid}
+                                      className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold whitespace-nowrap"
+                                      style={{
+                                        background: t.color + "22",
+                                        color: t.color,
+                                        border: `1px solid ${t.color}55`,
+                                      }}
+                                    >
+                                      {t.name}
+                                    </span>
+                                  );
+                                })}
+                                <div className="flex items-center gap-0.5 shrink-0">
+                                  {/* Search by drug name */}
+                                  <button
+                                    title="Search by drug name"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDrugNameFilter((prev) =>
+                                        prev === row.drugName
+                                          ? null
+                                          : row.drugName,
+                                      );
+                                      setSearchQuery(row.drugName);
+                                    }}
+                                    className="p-0.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="11"
+                                      height="11"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <circle cx="11" cy="11" r="8" />
+                                      <line
+                                        x1="21"
+                                        y1="21"
+                                        x2="16.65"
+                                        y2="16.65"
+                                      />
+                                    </svg>
+                                  </button>
+                                  {/* Copy drug name */}
+                                  <button
+                                    title="Copy drug name"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigator.clipboard.writeText(
+                                        row.drugName,
+                                      );
+                                      const btn = e.currentTarget;
+                                      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+                                      setTimeout(() => {
+                                        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+                                      }, 1200);
+                                    }}
+                                    className="p-0.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="11"
+                                      height="11"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <rect
+                                        x="9"
+                                        y="9"
+                                        width="13"
+                                        height="13"
+                                        rx="2"
+                                        ry="2"
+                                      />
+                                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                    </svg>
+                                  </button>
+                                  {/* Add note */}
+                                  <button
+                                    title="Add note"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setNotesDrug(row);
+                                      setNoteText(notesMap[row.ndc] ?? "");
+                                      setNotesSaved(false);
+                                      setOpenNotesSidebar(true);
+                                    }}
+                                    className={`p-0.5 rounded hover:bg-amber-50 ${notesMap[row.ndc] ? "text-amber-500" : "text-slate-400 hover:text-amber-500"}`}
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="11"
+                                      height="11"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                    </svg>
+                                  </button>
+                                </div>
+                                <span
+                                  className="text-xs font-semibold text-slate-800 truncate cursor-pointer hover:text-emerald-700"
+                                  title={row.drugName}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveDrug(row);
+                                    setActiveSidebar("drug");
+                                    setOutsideRange(false);
+                                    setIncludeBilled(false);
+                                    setDrugDetail(null);
+                                    setOpenDrugSidebar(true);
+                                    fetchDrugDetail(row.ndc, false, false);
+                                  }}
+                                >
+                                  {row.drugName}
+                                </span>
+                              </div>
+                            </td>
+                          )}
+                          {showPkg && (
+                            <td
+                              className="sticky z-20 sc"
+                              style={{
+                                left: L_PKG,
+                                width: 100,
+                                background: bg,
+                                textAlign: "right",
+                                padding: "0 10px",
+                              }}
+                            >
+                              <span className="text-xs text-slate-600 tabular-nums">
+                                {row.pkgSize}
+                              </span>
+                            </td>
+                          )}
+                          {showUnit && (
+                            <td
+                              className="sticky z-20 sc"
+                              style={{
+                                left: L_UNIT,
+                                width: 100,
+                                background: bg,
+                                textAlign: "right",
+                                padding: "0 10px",
+                              }}
+                            >
+                              <span className="text-xs text-slate-600 tabular-nums">
+                                {row.unit}
+                              </span>
+                            </td>
+                          )}
+                          {showOrdered && (
+                            <td
+                              className="sticky z-20 sl"
+                              style={{
+                                left: L_ORDERED,
+                                width: 140,
+                                background: bg,
+                                textAlign: "right",
+                                padding: "0 12px",
+                              }}
+                              onClick={(e) => handleOpenOrderedSidebar(row, e)}
+                            >
+                              <span className="text-xs font-bold text-slate-800 tabular-nums cursor-pointer">
+                                {row.totalOrdered.toLocaleString()}
+                              </span>
+                            </td>
+                          )}
 
                           {visCols.map((c) => (
                             <td
@@ -3213,9 +3555,9 @@ const TAG_COLORS = [
 
             {/* ── Total Billed Sidebar ── */}
             {/* {openBilledSidebar && billedDrug && ( */}
-              {/* // <> */}
-                {/* Backdrop */}
-                {/* <div
+            {/* // <> */}
+            {/* Backdrop */}
+            {/* <div
                   className="fixed inset-0 bg-black/30 z-[200]"
                   onClick={() => {
                     setOpenBilledSidebar(false);
@@ -3223,16 +3565,17 @@ const TAG_COLORS = [
                   }}
                 /> */}
 
-
-             
-{/* ── Total Billed Sidebar ── */}
-{openBilledSidebar && billedDrug && (
-  <>
-    {/* Backdrop */}
-    <div
-      className="fixed inset-0 bg-black/30 z-[200]"
-      onClick={() => { setOpenBilledSidebar(false); setShowRxFilters(false); }}
-    />
+            {/* ── Total Billed Sidebar ── */}
+            {openBilledSidebar && billedDrug && (
+              <>
+                {/* Backdrop */}
+                <div
+                  className="fixed inset-0 bg-black/30 z-[200]"
+                  onClick={() => {
+                    setOpenBilledSidebar(false);
+                    setShowRxFilters(false);
+                  }}
+                />
 
                 {/* Right Panel */}
                 <div
@@ -4334,290 +4677,577 @@ const TAG_COLORS = [
                         );
                       }
 
-          return (
-            <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
-  <colgroup>
-    <col style={{ width: "3%" }} />
-    <col style={{ width: "22%" }} />
-    <col style={{ width: "15%" }} />
-    <col style={{ width: "15%" }} />
-    <col style={{ width: "15%" }} />
-  </colgroup>
-  <thead>
-    <tr style={{ position: "sticky", top: 0, zIndex: 10, background: "#fff" }}>
-      <th style={{ padding: "7px 6px", textAlign: "center", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0" }}>#</th>
-      <th style={{ padding: "7px 6px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0" }}>INSURANCE</th>
-      <th style={{ padding: "7px 6px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0" }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-          <span style={{ height: 6, width: 6, borderRadius: "50%", background: "#10b981" }} />TOTAL ORDERED
-        </span>
-      </th>
-      <th style={{ padding: "7px 6px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0" }}>
-  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-    <span style={{ height: 6, width: 6, borderRadius: "50%", background: "#ef4444" }} />BILLED
-  </span>
-</th>
-      <th style={{ padding: "7px 6px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", background: "#fff", borderBottom: "2px solid #e2e8f0" }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-          <span style={{ height: 6, width: 6, borderRadius: "50%", background: "#f59e0b" }} />SHORTAGE
-        </span>
-      </th>
-    </tr>
-  </thead>
-  <tbody>
-    {pbmRows.map((row, i) => (
-      <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }} className="hover:bg-slate-50/60 transition-colors">
-        <td style={{ padding: "7px 6px", fontSize: 12, color: "#94a3b8", fontWeight: 500, textAlign: "center" }}>{i + 1}</td>
-        <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 600, color: "#1e293b", textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.name}</td>
-        <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 500, color: "#475569", textAlign: "left" }}>{shortageDrug.totalOrdered.toLocaleString()}</td>
-        <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 600, color: "#1e293b", textAlign: "left" }}>{row.billed.toLocaleString()}</td>
-        <td style={{ padding: "7px 6px", fontSize: 12, fontWeight: 700, textAlign: "left", color: row.shortage < 0 ? "#dc2626" : row.shortage === 0 ? "#94a3b8" : "#059669" }}>{row.shortage === 0 ? "—" : row.shortage.toLocaleString()}</td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-          );
-        })()}
-      </div>
-    </div>
-  </>
-)}
+                      return (
+                        <table
+                          style={{
+                            borderCollapse: "collapse",
+                            width: "100%",
+                            tableLayout: "fixed",
+                          }}
+                        >
+                          <colgroup>
+                            <col style={{ width: "3%" }} />
+                            <col style={{ width: "22%" }} />
+                            <col style={{ width: "15%" }} />
+                            <col style={{ width: "15%" }} />
+                            <col style={{ width: "15%" }} />
+                          </colgroup>
+                          <thead>
+                            <tr
+                              style={{
+                                position: "sticky",
+                                top: 0,
+                                zIndex: 10,
+                                background: "#fff",
+                              }}
+                            >
+                              <th
+                                style={{
+                                  padding: "7px 6px",
+                                  textAlign: "center",
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  color: "#64748b",
+                                  letterSpacing: "0.06em",
+                                  textTransform: "uppercase",
+                                  background: "#fff",
+                                  borderBottom: "2px solid #e2e8f0",
+                                }}
+                              >
+                                #
+                              </th>
+                              <th
+                                style={{
+                                  padding: "7px 6px",
+                                  textAlign: "left",
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  color: "#64748b",
+                                  letterSpacing: "0.06em",
+                                  textTransform: "uppercase",
+                                  background: "#fff",
+                                  borderBottom: "2px solid #e2e8f0",
+                                }}
+                              >
+                                INSURANCE
+                              </th>
+                              <th
+                                style={{
+                                  padding: "7px 6px",
+                                  textAlign: "left",
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  color: "#64748b",
+                                  letterSpacing: "0.06em",
+                                  textTransform: "uppercase",
+                                  background: "#fff",
+                                  borderBottom: "2px solid #e2e8f0",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 4,
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      height: 6,
+                                      width: 6,
+                                      borderRadius: "50%",
+                                      background: "#10b981",
+                                    }}
+                                  />
+                                  TOTAL ORDERED
+                                </span>
+                              </th>
+                              <th
+                                style={{
+                                  padding: "7px 6px",
+                                  textAlign: "left",
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  color: "#64748b",
+                                  letterSpacing: "0.06em",
+                                  textTransform: "uppercase",
+                                  background: "#fff",
+                                  borderBottom: "2px solid #e2e8f0",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 4,
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      height: 6,
+                                      width: 6,
+                                      borderRadius: "50%",
+                                      background: "#ef4444",
+                                    }}
+                                  />
+                                  BILLED
+                                </span>
+                              </th>
+                              <th
+                                style={{
+                                  padding: "7px 6px",
+                                  textAlign: "left",
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  color: "#64748b",
+                                  letterSpacing: "0.06em",
+                                  textTransform: "uppercase",
+                                  background: "#fff",
+                                  borderBottom: "2px solid #e2e8f0",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 4,
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      height: 6,
+                                      width: 6,
+                                      borderRadius: "50%",
+                                      background: "#f59e0b",
+                                    }}
+                                  />
+                                  SHORTAGE
+                                </span>
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pbmRows.map((row, i) => (
+                              <tr
+                                key={i}
+                                style={{ borderBottom: "1px solid #f1f5f9" }}
+                                className="hover:bg-slate-50/60 transition-colors"
+                              >
+                                <td
+                                  style={{
+                                    padding: "7px 6px",
+                                    fontSize: 12,
+                                    color: "#94a3b8",
+                                    fontWeight: 500,
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  {i + 1}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "7px 6px",
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: "#1e293b",
+                                    textAlign: "left",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {row.name}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "7px 6px",
+                                    fontSize: 12,
+                                    fontWeight: 500,
+                                    color: "#475569",
+                                    textAlign: "left",
+                                  }}
+                                >
+                                  {shortageDrug.totalOrdered.toLocaleString()}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "7px 6px",
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: "#1e293b",
+                                    textAlign: "left",
+                                  }}
+                                >
+                                  {row.billed.toLocaleString()}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "7px 6px",
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    textAlign: "left",
+                                    color:
+                                      row.shortage < 0
+                                        ? "#dc2626"
+                                        : row.shortage === 0
+                                          ? "#94a3b8"
+                                          : "#059669",
+                                  }}
+                                >
+                                  {row.shortage === 0
+                                    ? "—"
+                                    : row.shortage.toLocaleString()}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </>
+            )}
 
-{/* ── Notes Sidebar ── */}
-{openNotesSidebar && notesDrug && (
-  <>
-    <div
-      className="fixed inset-0 bg-black/30 z-[200]"
-      onClick={() => setOpenNotesSidebar(false)}
-    />
-    <div
-      className="fixed top-0 right-0 h-full z-[210] flex flex-col bg-white"
-      style={{ width: "35%", maxWidth: "100vw", boxShadow: "-4px 0 24px rgba(0,0,0,0.15)" }}
-    >
-      {/* Top Bar */}
-      <div className="flex items-center gap-2.5 px-5 py-3 border-b border-slate-100 flex-shrink-0">
-        <button
-          onClick={() => setOpenNotesSidebar(false)}
-          className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-        <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shrink-0" />
-        <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">Add Note</span>
-      </div>
+            {/* ── Notes Sidebar ── */}
+            {openNotesSidebar && notesDrug && (
+              <>
+                <div
+                  className="fixed inset-0 bg-black/30 z-[200]"
+                  onClick={() => setOpenNotesSidebar(false)}
+                />
+                <div
+                  className="fixed top-0 right-0 h-full z-[210] flex flex-col bg-white"
+                  style={{
+                    width: "35%",
+                    maxWidth: "100vw",
+                    boxShadow: "-4px 0 24px rgba(0,0,0,0.15)",
+                  }}
+                >
+                  {/* Top Bar */}
+                  <div className="flex items-center gap-2.5 px-5 py-3 border-b border-slate-100 flex-shrink-0">
+                    <button
+                      onClick={() => setOpenNotesSidebar(false)}
+                      className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shrink-0" />
+                    <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">
+                      Add Note
+                    </span>
+                  </div>
 
-      {/* Info Bar */}
-      <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex-shrink-0">
-        <div className="flex items-start gap-8 flex-wrap">
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">NDC</p>
-            <p className="text-[13px] font-mono font-bold text-slate-700 tabular-nums">{notesDrug.ndc}</p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Drug Name</p>
-            <p className="text-[13px] font-bold text-slate-900 truncate">{notesDrug.drugName}</p>
-          </div>
-        </div>
-      </div>
+                  {/* Info Bar */}
+                  <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex-shrink-0">
+                    <div className="flex items-start gap-8 flex-wrap">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                          NDC
+                        </p>
+                        <p className="text-[13px] font-mono font-bold text-slate-700 tabular-nums">
+                          {notesDrug.ndc}
+                        </p>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                          Drug Name
+                        </p>
+                        <p className="text-[13px] font-bold text-slate-900 truncate">
+                          {notesDrug.drugName}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-      {/* Note Input */}
-      <div className="flex-1 flex flex-col px-5 py-5 gap-4">
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Note</p>
-          {notesMap[notesDrug.ndc] && (
-            <button
-              onClick={() => {
-                const next = { ...notesMap };
-                delete next[notesDrug.ndc];
-                setNotesMap(next);
-                setNoteText("");
-                setNotesSaved(false);
-              }}
-              className="text-[11px] font-semibold text-red-400 hover:text-red-600"
-            >
-              Clear note
-            </button>
-          )}
-        </div>
-        <textarea
-          value={noteText}
-          onChange={(e) => { setNoteText(e.target.value); setNotesSaved(false); }}
-          placeholder="Type your note here..."
-          className="flex-1 w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-700 resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-slate-300"
-          style={{ minHeight: 200 }}
-        />
+                  {/* Note Input */}
+                  <div className="flex-1 flex flex-col px-5 py-5 gap-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Note
+                      </p>
+                      {notesMap[notesDrug.ndc] && (
+                        <button
+                          onClick={() => {
+                            const next = { ...notesMap };
+                            delete next[notesDrug.ndc];
+                            setNotesMap(next);
+                            setNoteText("");
+                            setNotesSaved(false);
+                          }}
+                          className="text-[11px] font-semibold text-red-400 hover:text-red-600"
+                        >
+                          Clear note
+                        </button>
+                      )}
+                    </div>
+                    <textarea
+                      value={noteText}
+                      onChange={(e) => {
+                        setNoteText(e.target.value);
+                        setNotesSaved(false);
+                      }}
+                      placeholder="Type your note here..."
+                      className="flex-1 w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-700 resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-slate-300"
+                      style={{ minHeight: 200 }}
+                    />
 
-        {/* Saved notes list */}
-        {notesMap[notesDrug.ndc] && noteText !== notesMap[notesDrug.ndc] && (
-          <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-            <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Saved Note</p>
-            <p className="text-sm text-slate-700 whitespace-pre-wrap">{notesMap[notesDrug.ndc]}</p>
-          </div>
-        )}
+                    {/* Saved notes list */}
+                    {notesMap[notesDrug.ndc] &&
+                      noteText !== notesMap[notesDrug.ndc] && (
+                        <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+                          <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">
+                            Saved Note
+                          </p>
+                          <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                            {notesMap[notesDrug.ndc]}
+                          </p>
+                        </div>
+                      )}
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              if (!noteText.trim()) return;
-              setNotesMap(prev => ({ ...prev, [notesDrug.ndc]: noteText.trim() }));
-              setNotesSaved(true);
-            }}
-            disabled={!noteText.trim()}
-            className="flex-1 h-9 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider transition-colors"
-          >
-            {notesSaved ? "✓ Saved" : "Save Note"}
-          </button>
-          <button
-            onClick={() => setOpenNotesSidebar(false)}
-            className="h-9 px-4 rounded-xl border border-slate-200 text-xs font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
-          >
-            Close
-          </button>
-        </div>
-
-        {/* All notes for this session */}
-        {Object.keys(notesMap).length > 0 && (
-          <div className="mt-2">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">All Notes This Session</p>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {Object.entries(notesMap).map(([ndc, note]) => {
-                const drug = inventoryData.find(r => r.ndc === ndc);
-                return (
-                  <div key={ndc} className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-[11px] font-mono font-bold text-slate-500">{ndc}</span>
+                    <div className="flex items-center gap-3">
                       <button
                         onClick={() => {
-                          const next = { ...notesMap };
-                          delete next[ndc];
-                          setNotesMap(next);
-                          if (notesDrug.ndc === ndc) { setNoteText(""); setNotesSaved(false); }
+                          if (!noteText.trim()) return;
+                          setNotesMap((prev) => ({
+                            ...prev,
+                            [notesDrug.ndc]: noteText.trim(),
+                          }));
+                          setNotesSaved(true);
                         }}
-                        className="text-[10px] text-red-400 hover:text-red-600 font-semibold"
+                        disabled={!noteText.trim()}
+                        className="flex-1 h-9 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider transition-colors"
                       >
-                        ✕
+                        {notesSaved ? "✓ Saved" : "Save Note"}
+                      </button>
+                      <button
+                        onClick={() => setOpenNotesSidebar(false)}
+                        className="h-9 px-4 rounded-xl border border-slate-200 text-xs font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
+                      >
+                        Close
                       </button>
                     </div>
-                    {drug && <p className="text-[10px] text-slate-400 truncate mb-1">{drug.drugName}</p>}
-                    <p className="text-xs text-slate-600 line-clamp-2">{note}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  </>
-)}
 
-{/* ── Row tag context menu (portal) ── */}
-            {rowTagMenuOpen !== null && rowTagMenuPos && (() => {
-              const row = paginatedData.find(r => r.id === rowTagMenuOpen);
-              if (!row) return null;
-              const assigned = rowTags[row.id] ?? [];
-              const hasTag = assigned.length > 0;
-              return (
-                <>
-                  <div
-                    ref={rowTagMenuRef}
-                    className="fixed bg-white border border-slate-200 rounded-xl shadow-2xl z-[9999]"
-                    style={{ top: rowTagMenuPos.y + 4, left: rowTagMenuPos.x, width: 200, maxHeight: 320, overflowY: "auto" }}
-                  >
-                    {hasTag ? (
-                      /* Remove Tag option */
-                      <div className="p-2">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 py-1">Assigned Tags</p>
-                        {assigned.map(tid => {
-                          const t = tags.find(x => x.id === tid);
-                          if (!t) return null;
-                          return (
-                            <div key={tid} className="flex items-center justify-between gap-2 px-2 py-1.5 hover:bg-red-50 rounded-lg group">
-                              <span
-                                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
-                                style={{ background: t.color + "22", color: t.color, border: `1px solid ${t.color}55` }}
+                    {/* All notes for this session */}
+                    {Object.keys(notesMap).length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                          All Notes This Session
+                        </p>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {Object.entries(notesMap).map(([ndc, note]) => {
+                            const drug = inventoryData.find(
+                              (r) => r.ndc === ndc,
+                            );
+                            return (
+                              <div
+                                key={ndc}
+                                className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2"
                               >
-                                {t.name}
-                              </span>
-                              <button
-                                onClick={() => {
-                                  setRowTags(prev => ({
-                                    ...prev,
-                                    [row.id]: (prev[row.id] ?? []).filter(x => x !== tid),
-                                  }));
-                                }}
-                                className="text-[10px] font-bold text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          );
-                        })}
-                        <div className="border-t border-slate-100 mt-2 pt-2">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 py-1">Add More</p>
-                          {tags.filter(t => !assigned.includes(t.id)).map(t => (
-                            <button
-                              key={t.id}
-                              onClick={() => {
-                                setRowTags(prev => ({ ...prev, [row.id]: [...(prev[row.id] ?? []), t.id] }));
-                              }}
-                              className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded-lg text-left"
-                            >
-                              <span
-                                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
-                                style={{ background: t.color + "22", color: t.color, border: `1px solid ${t.color}55` }}
-                              >
-                                {t.name}
-                              </span>
-                            </button>
-                          ))}
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                  <span className="text-[11px] font-mono font-bold text-slate-500">
+                                    {ndc}
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      const next = { ...notesMap };
+                                      delete next[ndc];
+                                      setNotesMap(next);
+                                      if (notesDrug.ndc === ndc) {
+                                        setNoteText("");
+                                        setNotesSaved(false);
+                                      }
+                                    }}
+                                    className="text-[10px] text-red-400 hover:text-red-600 font-semibold"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                                {drug && (
+                                  <p className="text-[10px] text-slate-400 truncate mb-1">
+                                    {drug.drugName}
+                                  </p>
+                                )}
+                                <p className="text-xs text-slate-600 line-clamp-2">
+                                  {note}
+                                </p>
+                              </div>
+                            );
+                          })}
                         </div>
-                      </div>
-                    ) : (
-                      /* Add Tag options */
-                      <div className="p-2">
-                        <div className="flex items-center justify-between px-2 py-1.5 mb-1">
-                          <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Add Tag</p>
-                          <button onClick={() => { setRowTagMenuOpen(null); setRowTagMenuPos(null); }}>
-                            <X className="w-3 h-3 text-slate-400" />
-                          </button>
-                        </div>
-                        {tags.length === 0 ? (
-                          <p className="text-xs text-slate-400 px-2 py-2">No tags yet. Create one from the Tags filter.</p>
-                        ) : (
-                          tags.map(t => (
-                            <button
-                              key={t.id}
-                              onClick={() => {
-                                setRowTags(prev => ({ ...prev, [row.id]: [...(prev[row.id] ?? []), t.id] }));
-                                setRowTagMenuOpen(null);
-                                setRowTagMenuPos(null);
-                              }}
-                              className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded-lg text-left"
-                            >
-                              <span
-                                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
-                                style={{ background: t.color + "22", color: t.color, border: `1px solid ${t.color}55` }}
-                              >
-                                {t.name}
-                              </span>
-                            </button>
-                          ))
-                        )}
                       </div>
                     )}
                   </div>
-                </>
-              );
-            })()}
+                </div>
+              </>
+            )}
 
-{/* ── Tag Create/Edit Modal ── */}
+            {/* ── Row tag context menu (portal) ── */}
+            {rowTagMenuOpen !== null &&
+              rowTagMenuPos &&
+              (() => {
+                const row = paginatedData.find((r) => r.id === rowTagMenuOpen);
+                if (!row) return null;
+                const assigned = rowTags[row.id] ?? [];
+                const hasTag = assigned.length > 0;
+                return (
+                  <>
+                    <div
+                      ref={rowTagMenuRef}
+                      className="fixed bg-white border border-slate-200 rounded-xl shadow-2xl z-[9999]"
+                      style={{
+                        top: rowTagMenuPos.y + 4,
+                        left: rowTagMenuPos.x,
+                        width: 200,
+                        maxHeight: 320,
+                        overflowY: "auto",
+                      }}
+                    >
+                      {hasTag ? (
+                        /* Remove Tag option */
+                        <div className="p-2">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 py-1">
+                            Assigned Tags
+                          </p>
+                          {assigned.map((tid) => {
+                            const t = tags.find((x) => x.id === tid);
+                            if (!t) return null;
+                            return (
+                              <div
+                                key={tid}
+                                className="flex items-center justify-between gap-2 px-2 py-1.5 hover:bg-red-50 rounded-lg group"
+                              >
+                                <span
+                                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
+                                  style={{
+                                    background: t.color + "22",
+                                    color: t.color,
+                                    border: `1px solid ${t.color}55`,
+                                  }}
+                                >
+                                  {t.name}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setRowTags((prev) => ({
+                                      ...prev,
+                                      [row.id]: (prev[row.id] ?? []).filter(
+                                        (x) => x !== tid,
+                                      ),
+                                    }));
+                                  }}
+                                  className="text-[10px] font-bold text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            );
+                          })}
+                          <div className="border-t border-slate-100 mt-2 pt-2">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 py-1">
+                              Add More
+                            </p>
+                            {tags
+                              .filter((t) => !assigned.includes(t.id))
+                              .map((t) => (
+                                <button
+                                  key={t.id}
+                                  onClick={() => {
+                                    setRowTags((prev) => ({
+                                      ...prev,
+                                      [row.id]: [...(prev[row.id] ?? []), t.id],
+                                    }));
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded-lg text-left"
+                                >
+                                  <span
+                                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
+                                    style={{
+                                      background: t.color + "22",
+                                      color: t.color,
+                                      border: `1px solid ${t.color}55`,
+                                    }}
+                                  >
+                                    {t.name}
+                                  </span>
+                                </button>
+                              ))}
+                          </div>
+                        </div>
+                      ) : (
+                        /* Add Tag options */
+                        <div className="p-2">
+                          <div className="flex items-center justify-between px-2 py-1.5 mb-1">
+                            <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">
+                              Add Tag
+                            </p>
+                            <button
+                              onClick={() => {
+                                setRowTagMenuOpen(null);
+                                setRowTagMenuPos(null);
+                              }}
+                            >
+                              <X className="w-3 h-3 text-slate-400" />
+                            </button>
+                          </div>
+                          {tags.length === 0 ? (
+                            <p className="text-xs text-slate-400 px-2 py-2">
+                              No tags yet. Create one from the Tags filter.
+                            </p>
+                          ) : (
+                            tags.map((t) => (
+                              <button
+                                key={t.id}
+                                onClick={() => {
+                                  setRowTags((prev) => ({
+                                    ...prev,
+                                    [row.id]: [...(prev[row.id] ?? []), t.id],
+                                  }));
+                                  setRowTagMenuOpen(null);
+                                  setRowTagMenuPos(null);
+                                }}
+                                className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded-lg text-left"
+                              >
+                                <span
+                                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
+                                  style={{
+                                    background: t.color + "22",
+                                    color: t.color,
+                                    border: `1px solid ${t.color}55`,
+                                  }}
+                                >
+                                  {t.name}
+                                </span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
+
+            {/* ── Tag Create/Edit Modal ── */}
             {tagModal && (
               <>
-                <div className="fixed inset-0 bg-black/40 z-[300]" onClick={() => { setTagModal(null); setTagMenuOpen(null); setTagMenuPos(null); }} />
+                <div
+                  className="fixed inset-0 bg-black/40 z-[300]"
+                  onClick={() => {
+                    setTagModal(null);
+                    setTagMenuOpen(null);
+                    setTagMenuPos(null);
+                  }}
+                />
                 <div
                   className="fixed z-[310] bg-white rounded-2xl shadow-2xl"
-                  style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 440, maxWidth: "95vw" }}
+                  style={{
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%,-50%)",
+                    width: 440,
+                    maxWidth: "95vw",
+                  }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Header */}
@@ -4626,7 +5256,10 @@ const TAG_COLORS = [
                       {tagModal.mode === "create" ? "Add New Tag" : "Edit Tag"}
                     </h2>
                     <button
-                      onClick={() => { setTagModal(null); setTagMenuPos(null); }}
+                      onClick={() => {
+                        setTagModal(null);
+                        setTagMenuPos(null);
+                      }}
                       className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100"
                     >
                       <X className="w-4 h-4" />
@@ -4636,7 +5269,9 @@ const TAG_COLORS = [
                   <div className="px-6 pb-6 space-y-5">
                     {/* Tag Name */}
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Tag Name</label>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Tag Name
+                      </label>
                       <input
                         type="text"
                         value={tagModalName}
@@ -4649,7 +5284,9 @@ const TAG_COLORS = [
 
                     {/* Color Picker */}
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-3">Select color</label>
+                      <label className="block text-sm font-semibold text-slate-700 mb-3">
+                        Select color
+                      </label>
                       <div className="flex items-center gap-2 flex-wrap">
                         {TAG_COLORS.map((color) => (
                           <button
@@ -4657,11 +5294,18 @@ const TAG_COLORS = [
                             onClick={() => setTagModalColor(color)}
                             className="rounded-full transition-transform hover:scale-110"
                             style={{
-                              width: 22, height: 22,
+                              width: 22,
+                              height: 22,
                               background: color,
-                              outline: tagModalColor === color ? `3px solid ${color}` : "none",
+                              outline:
+                                tagModalColor === color
+                                  ? `3px solid ${color}`
+                                  : "none",
                               outlineOffset: 2,
-                              boxShadow: tagModalColor === color ? `0 0 0 2px white, 0 0 0 4px ${color}` : "none",
+                              boxShadow:
+                                tagModalColor === color
+                                  ? `0 0 0 2px white, 0 0 0 4px ${color}`
+                                  : "none",
                             }}
                           />
                         ))}
@@ -4670,10 +5314,16 @@ const TAG_COLORS = [
 
                     {/* Preview */}
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-slate-400 font-medium">Preview:</span>
+                      <span className="text-xs text-slate-400 font-medium">
+                        Preview:
+                      </span>
                       <span
                         className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold"
-                        style={{ background: tagModalColor + "22", color: tagModalColor, border: `1px solid ${tagModalColor}55` }}
+                        style={{
+                          background: tagModalColor + "22",
+                          color: tagModalColor,
+                          border: `1px solid ${tagModalColor}55`,
+                        }}
                       >
                         {tagModalName || "Tag name"}
                       </span>
@@ -4685,10 +5335,24 @@ const TAG_COLORS = [
                       onClick={() => {
                         if (!tagModalName.trim()) return;
                         if (tagModal.mode === "create") {
-                          const newTag: Tag = { id: Date.now().toString(), name: tagModalName.trim(), color: tagModalColor };
-                          setTags(prev => [...prev, newTag]);
+                          const newTag: Tag = {
+                            id: Date.now().toString(),
+                            name: tagModalName.trim(),
+                            color: tagModalColor,
+                          };
+                          setTags((prev) => [...prev, newTag]);
                         } else if (tagModal.tag) {
-                          setTags(prev => prev.map(t => t.id === tagModal.tag!.id ? { ...t, name: tagModalName.trim(), color: tagModalColor } : t));
+                          setTags((prev) =>
+                            prev.map((t) =>
+                              t.id === tagModal.tag!.id
+                                ? {
+                                    ...t,
+                                    name: tagModalName.trim(),
+                                    color: tagModalColor,
+                                  }
+                                : t,
+                            ),
+                          );
                         }
                         setTagModal(null);
                       }}
