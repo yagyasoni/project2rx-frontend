@@ -217,14 +217,20 @@ const UploadWholesalersStep = ({
   onAddSupplier,
   onViewAudit,
 }: UploadWholesalersStepProps) => {
-  const { allSuppliers, selectedSuppliers, saveSuppliers, removeSupplier: removeFromContext, loading } = useSuppliers();
+  const {
+    allSuppliers,
+    selectedSuppliers,
+    saveSuppliers,
+    removeSupplier: removeFromContext,
+    loading,
+  } = useSuppliers();
   const [edit, setEdit] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedInDrawer, setSelectedInDrawer] = useState<string[]>([]);
   const [drawerSearch, setDrawerSearch] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);
-const [uploadedIds, setUploadedIds] = useState<Set<string>>(new Set());
+  const [uploadedIds, setUploadedIds] = useState<Set<string>>(new Set());
   // Auto-populate wholesaler list from user's DB selections on mount
   useEffect(() => {
     if (!loading && selectedSuppliers.length > 0 && wholesalers.length === 0) {
@@ -250,19 +256,26 @@ const [uploadedIds, setUploadedIds] = useState<Set<string>>(new Set());
   >({});
   const [showMappingFor, setShowMappingFor] = useState<string | null>(null);
   const [showMappingWarning, setShowMappingWarning] = useState(false);
-  const [missingMappingFields, setMissingMappingFields] = useState<string[]>([]);
+  const [missingMappingFields, setMissingMappingFields] = useState<string[]>(
+    [],
+  );
 
   const [existingWholesalerFiles, setExistingWholesalerFiles] = useState<
-  { wholesaler_name: string; file_name: string }[]
->([]);
+    { wholesaler_name: string; file_name: string }[]
+  >([]);
 
-useEffect(() => {
-  const auditId = localStorage.getItem("auditId");
-  if (!auditId) return;
-  axios.get(`https://api.auditprorx.com/api/audits/${auditId}/wholesaler-files`).then((res) => {
-    if (res.data?.length > 0) setExistingWholesalerFiles(res.data);
-  }).catch(() => {});
-}, []);
+  useEffect(() => {
+    const auditId = localStorage.getItem("auditId");
+    if (!auditId) return;
+    axios
+      .get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/wholesaler-files`,
+      )
+      .then((res) => {
+        if (res.data?.length > 0) setExistingWholesalerFiles(res.data);
+      })
+      .catch(() => {});
+  }, []);
 
   const WHOLESALER_REQUIRED_FIELDS = [
     { key: "ndcNumber", label: "Ndc Number" },
@@ -391,7 +404,7 @@ useEffect(() => {
         // ✅ Step 1: Try to fetch admin mapping from DB
         try {
           const res = await axios.get(
-             `https://api.auditprorx.com/api/supplier-mapping-by-name/${encodeURIComponent(wholesaler.name)}`
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/supplier-mapping-by-name/${encodeURIComponent(wholesaler.name)}`,
           );
 
           if (res.data?.mappings) {
@@ -455,30 +468,32 @@ useEffect(() => {
     }
 
     const formData = new FormData();
-const metadata: {
-  field: string;
-  wholesaler_name: string;
-  headerMapping: Record<string, string>;
-}[] = [];
+    const metadata: {
+      field: string;
+      wholesaler_name: string;
+      headerMapping: Record<string, string>;
+    }[] = [];
 
-const newUploads: string[] = [];
-wholesalers.forEach((w) => {
-  if (w.file && !uploadedIds.has(w.id)) {
-    const fieldName = w.name.toLowerCase().replace(/\s+/g, "");
-    metadata.push({
-      field: fieldName,
-      wholesaler_name: w.name,
-      headerMapping: wholesalerFieldMappings[w.id] || {},
+    const newUploads: string[] = [];
+    wholesalers.forEach((w) => {
+      if (w.file && !uploadedIds.has(w.id)) {
+        const fieldName = w.name.toLowerCase().replace(/\s+/g, "");
+        metadata.push({
+          field: fieldName,
+          wholesaler_name: w.name,
+          headerMapping: wholesalerFieldMappings[w.id] || {},
+        });
+        formData.append(fieldName, w.file);
+        newUploads.push(w.id);
+      }
     });
-    formData.append(fieldName, w.file);
-    newUploads.push(w.id);
-  }
-});
 
-if (newUploads.length === 0) {
-  toast("All files have already been uploaded. Add a new supplier or replace a file to upload.");
-  return;
-}
+    if (newUploads.length === 0) {
+      toast(
+        "All files have already been uploaded. Add a new supplier or replace a file to upload.",
+      );
+      return;
+    }
 
     formData.append("metadata", JSON.stringify(metadata));
 
@@ -496,20 +511,20 @@ if (newUploads.length === 0) {
 
     try {
       const res = await axios.post(
-        `https://api.auditprorx.com/api/audits/${id}/wholesalers`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/wholesalers`,
         formData,
       );
       clearInterval(intervalRef.current!);
       setUploadProgress(100);
       setTimeout(() => {
-  setIsUploading(false);
-  setUploadSuccess(true);
-  setUploadedIds((prev) => {
-    const next = new Set(prev);
-    newUploads.forEach((id) => next.add(id));
-    return next;
-  });
-}, 500);
+        setIsUploading(false);
+        setUploadSuccess(true);
+        setUploadedIds((prev) => {
+          const next = new Set(prev);
+          newUploads.forEach((id) => next.add(id));
+          return next;
+        });
+      }, 500);
       console.log(res.data);
     } catch (err: any) {
       clearInterval(intervalRef.current!);
@@ -528,17 +543,17 @@ if (newUploads.length === 0) {
     }
   };
 
-const handleDelete = (id: string) => {
-  const wholesaler = wholesalers.find((w) => w.id === id);
-  setWholesalers(wholesalers.filter((w) => w.id !== id));
-  setEdit(false);
-  setEditId(null);
+  const handleDelete = (id: string) => {
+    const wholesaler = wholesalers.find((w) => w.id === id);
+    setWholesalers(wholesalers.filter((w) => w.id !== id));
+    setEdit(false);
+    setEditId(null);
 
-  // Also remove from supplier context (syncs with Settings page)
-  if (wholesaler) {
-    removeFromContext(wholesaler.name);
-  }
-};
+    // Also remove from supplier context (syncs with Settings page)
+    if (wholesaler) {
+      removeFromContext(wholesaler.name);
+    }
+  };
 
   const handleConfirmAddFromDrawer = () => {
     const newItems = selectedInDrawer.map((name) => ({
@@ -625,24 +640,44 @@ const handleDelete = (id: string) => {
             ).length;
             return (
               <div key={wholesaler.id}>
-                <div className={`flex items-center gap-4 px-5 py-3.5 transition-colors ${wholesaler.file ? "bg-emerald-50/20" : "bg-white hover:bg-gray-50/50"}`}>
-                  <span className="w-5 text-[11px] font-bold text-gray-300 flex-shrink-0">{idx + 1}</span>
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-  wholesaler.file || existingWholesalerFiles.find((f) => f.wholesaler_name === wholesaler.name)
-    ? "bg-emerald-400"
-    : "bg-gray-300"
-}`} />
+                <div
+                  className={`flex items-center gap-4 px-5 py-3.5 transition-colors ${wholesaler.file ? "bg-emerald-50/20" : "bg-white hover:bg-gray-50/50"}`}
+                >
+                  <span className="w-5 text-[11px] font-bold text-gray-300 flex-shrink-0">
+                    {idx + 1}
+                  </span>
+                  <div
+                    className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      wholesaler.file ||
+                      existingWholesalerFiles.find(
+                        (f) => f.wholesaler_name === wholesaler.name,
+                      )
+                        ? "bg-emerald-400"
+                        : "bg-gray-300"
+                    }`}
+                  />
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-gray-800">{wholesaler.name}</span>
+                    <span className="text-sm font-semibold text-gray-800">
+                      {wholesaler.name}
+                    </span>
                     {wholesaler.file ? (
-  <p className="text-[11px] text-emerald-600 mt-0.5 truncate">
-    {wholesaler.file.name}{mappingCount > 0 && ` · ${mappingCount} columns mapped`}
-  </p>
-) : existingWholesalerFiles.find((f) => f.wholesaler_name === wholesaler.name) ? (
-  <p className="text-[11px] text-emerald-600 mt-0.5 truncate">
-    {existingWholesalerFiles.find((f) => f.wholesaler_name === wholesaler.name)!.file_name} · Previously uploaded
-  </p>
-) : null}
+                      <p className="text-[11px] text-emerald-600 mt-0.5 truncate">
+                        {wholesaler.file.name}
+                        {mappingCount > 0 &&
+                          ` · ${mappingCount} columns mapped`}
+                      </p>
+                    ) : existingWholesalerFiles.find(
+                        (f) => f.wholesaler_name === wholesaler.name,
+                      ) ? (
+                      <p className="text-[11px] text-emerald-600 mt-0.5 truncate">
+                        {
+                          existingWholesalerFiles.find(
+                            (f) => f.wholesaler_name === wholesaler.name,
+                          )!.file_name
+                        }{" "}
+                        · Previously uploaded
+                      </p>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {wholesaler.file && showMappingFor !== wholesaler.id && (

@@ -161,7 +161,9 @@ export default function Feedback() {
     try {
       if (!silent) setLoading(true);
 
-      const res = await axios.get("https://api.auditprorx.com/admin/feedbacks");
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/feedbacks`,
+      );
 
       const rows = res?.data?.feedbacks ?? [];
 
@@ -239,7 +241,9 @@ export default function Feedback() {
     setDeleting(true);
 
     try {
-      await axios.delete(`https://api.auditprorx.com/admin/feedbacks/${id}`);
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/feedbacks/${id}`,
+      );
       await fetchFeedbacks();
 
       setDeletedCount((c) => c + 1);

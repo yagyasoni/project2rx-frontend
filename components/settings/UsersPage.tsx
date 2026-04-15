@@ -81,7 +81,7 @@ const UsersPage = () => {
         }
 
         const res = await axios.get(
-          `https://api.auditprorx.com/pay/subscription/${userId}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
         );
 
         console.log("Subscription API response:", res.data);
@@ -114,7 +114,7 @@ const UsersPage = () => {
   //     }
 
   //     const res = await axios.get(
-  //       `https://api.auditprorx.com/pay/subscription/${userId}`,
+  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
   //     );
 
   //     console.log("Subscription API response:", res.data);
@@ -241,7 +241,7 @@ const UsersPage = () => {
                               const userId = localStorage.getItem("userId");
                               try {
                                 await axios.post(
-                                  `https://api.auditprorx.com/pay/cancel-subscription`,
+                                  `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/cancel-subscription`,
                                   {
                                     userId: userId,
                                   },
@@ -290,7 +290,7 @@ const UsersPage = () => {
                                   const userId = localStorage.getItem("userId");
                                   try {
                                     await axios.post(
-                                      `https://api.auditprorx.com/pay/cancel-subscription`,
+                                      `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/cancel-subscription`,
                                       {
                                         userId: userId,
                                       },

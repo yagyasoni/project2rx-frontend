@@ -37,7 +37,7 @@ const navItems = [
     path: "/master-sheet-queue",
   },
   { title: "Feedbacks", icon: MessageSquareReply, path: "/feedbacks" },
-  { title: "Drug Search", icon: Search, path: "/drug-search" },
+  // { title: "Drug Search", icon: Search, path: "/drug-search" },
 ];
 
 type Popup = "support" | "account" | "settings" | null;
@@ -80,7 +80,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       const refreshToken = localStorage.getItem("refreshToken");
 
       // Revoke refresh token on server
-      await axios.post("https://api.auditprorx.com/auth/logout", {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
         refreshToken,
       });
     } catch {

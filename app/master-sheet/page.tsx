@@ -163,19 +163,42 @@ export default function ExcelEditorModal({
     [data],
   );
 
+  // const commitEdit = useCallback(
+  //   (val: string, visIdx: number, ci: number) => {
+  //     if (!data) return;
+  //     const targetRow = filteredRows[visIdx];
+  //     const realIdx = data.rows.indexOf(targetRow);
+  //     if (realIdx === -1) return;
+  //     const newRows = data.rows.map((row, ri) =>
+  //       ri === realIdx ? row.map((cell, i) => (i === ci ? val : cell)) : row,
+  //     );
+  //     setData({ ...data, rows: newRows });
+  //     setDirtyRows((prev) => new Set(prev).add(realIdx));
+  //   },
+  //   [data, filteredRows],
+  // );
+
   const commitEdit = useCallback(
     (val: string, visIdx: number, ci: number) => {
       if (!data) return;
-      const targetRow = filteredRows[visIdx];
-      const realIdx = data.rows.indexOf(targetRow);
-      if (realIdx === -1) return;
-      const newRows = data.rows.map((row, ri) =>
-        ri === realIdx ? row.map((cell, i) => (i === ci ? val : cell)) : row,
+      const globalVisIdx = page * PAGE_SIZE + visIdx;
+      const targetRow = filteredRows[globalVisIdx];
+
+      // ✅ Use ID-based lookup instead of reference equality
+      const idColIdx = data.headers.indexOf(ID_COL);
+      const rowId = targetRow[idColIdx];
+
+      const newRows = data.rows.map((row) =>
+        row[idColIdx] === rowId
+          ? row.map((cell, i) => (i === ci ? val : cell))
+          : row,
       );
+
+      const realIdx = data.rows.findIndex((row) => row[idColIdx] === rowId);
       setData({ ...data, rows: newRows });
       setDirtyRows((prev) => new Set(prev).add(realIdx));
     },
-    [data, filteredRows],
+    [data, filteredRows, page],
   );
 
   const deleteRow = (visibleIdx: number) => {
@@ -215,6 +238,7 @@ export default function ExcelEditorModal({
           ),
         );
       }
+      const rowsToSend = data.rows.filter((_, i) => dirtyRows.has(i));
       const res = await axios.post<{
         message: string;
         updated: number;
@@ -222,9 +246,11 @@ export default function ExcelEditorModal({
       }>(`${API_BASE}/admin/excel`, {
         sheetName: data.sheetName,
         headers: data.headers,
-        rows: data.rows,
+        rows: rowsToSend,
       });
       onToast(`✓ ${res.data.message}`, "success");
+      // onClose();
+      await fetchSheet(); // refresh from DB
       onClose();
     } catch (err: any) {
       onToast(

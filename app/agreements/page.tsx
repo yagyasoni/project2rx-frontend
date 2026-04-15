@@ -406,9 +406,9 @@ const Spinner = () => (
 //     <DocSection number="8" title="Governing Law and Dispute Resolution">
 //       <p className="text-slate-600">
 //         This Agreement shall be governed by and construed in accordance with the
-//         laws of the State of New York. Any disputes arising from this Agreement
-//         shall be resolved in the state or federal courts located in New York, or
-//         through agreed arbitration in New York, ensuring both parties have a
+//         laws of the State of New Jersey. Any disputes arising from this Agreement
+//         shall be resolved in the state or federal courts located in New Jersey, or
+//         through agreed arbitration in New Jersey, ensuring both parties have a
 //         clear forum for resolution.
 //       </p>
 //     </DocSection>
@@ -447,9 +447,9 @@ const Spinner = () => (
 //           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
 //             Drug Drop Rx LLC
 //           </p>
-//           <SigRow label="Name" value="Mr. Fahad Mulla" />
+//           <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
 //           <SigRow label="Title" value="CEO" />
-//           <SigRow label="Signature" value="Fahad Mulla" isSignature />
+//           <SigRow label="Signature" value="Imtiyaz Ahmed Mulla" isSignature />
 //           <SigRow
 //             label="Date"
 //             value={new Date().toLocaleDateString("en-US", {
@@ -646,10 +646,10 @@ const NDAContent = ({
     <DocSection number="11" title="Dispute Resolution">
       <p className="text-slate-600">
         Any disputes arising out of or relating to this Agreement shall be
-        resolved through binding arbitration conducted in the State of New York,
-        in accordance with applicable arbitration rules. Each party agrees to
-        resolve disputes on an individual basis and waives the right to
-        participate in class or collective actions.
+        resolved through binding arbitration conducted in the State of New
+        Jersey, in accordance with applicable arbitration rules. Each party
+        agrees to resolve disputes on an individual basis and waives the right
+        to participate in class or collective actions.
       </p>
     </DocSection>
 
@@ -679,7 +679,7 @@ const NDAContent = ({
           },
           {
             term: "Governing Law",
-            desc: "This Agreement is governed by the laws of the State of New York.",
+            desc: "This Agreement is governed by the laws of the State of New Jersey.",
           },
         ].map(({ term, desc }) => (
           <div key={term} className="flex gap-2 text-slate-600">
@@ -702,9 +702,9 @@ const NDAContent = ({
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
             Drug Drop Rx LLC
           </p>
-          <SigRow label="Name" value="Mr. Fahad Mulla" />
+          <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
           <SigRow label="Title" value="CEO" />
-          <SigRow label="Signature" value="Fahad Mulla" isSignature />
+          <SigRow label="Signature" value="Imtiyaz Ahmed Mulla" isSignature />
           <SigRow
             label="Date"
             value={new Date().toLocaleDateString("en-US", {
@@ -906,7 +906,7 @@ const WholesalerContent = () => (
 //             <span className="font-semibold text-slate-800">
 //               Drug Drop Rx LLC
 //             </span>
-//             , a New York limited liability company (hereinafter referred to as
+//             , a New Jersey limited liability company (hereinafter referred to as
 //             "AuditProRx").
 //           </p>
 //         </div>
@@ -1077,7 +1077,7 @@ const WholesalerContent = () => (
 //       <DocSection number="7" title="Governing Law and Dispute Resolution">
 //         <p className="text-slate-600">
 //           This Agreement shall be governed by and construed in accordance with
-//           the laws of the State of New York. Any dispute arising from or
+//           the laws of the State of New Jersey. Any dispute arising from or
 //           relating to this Agreement shall be resolved through mediation or
 //           arbitration in accordance with the rules of AAA then in effect.
 //         </p>
@@ -1113,9 +1113,9 @@ const WholesalerContent = () => (
 //             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
 //               Drug Drop Rx LLC
 //             </p>
-//             <SigRow label="Name" value="Mr. Fahad Mulla" />
+//             <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
 //             <SigRow label="Title" value="CEO" />
-//             <SigRow label="Signature" value="Fahad Mulla" isSignature />
+//             <SigRow label="Signature" value="Imtiyaz Ahmed Mulla" isSignature />
 //             <SigRow label="Date" value={today} />
 //           </div>
 //           <div className="rounded-xl border border-emerald-200 bg-emerald-50/30 p-4 shadow-sm">
@@ -1286,7 +1286,7 @@ const ReleaseAgreementContent = ({
       <DocSection number="10" title="Dispute Resolution">
         <p className="text-slate-600">
           Any disputes arising from this Agreement shall be resolved through
-          binding arbitration in the State of New York. The parties agree to
+          binding arbitration in the State of New Jersey. The parties agree to
           resolve disputes on an individual basis and waive participation in
           class or collective actions.
         </p>
@@ -1313,9 +1313,9 @@ const ReleaseAgreementContent = ({
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
               Drug Drop Rx LLC
             </p>
-            <SigRow label="Name" value="Mr. Fahad Mulla" />
+            <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
             <SigRow label="Title" value="CEO" />
-            <SigRow label="Signature" value="Fahad Mulla" isSignature />
+            <SigRow label="Signature" value="Imtiyaz Ahmed Mulla" isSignature />
             <SigRow label="Date" value={today} />
           </div>
 
@@ -1705,7 +1705,7 @@ const AgreementsPage = () => {
         const userId = localStorage.getItem("userId");
         if (userId) {
           await axios.post(
-            `https://api.auditprorx.com
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}
 /api/user-suppliers/${userId}`,
             {
               supplierNames: selectedSuppliers,
@@ -1889,7 +1889,7 @@ const AgreementsPage = () => {
     addSection(
       "8",
       "Governing Law and Dispute Resolution",
-      "This Agreement shall be governed by and construed in accordance with the laws of the State of New York. Any disputes arising from this Agreement shall be resolved in the state or federal courts located in New York, or through agreed arbitration in New York.",
+      "This Agreement shall be governed by and construed in accordance with the laws of the State of New Jersey. Any disputes arising from this Agreement shall be resolved in the state or federal courts located in New Jersey, or through agreed arbitration in New Jersey.",
     );
 
     addSection(
@@ -1931,7 +1931,7 @@ const AgreementsPage = () => {
     doc.text("Drug Drop Rx LLC", margin + 12, y + 16);
 
     const sigRows = [
-      { label: "Name", value: "Mr. Fahad Mulla" },
+      { label: "Name", value: "Mr. Imtiyaz Ahmed Mulla" },
       { label: "Title", value: "CEO" },
       { label: "Date", value: today },
     ];
@@ -1948,7 +1948,7 @@ const AgreementsPage = () => {
     doc.setFontSize(18);
     doc.setFont("helvetica", "bolditalic");
     doc.setTextColor(30, 30, 30);
-    doc.text("Fahad Mulla", margin + 12, y + 88);
+    doc.text("Imtiyaz Ahmed Mulla", margin + 12, y + 88);
 
     // Pharmacy sig content
     const px = margin + sigBoxW + 28;
