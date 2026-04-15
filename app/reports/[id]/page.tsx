@@ -3385,12 +3385,7 @@ const TAG_COLORS = [
                         {
                           label: "Total QTY",
                           // value: billedDrug.totalBilled.toLocaleString(),
-                          value: (qtyType === "UNIT" && billedDrug.pkgSize > 0
-                            ? +(
-                                billedDrug.totalBilled / billedDrug.pkgSize
-                              ).toFixed(2)
-                            : billedDrug.totalBilled
-                          ).toLocaleString(),
+                          value: billedDrug.totalBilled.toLocaleString(),
                           bold: true,
                         },
                         ...(rxLines.length > 0
