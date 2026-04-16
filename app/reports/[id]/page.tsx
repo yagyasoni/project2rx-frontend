@@ -2475,7 +2475,15 @@ export default function InventoryReportPage() {
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                                   </svg>
                                 </button>
-                                <span className="text-[11px] font-mono text-slate-500 tracking-tight truncate flex-1">
+                                <span
+                                  className="text-[11px] font-mono text-slate-500 tracking-tight truncate flex-1"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveDrug(row);
+                                    setActiveSidebar("ndc");
+                                    setOpenDrugSidebar(true);
+                                  }}
+                                >
                                   {row.ndc}
                                 </span>
                                 {/* 3-dot tag button */}
