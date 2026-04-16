@@ -137,6 +137,7 @@ export default function Feedback() {
   const [viewRow, setViewRow] = useState<FeedbackRow | null>(null);
   const [deleteRow, setDeleteRow] = useState<FeedbackRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // useEffect(() => {
   //   const interval = setInterval(() => {
@@ -148,6 +149,13 @@ export default function Feedback() {
 
   useEffect(() => {
     fetchFeedbacks();
+  }, []);
+
+  useEffect(() => {
+    // mark all as read when admin opens feedback page
+    const now = Date.now();
+    localStorage.setItem("lastSeenFeedbackTime", String(now));
+    setUnreadCount(0);
   }, []);
 
   useEffect(() => {
@@ -185,7 +193,24 @@ export default function Feedback() {
         uniqueMap.set(item.id, item);
       });
 
-      setFeedbacks(Array.from(uniqueMap.values()));
+      // setFeedbacks(Array.from(uniqueMap.values()));
+      const finalData = Array.from(uniqueMap.values());
+
+      // 🔥 Calculate unread count
+      const lastSeen = localStorage.getItem("lastSeenFeedbackTime");
+
+      let unread = 0;
+
+      if (lastSeen) {
+        unread = finalData.filter(
+          (f) => new Date(f.created_at).getTime() > Number(lastSeen),
+        ).length;
+      } else {
+        unread = finalData.length; // first time → everything unread
+      }
+
+      setUnreadCount(unread);
+      setFeedbacks(finalData);
     } catch (err: any) {
       console.error("Fetch feedback error:", err);
 
