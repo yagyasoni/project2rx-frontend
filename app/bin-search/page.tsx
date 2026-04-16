@@ -47,7 +47,7 @@ export default function BinSearch() {
       if (groupNumber.trim()) params.append("group", groupNumber.trim());
 
       const res = await axios.get(
-        `${API_BASE}/api/bin-search?${params.toString()}`
+        `${API_BASE}/api/bin-search?${params.toString()}`,
       );
       setResults(res.data || []);
     } catch (err) {
@@ -76,18 +76,18 @@ export default function BinSearch() {
     try {
       const userId = localStorage.getItem("userId");
 
-      const res = await axios.post(
-        `${API_BASE}/admin/feedbacks`,
-        {
-          user_id: userId || null,
-          subject: feedback.subject,
-          message: feedback.message,
-        },
-      );
+      const res = await axios.post(`${API_BASE}/admin/feedbacks`, {
+        user_id: userId || null,
+        subject: feedback.subject,
+        message: feedback.message,
+      });
       console.log(res?.data);
 
       setFeedbackSuccess("Feedback sent successfully!");
       setFeedback({ subject: "", message: "" });
+      setTimeout(() => {
+        setFeedbackSuccess("");
+      }, 1500);
     } catch (error: any) {
       console.error("Feedback error:", error);
 
@@ -301,7 +301,10 @@ export default function BinSearch() {
                   Send Feedback
                 </h3>
                 <button
-                  onClick={() => setShowFeedback(false)}
+                  onClick={() => {
+                    setShowFeedback(false);
+                    setFeedbackSuccess("");
+                  }}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   ✕

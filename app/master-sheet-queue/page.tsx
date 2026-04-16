@@ -71,7 +71,17 @@ const MasterSheetQueue = () => {
         group: r.grp, // backend → frontend mapping
       }));
 
-      setFetchedRows(formatted);
+      // setFetchedRows(formatted);
+      const uniqueMap = new Map();
+
+      formatted.forEach((row: any) => {
+        const key = `${row.bin}-${row.pcn}-${row.group}`;
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, row);
+        }
+      });
+
+      setFetchedRows(Array.from(uniqueMap.values()));
       // 🔹 Fetch stats
       const statsRes = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/master-sheet-queue/stats`,

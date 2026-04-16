@@ -48,6 +48,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const [openPopup, setOpenPopup] = useState<Popup>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [feedbackUnread, setFeedbackUnread] = useState(0);
   const router = useRouter();
 
   const toggle = (name: Popup) =>
@@ -73,6 +74,36 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/feedbacks`,
+        );
+
+        const rows = res?.data?.feedbacks ?? [];
+
+        const lastSeen = localStorage.getItem("lastSeenFeedbackTime");
+
+        let unread = 0;
+
+        if (lastSeen) {
+          unread = rows.filter(
+            (f: any) => new Date(f.created_at).getTime() > Number(lastSeen),
+          ).length;
+        } else {
+          unread = rows.length;
+        }
+
+        setFeedbackUnread(unread);
+      } catch (err) {
+        console.error("Unread fetch error:", err);
+      }
+    }, 10000); // every 10 sec
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = async () => {
@@ -137,10 +168,26 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             {navItems.map((item) => {
               const isActive = active === item.title;
               return (
+                // <button
+                //   key={item.title}
+                //   onClick={() => {
+                //     // setActive(item.title);
+                //     router.push(item.path);
+                //   }}
+                //   className={`w-full flex items-center gap-3 ${
+                //     collapsed ? "px-2 justify-center" : "px-4"
+                //   } py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                //     isActive
+                //       ? "bg-muted text-foreground"
+                //       : "text-gray-foreground hover:bg-muted/60 hover:text-foreground cursor-pointer"
+                //   }`}
+                // >
+                //   <item.icon size={18} className="shrink-0" />
+                //   {!collapsed && <span>{item.title}</span>}
+                // </button>
                 <button
                   key={item.title}
                   onClick={() => {
-                    // setActive(item.title);
                     router.push(item.path);
                   }}
                   className={`w-full flex items-center gap-3 ${
@@ -151,7 +198,17 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                       : "text-gray-foreground hover:bg-muted/60 hover:text-foreground cursor-pointer"
                   }`}
                 >
-                  <item.icon size={18} className="shrink-0" />
+                  <div className="relative flex items-center">
+                    <item.icon size={18} className="shrink-0" />
+
+                    {/* 🔥 Badge */}
+                    {item.title === "Feedbacks" && feedbackUnread > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-[1px] rounded-full font-bold">
+                        {feedbackUnread}
+                      </span>
+                    )}
+                  </div>
+
                   {!collapsed && <span>{item.title}</span>}
                 </button>
               );
