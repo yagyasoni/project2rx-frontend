@@ -3419,13 +3419,17 @@ export default function InventoryReportPage() {
                                 }}
                               >
                                 {r.invoice_date
-                                  ? new Date(
-                                      r.invoice_date + "T00:00:00",
-                                    ).toLocaleDateString("en-US", {
-                                      month: "2-digit",
-                                      day: "2-digit",
-                                      year: "numeric",
-                                    })
+                                  ? (() => {
+                                      const s = String(r.invoice_date).slice(0, 10);
+                                      const d = new Date(s + "T00:00:00");
+                                      return isNaN(d.getTime())
+                                        ? s
+                                        : d.toLocaleDateString("en-US", {
+                                            month: "2-digit",
+                                            day: "2-digit",
+                                            year: "numeric",
+                                          });
+                                    })()
                                   : "—"}
                               </td>
                               <td
