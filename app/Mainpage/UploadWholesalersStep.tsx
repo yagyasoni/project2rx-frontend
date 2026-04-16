@@ -419,13 +419,16 @@ const UploadWholesalersStep = ({
             console.log(`✅ Converted to frontend format:`, converted);
 
             if (Object.keys(converted).length > 0) {
-              setWholesalerFieldMappings((prev) => ({
-                ...prev,
-                [id]: converted,
-              }));
-              setShowMappingFor(id);
-              return; // Done — skip auto-detect
-            }
+  // Merge: auto-detect fills gaps, admin mapping takes precedence
+  const auto = buildWholesalerAutoMapping(parsedHeaders);
+  const merged = { ...auto, ...converted };
+  setWholesalerFieldMappings((prev) => ({
+    ...prev,
+    [id]: merged,
+  }));
+  setShowMappingFor(id);
+  return;
+}
           }
         } catch (err) {
           console.log(
