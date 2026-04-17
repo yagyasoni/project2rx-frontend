@@ -86,6 +86,19 @@ export default function InactiveAccount() {
     } //
   };
 
+  const renewSubscription = async () => {
+    const userId = localStorage.getItem("userId");
+    try {
+      await axios.post(`https://api.auditprorx.com/pay/renew-subscription`, {
+        userId,
+      });
+      toast("Subscription renewed successfully!");
+      window.location.reload();
+    } catch (err) {
+      console.error("Renew failed:", err);
+      toast("Something went wrong while renewing");
+    }
+  };
   // ✅ Allow auth + admin routes ALWAYS
   if (
     pathname === "/" ||
@@ -144,11 +157,23 @@ export default function InactiveAccount() {
 
         <div className="mt-5 flex flex-col gap-2">
           {/* ✅ SHOW PAYMENT BUTTON ONLY IF NO SUB */}
-          {(paymentStatus === "no_subscription" ||
+          {/* {(paymentStatus === "no_subscription" ||
             paymentStatus === "inactive" ||
             paymentStatus === "canceled") && (
             <Button className="w-full" onClick={paymentPath}>
               Proceed with Payment
+            </Button>
+          )} */}
+          {(paymentStatus === "no_subscription" ||
+            paymentStatus === "inactive") && (
+            <Button className="w-full" onClick={paymentPath}>
+              Proceed with Payment
+            </Button>
+          )}
+
+          {paymentStatus === "canceled" && (
+            <Button className="w-full" onClick={renewSubscription}>
+              Renew Subscription
             </Button>
           )}
 

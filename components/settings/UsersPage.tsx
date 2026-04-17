@@ -27,6 +27,7 @@ const UsersPage = () => {
 
   const [subscription, setSubscription] = useState<any>(null);
   const [subLoading, setSubLoading] = useState(false);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
   useEffect(() => {
     const user = async () => {
@@ -90,6 +91,7 @@ const UsersPage = () => {
         const sub = res?.data?.subscription ?? null;
 
         setSubscription(sub);
+        setCancelAtPeriodEnd(sub?.cancel_at_period_end ?? false); // ← add this
       } catch (err: any) {
         console.error("❌ Failed to fetch subscription:", err);
 
@@ -250,7 +252,7 @@ const UsersPage = () => {
                                 toast.success(
                                   "Subscription will be canceled after period ends",
                                 );
-                                window.location.reload();
+                                // window.location.reload();
                               } catch {
                                 toast.error("Failed to cancel subscription");
                               }
@@ -282,7 +284,7 @@ const UsersPage = () => {
                               </span>
                             </div>
 
-                            {(subscription.status === "active" ||
+                            {/* {(subscription.status === "active" ||
                               subscription.status === "trialing" ||
                               subscription.status === "past_due") && (
                               <Button
@@ -310,6 +312,36 @@ const UsersPage = () => {
                                 className="w-full mt-2 text-xs"
                               >
                                 Cancel Subscription
+                              </Button>
+                            )} */}
+                            {(subscription.status === "active" ||
+                              subscription.status === "trialing" ||
+                              subscription.status === "past_due") && (
+                              <Button
+                                onClick={async () => {
+                                  const userId = localStorage.getItem("userId");
+                                  try {
+                                    await axios.post(
+                                      `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/cancel-subscription`,
+                                      { userId },
+                                    );
+                                    toast.success(
+                                      "Subscription will be canceled after period ends",
+                                    );
+                                    setCancelAtPeriodEnd(true); // ← instantly disables button
+                                  } catch {
+                                    toast.error(
+                                      "Failed to cancel subscription",
+                                    );
+                                  }
+                                }}
+                                variant="destructive"
+                                className="w-full mt-2 text-xs"
+                                disabled={cancelAtPeriodEnd} // ← disabled if already canceled
+                              >
+                                {cancelAtPeriodEnd
+                                  ? "Cancellation Scheduled"
+                                  : "Cancel Subscription"}
                               </Button>
                             )}
                           </div>

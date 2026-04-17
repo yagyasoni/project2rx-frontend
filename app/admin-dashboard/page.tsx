@@ -123,6 +123,7 @@ export default function AdminDashboard() {
   const [subLoading, setSubLoading] = useState(false);
   const [subStatus, setSubStatus] = useState("inactive");
   const [updatingSub, setUpdatingSub] = useState(false);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
   useEffect(() => {
     setNow(new Date());
@@ -312,6 +313,7 @@ export default function AdminDashboard() {
       } else {
         setSubStatus("inactive"); // default
       }
+      setCancelAtPeriodEnd(sub?.cancel_at_period_end ?? false); // ← add this
     } catch (err) {
       toast.error("Failed to fetch subscription");
       setSubscription(null);
@@ -790,7 +792,7 @@ export default function AdminDashboard() {
                                     </span>
                                   </div>
 
-                                  {(subscription.status === "active" ||
+                                  {/* {(subscription.status === "active" ||
                                     subscription.status === "trialing" ||
                                     subscription.status === "past_due") && (
                                     <Button
@@ -817,6 +819,35 @@ export default function AdminDashboard() {
                                       className="w-full mt-2 text-xs"
                                     >
                                       Cancel Subscription
+                                    </Button>
+                                  )} */}
+                                  {(subscription.status === "active" ||
+                                    subscription.status === "trialing" ||
+                                    subscription.status === "past_due") && (
+                                    <Button
+                                      onClick={async () => {
+                                        try {
+                                          await axios.post(
+                                            `${API_BASE}/pay/cancel-subscription`,
+                                            { userId: selected.id },
+                                          );
+                                          toast.success(
+                                            "Subscription will be canceled after period ends",
+                                          );
+                                          setCancelAtPeriodEnd(true); // ← instantly disables
+                                        } catch {
+                                          toast.error(
+                                            "Failed to cancel subscription",
+                                          );
+                                        }
+                                      }}
+                                      variant="destructive"
+                                      className="w-full mt-2 text-xs"
+                                      disabled={cancelAtPeriodEnd} // ← disabled if already canceled
+                                    >
+                                      {cancelAtPeriodEnd
+                                        ? "Cancellation Scheduled"
+                                        : "Cancel Subscription"}
                                     </Button>
                                   )}
                                 </div>
