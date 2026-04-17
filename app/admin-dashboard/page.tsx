@@ -433,7 +433,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Two-column layout: Table + Detail */}
-            <div className="flex flex-col lg:flex-row gap-5 h-[calc(102vh)]">
+            <div className="flex flex-col lg:flex-row gap-5 h-[calc(102vh-15px)]">
               {/* LEFT — Users Table */}
               <div className="w-full lg:w-[55%] rounded-lg border border-border overflow-hidden flex flex-col">
                 {" "}
