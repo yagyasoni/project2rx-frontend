@@ -22,7 +22,9 @@ export default function InactiveAccount() {
       try {
         const res = await axios.get(`https://api.auditprorx.com/auth/users`);
         const users = res.data;
+
         const currentUser = users.find((u: any) => u.id === userId);
+        console.log("Fetched user status:", currentUser);
         if (currentUser) setStatus(currentUser.status);
       } catch (err) {
         console.error("Failed to fetch user status:", err);
@@ -47,6 +49,7 @@ export default function InactiveAccount() {
           `https://api.auditprorx.com/pay/subscription/${userId}`,
         );
         const data = res.data;
+        console.log("Fetched subscription status:", data);
 
         if (!data.subscription) {
           // ❌ No subscription → force payment flow
