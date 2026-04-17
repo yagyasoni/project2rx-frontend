@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { createCheckoutSession } from "@/components/checkoutSession";
 import { toast } from "sonner";
+import { Spinner } from "./ui/spinner";
 
 export default function InactiveAccount() {
   const pathname = usePathname();
@@ -16,55 +17,88 @@ export default function InactiveAccount() {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
-    const fetchStatus = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/users`,
-        );
-        const users = res.data;
-        const currentUser = users.find((u: any) => u.id === userId);
-        if (currentUser) setStatus(currentUser.status);
+        const [usersRes, subRes] = await Promise.all([
+          axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/users`),
+          axios.get(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
+          ),
+        ]);
+
+        const currentUser = usersRes.data.find((u: any) => u.id === userId);
+        setStatus(currentUser?.status ?? "inactive"); // fallback if not found
+
+        const sub = subRes.data.subscription;
+        setPaymentStatus(sub ? sub.status : "no_subscription");
       } catch (err) {
-        console.error("Failed to fetch user status:", err);
-      }
-    };
-
-    fetchStatus(); // on mount
-  }, []);
-
-  // ✅ FETCH SUBSCRIPTION STATUS
-  useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        const userId = localStorage.getItem("userId");
-
-        if (!userId) {
-          setLoading(false);
-          return;
-        }
-
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
-        );
-        const data = res.data;
-
-        if (!data.subscription) {
-          // ❌ No subscription → force payment flow
-          setPaymentStatus("no_subscription");
-        } else {
-          setPaymentStatus(data.subscription.status);
-        }
-      } catch (err) {
-        console.error("Subscription fetch error:", err);
+        console.error("Failed to fetch account status:", err);
+        setStatus("inactive"); // fail-safe: block access on error
+        setPaymentStatus("no_subscription");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSubscription();
+    fetchAll();
   }, []);
+
+  // useEffect(() => {
+  //   const userId = localStorage.getItem("userId");
+  //   if (!userId) return;
+
+  //   const fetchStatus = async () => {
+  //     try {
+  //       const res = await axios.get(
+  //         `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/users`,
+  //       );
+  //       const users = res.data;
+  //       const currentUser = users.find((u: any) => u.id === userId);
+  //       if (currentUser) setStatus(currentUser.status);
+  //     } catch (err) {
+  //       console.error("Failed to fetch user status:", err);
+  //     }
+  //   };
+
+  //   fetchStatus(); // on mount
+  // }, []);
+
+  // // ✅ FETCH SUBSCRIPTION STATUS
+  // useEffect(() => {
+  //   const fetchSubscription = async () => {
+  //     try {
+  //       const userId = localStorage.getItem("userId");
+
+  //       if (!userId) {
+  //         setLoading(false);
+  //         return;
+  //       }
+
+  //       const res = await axios.get(
+  //         `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
+  //       );
+  //       const data = res.data;
+
+  //       if (!data.subscription) {
+  //         // ❌ No subscription → force payment flow
+  //         setPaymentStatus("no_subscription");
+  //       } else {
+  //         setPaymentStatus(data.subscription.status);
+  //       }
+  //     } catch (err) {
+  //       console.error("Subscription fetch error:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchSubscription();
+  // }, []);
 
   const paymentPath = async () => {
     const userId = localStorage.getItem("userId");
@@ -101,11 +135,17 @@ export default function InactiveAccount() {
     return null;
   }
 
+  if (loading) {
+    return (
+      <>
+        <Spinner />
+      </>
+    );
+  }
+
   if (
-    (paymentStatus === "active" ||
-      paymentStatus === "trialing" ||
-      !paymentStatus) &&
-    (status === "active" || !status)
+    (paymentStatus === "active" || paymentStatus === "trialing") &&
+    status === "active"
   ) {
     return null;
   }
