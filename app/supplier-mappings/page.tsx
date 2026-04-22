@@ -12,6 +12,8 @@ import {
   MoreVertical,
   FileSpreadsheet,
   X,
+  Copy,
+  PencilLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,10 +65,38 @@ const REQUIRED_FIELDS = [
   "quantity",
 ];
 
+const AUDIT_TEMPLATE = `Hello,
+
+We hope you're doing well. We are reaching out from [Pharmacy Name] to request a CSV or Excel file containing a purchase detail statement from [FROM DATE] through [TO DATE]. This is for a month end internal audit.
+
+Please make sure to exclude any purchases made through 3 parties such as Trxade or EzriRx.
+
+Requested For:
+
+[PHARMACY NAME]
+[PHARMACY ADDRESS]
+[PHONE NUMBER]
+
+Requested Fields:
+- NDC Number
+- Invoice Date
+- Item Description
+- Quantity
+- Unit Price
+- Total Price
+
+We would appreciate it if you could email us the file at your earliest convenience.
+
+Thank you for your prompt assistance, and we look forward to your response.
+
+Best Regards,
+[PHARMACY NAME]`;
+
 // ── Types ──────────────────────────────────────────────────
 interface Supplier {
   id: string;
   name: string;
+  email?: string;
   created_at: string;
   mappings?: Record<string, string>; // 👈 ADD THIS
 }
@@ -121,6 +151,10 @@ const SupplierMappingPage = () => {
   const [uploadStep, setUploadStep] = useState<"upload" | "map">("upload");
   const textLight = "hsl(0 0% 95%)"; // Near white
   const [loading, setLoading] = useState(false);
+  const [newSupplierEmail, setNewSupplierEmail] = useState("");
+  const [editEmailModal, setEditEmailModal] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [emailInput, setEmailInput] = useState("");
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -162,6 +196,7 @@ const SupplierMappingPage = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers`,
         {
           name: newSupplierName.trim(),
+          email: newSupplierEmail.trim(),
         },
       );
 
@@ -334,14 +369,28 @@ const SupplierMappingPage = () => {
               Manage suppliers and map their file columns to standard fields
             </p>
           </div>
-          <Button
-            onClick={() => setAddModal(true)}
-            className="gap-2 bg-foreground text-background hover:bg-foreground/90 text-xs font-semibold"
-            size="sm"
-          >
-            <Plus size={14} />
-            Add Supplier
-          </Button>
+          <div className="flex flex-col-2 gap-3 ">
+            <Button
+              onClick={() => setAddModal(true)}
+              className="cursor-pointer gap-2 bg-foreground text-background hover:bg-foreground/90 text-xs font-semibold"
+              size="sm"
+            >
+              <Plus size={14} />
+              Add Supplier
+            </Button>
+            <button
+              onClick={() => {
+                const template = `${AUDIT_TEMPLATE}`.trim();
+
+                navigator.clipboard.writeText(template);
+                toast("Template copied!");
+              }}
+              className="font-semibold cursor-pointer border border-gray-400 rounded-md w-full px-3 py-2 text-left text-xs hover:bg-muted flex items-center gap-2"
+            >
+              <Copy size={14} />
+              Copy Template
+            </button>
+          </div>
         </div>
 
         {/* Suppliers Table */}
@@ -355,6 +404,9 @@ const SupplierMappingPage = () => {
                   </th>
                   <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Supplier Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold">
+                    Email
                   </th>
                   <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Mapping Status
@@ -413,6 +465,9 @@ const SupplierMappingPage = () => {
                             {supplier.name}
                           </span>
                         </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {supplier.email || "-"}
+                        </td>
                         <td className="px-4 py-3">
                           <span
                             className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold 
@@ -467,6 +522,18 @@ const SupplierMappingPage = () => {
                                   {savedMappings[supplier.id]
                                     ? "Update Mapping"
                                     : "Upload & Map"}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingSupplier(supplier);
+                                    setEmailInput(supplier.email || "");
+                                    setEditEmailModal(true);
+                                    setActiveMenu(null);
+                                  }}
+                                  className="w-full px-3 py-2 text-left text-xs hover:bg-muted flex items-center gap-2"
+                                >
+                                  <PencilLine size={12} />
+                                  Edit Email
                                 </button>
                                 {savedMappings[supplier.id] && (
                                   <button
@@ -593,7 +660,17 @@ const SupplierMappingPage = () => {
                 }}
               />
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Email</Label>
+              <Input
+                value={newSupplierEmail}
+                onChange={(e) => setNewSupplierEmail(e.target.value)}
+                placeholder="e.g. supplier@email.com"
+                className="text-xs"
+              />
+            </div>
           </div>
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -612,6 +689,47 @@ const SupplierMappingPage = () => {
               className="text-xs bg-foreground text-background hover:bg-foreground/90"
             >
               Add Supplier
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Email Modal */}
+      <Dialog open={editEmailModal} onOpenChange={setEditEmailModal}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit Email</DialogTitle>
+          </DialogHeader>
+
+          <Input
+            value={emailInput}
+            onChange={(e) => setEmailInput(e.target.value)}
+            placeholder="Enter email"
+            className="text-xs"
+          />
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditEmailModal(false)}>
+              Cancel
+            </Button>
+
+            <Button
+              onClick={async () => {
+                if (!editingSupplier) return;
+
+                const res = await axios.put(
+                  `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers/${editingSupplier.id}/email`,
+                  { email: emailInput },
+                );
+
+                setSuppliers((prev) =>
+                  prev.map((s) => (s.id === editingSupplier.id ? res.data : s)),
+                );
+
+                setEditEmailModal(false);
+              }}
+            >
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
