@@ -42,24 +42,19 @@ export default function CommunityLinkPageCopy({
   const formatCurrency = (val: number) =>
     `$${Number(val || 0).toLocaleString()}`;
 
-  // ================= FETCH MAIN =================
   const fetchCommunityData = async () => {
     try {
       setLoading(true);
 
-      const rawUserId = localStorage.getItem("userId");
-      const userId =
-        rawUserId && rawUserId !== "null" && rawUserId !== "undefined"
-          ? rawUserId
-          : null;
+      const userId = localStorage.getItem("userId");
 
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/community/${ndcNumber}`,
         {
           params: {
             includeGroups: false,
-            mode: active,
-            userId: active === "opportunities" && userId ? userId : undefined,
+            mode: active, // state | opportunities
+            userId: active === "opportunities" ? userId : undefined, // 👈 ONLY send when needed
           },
         },
       );
@@ -74,19 +69,10 @@ export default function CommunityLinkPageCopy({
 
   useEffect(() => {
     fetchCommunityData();
-    // reset expanded states when tab/ndc changes
-    setExpandedRows(new Set());
-    setExpandedRxCells(new Set());
-    setGroupDataMap({});
-  }, [active, ndcNumber]);
+  }, [active]);
 
-  // ================= FETCH GROUPS =================
   const fetchGroupsForRow = async (row: CommunityRow) => {
-    const rawUserId = localStorage.getItem("userId");
-    const userId =
-      rawUserId && rawUserId !== "null" && rawUserId !== "undefined"
-        ? rawUserId
-        : null;
+    const userId = localStorage.getItem("userId");
 
     const res = await axios.get(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/community/${ndcNumber}`,
@@ -96,7 +82,7 @@ export default function CommunityLinkPageCopy({
           bin: row.bin,
           pcn: row.pcn,
           mode: active,
-          userId: active === "opportunities" && userId ? userId : undefined,
+          userId: active === "opportunities" ? userId : undefined,
         },
       },
     );
@@ -109,11 +95,7 @@ export default function CommunityLinkPageCopy({
 
     setExpandedRows((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
+      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
 
@@ -219,36 +201,37 @@ export default function CommunityLinkPageCopy({
           </button>
         </div>
       </div>
-
       <div className="h-[calc(106vh)] overflow-y-auto flex flex-col bg-white">
+        {" "}
         <table className="min-w-full text-sm border border-slate-200 border-collapse">
           <thead>
             <tr className="bg-slate-50">
               <th
-                className="border px-2 py-2 text-center w-[120px] cursor-pointer"
+                className="border px-2 py-2 text-center w-[120px]"
                 onClick={() => handleSort("bin")}
               >
                 <Header label="BIN" active={sortDir("bin")} />
               </th>
 
               <th
-                className="border px-2 py-2 text-center w-[120px] cursor-pointer"
+                className="border px-2 py-2 text-center w-[120px]"
                 onClick={() => handleSort("pcn")}
               >
                 <Header label="PCN" active={sortDir("pcn")} />
               </th>
 
+              {/* ✅ NEW See GROUP COLUMN */}
               <th className="border px-2 py-2 text-center w-[110px]">Group</th>
 
               <th
-                className="border px-2 py-2 text-center w-[130px] cursor-pointer"
+                className="border px-2 py-2 text-center w-[130px]"
                 onClick={() => handleSort("avg_ins_paid")}
               >
                 <Header label="Avg Ins Paid" active={sortDir("avg_ins_paid")} />
               </th>
 
               <th
-                className="border px-2 py-2 text-center w-[140px] cursor-pointer"
+                className="border px-2 py-2 text-center w-[140px]"
                 onClick={() => handleSort("avg_ins_paid_per_unit")}
               >
                 <Header
@@ -258,7 +241,7 @@ export default function CommunityLinkPageCopy({
               </th>
 
               <th
-                className="border px-2 py-2 text-center w-[120px] cursor-pointer"
+                className="border px-2 py-2 text-center w-[120px]"
                 onClick={() => handleSort("estimated_rxs")}
               >
                 <Header label="Rx's" active={sortDir("estimated_rxs")} />
@@ -273,12 +256,6 @@ export default function CommunityLinkPageCopy({
                   Loading...
                 </td>
               </tr>
-            ) : sortedData.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center py-6 border text-slate-400">
-                  No community data available
-                </td>
-              </tr>
             ) : (
               sortedData.flatMap((row) => {
                 const key = getRowKey(row);
@@ -288,8 +265,10 @@ export default function CommunityLinkPageCopy({
                 return [
                   <tr key={key} className="hover:bg-slate-50">
                     <td className="border px-2 py-2 text-center">{row.bin}</td>
+
                     <td className="border px-2 py-2 text-center">{row.pcn}</td>
 
+                    {/* ✅ TOGGLE BUTTON COLUMN */}
                     <td className="border px-2 py-2 text-center">
                       <button
                         onClick={() => toggleRow(row)}
@@ -346,79 +325,66 @@ export default function CommunityLinkPageCopy({
                             </thead>
 
                             <tbody>
-                              {groupRows.length === 0 ? (
-                                <tr>
-                                  <td
-                                    colSpan={5}
-                                    className="border px-2 py-3 text-center text-slate-400"
-                                  >
-                                    Loading groups...
-                                  </td>
-                                </tr>
-                              ) : (
-                                groupRows.map((g, i) => {
-                                  const cellKey = `${key}-${i}`;
-                                  const isRxExpanded = expandedRxCells.has(cellKey);
-                                  const rxList = g.rx_numbers || [];
-                                  const visibleRxs = isRxExpanded
-                                    ? rxList
-                                    : rxList.slice(0, 5);
-                                  const hiddenCount = rxList.length - 5;
+                              {groupRows.map((g, i) => {
+                                const cellKey = `${key}-${i}`;
+                                const isRxExpanded = expandedRxCells.has(cellKey);
+                                const rxList = g.rx_numbers || [];
+                                const visibleRxs = isRxExpanded
+                                  ? rxList
+                                  : rxList.slice(0, 5);
+                                const hiddenCount = rxList.length - 5;
 
-                                  return (
-                                    <tr key={i}>
-                                      <td className="border px-2 py-1">
-                                        {g.grp || <span className="text-slate-300">—</span>}
-                                      </td>
-                                      <td className="border px-2 py-1 text-right">
-                                        {formatCurrency(g.avg_ins_paid)}
-                                      </td>
-                                      <td className="border px-2 py-1 text-right">
-                                        {formatCurrency(g.avg_ins_paid_per_unit)}
-                                      </td>
-                                      <td className="border px-2 py-1 text-center">
-                                        {g.estimated_rxs}
-                                      </td>
-                                      <td className="border px-2 py-1 text-left align-top">
-                                        {rxList.length > 0 ? (
-                                          <div className="flex flex-wrap gap-1 max-w-[400px] items-center">
-                                            {visibleRxs.map((rx) => (
-                                              <span
-                                                key={rx}
-                                                className="px-1.5 py-0.5 bg-slate-200 rounded text-[10px] font-mono text-slate-700"
-                                              >
-                                                {rx}
-                                              </span>
-                                            ))}
-                                            {rxList.length > 5 && (
-                                              <button
-                                                onClick={() => {
-                                                  setExpandedRxCells((prev) => {
-                                                    const next = new Set(prev);
-                                                    if (next.has(cellKey)) {
-                                                      next.delete(cellKey);
-                                                    } else {
-                                                      next.add(cellKey);
-                                                    }
-                                                    return next;
-                                                  });
-                                                }}
-                                                className="text-[10px] text-emerald-600 hover:text-emerald-800 font-semibold self-center cursor-pointer underline"
-                                              >
-                                                {isRxExpanded
-                                                  ? "Show less"
-                                                  : `+${hiddenCount} more`}
-                                              </button>
-                                            )}
-                                          </div>
-                                        ) : (
-                                          <span className="text-slate-300">—</span>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              )}
+                                return (
+                                  <tr key={i}>
+                                    <td className="border px-2 py-1">{g.grp}</td>
+                                    <td className="border px-2 py-1 text-right">
+                                      {formatCurrency(g.avg_ins_paid)}
+                                    </td>
+                                    <td className="border px-2 py-1 text-right">
+                                      {formatCurrency(g.avg_ins_paid_per_unit)}
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      {g.estimated_rxs}
+                                    </td>
+                                    <td className="border px-2 py-1 text-left align-top">
+                                      {rxList.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1 max-w-[400px] items-center">
+                                          {visibleRxs.map((rx) => (
+                                            <span
+                                              key={rx}
+                                              className="px-1.5 py-0.5 bg-slate-200 rounded text-[10px] font-mono text-slate-700"
+                                            >
+                                              {rx}
+                                            </span>
+                                          ))}
+                                          {rxList.length > 5 && (
+                                            <button
+                                              onClick={() => {
+                                                setExpandedRxCells((prev) => {
+                                                  const next = new Set(prev);
+                                                  if (next.has(cellKey)) {
+                                                    next.delete(cellKey);
+                                                  } else {
+                                                    next.add(cellKey);
+                                                  }
+                                                  return next;
+                                                });
+                                              }}
+                                              className="text-[10px] text-emerald-600 hover:text-emerald-800 font-semibold self-center cursor-pointer underline"
+                                            >
+                                              {isRxExpanded
+                                                ? "Show less"
+                                                : `+${hiddenCount} more`}
+                                            </button>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <span className="text-slate-300">—</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
