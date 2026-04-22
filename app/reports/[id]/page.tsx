@@ -4651,8 +4651,7 @@ export default function InventoryReportPage() {
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                  
                 </>
               )}
 
