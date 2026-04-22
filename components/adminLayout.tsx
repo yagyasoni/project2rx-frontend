@@ -37,7 +37,6 @@ const navItems = [
     path: "/master-sheet-queue",
   },
   { title: "Feedbacks", icon: MessageSquareReply, path: "/feedbacks" },
-  // { title: "Drug Search", icon: Search, path: "/drug-search" },
 ];
 
 type Popup = "support" | "account" | "settings" | null;
@@ -49,6 +48,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [feedbackUnread, setFeedbackUnread] = useState(0);
+  const [queuePending, setQueuePending] = useState(0);
   const router = useRouter();
 
   const toggle = (name: Popup) =>
@@ -104,6 +104,28 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     }, 10000); // every 10 sec
 
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/master-sheet-queue/stats`,
+        );
+        setQueuePending(Number(res.data.pending || 0));
+      } catch {}
+    };
+
+    fetchStats(); // initial
+
+    const interval = setInterval(fetchStats, 10000);
+
+    window.addEventListener("queue-updated", fetchStats);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("queue-updated", fetchStats);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -168,23 +190,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             {navItems.map((item) => {
               const isActive = active === item.title;
               return (
-                // <button
-                //   key={item.title}
-                //   onClick={() => {
-                //     // setActive(item.title);
-                //     router.push(item.path);
-                //   }}
-                //   className={`w-full flex items-center gap-3 ${
-                //     collapsed ? "px-2 justify-center" : "px-4"
-                //   } py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                //     isActive
-                //       ? "bg-muted text-foreground"
-                //       : "text-gray-foreground hover:bg-muted/60 hover:text-foreground cursor-pointer"
-                //   }`}
-                // >
-                //   <item.icon size={18} className="shrink-0" />
-                //   {!collapsed && <span>{item.title}</span>}
-                // </button>
                 <button
                   key={item.title}
                   onClick={() => {
@@ -201,12 +206,18 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                   <div className="relative flex items-center">
                     <item.icon size={18} className="shrink-0" />
 
-                    {/* 🔥 Badge */}
                     {item.title === "Feedbacks" && feedbackUnread > 0 && (
                       <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-[1px] rounded-full font-bold">
                         {feedbackUnread}
                       </span>
                     )}
+
+                    {item.title === "Master Sheet Queue" &&
+                      queuePending > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] px-1.5 py-[1px] rounded-full font-bold">
+                          {queuePending}
+                        </span>
+                      )}
                   </div>
 
                   {!collapsed && <span>{item.title}</span>}

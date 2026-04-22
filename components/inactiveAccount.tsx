@@ -20,11 +20,11 @@ export default function InactiveAccount() {
 
     const fetchStatus = async () => {
       try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/users`,
-        );
+        const res = await axios.get(`https://api.auditprorx.com/auth/users`);
         const users = res.data;
+
         const currentUser = users.find((u: any) => u.id === userId);
+        console.log("Fetched user status:", currentUser);
         if (currentUser) setStatus(currentUser.status);
       } catch (err) {
         console.error("Failed to fetch user status:", err);
@@ -46,9 +46,10 @@ export default function InactiveAccount() {
         }
 
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
+          `https://api.auditprorx.com/pay/subscription/${userId}`,
         );
         const data = res.data;
+        console.log("Fetched subscription status:", data);
 
         if (!data.subscription) {
           // ❌ No subscription → force payment flow
@@ -85,6 +86,19 @@ export default function InactiveAccount() {
     } //
   };
 
+  const renewSubscription = async () => {
+    const userId = localStorage.getItem("userId");
+    try {
+      await axios.post(`https://api.auditprorx.com/pay/renew-subscription`, {
+        userId,
+      });
+      toast("Subscription renewed successfully!");
+      window.location.reload();
+    } catch (err) {
+      console.error("Renew failed:", err);
+      toast("Something went wrong while renewing");
+    }
+  };
   // ✅ Allow auth + admin routes ALWAYS
   if (
     pathname === "/" ||
@@ -143,11 +157,23 @@ export default function InactiveAccount() {
 
         <div className="mt-5 flex flex-col gap-2">
           {/* ✅ SHOW PAYMENT BUTTON ONLY IF NO SUB */}
-          {(paymentStatus === "no_subscription" ||
+          {/* {(paymentStatus === "no_subscription" ||
             paymentStatus === "inactive" ||
             paymentStatus === "canceled") && (
             <Button className="w-full" onClick={paymentPath}>
               Proceed with Payment
+            </Button>
+          )} */}
+          {(paymentStatus === "no_subscription" ||
+            paymentStatus === "inactive") && (
+            <Button className="w-full" onClick={paymentPath}>
+              Proceed with Payment
+            </Button>
+          )}
+
+          {paymentStatus === "canceled" && (
+            <Button className="w-full" onClick={renewSubscription}>
+              Renew Subscription
             </Button>
           )}
 

@@ -10,6 +10,7 @@ import {
   Download,
   SlidersHorizontal,
   MoveLeftIcon,
+  MoveLeftIcon,
 } from "lucide-react";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import CommunityLinkPageCopy from "@/components/communityLink";
 import CommunityLinkPageCopy from "@/components/communityLink";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -111,6 +113,8 @@ interface InventoryRow {
   shortageNjBilled: number;
 
   brand: string | null; // ← ADD THIS
+
+  brand: string | null; // ← ADD THIS
 }
 
 interface RxLine {
@@ -138,6 +142,32 @@ interface OrderLine {
   is_outside_date_range: boolean;
 }
 
+interface DrugLookupNdc {
+  drug_name: string;
+  ndc: string;
+  brand: string | null;
+  rx_count: number;
+  avg_qty_per_rx: number;
+  avg_copay_per_rx: number | null;
+  avg_ins_paid_per_rx: number;
+  avg_ins_paid_per_unit: number;
+}
+
+interface DrugLookupDrug {
+  drug_name: string;
+  brand: string | null;
+  rx_count: number;
+  avg_qty_per_rx: number;
+  avg_copay_per_rx: number | null;
+  avg_ins_paid_per_rx: number;
+  avg_ins_paid_per_unit: number;
+  ndcs: DrugLookupNdc[];
+}
+
+interface DrugLookupResponse {
+  ingredient: string;
+  drugs: DrugLookupDrug[];
+}
 interface DrugLookupNdc {
   drug_name: string;
   ndc: string;
@@ -435,8 +465,16 @@ export default function InventoryReportPage() {
   const [activeSidebar, setActiveSidebar] = useState<
     "ndc" | "drug" | "drug-lookup" | null
   >(null);
+  const [activeSidebar, setActiveSidebar] = useState<
+    "ndc" | "drug" | "drug-lookup" | null
+  >(null);
   const [drugDetail, setDrugDetail] = useState<any>(null);
   const [drugDetailLoading, setDrugDetailLoading] = useState(false);
+  const [drugLookup, setDrugLookup] = useState<DrugLookupResponse | null>(null);
+  const [drugLookupLoading, setDrugLookupLoading] = useState(false);
+  const [expandedLookupDrug, setExpandedLookupDrug] = useState<string | null>(
+    null,
+  );
   const [drugLookup, setDrugLookup] = useState<DrugLookupResponse | null>(null);
   const [drugLookupLoading, setDrugLookupLoading] = useState(false);
   const [expandedLookupDrug, setExpandedLookupDrug] = useState<string | null>(
@@ -641,6 +679,63 @@ export default function InventoryReportPage() {
     };
   }, [drugLookup]);
 
+  const extractIngredient = (drugName: string) =>
+    drugName.trim().split(/\s+/)[0].toUpperCase();
+
+  const fetchDrugLookup = async (ingredient: string) => {
+    setDrugLookupLoading(true);
+    setDrugLookup(null);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/drug-lookup?ingredient=${encodeURIComponent(ingredient)}`,
+      );
+      const data = await res.json();
+      setDrugLookup(data);
+    } catch (e) {
+      console.error("fetchDrugLookup error:", e);
+    } finally {
+      setDrugLookupLoading(false);
+    }
+  };
+
+  const drugLookupAgg = useMemo(() => {
+    if (!drugLookup || !drugLookup.drugs || drugLookup.drugs.length === 0) {
+      return null;
+    }
+    const drugs = drugLookup.drugs;
+    const num = (v: any) => Number(v ?? 0) || 0;
+
+    const totalRxs = drugs.reduce((s, d) => s + num(d.rx_count), 0);
+    const totalQty = drugs.reduce(
+      (s, d) => s + num(d.avg_qty_per_rx) * num(d.rx_count),
+      0,
+    );
+    const totalInsPaid = drugs.reduce(
+      (s, d) => s + num(d.avg_ins_paid_per_rx) * num(d.rx_count),
+      0,
+    );
+    const weightedAvgPerUnit = totalQty > 0 ? totalInsPaid / totalQty : 0;
+    const weightedAvgQty = totalRxs > 0 ? totalQty / totalRxs : 0;
+    const weightedAvgInsPerRx = totalRxs > 0 ? totalInsPaid / totalRxs : 0;
+
+    const byRx = [...drugs].sort((a, b) => num(b.rx_count) - num(a.rx_count));
+    const byUnit = [...drugs].sort(
+      (a, b) => num(b.avg_ins_paid_per_unit) - num(a.avg_ins_paid_per_unit),
+    );
+
+    return {
+      totalRxs,
+      totalQty,
+      totalInsPaid,
+      weightedAvgPerUnit,
+      weightedAvgQty,
+      weightedAvgInsPerRx,
+      mostPrescribed: byRx[0],
+      highestUnit: byUnit[0],
+      lowestUnit: byUnit[byUnit.length - 1],
+    };
+  }, [drugLookup]);
+
   const handleSort = (key: keyof InventoryRow, e: React.MouseEvent) => {
     const idx = sortRules.findIndex((r) => r.key === key);
     let next = [...sortRules];
@@ -722,6 +817,7 @@ export default function InventoryReportPage() {
             drugName: (row.drug_name ?? row.drugName ?? "")
               .replace(/\s*\(\d{5}-\d{4}-\d{2}\).*$/, "")
               .trim(),
+            brand: row.brand ?? null,
             brand: row.brand ?? null,
             rank: 0,
             pkgSize: row.package_size ?? 0,
@@ -1103,6 +1199,28 @@ export default function InventoryReportPage() {
       );
     return (
       <span className="tabular-nums text-slate-700">{v.toLocaleString()}</span>
+    );
+  };
+
+  // Brand pill: Y → "B" (cyan, brand), N → "G" (amber, generic)
+  const brandPill = (brand: string | null | undefined) => {
+    if (!brand) return null;
+    const raw = String(brand).trim().toUpperCase();
+    // treat "Y", "B", or "BRAND" as brand; everything else as generic
+    const isBrand = raw === "Y" || raw === "B" || raw === "BRAND";
+    const label = isBrand ? "B" : "G";
+    return (
+      <span
+        className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase"
+        style={{
+          background: isBrand ? "#cffafe" : "#fef3c7",
+          color: isBrand ? "#155e75" : "#92400e",
+          border: `1px solid ${isBrand ? "#67e8f9" : "#fcd34d"}`,
+        }}
+        title={isBrand ? "Brand" : "Generic"}
+      >
+        {label}
+      </span>
     );
   };
 
@@ -2670,6 +2788,8 @@ export default function InventoryReportPage() {
                                 })}
                                 {/* Brand pill — NEW: on the left, matching reference UI */}
                                 {brandPill(row.brand)}
+                                {/* Brand pill — NEW: on the left, matching reference UI */}
+                                {brandPill(row.brand)}
                                 <div className="flex items-center gap-0.5 shrink-0">
                                   {/* Search by drug name */}
                                   <button
@@ -2773,13 +2893,19 @@ export default function InventoryReportPage() {
                                 </div>
                                 <span
                                   className="text-xs font-semibold text-slate-800 truncate cursor-pointer hover:text-indigo-700"
+                                  className="text-xs font-semibold text-slate-800 truncate cursor-pointer hover:text-indigo-700"
                                   title={row.drugName}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setActiveDrug(row);
                                     setActiveSidebar("drug-lookup");
                                     setExpandedLookupDrug(null);
+                                    setActiveSidebar("drug-lookup");
+                                    setExpandedLookupDrug(null);
                                     setOpenDrugSidebar(true);
+                                    fetchDrugLookup(
+                                      extractIngredient(row.drugName),
+                                    );
                                     fetchDrugLookup(
                                       extractIngredient(row.drugName),
                                     );
@@ -3330,6 +3456,63 @@ export default function InventoryReportPage() {
                         </div>
                       </div>
                     </div>
+                    {/* KPI Cards */}
+                    <div className="px-5 py-4 bg-white border-b border-slate-200 flex-shrink-0">
+                      <div className="grid grid-cols-5 gap-2.5">
+                        <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/60 border border-indigo-200/60 rounded-xl p-3">
+                          <p className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest mb-1">
+                            Ingredient
+                          </p>
+                          <p className="text-[14px] font-extrabold text-slate-900 truncate">
+                            {drugLookup?.ingredient ??
+                              extractIngredient(activeDrug.drugName)}
+                          </p>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-xl p-3">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                            Variants
+                          </p>
+                          <p className="text-[15px] font-extrabold text-slate-900 tabular-nums">
+                            {drugLookup?.drugs?.length ?? 0}
+                          </p>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-xl p-3">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                            Total Rx
+                          </p>
+                          <p className="text-[15px] font-extrabold text-cyan-700 tabular-nums">
+                            {drugLookupAgg
+                              ? Number(drugLookupAgg.totalRxs).toLocaleString()
+                              : "—"}
+                          </p>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-xl p-3">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                            Total Ins Paid
+                          </p>
+                          <p className="text-[15px] font-extrabold text-emerald-700 tabular-nums">
+                            {drugLookupAgg
+                              ? `$${Number(
+                                  drugLookupAgg.totalInsPaid,
+                                ).toLocaleString("en-US", {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 0,
+                                })}`
+                              : "—"}
+                          </p>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-xl p-3">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                            Avg / Unit
+                          </p>
+                          <p className="text-[15px] font-extrabold text-slate-900 tabular-nums">
+                            {drugLookupAgg
+                              ? `$${Number(drugLookupAgg.weightedAvgPerUnit).toFixed(2)}`
+                              : "—"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
                     {/* Body: scrollable stack */}
                     <div className="flex-1 overflow-auto px-5 py-4 space-y-4">
@@ -3343,7 +3526,577 @@ export default function InventoryReportPage() {
                             Click a row to expand NDC breakdown
                           </span>
                         </div>
+                    {/* Body: scrollable stack */}
+                    <div className="flex-1 overflow-auto px-5 py-4 space-y-4">
+                      {/* Table Card */}
+                      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                        <div className="px-4 py-2.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+                          <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-widest">
+                            Medications
+                          </h3>
+                          <span className="text-[10px] text-slate-400">
+                            Click a row to expand NDC breakdown
+                          </span>
+                        </div>
 
+                        {drugLookupLoading ? (
+                          <div className="flex items-center justify-center h-48 gap-3">
+                            <div className="h-5 w-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+                            <span className="text-sm text-slate-400 font-medium">
+                              Loading drug data…
+                            </span>
+                          </div>
+                        ) : !drugLookup ||
+                          !drugLookup.drugs ||
+                          drugLookup.drugs.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center h-48 gap-2">
+                            <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-1">
+                              <Search className="w-4 h-4 text-slate-400" />
+                            </div>
+                            <p className="text-sm font-semibold text-slate-500">
+                              No drugs found for this ingredient
+                            </p>
+                          </div>
+                        ) : (
+                          <table
+                            style={{
+                              borderCollapse: "collapse",
+                              width: "100%",
+                              tableLayout: "fixed",
+                            }}
+                          >
+                            <colgroup>
+                              <col style={{ width: "30%" }} />
+                              <col style={{ width: "12%" }} />
+                              <col style={{ width: "13%" }} />
+                              <col style={{ width: "15%" }} />
+                              <col style={{ width: "15%" }} />
+                              <col style={{ width: "15%" }} />
+                            </colgroup>
+                            <thead>
+                              <tr style={{ background: "#1e293b" }}>
+                                {[
+                                  {
+                                    line1: "Medications",
+                                    line2: "",
+                                    align: "left" as const,
+                                  },
+                                  {
+                                    line1: "Avg Qty",
+                                    line2: "per Rx",
+                                    align: "right" as const,
+                                  },
+                                  {
+                                    line1: "Avg CoPay",
+                                    line2: "per Rx",
+                                    align: "right" as const,
+                                  },
+                                  {
+                                    line1: "Avg Ins Paid",
+                                    line2: "per Rx",
+                                    align: "right" as const,
+                                  },
+                                  {
+                                    line1: "Avg Ins Paid",
+                                    line2: "per Unit",
+                                    align: "right" as const,
+                                  },
+                                  {
+                                    line1: "Rx Count",
+                                    line2: "",
+                                    align: "right" as const,
+                                  },
+                                ].map((h, i) => (
+                                  <th
+                                    key={i}
+                                    style={{
+                                      padding: "8px 10px",
+                                      textAlign: h.align,
+                                      fontSize: 10,
+                                      fontWeight: 700,
+                                      color: "#fff",
+                                      letterSpacing: "0.05em",
+                                      textTransform: "uppercase",
+                                      lineHeight: 1.3,
+                                    }}
+                                  >
+                                    <div>{h.line1}</div>
+                                    {h.line2 && (
+                                      <div
+                                        style={{
+                                          color: "#94a3b8",
+                                          fontWeight: 500,
+                                          fontSize: 9,
+                                        }}
+                                      >
+                                        {h.line2}
+                                      </div>
+                                    )}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {drugLookup.drugs.map((drug, di) => {
+                                const isExpanded =
+                                  expandedLookupDrug === drug.drug_name;
+                                return (
+                                  <React.Fragment key={drug.drug_name}>
+                                    <tr
+                                      style={{
+                                        borderBottom: "1px solid #e2e8f0",
+                                        background: isExpanded
+                                          ? "#eef2ff"
+                                          : di % 2 === 1
+                                            ? "#f8fafc"
+                                            : "#fff",
+                                        cursor: "pointer",
+                                      }}
+                                      onClick={() =>
+                                        setExpandedLookupDrug(
+                                          isExpanded ? null : drug.drug_name,
+                                        )
+                                      }
+                                      className="hover:bg-indigo-50/60 transition-colors"
+                                    >
+                                      <td
+                                        style={{
+                                          padding: "9px 10px",
+                                          fontSize: 12,
+                                        }}
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <ChevronDown
+                                            className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${isExpanded ? "" : "-rotate-90"}`}
+                                          />
+                                          <span className="text-slate-400 tabular-nums text-[11px] shrink-0">
+                                            {di + 1}.
+                                          </span>
+                                          <span className="font-semibold text-slate-800 truncate">
+                                            {drug.drug_name}
+                                          </span>
+                                          {brandPill(drug.brand)}
+                                        </div>
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "9px 10px",
+                                          fontSize: 12,
+                                          textAlign: "right",
+                                        }}
+                                      >
+                                        <span className="tabular-nums text-slate-700">
+                                          {Number(
+                                            drug.avg_qty_per_rx ?? 0,
+                                          ).toFixed(0)}
+                                        </span>
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "9px 10px",
+                                          fontSize: 12,
+                                          textAlign: "right",
+                                          background: "rgba(240,253,250,0.6)",
+                                        }}
+                                      >
+                                        <span className="tabular-nums text-slate-700">
+                                          {drug.avg_copay_per_rx != null
+                                            ? `$${Number(drug.avg_copay_per_rx).toFixed(2)}`
+                                            : "—"}
+                                        </span>
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "9px 10px",
+                                          fontSize: 12,
+                                          textAlign: "right",
+                                          background: "rgba(240,253,250,0.6)",
+                                        }}
+                                      >
+                                        <span className="tabular-nums font-semibold text-slate-800">
+                                          $
+                                          {Number(
+                                            drug.avg_ins_paid_per_rx ?? 0,
+                                          ).toFixed(2)}
+                                        </span>
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "9px 10px",
+                                          fontSize: 12,
+                                          textAlign: "right",
+                                          background: "rgba(240,253,250,0.6)",
+                                        }}
+                                      >
+                                        <span className="tabular-nums text-slate-700">
+                                          $
+                                          {Number(
+                                            drug.avg_ins_paid_per_unit ?? 0,
+                                          ).toFixed(2)}
+                                        </span>
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "9px 10px",
+                                          fontSize: 12,
+                                          textAlign: "right",
+                                          background: "rgba(236,254,255,0.6)",
+                                        }}
+                                      >
+                                        <span className="tabular-nums font-bold text-cyan-800">
+                                          {Number(
+                                            drug.rx_count ?? 0,
+                                          ).toLocaleString()}
+                                        </span>
+                                      </td>
+                                    </tr>
+
+                                    {isExpanded &&
+                                      drug.ndcs &&
+                                      drug.ndcs.map((ndc, ni) => (
+                                        <tr
+                                          key={ndc.ndc}
+                                          style={{
+                                            borderBottom: "1px solid #f1f5f9",
+                                            background:
+                                              ni % 2 === 1 ? "#f8fafc" : "#fff",
+                                          }}
+                                          className="hover:bg-indigo-50/40 transition-colors"
+                                        >
+                                          <td
+                                            style={{
+                                              padding: "7px 10px 7px 36px",
+                                              fontSize: 12,
+                                            }}
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-indigo-400 text-sm leading-none shrink-0">
+                                                ◦
+                                              </span>
+                                              <span className="font-mono text-[11px] text-slate-600 tabular-nums">
+                                                {ndc.ndc}
+                                              </span>
+                                              {brandPill(ndc.brand)}
+                                              <button
+                                                className="cursor-pointer text-[10px] text-indigo-600 hover:underline ml-auto"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+
+                                                  setActiveDrug(
+                                                    (prev: any) => ({
+                                                      ...prev,
+                                                      ndc: ndc.ndc,
+                                                    }),
+                                                  );
+
+                                                  setActiveSidebar("drug");
+                                                  setOpenDrugSidebar(true);
+                                                }}
+                                              >
+                                                Community ↗
+                                              </button>
+                                            </div>
+                                          </td>
+                                          <td
+                                            style={{
+                                              padding: "7px 10px",
+                                              fontSize: 12,
+                                              textAlign: "right",
+                                            }}
+                                          >
+                                            <span className="tabular-nums text-slate-600">
+                                              {Number(
+                                                ndc.avg_qty_per_rx ?? 0,
+                                              ).toFixed(0)}
+                                            </span>
+                                          </td>
+                                          <td
+                                            style={{
+                                              padding: "7px 10px",
+                                              fontSize: 12,
+                                              textAlign: "right",
+                                              background:
+                                                "rgba(240,253,250,0.4)",
+                                            }}
+                                          >
+                                            <span className="tabular-nums text-slate-600">
+                                              {ndc.avg_copay_per_rx != null
+                                                ? `$${Number(ndc.avg_copay_per_rx).toFixed(2)}`
+                                                : "—"}
+                                            </span>
+                                          </td>
+                                          <td
+                                            style={{
+                                              padding: "7px 10px",
+                                              fontSize: 12,
+                                              textAlign: "right",
+                                              background:
+                                                "rgba(240,253,250,0.4)",
+                                            }}
+                                          >
+                                            <span className="tabular-nums text-slate-700">
+                                              $
+                                              {Number(
+                                                ndc.avg_ins_paid_per_rx ?? 0,
+                                              ).toFixed(2)}
+                                            </span>
+                                          </td>
+                                          <td
+                                            style={{
+                                              padding: "7px 10px",
+                                              fontSize: 12,
+                                              textAlign: "right",
+                                              background:
+                                                "rgba(240,253,250,0.4)",
+                                            }}
+                                          >
+                                            <span className="tabular-nums text-slate-600">
+                                              $
+                                              {Number(
+                                                ndc.avg_ins_paid_per_unit ?? 0,
+                                              ).toFixed(2)}
+                                            </span>
+                                          </td>
+                                          <td
+                                            style={{
+                                              padding: "7px 10px",
+                                              fontSize: 12,
+                                              textAlign: "right",
+                                              background:
+                                                "rgba(236,254,255,0.4)",
+                                            }}
+                                          >
+                                            <span className="tabular-nums font-semibold text-cyan-700">
+                                              {Number(
+                                                ndc.rx_count ?? 0,
+                                              ).toLocaleString()}
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                  </React.Fragment>
+                                );
+                              })}
+                            </tbody>
+                            {drugLookupAgg && (
+                              <tfoot>
+                                <tr
+                                  style={{
+                                    background: "#f1f5f9",
+                                    borderTop: "2px solid #cbd5e1",
+                                  }}
+                                >
+                                  <td
+                                    style={{
+                                      padding: "10px 10px",
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                      color: "#475569",
+                                      textTransform: "uppercase",
+                                      letterSpacing: "0.05em",
+                                    }}
+                                  >
+                                    Totals / Weighted Avg
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: "10px 10px",
+                                      fontSize: 12,
+                                      textAlign: "right",
+                                    }}
+                                  >
+                                    <span className="tabular-nums font-bold text-slate-800">
+                                      {Number(
+                                        drugLookupAgg.weightedAvgQty,
+                                      ).toFixed(0)}
+                                    </span>
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: "10px 10px",
+                                      fontSize: 12,
+                                      textAlign: "right",
+                                    }}
+                                  >
+                                    <span className="tabular-nums text-slate-400">
+                                      —
+                                    </span>
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: "10px 10px",
+                                      fontSize: 12,
+                                      textAlign: "right",
+                                    }}
+                                  >
+                                    <span className="tabular-nums font-bold text-slate-800">
+                                      $
+                                      {Number(
+                                        drugLookupAgg.weightedAvgInsPerRx,
+                                      ).toFixed(2)}
+                                    </span>
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: "10px 10px",
+                                      fontSize: 12,
+                                      textAlign: "right",
+                                    }}
+                                  >
+                                    <span className="tabular-nums font-bold text-emerald-700">
+                                      $
+                                      {Number(
+                                        drugLookupAgg.weightedAvgPerUnit,
+                                      ).toFixed(2)}
+                                    </span>
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: "10px 10px",
+                                      fontSize: 12,
+                                      textAlign: "right",
+                                    }}
+                                  >
+                                    <span className="tabular-nums font-extrabold text-cyan-800">
+                                      {Number(
+                                        drugLookupAgg.totalRxs,
+                                      ).toLocaleString()}
+                                    </span>
+                                  </td>
+                                </tr>
+                              </tfoot>
+                            )}
+                          </table>
+                        )}
+                      </div>
+
+                      {/* Insights Cards */}
+                      {drugLookupAgg &&
+                        drugLookup &&
+                        drugLookup.drugs &&
+                        drugLookup.drugs.length > 1 && (
+                          <div>
+                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">
+                              Insights
+                            </h3>
+                            <div className="grid grid-cols-3 gap-2.5">
+                              <div className="bg-white border border-slate-200 rounded-xl p-3.5">
+                                <div className="flex items-center gap-1.5 mb-1.5">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 shrink-0" />
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Most Prescribed
+                                  </p>
+                                </div>
+                                <p
+                                  className="text-[12px] font-bold text-slate-900 truncate mb-0.5"
+                                  title={
+                                    drugLookupAgg.mostPrescribed?.drug_name ??
+                                    ""
+                                  }
+                                >
+                                  {drugLookupAgg.mostPrescribed?.drug_name ??
+                                    "—"}
+                                </p>
+                                <p className="text-[11px] text-slate-500 tabular-nums">
+                                  {Number(
+                                    drugLookupAgg.mostPrescribed?.rx_count ?? 0,
+                                  ).toLocaleString()}{" "}
+                                  prescriptions
+                                </p>
+                              </div>
+                              <div className="bg-white border border-slate-200 rounded-xl p-3.5">
+                                <div className="flex items-center gap-1.5 mb-1.5">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Highest $/Unit
+                                  </p>
+                                </div>
+                                <p
+                                  className="text-[12px] font-bold text-slate-900 truncate mb-0.5"
+                                  title={
+                                    drugLookupAgg.highestUnit?.drug_name ?? ""
+                                  }
+                                >
+                                  {drugLookupAgg.highestUnit?.drug_name ?? "—"}
+                                </p>
+                                <p className="text-[11px] text-red-600 tabular-nums font-semibold">
+                                  $
+                                  {Number(
+                                    drugLookupAgg.highestUnit
+                                      ?.avg_ins_paid_per_unit ?? 0,
+                                  ).toFixed(2)}{" "}
+                                  / unit
+                                </p>
+                              </div>
+                              <div className="bg-white border border-slate-200 rounded-xl p-3.5">
+                                <div className="flex items-center gap-1.5 mb-1.5">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Lowest $/Unit
+                                  </p>
+                                </div>
+                                <p
+                                  className="text-[12px] font-bold text-slate-900 truncate mb-0.5"
+                                  title={
+                                    drugLookupAgg.lowestUnit?.drug_name ?? ""
+                                  }
+                                >
+                                  {drugLookupAgg.lowestUnit?.drug_name ?? "—"}
+                                </p>
+                                <p className="text-[11px] text-emerald-600 tabular-nums font-semibold">
+                                  $
+                                  {Number(
+                                    drugLookupAgg.lowestUnit
+                                      ?.avg_ins_paid_per_unit ?? 0,
+                                  ).toFixed(2)}{" "}
+                                  / unit
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                      {/* Community Coverage Teaser */}
+                      <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 bg-white/40">
+                        <div className="flex items-start gap-3">
+                          <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-indigo-100 to-cyan-100 flex items-center justify-center shrink-0">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="#6366f1"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M2 12h20" />
+                              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <h4 className="text-[13px] font-bold text-slate-800">
+                                Community Coverage
+                              </h4>
+                              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-bold uppercase tracking-wider">
+                                Coming Soon
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                              Compare your pharmacy's pricing against community
+                              benchmarks by BIN/PCN/Group, filtered by state and
+                              time range — coming in a future release.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
                         {drugLookupLoading ? (
                           <div className="flex items-center justify-center h-48 gap-3">
                             <div className="h-5 w-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
