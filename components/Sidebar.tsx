@@ -18,6 +18,7 @@ import {
   Phone,
   X,
   GitBranch,
+  Pill,
 } from "lucide-react";
 import axios from "axios";
 import api from "@/lib/api";
@@ -58,26 +59,31 @@ export default function Sidebar({
           },
         });
         console.log(res.data);
-        localStorage.setItem("pharmacyName", res?.data?.pharmacy?.pharmacy_name);
-localStorage.setItem("pharmacyNameFor", localStorage.getItem("userEmail") || "");
-setAccountName(res?.data?.pharmacy?.pharmacy_name || "Account Name");
-        
+        localStorage.setItem(
+          "pharmacyName",
+          res?.data?.pharmacy?.pharmacy_name,
+        );
+        localStorage.setItem(
+          "pharmacyNameFor",
+          localStorage.getItem("userEmail") || "",
+        );
+        setAccountName(res?.data?.pharmacy?.pharmacy_name || "Account Name");
       } catch (err) {
         console.log("error");
-         setAccountName(localStorage.getItem("pharmacyName") || "Account Name");
+        setAccountName(localStorage.getItem("pharmacyName") || "Account Name");
       }
     };
     const cachedEmail = localStorage.getItem("userEmail");
-const cachedPharmacyFor = localStorage.getItem("pharmacyNameFor");
-const cached = localStorage.getItem("pharmacyName");
+    const cachedPharmacyFor = localStorage.getItem("pharmacyNameFor");
+    const cached = localStorage.getItem("pharmacyName");
 
-if (cached && cachedPharmacyFor === cachedEmail) {
-  setAccountName(cached);
-} else {
-  localStorage.removeItem("pharmacyName");
-  localStorage.removeItem("pharmacyNameFor");
-}
-pharmacy();
+    if (cached && cachedPharmacyFor === cachedEmail) {
+      setAccountName(cached);
+    } else {
+      localStorage.removeItem("pharmacyName");
+      localStorage.removeItem("pharmacyNameFor");
+    }
+    pharmacy();
   }, []);
 
   const [openPopup, setOpenPopup] = useState<Popup>(null);
@@ -168,22 +174,22 @@ pharmacy();
           {sidebarOpen && <span className="ml-3">Bin Search</span>}
         </Link>
 
-        <Link href="/coming-soon" className={navClass("/tickets")}>
-          <Ticket className="w-5 h-5" />
+        <Link href="/coming-soon" className={navClass("/coming-soon")}>
+          <Pill className="w-7 h-7 font-bold" />
           {sidebarOpen && (
             <div className="flex justify-between w-full ml-3">
-              <span>Tickets</span>
-              <span className="bg-pink-500 text-white text-xs px-2 py-0.5 rounded">
+              <span>Drug Lookup</span>
+              {/* <span className="bg-pink-500 text-white text-xs px-2 py-0.5 rounded">
                 NEW
-              </span>
+              </span> */}
             </div>
           )}
         </Link>
 
         <Link href="/how-to" className={navClass("/how-to")}>
-  <HelpCircle className="w-5 h-5" />
-  {sidebarOpen && <span className="ml-3">How To</span>}
-</Link>
+          <HelpCircle className="w-5 h-5" />
+          {sidebarOpen && <span className="ml-3">How To</span>}
+        </Link>
       </nav>
 
       {/* BOTTOM */}

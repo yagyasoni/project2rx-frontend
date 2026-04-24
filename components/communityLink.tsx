@@ -12,14 +12,15 @@ type CommunityRow = {
   avg_ins_paid: number;
   avg_ins_paid_per_unit: number;
   estimated_rxs: number;
+  rx_numbers?: string[];
 };
-
-// const ndcNumber = "64380-0737-06";
 
 export default function CommunityLinkPageCopy({
   ndcNumber,
+  drugName,
 }: {
   ndcNumber: string;
+  drugName?: string;
 }) {
   const [communityData, setCommunityData] = useState<CommunityRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,6 +29,9 @@ export default function CommunityLinkPageCopy({
     Record<string, CommunityRow[]>
   >({});
   const [active, setActive] = useState("state");
+  const [expandedRxCells, setExpandedRxCells] = useState<Set<string>>(
+    new Set(),
+  );
 
   const [sortConfig, setSortConfig] = useState<{
     key?: keyof CommunityRow;
@@ -41,23 +45,6 @@ export default function CommunityLinkPageCopy({
 
   const formatCurrency = (val: number) =>
     `$${Number(val || 0).toLocaleString()}`;
-
-  // ================= FETCH MAIN =================
-  // const fetchCommunityData = async () => {
-  //   try {
-  //     setLoading(true);
-
-  //     const res = await axios.get(
-  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/community/${ndcNumber}?includeGroups=false`,
-  //     );
-
-  //     setCommunityData(res.data || []);
-  //   } catch (err) {
-  //     console.error(err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const fetchCommunityData = async () => {
     try {
@@ -87,15 +74,6 @@ export default function CommunityLinkPageCopy({
   useEffect(() => {
     fetchCommunityData();
   }, [active]);
-
-  // ================= FETCH GROUPS =================
-  // const fetchGroupsForRow = async (row: CommunityRow) => {
-  //   const res = await axios.get(
-  //     `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/community/${ndcNumber}?includeGroups=true&bin=${row.bin}&pcn=${row.pcn}`,
-  //   );
-
-  //   return res.data || [];
-  // };
 
   const fetchGroupsForRow = async (row: CommunityRow) => {
     const userId = localStorage.getItem("userId");
@@ -172,11 +150,38 @@ export default function CommunityLinkPageCopy({
   // ================= UI =================
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Community</h1>
+      <div className="flex items-start justify-between mb-4 gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-bold text-slate-900">Community</h1>
+          {(drugName || ndcNumber) && (
+            <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1">
+              {drugName && (
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+                    Drug Name
+                  </p>
+                  <p
+                    className="text-sm font-bold text-slate-800 truncate max-w-[360px]"
+                    title={drugName}
+                  >
+                    {drugName}
+                  </p>
+                </div>
+              )}
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+                  NDC
+                </p>
+                <p className="text-sm font-mono font-semibold text-slate-700 tabular-nums">
+                  {ndcNumber}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Toggle Group */}
-        <div className="flex bg-gray-100 rounded-lg p-1">
+        <div className="flex bg-gray-100 rounded-lg p-1 shrink-0">
           <button
             className={`cursor-pointer px-4 py-1.5 text-sm rounded-md transition ${
               active === "state"
@@ -317,24 +322,78 @@ export default function CommunityLinkPageCopy({
                                 <th className="border px-2 py-1 text-center">
                                   Rx's
                                 </th>
+                                <th className="border px-2 py-1 text-left">
+                                  Rx Numbers
+                                </th>
                               </tr>
                             </thead>
 
                             <tbody>
-                              {groupRows.map((g, i) => (
-                                <tr key={i}>
-                                  <td className="border px-2 py-1">{g.grp}</td>
-                                  <td className="border px-2 py-1 text-right">
-                                    {formatCurrency(g.avg_ins_paid)}
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    {formatCurrency(g.avg_ins_paid_per_unit)}
-                                  </td>
-                                  <td className="border px-2 py-1 text-center">
-                                    {g.estimated_rxs}
-                                  </td>
-                                </tr>
-                              ))}
+                              {groupRows.map((g, i) => {
+                                const cellKey = `${key}-${i}`;
+                                const isRxExpanded =
+                                  expandedRxCells.has(cellKey);
+                                const rxList = g.rx_numbers || [];
+                                const visibleRxs = isRxExpanded
+                                  ? rxList
+                                  : rxList.slice(0, 5);
+                                const hiddenCount = rxList.length - 5;
+
+                                return (
+                                  <tr key={i}>
+                                    <td className="border px-2 py-1">
+                                      {g.grp}
+                                    </td>
+                                    <td className="border px-2 py-1 text-right">
+                                      {formatCurrency(g.avg_ins_paid)}
+                                    </td>
+                                    <td className="border px-2 py-1 text-right">
+                                      {formatCurrency(g.avg_ins_paid_per_unit)}
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      {g.estimated_rxs}
+                                    </td>
+                                    <td className="border px-2 py-1 text-left align-top">
+                                      {rxList.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1 max-w-[400px] items-center">
+                                          {visibleRxs.map((rx) => (
+                                            <span
+                                              key={rx}
+                                              className="px-1.5 py-0.5 bg-slate-200 rounded text-[10px] font-mono text-slate-700"
+                                            >
+                                              {rx}
+                                            </span>
+                                          ))}
+                                          {rxList.length > 5 && (
+                                            <button
+                                              onClick={() => {
+                                                setExpandedRxCells((prev) => {
+                                                  const next = new Set(prev);
+                                                  if (next.has(cellKey)) {
+                                                    next.delete(cellKey);
+                                                  } else {
+                                                    next.add(cellKey);
+                                                  }
+                                                  return next;
+                                                });
+                                              }}
+                                              className="text-[10px] text-emerald-600 hover:text-emerald-800 font-semibold self-center cursor-pointer underline"
+                                            >
+                                              {isRxExpanded
+                                                ? "Show less"
+                                                : `+${hiddenCount} more`}
+                                            </button>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <span className="text-slate-300">
+                                          —
+                                        </span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
