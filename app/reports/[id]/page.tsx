@@ -164,6 +164,32 @@ interface DrugLookupResponse {
   ingredient: string;
   drugs: DrugLookupDrug[];
 }
+interface DrugLookupNdc {
+  drug_name: string;
+  ndc: string;
+  brand: string | null;
+  rx_count: number;
+  avg_qty_per_rx: number;
+  avg_copay_per_rx: number | null;
+  avg_ins_paid_per_rx: number;
+  avg_ins_paid_per_unit: number;
+}
+
+interface DrugLookupDrug {
+  drug_name: string;
+  brand: string | null;
+  rx_count: number;
+  avg_qty_per_rx: number;
+  avg_copay_per_rx: number | null;
+  avg_ins_paid_per_rx: number;
+  avg_ins_paid_per_unit: number;
+  ndcs: DrugLookupNdc[];
+}
+
+interface DrugLookupResponse {
+  ingredient: string;
+  drugs: DrugLookupDrug[];
+}
 // ─── Column group types ───────────────────────────────────────────────────────
 
 type ColGroup =
@@ -2670,6 +2696,8 @@ export default function InventoryReportPage() {
                                 })}
                                 {/* Brand pill — NEW: on the left, matching reference UI */}
                                 {brandPill(row.brand)}
+                                {/* Brand pill — NEW: on the left, matching reference UI */}
+                                {brandPill(row.brand)}
                                 <div className="flex items-center gap-0.5 shrink-0">
                                   {/* Search by drug name */}
                                   <button
@@ -3208,7 +3236,10 @@ export default function InventoryReportPage() {
                     </button>
                   </div>
                   <div className="pt-3">
-                    <CommunityLinkPageCopy ndcNumber={activeDrug.ndc} />
+                    <CommunityLinkPageCopy 
+                      ndcNumber={activeDrug.ndc} 
+                      drugName={activeDrug.drugName}
+                    />
                   </div>
                 </div>
               </>
