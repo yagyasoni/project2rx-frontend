@@ -541,7 +541,7 @@ export default function DrugLookupComponent({
   );
 }
 
-// Eg.-><DrugLookupComponent
+// {/* <DrugLookupComponent
 //   ndcNumber="00093005301"
 //   drugName="Lisinopril"         // optional
 //   mode="state"                  // "state" | "opportunities", default "state"
@@ -551,4 +551,4 @@ export default function DrugLookupComponent({
 //     grp: "GRP001",              // optional
 //     range: "last_90_days",      // "" | "last_90_days" | "this_year"
 //   }}
-// />
+// /> */}
