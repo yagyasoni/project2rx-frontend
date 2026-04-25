@@ -451,9 +451,13 @@ export default function CommunityLinkPageCopy({
   const [communityData, setCommunityData] = useState<CommunityRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [groupDataMap, setGroupDataMap] = useState<Record<string, CommunityRow[]>>({});
+  const [groupDataMap, setGroupDataMap] = useState<
+    Record<string, CommunityRow[]>
+  >({});
   const [active, setActive] = useState("state");
-  const [expandedRxCells, setExpandedRxCells] = useState<Set<string>>(new Set());
+  const [expandedRxCells, setExpandedRxCells] = useState<Set<string>>(
+    new Set(),
+  );
 
   const [sortConfig, setSortConfig] = useState<{
     key?: keyof CommunityRow;
@@ -753,7 +757,8 @@ export default function CommunityLinkPageCopy({
                             <tbody>
                               {groupRows.map((g, i) => {
                                 const cellKey = `${key}-${i}`;
-                                const isRxExpanded = expandedRxCells.has(cellKey);
+                                const isRxExpanded =
+                                  expandedRxCells.has(cellKey);
                                 const rxList = g.rx_numbers || [];
                                 const visibleRxs = isRxExpanded
                                   ? rxList
@@ -762,7 +767,9 @@ export default function CommunityLinkPageCopy({
 
                                 return (
                                   <tr key={i}>
-                                    <td className="border px-2 py-1">{g.grp}</td>
+                                    <td className="border px-2 py-1">
+                                      {g.grp}
+                                    </td>
                                     <td className="border px-2 py-1 text-right">
                                       {formatCurrency(g.avg_ins_paid)}
                                     </td>
@@ -805,7 +812,9 @@ export default function CommunityLinkPageCopy({
                                           )}
                                         </div>
                                       ) : (
-                                        <span className="text-slate-300">—</span>
+                                        <span className="text-slate-300">
+                                          —
+                                        </span>
                                       )}
                                     </td>
                                   </tr>
