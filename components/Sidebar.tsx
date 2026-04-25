@@ -10,7 +10,6 @@ import {
   Layers,
   Search,
   Ticket,
-   Pill,
   HelpCircle,
   LifeBuoy,
   User,
