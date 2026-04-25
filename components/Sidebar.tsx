@@ -10,6 +10,7 @@ import {
   Layers,
   Search,
   Ticket,
+   Pill,
   HelpCircle,
   LifeBuoy,
   User,
@@ -168,7 +169,13 @@ pharmacy();
           {sidebarOpen && <span className="ml-3">Bin Search</span>}
         </Link>
 
-        <Link href="/coming-soon" className={navClass("/tickets")}>
+        {/* Was: Tickets — now Drug Lookup */}
+<Link href="/DrugLookup" className={navClass("/DrugLookup")}>
+  <Pill className="w-5 h-5" />
+  {sidebarOpen && <span className="ml-3">Drug Lookup</span>}
+</Link>
+
+        {/* <Link href="/coming-soon" className={navClass("/tickets")}>
           <Ticket className="w-5 h-5" />
           {sidebarOpen && (
             <div className="flex justify-between w-full ml-3">
@@ -178,7 +185,7 @@ pharmacy();
               </span>
             </div>
           )}
-        </Link>
+        </Link> */}
 
         <Link href="/how-to" className={navClass("/how-to")}>
   <HelpCircle className="w-5 h-5" />

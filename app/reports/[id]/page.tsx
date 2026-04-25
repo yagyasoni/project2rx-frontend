@@ -2696,8 +2696,6 @@ export default function InventoryReportPage() {
                                 })}
                                 {/* Brand pill — NEW: on the left, matching reference UI */}
                                 {brandPill(row.brand)}
-                                {/* Brand pill — NEW: on the left, matching reference UI */}
-                                {brandPill(row.brand)}
                                 <div className="flex items-center gap-0.5 shrink-0">
                                   {/* Search by drug name */}
                                   <button
