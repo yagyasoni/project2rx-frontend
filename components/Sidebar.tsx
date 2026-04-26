@@ -9,7 +9,6 @@ import {
   FileText,
   Layers,
   Search,
-  Ticket,
   HelpCircle,
   LifeBuoy,
   User,
@@ -174,17 +173,13 @@ export default function Sidebar({
           {sidebarOpen && <span className="ml-3">Bin Search</span>}
         </Link>
 
-        <Link href="/coming-soon" className={navClass("/coming-soon")}>
-          <Pill className="w-7 h-7 font-bold" />
-          {sidebarOpen && (
-            <div className="flex justify-between w-full ml-3">
-              <span>Drug Lookup</span>
-              {/* <span className="bg-pink-500 text-white text-xs px-2 py-0.5 rounded">
-                NEW
-              </span> */}
-            </div>
-          )}
-        </Link>
+        {/* Was: Tickets — now Drug Lookup */}
+<Link href="/DrugLookup" className={navClass("/DrugLookup")}>
+  <Pill className="w-5 h-5" />
+  {sidebarOpen && <span className="ml-3">Drug Lookup</span>}
+</Link>
+
+        
 
         <Link href="/how-to" className={navClass("/how-to")}>
           <HelpCircle className="w-5 h-5" />
