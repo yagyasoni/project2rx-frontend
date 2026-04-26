@@ -229,16 +229,16 @@ const UsersPage = () => {
                       {/* 🔥 CASE 1: SUBSCRIPTION NOT YET SYNCED (WEBHOOK DELAY) */}
                       {!subscription.stripe_subscription_id ? (
                         <div className="rounded-lg border border-gray-300 bg-gray-50 p-3 space-y-2">
-                          <p className="text-xs text-gray-700 font-medium">
+                          {/* <p className="text-xs text-gray-700 font-medium">
                             Trial started successfully
                           </p>
                           <p className="text-[10px] text-gray-600">
                             Subscription is syncing with Stripe. You can still
                             cancel it.
-                          </p>
+                          </p> */}
 
                           {/* ✅ CANCEL BUTTON (AVAILABLE EVEN WITHOUT ID) */}
-                          <Button
+                          {/* <Button
                             onClick={async () => {
                               const userId = localStorage.getItem("userId");
                               try {
@@ -261,7 +261,23 @@ const UsersPage = () => {
                             className="w-full text-xs"
                           >
                             Cancel Subscription
-                          </Button>
+                          </Button> */}
+                          <div className="text-[10px] text-muted-foreground">
+                            Status :{" "}
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                subscription.status === "active"
+                                  ? "bg-green-100 text-green-700"
+                                  : subscription.status === "trialing"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : subscription.status === "past_due"
+                                      ? "bg-yellow-100 text-yellow-700"
+                                      : "bg-red-100 text-red-700"
+                              }`}
+                            >
+                              {subscription.status}
+                            </span>
+                          </div>
                         </div>
                       ) : (
                         <>
