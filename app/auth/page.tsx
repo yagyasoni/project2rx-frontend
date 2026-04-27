@@ -132,6 +132,7 @@ const AuthPageInner = () => {
         window.dispatchEvent(new Event("storage"));
 
         router.push("/Mainpage");
+        router.refresh();
       } catch (err) {
         console.error("Login failed:", err);
 
