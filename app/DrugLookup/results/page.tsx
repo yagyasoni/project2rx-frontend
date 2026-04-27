@@ -1016,7 +1016,7 @@ function DrugLookupResultsInner() {
                   bin: urlBin || undefined,
                   pcn: urlPcn || undefined,
                   grp: urlGrp || undefined,
-                  range: "last_90_days",
+                  range: "this_year",
                 }}
               />
             </div>
