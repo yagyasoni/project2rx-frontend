@@ -132,7 +132,10 @@ const AuthPageInner = () => {
         window.dispatchEvent(new Event("storage"));
 
         router.push("/Mainpage");
-        router.refresh();
+        // small delay to ensure navigation completes
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       } catch (err) {
         console.error("Login failed:", err);
 
