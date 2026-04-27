@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Mail, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,58 +14,117 @@ export default function InactiveAccount() {
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const prevStatusRef = useRef<string | null>(null);
+  const prevPaymentRef = useRef<string | null>(null);
+
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (!userId) return;
 
-    const fetchStatus = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await axios.get(`https://api.auditprorx.com/auth/users`);
-        const users = res.data;
+        const [userRes, subRes] = await Promise.all([
+          axios.get(`https://api.auditprorx.com/auth/users`),
+          axios.get(`https://api.auditprorx.com/pay/subscription/${userId}`),
+        ]);
 
+        const users = userRes.data;
         const currentUser = users.find((u: any) => u.id === userId);
-        console.log("Fetched user status:", currentUser);
-        if (currentUser) setStatus(currentUser.status);
-      } catch (err) {
-        console.error("Failed to fetch user status:", err);
-      }
-    };
 
-    fetchStatus(); // on mount
-  }, []);
+        const newStatus = currentUser?.status || null;
 
-  // ✅ FETCH SUBSCRIPTION STATUS
-  useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        const userId = localStorage.getItem("userId");
+        const subData = subRes.data;
+        const newPaymentStatus = subData.subscription
+          ? subData.subscription.status
+          : "no_subscription";
 
-        if (!userId) {
-          setLoading(false);
+        // ✅ FIRST LOAD → just store values
+        if (prevStatusRef.current === null && prevPaymentRef.current === null) {
+          prevStatusRef.current = newStatus;
+          prevPaymentRef.current = newPaymentStatus;
+
+          setStatus(newStatus);
+          setPaymentStatus(newPaymentStatus);
           return;
         }
 
-        const res = await axios.get(
-          `https://api.auditprorx.com/pay/subscription/${userId}`,
-        );
-        const data = res.data;
-        console.log("Fetched subscription status:", data);
-
-        if (!data.subscription) {
-          // ❌ No subscription → force payment flow
-          setPaymentStatus("no_subscription");
-        } else {
-          setPaymentStatus(data.subscription.status);
+        // 🚨 CHANGE DETECTED → RELOAD PAGE
+        if (
+          prevStatusRef.current !== newStatus ||
+          prevPaymentRef.current !== newPaymentStatus
+        ) {
+          console.log("Status changed → refreshing page...");
+          window.location.reload();
         }
+
+        // Update refs
+        prevStatusRef.current = newStatus;
+        prevPaymentRef.current = newPaymentStatus;
       } catch (err) {
-        console.error("Subscription fetch error:", err);
-      } finally {
-        setLoading(false);
+        console.error("Fetch error:", err);
       }
     };
 
-    fetchSubscription();
+    fetchAll();
+
+    // 🔁 Check every 5 seconds
+    const interval = setInterval(fetchAll, 5000);
+
+    return () => clearInterval(interval);
   }, []);
+
+  // useEffect(() => {
+  //   const userId = localStorage.getItem("userId");
+  //   if (!userId) return;
+
+  //   const fetchStatus = async () => {
+  //     try {
+  //       const res = await axios.get(`https://api.auditprorx.com/auth/users`);
+  //       const users = res.data;
+
+  //       const currentUser = users.find((u: any) => u.id === userId);
+  //       console.log("Fetched user status:", currentUser);
+  //       if (currentUser) setStatus(currentUser.status);
+  //     } catch (err) {
+  //       console.error("Failed to fetch user status:", err);
+  //     }
+  //   };
+
+  //   fetchStatus(); // on mount
+  // }, []);
+
+  // ✅ FETCH SUBSCRIPTION STATUS
+  // useEffect(() => {
+  //   const fetchSubscription = async () => {
+  //     try {
+  //       const userId = localStorage.getItem("userId");
+
+  //       if (!userId) {
+  //         setLoading(false);
+  //         return;
+  //       }
+
+  //       const res = await axios.get(
+  //         `https://api.auditprorx.com/pay/subscription/${userId}`,
+  //       );
+  //       const data = res.data;
+  //       console.log("Fetched subscription status:", data);
+
+  //       if (!data.subscription) {
+  //         // ❌ No subscription → force payment flow
+  //         setPaymentStatus("no_subscription");
+  //       } else {
+  //         setPaymentStatus(data.subscription.status);
+  //       }
+  //     } catch (err) {
+  //       console.error("Subscription fetch error:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchSubscription();
+  // }, []);
 
   const paymentPath = async () => {
     const userId = localStorage.getItem("userId");
