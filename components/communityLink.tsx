@@ -631,7 +631,7 @@ export default function CommunityLinkPageCopy({
           </button>
         </div>
       </div>
-      <div className="h-[calc(106vh)] overflow-y-auto flex flex-col bg-white">
+      <div className="h-[calc(106vh-50px)] overflow-y-auto flex flex-col bg-white">
         {" "}
         <table className="min-w-full text-sm border border-slate-200 border-collapse">
           <thead>
