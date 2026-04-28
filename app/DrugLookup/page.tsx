@@ -86,23 +86,22 @@ export default function DrugLookupLandingPage() {
     }
   }, []);
 
-
   // ── Fetch landing stats + trending ──
-useEffect(() => {
-  (async () => {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-lookup-landing`,
-      );
-      if (!res.ok) throw new Error("Failed");
-      const data = await res.json();
-      setLandingData(data);
-    } catch (err) {
-      console.error("Landing data error:", err);
-      setLandingData(null);
-    }
-  })();
-}, []);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-lookup-landing`,
+        );
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+        setLandingData(data);
+      } catch (err) {
+        console.error("Landing data error:", err);
+        setLandingData(null);
+      }
+    })();
+  }, []);
 
   // Autocomplete API with debounce
   useEffect(() => {
@@ -118,7 +117,19 @@ useEffect(() => {
         );
         if (!res.ok) throw new Error("Search failed");
         const data: { name: string; rx_count: number }[] = await res.json();
-        setSuggestions(data.map((d) => d.name));
+        // setSuggestions(data.map((d) => d.name));
+
+        setSuggestions(
+          data
+            .map((d) => d.name)
+            .filter(
+              (name) =>
+                name &&
+                name.length < 100 &&
+                !name.includes(",") &&
+                !name.includes("|"),
+            ),
+        );
       } catch (err) {
         console.error("Drug search error:", err);
         setSuggestions([]);
@@ -229,7 +240,9 @@ useEffect(() => {
                     What do you want to search today?
                   </h1>
                   <p className="text-center text-teal-100/80 text-sm md:text-base max-w-2xl mx-auto mb-10 leading-relaxed">
-                   AuditProRx Community-powered drug intelligence. Search the AuditProRx network for drug variants, NDC codes, payer performance, and unit pricing all in one place.
+                    AuditProRx Community-powered drug intelligence. Search the
+                    AuditProRx network for drug variants, NDC codes, payer
+                    performance, and unit pricing all in one place.
                   </p>
 
                   {/* Search bar */}
@@ -283,116 +296,125 @@ useEffect(() => {
                     </div>
 
                     {/* Autocomplete dropdown */}
-                    {focused && (suggestions.length > 0 || recentSearches.length > 0) && (
-                      <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50">
-                        {suggestions.length > 0 && (
-                          <div className="py-2">
-                            <p className="px-4 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                              <Sparkles className="w-3 h-3" />
-                              Suggestions
-                            </p>
-                            {suggestions.map((s) => (
-                              <button
-                                key={s}
-                                onClick={() => fillSearch(s)}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-teal-50/70 text-left group transition-colors"
-                              >
-                                <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-teal-600" />
-                                <span className="text-sm text-slate-700 group-hover:text-teal-800 font-medium">
-                                  {s}
-                                </span>
-                                <ArrowRight className="w-3.5 h-3.5 text-slate-300 ml-auto group-hover:text-teal-500 group-hover:translate-x-0.5 transition-transform" />
-                              </button>
-                            ))}
-                          </div>
-                        )}
-
-                        {suggestions.length === 0 && recentSearches.length > 0 && (
-                          <div className="py-2">
-                            <div className="px-4 py-1.5 flex items-center justify-between">
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                <Clock className="w-3 h-3" />
-                                Recent Searches
+                    {focused &&
+                      (suggestions.length > 0 || recentSearches.length > 0) && (
+                        <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50">
+                          {suggestions.length > 0 && (
+                            <div className="py-2">
+                              <p className="px-4 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                <Sparkles className="w-3 h-3" />
+                                Suggestions
                               </p>
-                              <button
-                                onClick={clearRecent}
-                                className="text-[10px] font-semibold text-slate-400 hover:text-red-500"
-                              >
-                                Clear
-                              </button>
+                              {suggestions.map((s) => (
+                                <button
+                                  key={s}
+                                  onClick={() => fillSearch(s)}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-teal-50/70 text-left group transition-colors"
+                                >
+                                  <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-teal-600" />
+                                  <span className="text-sm text-slate-700 group-hover:text-teal-800 font-medium">
+                                    {s}
+                                  </span>
+                                  <ArrowRight className="w-3.5 h-3.5 text-slate-300 ml-auto group-hover:text-teal-500 group-hover:translate-x-0.5 transition-transform" />
+                                </button>
+                              ))}
                             </div>
-                            {recentSearches.map((s) => (
-                              <button
-                                key={s}
-                                onClick={() => fillSearch(s)}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-left group transition-colors"
-                              >
-                                <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="text-sm text-slate-700 font-medium">
-                                  {s}
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
+
+                          {suggestions.length === 0 &&
+                            recentSearches.length > 0 && (
+                              <div className="py-2">
+                                <div className="px-4 py-1.5 flex items-center justify-between">
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                    <Clock className="w-3 h-3" />
+                                    Recent Searches
+                                  </p>
+                                  <button
+                                    onClick={clearRecent}
+                                    className="text-[10px] font-semibold text-slate-400 hover:text-red-500"
+                                  >
+                                    Clear
+                                  </button>
+                                </div>
+                                {recentSearches.map((s) => (
+                                  <button
+                                    key={s}
+                                    onClick={() => fillSearch(s)}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-left group transition-colors"
+                                  >
+                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                    <span className="text-sm text-slate-700 font-medium">
+                                      {s}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                        </div>
+                      )}
                   </div>
 
                   {/* Trending searches */}
                   {/* Trending searches (live from DB) */}
-<div className="max-w-3xl mx-auto mt-8">
-  <div className="flex items-start gap-3 flex-wrap justify-center">
-    <span className="text-[11px] font-bold text-teal-100/70 uppercase tracking-widest flex items-center gap-1.5 pt-1.5">
-      <TrendingUp className="w-3 h-3" />
-      Trending
-    </span>
-    <div className="flex items-center gap-2 flex-wrap justify-center">
-      {(landingData?.trending?.length
-        ? landingData.trending.map((t) => t.query)
-        : FALLBACK_TRENDING
-      ).map((term) => (
-        <button
-          key={term}
-          onClick={() => fillSearch(term)}
-          className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/40 text-[12px] font-semibold text-white transition-all hover:scale-105"
-        >
-          {term}
-        </button>
-      ))}
-    </div>
-  </div>
-</div>
+                  <div className="max-w-3xl mx-auto mt-8">
+                    <div className="flex items-start gap-3 flex-wrap justify-center">
+                      <span className="text-[11px] font-bold text-teal-100/70 uppercase tracking-widest flex items-center gap-1.5 pt-1.5">
+                        <TrendingUp className="w-3 h-3" />
+                        Trending
+                      </span>
+                      <div className="flex items-center gap-2 flex-wrap justify-center">
+                        {(landingData?.trending?.length
+                          ? landingData.trending.map((t) => t.query)
+                          : FALLBACK_TRENDING
+                        ).map((term) => (
+                          <button
+                            key={term}
+                            onClick={() => fillSearch(term)}
+                            className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/40 text-[12px] font-semibold text-white transition-all hover:scale-105"
+                          >
+                            {term}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Stats strip pinned to bottom of hero */}
               {/* Stats strip (live from DB) */}
-<div className="relative border-t border-white/10 bg-white/5 backdrop-blur-sm">
-  <div className="max-w-6xl mx-auto px-8 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-    {(["drugs_indexed", "ndc_codes", "total_prescriptions", "pharmacies"] as const).map((key) => {
-      const meta = STAT_META[key];
-      const Icon = meta.icon;
-      const value = landingData?.stats?.[key];
+              <div className="relative border-t border-white/10 bg-white/5 backdrop-blur-sm">
+                <div className="max-w-6xl mx-auto px-8 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {(
+                    [
+                      "drugs_indexed",
+                      "ndc_codes",
+                      "total_prescriptions",
+                      "pharmacies",
+                    ] as const
+                  ).map((key) => {
+                    const meta = STAT_META[key];
+                    const Icon = meta.icon;
+                    const value = landingData?.stats?.[key];
 
-      return (
-        <div key={key} className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
-            <Icon className="w-4 h-4 text-teal-300" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold text-teal-200/70 uppercase tracking-widest">
-              {meta.label}
-            </p>
-            <p className="text-sm font-extrabold text-white tabular-nums">
-              {formatStat(value)}
-            </p>
-          </div>
-        </div>
-      );
-    })}
-  </div>
-</div>
+                    return (
+                      <div key={key} className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-lg bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4 text-teal-300" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold text-teal-200/70 uppercase tracking-widest">
+                            {meta.label}
+                          </p>
+                          <p className="text-sm font-extrabold text-white tabular-nums">
+                            {formatStat(value)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </section>
           </div>
         </div>

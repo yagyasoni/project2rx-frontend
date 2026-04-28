@@ -110,6 +110,10 @@ function DrugLookupResultsInner() {
   const [communityDrugName, setCommunityDrugName] = useState<string | null>(
     null,
   );
+  const [sortConfig, setSortConfig] = useState({
+    key: "rx_count",
+    direction: "desc",
+  });
 
   // ── Sync form state with URL when URL changes (back/forward navigation) ──
   useEffect(() => {
@@ -267,6 +271,117 @@ function DrugLookupResultsInner() {
   }, [data]);
 
   const displayIngredient = data?.ingredient ?? extractIngredient(urlQ);
+
+  // const sortedDrugs = useMemo(() => {
+  //   if (!data?.drugs) return [];
+
+  //   const num = (v: any) => Number(v ?? 0) || 0;
+
+  //   // let sortable = [...data.drugs];
+  //   let sortable = data.drugs.slice(); // instead of spread
+
+  //   if (sortConfig !== null) {
+  //     sortable.sort((a, b) => {
+  //       let aVal: any;
+  //       let bVal: any;
+
+  //       switch (sortConfig.key) {
+  //         case "drug_name":
+  //           aVal = a.drug_name?.toLowerCase();
+  //           bVal = b.drug_name?.toLowerCase();
+  //           break;
+  //         case "avg_qty_per_rx":
+  //           aVal = num(a.avg_qty_per_rx);
+  //           bVal = num(b.avg_qty_per_rx);
+  //           break;
+  //         case "avg_copay_per_rx":
+  //           aVal = num(a.avg_copay_per_rx);
+  //           bVal = num(b.avg_copay_per_rx);
+  //           break;
+  //         case "avg_ins_paid_per_rx":
+  //           aVal = num(a.avg_ins_paid_per_rx);
+  //           bVal = num(b.avg_ins_paid_per_rx);
+  //           break;
+  //         case "avg_ins_paid_per_unit":
+  //           aVal = num(a.avg_ins_paid_per_unit);
+  //           bVal = num(b.avg_ins_paid_per_unit);
+  //           break;
+  //         case "rx_count":
+  //           aVal = num(a.rx_count);
+  //           bVal = num(b.rx_count);
+  //           break;
+  //         default:
+  //           return 0;
+  //       }
+
+  //       if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+  //       if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+  //       return 0;
+  //     });
+  //   }
+
+  //   return sortable;
+  // }, [data, sortConfig]);
+
+  const sortedDrugs = useMemo(() => {
+    if (!data?.drugs) return [];
+
+    const num = (v: any) => Number(v ?? 0) || 0;
+
+    return [...data.drugs].sort((a, b) => {
+      let aVal: any;
+      let bVal: any;
+
+      switch (sortConfig.key) {
+        case "drug_name":
+          aVal = a.drug_name?.toLowerCase() ?? "";
+          bVal = b.drug_name?.toLowerCase() ?? "";
+          break;
+        case "avg_qty_per_rx":
+          aVal = num(a.avg_qty_per_rx);
+          bVal = num(b.avg_qty_per_rx);
+          break;
+        case "avg_copay_per_rx":
+          aVal = num(a.avg_copay_per_rx);
+          bVal = num(b.avg_copay_per_rx);
+          break;
+        case "avg_ins_paid_per_rx":
+          aVal = num(a.avg_ins_paid_per_rx);
+          bVal = num(b.avg_ins_paid_per_rx);
+          break;
+        case "avg_ins_paid_per_unit":
+          aVal = num(a.avg_ins_paid_per_unit);
+          bVal = num(b.avg_ins_paid_per_unit);
+          break;
+        case "rx_count":
+          aVal = num(a.rx_count);
+          bVal = num(b.rx_count);
+          break;
+        default:
+          return 0;
+      }
+
+      return sortConfig.direction === "asc"
+        ? aVal > bVal
+          ? 1
+          : -1
+        : aVal < bVal
+          ? 1
+          : -1;
+    });
+  }, [data?.drugs, sortConfig]);
+
+  const handleSort = (key: string) => {
+    setSortConfig((prev) => {
+      if (prev?.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { key, direction: "desc" }; // default DESC (better for metrics)
+    });
+  };
 
   return (
     <ProtectedRoute>
@@ -583,43 +698,99 @@ function DrugLookupResultsInner() {
                         <thead>
                           <tr style={{ background: "#1e293b" }}>
                             {[
-                              { l1: "Medications", l2: "", a: "left" as const },
                               {
+                                key: "drug_name",
+                                l1: "Medications",
+                                l2: "",
+                                a: "left",
+                              },
+                              {
+                                key: "avg_qty_per_rx",
                                 l1: "Avg Qty",
                                 l2: "per Rx",
-                                a: "right" as const,
+                                a: "right",
                               },
                               {
+                                key: "avg_copay_per_rx",
                                 l1: "Avg CoPay",
                                 l2: "per Rx",
-                                a: "right" as const,
+                                a: "right",
                               },
                               {
+                                key: "avg_ins_paid_per_rx",
                                 l1: "Avg Ins Paid",
                                 l2: "per Rx",
-                                a: "right" as const,
+                                a: "right",
                               },
                               {
+                                key: "avg_ins_paid_per_unit",
                                 l1: "Avg Ins Paid",
                                 l2: "per Unit",
-                                a: "right" as const,
+                                a: "right",
                               },
-                              { l1: "Rx Count", l2: "", a: "right" as const },
+                              {
+                                key: "rx_count",
+                                l1: "Rx Count",
+                                l2: "",
+                                a: "right",
+                              },
                             ].map((h, i) => (
+                              // <th
+                              //   key={i}
+                              //   style={{
+                              //     padding: "10px 12px",
+                              //     textAlign: h.a,
+                              //     fontSize: 10,
+                              //     fontWeight: 700,
+                              //     color: "#fff",
+                              //     letterSpacing: "0.06em",
+                              //     textTransform: "uppercase",
+                              //     lineHeight: 1.3,
+                              //   }}
+                              // >
+                              //   <div>{h.l1}</div>
+                              //   {h.l2 && (
+                              //     <div
+                              //       style={{
+                              //         color: "#94a3b8",
+                              //         fontWeight: 500,
+                              //         fontSize: 9,
+                              //       }}
+                              //     >
+                              //       {h.l2}
+                              //     </div>
+                              //   )}
+                              // </th>
                               <th
                                 key={i}
+                                onClick={() => handleSort(h.key)}
                                 style={{
                                   padding: "10px 12px",
-                                  textAlign: h.a,
+                                  textAlign: h.a as "left" | "right",
                                   fontSize: 10,
                                   fontWeight: 700,
                                   color: "#fff",
                                   letterSpacing: "0.06em",
                                   textTransform: "uppercase",
                                   lineHeight: 1.3,
+                                  cursor: "pointer",
                                 }}
                               >
-                                <div>{h.l1}</div>
+                                <div
+                                  className={`flex items-center gap-1 ${
+                                    h.a === "right"
+                                      ? "justify-end"
+                                      : "justify-start"
+                                  }`}
+                                >
+                                  <span>{h.l1}</span>
+
+                                  {sortConfig?.key === h.key &&
+                                    (sortConfig.direction === "asc"
+                                      ? "↑"
+                                      : "↓")}
+                                </div>
+
                                 {h.l2 && (
                                   <div
                                     style={{
@@ -636,7 +807,7 @@ function DrugLookupResultsInner() {
                           </tr>
                         </thead>
                         <tbody>
-                          {data.drugs.map((drug, di) => {
+                          {sortedDrugs.map((drug, di) => {
                             const isExp = expandedDrug === drug.drug_name;
                             return (
                               <React.Fragment key={drug.drug_name}>

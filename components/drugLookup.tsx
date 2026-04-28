@@ -121,9 +121,9 @@ function GroupSubTable({
                 <th className="border border-slate-200 px-2 py-1.5 text-center text-[10px] font-bold uppercase text-slate-500">
                   Rx's
                 </th>
-                <th className="border border-slate-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase text-slate-500">
+                {/* <th className="border border-slate-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase text-slate-500">
                   Rx Numbers
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody>
@@ -158,7 +158,7 @@ function GroupSubTable({
                       <td className="border border-slate-200 px-2 py-1.5 text-center text-slate-700">
                         {Number(g.estimated_rxs).toLocaleString()}
                       </td>
-                      <td className="border border-slate-200 px-2 py-1.5 align-top">
+                      {/* <td className="border border-slate-200 px-2 py-1.5 align-top">
                         {rxList.length > 0 ? (
                           <div className="flex flex-wrap gap-1 max-w-[400px] items-center">
                             {visible.map((rx) => (
@@ -181,7 +181,7 @@ function GroupSubTable({
                         ) : (
                           <span className="text-slate-300 text-xs">—</span>
                         )}
-                      </td>
+                      </td> */}
                     </tr>
                   );
                 })
