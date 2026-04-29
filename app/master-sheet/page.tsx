@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import {
@@ -66,6 +66,8 @@ const COL_CONFIG: Record<
   grp: { label: "GRP", width: 130 },
   pbm_name: { label: "PBM Name", width: 200 },
   payer_type: { label: "Payer Type", width: 160 },
+  // created_at: { label: "Created At", width: 180, readOnly: true },
+  updated_at: { label: "Last Edited", width: 180, readOnly: true },
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -96,6 +98,10 @@ export default function ExcelEditorModal({
     r: number;
     c: number;
     value: CellValue;
+  } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
   } | null>(null);
 
   useEffect(() => {
@@ -135,15 +141,47 @@ export default function ExcelEditorModal({
     }
   };
 
-  const filteredRows =
-    data?.rows.filter((row) => {
-      if (!searchQuery.trim()) return true;
+  const filteredRows = useMemo(() => {
+    if (!data) return [];
+
+    let rows = [...data.rows];
+
+    // 🔍 FILTER
+    if (searchQuery.trim()) {
       const colIdx = data.headers.indexOf(searchCol);
-      if (colIdx === -1) return true;
-      return String(row[colIdx] ?? "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-    }) ?? [];
+
+      rows = rows.filter((row) =>
+        String(row[colIdx] ?? "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()),
+      );
+    }
+
+    // 🔽 SORT
+    if (sortConfig) {
+      const colIdx = data.headers.indexOf(sortConfig.key);
+
+      rows.sort((a, b) => {
+        const valA = a[colIdx] ?? "";
+        const valB = b[colIdx] ?? "";
+
+        const numA = Number(valA);
+        const numB = Number(valB);
+
+        // number sort
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return sortConfig.direction === "asc" ? numA - numB : numB - numA;
+        }
+
+        // string sort
+        return sortConfig.direction === "asc"
+          ? String(valA).localeCompare(String(valB))
+          : String(valB).localeCompare(String(valA));
+      });
+    }
+
+    return rows;
+  }, [data, searchQuery, searchCol, sortConfig]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const pageRows = filteredRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -461,6 +499,21 @@ export default function ExcelEditorModal({
                     return (
                       <th
                         key={ci}
+                        onClick={() => {
+                          // if (COL_CONFIG[h]?.readOnly) return;
+                          if (h === "id") return; // only block ID, allow updated_at sorting
+
+                          setSortConfig((prev) => {
+                            if (prev?.key === h) {
+                              return {
+                                key: h,
+                                direction:
+                                  prev.direction === "asc" ? "desc" : "asc",
+                              };
+                            }
+                            return { key: h, direction: "asc" };
+                          });
+                        }}
                         style={{ minWidth: cfg.width, width: cfg.width }}
                         className="bg-muted px-3.5 py-2.5 border-b border-r border-border text-left text-[11px] font-bold uppercase tracking-wider text-foreground select-none whitespace-nowrap"
                       >
@@ -477,7 +530,15 @@ export default function ExcelEditorModal({
                                 : "text-foreground"
                             }
                           >
-                            {cfg.label}
+                            {/* {cfg.label} */}
+                            <div className="flex items-center gap-1">
+                              {cfg.label}
+                              {sortConfig?.key === h && (
+                                <span className="text-xs">
+                                  {sortConfig.direction === "asc" ? "↑" : "↓"}
+                                </span>
+                              )}
+                            </div>
                           </span>
                         </div>
                         <div className="text-[9px] text-muted-foreground mt-0.5 font-normal">
@@ -593,7 +654,44 @@ export default function ExcelEditorModal({
                               ) : isId ? (
                                 <span className="text-muted-foreground font-semibold text-[11px]">
                                   {cell !== null && cell !== "" ? (
-                                    cell
+                                    header === "updated_at" ? (
+                                      (() => {
+                                        const d = new Date(cell);
+                                        const timeStr = d.toLocaleTimeString(
+                                          "en-IN",
+                                          {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                            hour12: true,
+                                          },
+                                        );
+                                        const diffDays = Math.floor(
+                                          (Date.now() - d.getTime()) / 86400000,
+                                        );
+                                        const dateStr =
+                                          diffDays === 0
+                                            ? "Today"
+                                            : diffDays === 1
+                                              ? "Yesterday"
+                                              : d.toLocaleDateString("en-IN", {
+                                                  weekday: "short",
+                                                  day: "2-digit",
+                                                  month: "short",
+                                                  year:
+                                                    d.getFullYear() !==
+                                                    new Date().getFullYear()
+                                                      ? "numeric"
+                                                      : undefined,
+                                                });
+                                        return (
+                                          <span title={cell}>
+                                            {dateStr} · {timeStr}
+                                          </span>
+                                        );
+                                      })()
+                                    ) : (
+                                      cell
+                                    )
                                   ) : (
                                     <span className="text-muted-foreground/40">
                                       auto
