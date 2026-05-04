@@ -87,14 +87,6 @@ const SettingsLayout = () => {
             })}
           </nav>
 
-          {/* Footer */}
-          {!collapsed && (
-            <div className="px-4 py-3 border-t border-white/10">
-              <p className="text-[10px] text-slate-600 font-medium">
-                MedRx · v1.0
-              </p>
-            </div>
-          )}
 
           {/* Collapse toggle */}
           <button

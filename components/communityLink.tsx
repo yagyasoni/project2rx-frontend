@@ -956,10 +956,8 @@ export default function CommunityLinkPageCopy({
 
   const sortedData = useMemo(() => {
     if (!sortConfig.key) return communityData;
-
     const key = sortConfig.key;
     const direction = sortConfig.direction ?? "asc";
-
     return [...communityData].sort((a, b) => {
       let valA = a[key];
       let valB = b[key];

@@ -231,8 +231,8 @@ const AuditWizard = ({
 
   // Step 3 state
   const [inventoryFile, setInventoryFile] = useState<File | null>(null);
-  const [excludeTransferred, setExcludeTransferred] = useState(false);
-  const [excludeUnbilled, setExcludeUnbilled] = useState(false);
+const [excludeTransferred, setExcludeTransferred] = useState(true);
+const [excludeUnbilled, setExcludeUnbilled] = useState(true);
 
   // Step 4 state
   const [wholesalers, setWholesalers] = useState<Wholesaler[]>(defaultWholesalers);

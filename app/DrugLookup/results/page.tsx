@@ -23,7 +23,7 @@ import {
   RotateCcw,
   ExternalLink,
 } from "lucide-react";
-import DrugLookupComponent from "@/components/drugLookup";
+// import DrugLookupComponent from "@/components/drugLookup";
 import CommunityLinkPageCopy from "@/components/communityLink";
 
 interface DrugLookupNdc {
@@ -385,7 +385,7 @@ function DrugLookupResultsInner() {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute role = "user">
       <div className="relative w-full bg-slate-50 min-h-screen">
         <div className="relative h-full w-full flex">
           <div
