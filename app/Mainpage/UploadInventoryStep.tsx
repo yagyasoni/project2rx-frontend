@@ -389,6 +389,8 @@ const UploadInventoryStep = ({
     const formData = new FormData();
     formData.append("file", inventoryFile);
     formData.append("headerMapping", JSON.stringify(fieldMapping));
+    formData.append("excludeTransferred", String(excludeTransferred));
+    formData.append("excludeUnbilled", String(excludeUnbilled));
 
     setUploadProgress(0);
     setIsUploading(true);

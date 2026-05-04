@@ -80,6 +80,9 @@ const NameReportStep = ({
               I agree to the Terms of Service.{" "}
               <a
                 href="/terms-of-service"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
                 className="text-foreground underline font-medium hover:text-primary"
               >
                 Read more

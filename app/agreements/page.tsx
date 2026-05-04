@@ -1348,12 +1348,37 @@ const SupplierStep = ({
   onToggle: (name: string) => void;
 }) => {
   const [query, setQuery] = useState("");
+  const [allSuppliers, setAllSuppliers] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers`
+        );
+        // res.data is [{ id, name }, ...] — extract just names
+        const names = res.data
+          .map((s: { name: string }) => s.name)
+          .filter(Boolean)
+          .sort();
+        setAllSuppliers(names);
+      } catch (err) {
+        console.error("Failed to fetch suppliers:", err);
+        toast.error("Failed to load supplier list");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSuppliers();
+  }, []);
+
   const filtered = useMemo(
     () =>
-      ALL_SUPPLIERS.filter((s) =>
+      allSuppliers.filter((s) =>
         s.toLowerCase().includes(query.toLowerCase()),
       ),
-    [query],
+    [query, allSuppliers],
   );
 
   return (
@@ -1406,7 +1431,12 @@ const SupplierStep = ({
               scrollbarColor: "#e2e8f0 transparent",
             }}
           >
-            {filtered.map((name, i) => {
+            {loading && (
+              <div className="py-8 text-center text-xs text-slate-400">
+                Loading suppliers...
+              </div>
+            )}
+            {!loading && filtered.map((name, i) => {
               const isChecked = selected.includes(name);
               return (
                 <div
@@ -1705,8 +1735,7 @@ const AgreementsPage = () => {
         const userId = localStorage.getItem("userId");
         if (userId) {
           await axios.post(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}
-/api/user-suppliers/${userId}`,
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user-suppliers/${userId}`,
             {
               supplierNames: selectedSuppliers,
             },

@@ -31,16 +31,6 @@ const GUIDES: Guide[] = [
     id: "kinray",
     name: "Kinray",
     category: "wholesaler",
-    folder: "kinray",
-    stepCount: 5,
-    color: "bg-emerald-50",
-    accent: "text-emerald-600",
-    border: "border-emerald-100",
-  },
-  {
-    id: "kinray1",
-    name: "Kinray 1",
-    category: "wholesaler",
     folder: "kinray1",
     stepCount: 5,
     color: "bg-emerald-50",
@@ -51,16 +41,6 @@ const GUIDES: Guide[] = [
     id: "mckesson",
     name: "McKesson",
     category: "wholesaler",
-    folder: "mckesson",
-    stepCount: 6,
-    color: "bg-violet-50",
-    accent: "text-violet-600",
-    border: "border-violet-100",
-  },
-  {
-    id: "mckesson1",
-    name: "McKesson 1",
-    category: "wholesaler",
     folder: "mckesson1",
     stepCount: 6,
     color: "bg-violet-50",
@@ -70,16 +50,6 @@ const GUIDES: Guide[] = [
   {
     id: "primerx",
     name: "PrimeRx",
-    category: "pharmacy",
-    folder: "primerx",
-    stepCount: 3,
-    color: "bg-orange-50",
-    accent: "text-orange-600",
-    border: "border-orange-100",
-  },
-  {
-    id: "primerx1",
-    name: "PrimeRx 1",
     category: "pharmacy",
     folder: "primerx1",
     stepCount: 3,
@@ -211,7 +181,7 @@ export default function HowToPage() {
   const pharmacies = GUIDES.filter((g) => g.category === "pharmacy");
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute role = "user">
       <div className="flex h-screen bg-slate-50">
         <Sidebar
           sidebarOpen={sidebarOpen}

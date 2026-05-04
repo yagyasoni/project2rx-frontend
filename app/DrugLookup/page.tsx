@@ -13,7 +13,7 @@ import {
   Sparkles,
   ArrowRight,
   Database,
-  Users,
+  FileText,
   Receipt,
 } from "lucide-react";
 
@@ -36,8 +36,8 @@ const FALLBACK_TRENDING = [
 const STAT_META: Record<string, { label: string; icon: any }> = {
   drugs_indexed: { label: "Drugs Indexed", icon: Pill },
   ndc_codes: { label: "NDC Codes", icon: Database },
-  total_prescriptions: { label: "Prescriptions", icon: Receipt },
-  pharmacies: { label: "Pharmacies", icon: Users },
+  total_prescriptions: { label: "Billed Amount", icon: Receipt },
+  unique_rx: { label: "Unique Rx Count", icon: FileText },
 };
 
 // ─── Smart number formatter (847 / 45.9K+ / 1.2M+) ───────────────────────
@@ -54,7 +54,7 @@ type LandingData = {
     drugs_indexed: number;
     ndc_codes: number;
     total_prescriptions: number;
-    pharmacies: number;
+    unique_rx: number;
   };
   trending: { query: string; hits: number }[];
 };
@@ -170,7 +170,7 @@ useEffect(() => {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute role = "user">
       <div className="relative w-full bg-white h-screen overflow-hidden">
         <div className="relative h-full w-full flex">
           {/* ── Sidebar ── */}
@@ -370,7 +370,7 @@ useEffect(() => {
               {/* Stats strip (live from DB) */}
 <div className="relative border-t border-white/10 bg-white/5 backdrop-blur-sm">
   <div className="max-w-6xl mx-auto px-8 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-    {(["drugs_indexed", "ndc_codes", "total_prescriptions", "pharmacies"] as const).map((key) => {
+    {(["drugs_indexed", "ndc_codes", "total_prescriptions", "unique_rx"] as const).map((key) => {
       const meta = STAT_META[key];
       const Icon = meta.icon;
       const value = landingData?.stats?.[key];

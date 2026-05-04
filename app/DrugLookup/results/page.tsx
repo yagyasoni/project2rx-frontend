@@ -9,7 +9,8 @@ import {
   BarChart3, DollarSign, Hash, Flame, ArrowDownCircle, ArrowUpCircle,
   Globe, Filter, RotateCcw, ExternalLink,
 } from "lucide-react";
-import DrugLookupComponent from "@/components/drugLookup";
+// import DrugLookupComponent from "@/components/drugLookup";
+import CommunityLinkPageCopy from "@/components/communityLink";
 
 interface DrugLookupNdc {
   drug_name: string; ndc: string; brand: string | null;
@@ -227,7 +228,7 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
   const displayIngredient = data?.ingredient ?? extractIngredient(urlQ);
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute role = "user">
       <div className="relative w-full bg-slate-50 min-h-screen">
         <div className="relative h-full w-full flex">
           <div
@@ -647,7 +648,7 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
       >
         <X className="w-4 h-4 text-slate-600" />
       </button>
-      <DrugLookupComponent
+      {/* <DrugLookupComponent
         ndcNumber={communityNdc}
         drugName={communityDrugName ?? undefined}
         mode="state"
@@ -657,7 +658,14 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
           grp: urlGrp || undefined,
           range: "last_90_days",
         }}
-      />
+      /> */}
+      <CommunityLinkPageCopy
+                ndcNumber={communityNdc}
+                drugName={communityDrugName ?? ""}
+                filterBin={urlBin || undefined}
+                filterPcn={urlPcn || undefined}
+                filterGrp={urlGrp || undefined}
+              />
     </div>
   </div>
 )}
