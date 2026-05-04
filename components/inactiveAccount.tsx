@@ -216,14 +216,6 @@ export default function InactiveAccount() {
         </p>
 
         <div className="mt-5 flex flex-col gap-2">
-          {/* ✅ SHOW PAYMENT BUTTON ONLY IF NO SUB */}
-          {/* {(paymentStatus === "no_subscription" ||
-            paymentStatus === "inactive" ||
-            paymentStatus === "canceled") && (
-            <Button className="w-full" onClick={paymentPath}>
-              Proceed with Payment
-            </Button>
-          )} */}
           {(paymentStatus === "no_subscription" ||
             paymentStatus === "inactive") &&
             status === "active" && (

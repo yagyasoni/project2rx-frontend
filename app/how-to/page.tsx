@@ -3,7 +3,13 @@
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { BookOpen, Building2, Pill, ChevronRight, ArrowLeft } from "lucide-react";
+import {
+  BookOpen,
+  Building2,
+  Pill,
+  ChevronRight,
+  ArrowLeft,
+} from "lucide-react";
 
 type Guide = {
   id: string;
@@ -108,7 +114,9 @@ function GuideDetail({ guide, onBack }: { guide: Guide; onBack: () => void }) {
           </button>
           <div className="w-px h-5 bg-slate-200" />
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl ${guide.color} ${guide.border} border flex items-center justify-center`}>
+            <div
+              className={`w-9 h-9 rounded-xl ${guide.color} ${guide.border} border flex items-center justify-center`}
+            >
               {guide.category === "wholesaler" ? (
                 <Building2 className={`w-4 h-4 ${guide.accent}`} />
               ) : (
@@ -116,7 +124,9 @@ function GuideDetail({ guide, onBack }: { guide: Guide; onBack: () => void }) {
               )}
             </div>
             <div>
-              <h1 className="text-base font-bold text-slate-900">{guide.name}</h1>
+              <h1 className="text-base font-bold text-slate-900">
+                {guide.name}
+              </h1>
               <p className="text-xs text-slate-400">{guide.stepCount} steps</p>
             </div>
           </div>
@@ -152,7 +162,8 @@ function GuideDetail({ guide, onBack }: { guide: Guide; onBack: () => void }) {
                   const parent = target.parentElement;
                   if (parent && !parent.querySelector(".img-error-msg")) {
                     const msg = document.createElement("div");
-                    msg.className = "img-error-msg flex items-center justify-center py-12 text-xs text-slate-400";
+                    msg.className =
+                      "img-error-msg flex items-center justify-center py-12 text-xs text-slate-400";
                     msg.innerText = `⚠ Image not found — place file at: public/how-to/${guide.folder}/${step}.png`;
                     parent.appendChild(msg);
                   }
@@ -184,7 +195,9 @@ function GuideCard({ guide, onClick }: { guide: Guide; onClick: () => void }) {
       onClick={onClick}
       className="group bg-white border border-gray-200 rounded-2xl p-5 text-left hover:border-gray-400 hover:shadow-md transition-all duration-200 flex items-center gap-4"
     >
-      <div className={`w-12 h-12 rounded-xl ${guide.color} ${guide.border} border flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+      <div
+        className={`w-12 h-12 rounded-xl ${guide.color} ${guide.border} border flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}
+      >
         {guide.category === "wholesaler" ? (
           <Building2 className={`w-5 h-5 ${guide.accent}`} />
         ) : (
@@ -221,7 +234,10 @@ export default function HowToPage() {
         />
 
         {activeGuide ? (
-          <GuideDetail guide={activeGuide} onBack={() => setActiveGuide(null)} />
+          <GuideDetail
+            guide={activeGuide}
+            onBack={() => setActiveGuide(null)}
+          />
         ) : (
           <main className="flex-1 overflow-auto">
             {/* Header */}
@@ -231,7 +247,9 @@ export default function HowToPage() {
                   <BookOpen className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">How To</h1>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    How To
+                  </h1>
                   <p className="text-sm text-slate-500 mt-0.5">
                     Step-by-step guides for downloading audit files
                   </p>
@@ -244,14 +262,20 @@ export default function HowToPage() {
               <section>
                 <div className="flex items-center gap-2 mb-4">
                   <Building2 className="w-4 h-4 text-slate-500" />
-                  <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Wholesalers</h2>
+                  <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                    Wholesalers
+                  </h2>
                   <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
                     {wholesalers.length}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {wholesalers.map((guide) => (
-                    <GuideCard key={guide.id} guide={guide} onClick={() => setActiveGuide(guide)} />
+                    <GuideCard
+                      key={guide.id}
+                      guide={guide}
+                      onClick={() => setActiveGuide(guide)}
+                    />
                   ))}
                 </div>
               </section>
@@ -260,14 +284,20 @@ export default function HowToPage() {
               <section>
                 <div className="flex items-center gap-2 mb-4">
                   <Pill className="w-4 h-4 text-slate-500" />
-                  <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Pharmacies</h2>
+                  <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                    Pharmacies
+                  </h2>
                   <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
                     {pharmacies.length}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {pharmacies.map((guide) => (
-                    <GuideCard key={guide.id} guide={guide} onClick={() => setActiveGuide(guide)} />
+                    <GuideCard
+                      key={guide.id}
+                      guide={guide}
+                      onClick={() => setActiveGuide(guide)}
+                    />
                   ))}
                 </div>
               </section>
