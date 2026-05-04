@@ -3234,8 +3234,8 @@ export default function InventoryReportPage() {
                     </button>
                   </div>
                   <div className="pt-3">
-                    <CommunityLinkPageCopy 
-                      ndcNumber={activeDrug.ndc} 
+                    <CommunityLinkPageCopy
+                      ndcNumber={activeDrug.ndc}
                       drugName={activeDrug.drugName}
                     />
                   </div>

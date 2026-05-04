@@ -5,23 +5,45 @@ import { useRouter, useSearchParams } from "next/navigation";
 import AppSidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
-  Search, X, ChevronDown, ArrowLeft, Sparkles, TrendingUp, Pill,
-  BarChart3, DollarSign, Hash, Flame, ArrowDownCircle, ArrowUpCircle,
-  Globe, Filter, RotateCcw, ExternalLink,
+  Search,
+  X,
+  ChevronDown,
+  ArrowLeft,
+  Sparkles,
+  TrendingUp,
+  Pill,
+  BarChart3,
+  DollarSign,
+  Hash,
+  Flame,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Globe,
+  Filter,
+  RotateCcw,
+  ExternalLink,
 } from "lucide-react";
 // import DrugLookupComponent from "@/components/drugLookup";
 import CommunityLinkPageCopy from "@/components/communityLink";
 
 interface DrugLookupNdc {
-  drug_name: string; ndc: string; brand: string | null;
-  rx_count: number; avg_qty_per_rx: number;
-  avg_copay_per_rx: number | null; avg_ins_paid_per_rx: number;
+  drug_name: string;
+  ndc: string;
+  brand: string | null;
+  rx_count: number;
+  avg_qty_per_rx: number;
+  avg_copay_per_rx: number | null;
+  avg_ins_paid_per_rx: number;
   avg_ins_paid_per_unit: number;
 }
 interface DrugLookupDrug {
-  drug_name: string; brand: string | null; rx_count: number;
-  avg_qty_per_rx: number; avg_copay_per_rx: number | null;
-  avg_ins_paid_per_rx: number; avg_ins_paid_per_unit: number;
+  drug_name: string;
+  brand: string | null;
+  rx_count: number;
+  avg_qty_per_rx: number;
+  avg_copay_per_rx: number | null;
+  avg_ins_paid_per_rx: number;
+  avg_ins_paid_per_unit: number;
   ndcs: DrugLookupNdc[];
 }
 interface DrugLookupResponse {
@@ -86,7 +108,13 @@ function DrugLookupResultsInner() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [activePanel, setActivePanel] = useState<string | null>(null);
 
-const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
+  const [communityDrugName, setCommunityDrugName] = useState<string | null>(
+    null,
+  );
+  const [sortConfig, setSortConfig] = useState({
+    key: "rx_count",
+    direction: "desc",
+  });
 
   // ── Sync form state with URL when URL changes (back/forward navigation) ──
   useEffect(() => {
@@ -157,7 +185,10 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
   // ── Click-outside for autocomplete ──
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (drugNameRef.current && !drugNameRef.current.contains(e.target as Node)) {
+      if (
+        drugNameRef.current &&
+        !drugNameRef.current.contains(e.target as Node)
+      ) {
         setDrugNameFocused(false);
       }
     };
@@ -212,20 +243,146 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
     const drugs = data.drugs;
     const num = (v: any) => Number(v ?? 0) || 0;
     const totalRxs = drugs.reduce((s, d) => s + num(d.rx_count), 0);
-    const totalQty = drugs.reduce((s, d) => s + num(d.avg_qty_per_rx) * num(d.rx_count), 0);
-    const totalInsPaid = drugs.reduce((s, d) => s + num(d.avg_ins_paid_per_rx) * num(d.rx_count), 0);
+    const totalQty = drugs.reduce(
+      (s, d) => s + num(d.avg_qty_per_rx) * num(d.rx_count),
+      0,
+    );
+    const totalInsPaid = drugs.reduce(
+      (s, d) => s + num(d.avg_ins_paid_per_rx) * num(d.rx_count),
+      0,
+    );
     const weightedAvgPerUnit = totalQty > 0 ? totalInsPaid / totalQty : 0;
     const weightedAvgQty = totalRxs > 0 ? totalQty / totalRxs : 0;
     const weightedAvgInsPerRx = totalRxs > 0 ? totalInsPaid / totalRxs : 0;
     const byRx = [...drugs].sort((a, b) => num(b.rx_count) - num(a.rx_count));
-    const byUnit = [...drugs].sort((a, b) => num(b.avg_ins_paid_per_unit) - num(a.avg_ins_paid_per_unit));
+    const byUnit = [...drugs].sort(
+      (a, b) => num(b.avg_ins_paid_per_unit) - num(a.avg_ins_paid_per_unit),
+    );
     return {
-      totalRxs, totalQty, totalInsPaid, weightedAvgPerUnit, weightedAvgQty, weightedAvgInsPerRx,
-      mostPrescribed: byRx[0], highestUnit: byUnit[0], lowestUnit: byUnit[byUnit.length - 1],
+      totalRxs,
+      totalQty,
+      totalInsPaid,
+      weightedAvgPerUnit,
+      weightedAvgQty,
+      weightedAvgInsPerRx,
+      mostPrescribed: byRx[0],
+      highestUnit: byUnit[0],
+      lowestUnit: byUnit[byUnit.length - 1],
     };
   }, [data]);
 
   const displayIngredient = data?.ingredient ?? extractIngredient(urlQ);
+
+  // const sortedDrugs = useMemo(() => {
+  //   if (!data?.drugs) return [];
+
+  //   const num = (v: any) => Number(v ?? 0) || 0;
+
+  //   // let sortable = [...data.drugs];
+  //   let sortable = data.drugs.slice(); // instead of spread
+
+  //   if (sortConfig !== null) {
+  //     sortable.sort((a, b) => {
+  //       let aVal: any;
+  //       let bVal: any;
+
+  //       switch (sortConfig.key) {
+  //         case "drug_name":
+  //           aVal = a.drug_name?.toLowerCase();
+  //           bVal = b.drug_name?.toLowerCase();
+  //           break;
+  //         case "avg_qty_per_rx":
+  //           aVal = num(a.avg_qty_per_rx);
+  //           bVal = num(b.avg_qty_per_rx);
+  //           break;
+  //         case "avg_copay_per_rx":
+  //           aVal = num(a.avg_copay_per_rx);
+  //           bVal = num(b.avg_copay_per_rx);
+  //           break;
+  //         case "avg_ins_paid_per_rx":
+  //           aVal = num(a.avg_ins_paid_per_rx);
+  //           bVal = num(b.avg_ins_paid_per_rx);
+  //           break;
+  //         case "avg_ins_paid_per_unit":
+  //           aVal = num(a.avg_ins_paid_per_unit);
+  //           bVal = num(b.avg_ins_paid_per_unit);
+  //           break;
+  //         case "rx_count":
+  //           aVal = num(a.rx_count);
+  //           bVal = num(b.rx_count);
+  //           break;
+  //         default:
+  //           return 0;
+  //       }
+
+  //       if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+  //       if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+  //       return 0;
+  //     });
+  //   }
+
+  //   return sortable;
+  // }, [data, sortConfig]);
+
+  const sortedDrugs = useMemo(() => {
+    if (!data?.drugs) return [];
+
+    const num = (v: any) => Number(v ?? 0) || 0;
+
+    return [...data.drugs].sort((a, b) => {
+      let aVal: any;
+      let bVal: any;
+
+      switch (sortConfig.key) {
+        case "drug_name":
+          aVal = a.drug_name?.toLowerCase() ?? "";
+          bVal = b.drug_name?.toLowerCase() ?? "";
+          break;
+        case "avg_qty_per_rx":
+          aVal = num(a.avg_qty_per_rx);
+          bVal = num(b.avg_qty_per_rx);
+          break;
+        case "avg_copay_per_rx":
+          aVal = num(a.avg_copay_per_rx);
+          bVal = num(b.avg_copay_per_rx);
+          break;
+        case "avg_ins_paid_per_rx":
+          aVal = num(a.avg_ins_paid_per_rx);
+          bVal = num(b.avg_ins_paid_per_rx);
+          break;
+        case "avg_ins_paid_per_unit":
+          aVal = num(a.avg_ins_paid_per_unit);
+          bVal = num(b.avg_ins_paid_per_unit);
+          break;
+        case "rx_count":
+          aVal = num(a.rx_count);
+          bVal = num(b.rx_count);
+          break;
+        default:
+          return 0;
+      }
+
+      return sortConfig.direction === "asc"
+        ? aVal > bVal
+          ? 1
+          : -1
+        : aVal < bVal
+          ? 1
+          : -1;
+    });
+  }, [data?.drugs, sortConfig]);
+
+  const handleSort = (key: string) => {
+    setSortConfig((prev) => {
+      if (prev?.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { key, direction: "desc" }; // default DESC (better for metrics)
+    });
+  };
 
   return (
     <ProtectedRoute role = "user">
@@ -386,13 +543,25 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
                       Filtering by:
                     </span>
                     {urlBin && (
-                      <FilterChip label="BIN" value={urlBin} onRemove={() => removeOneFilter("bin")} />
+                      <FilterChip
+                        label="BIN"
+                        value={urlBin}
+                        onRemove={() => removeOneFilter("bin")}
+                      />
                     )}
                     {urlPcn && (
-                      <FilterChip label="PCN" value={urlPcn} onRemove={() => removeOneFilter("pcn")} />
+                      <FilterChip
+                        label="PCN"
+                        value={urlPcn}
+                        onRemove={() => removeOneFilter("pcn")}
+                      />
                     )}
                     {urlGrp && (
-                      <FilterChip label="Group" value={urlGrp} onRemove={() => removeOneFilter("grp")} />
+                      <FilterChip
+                        label="Group"
+                        value={urlGrp}
+                        onRemove={() => removeOneFilter("grp")}
+                      />
                     )}
                   </div>
                 )}
@@ -433,7 +602,9 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
 
               {!loading && error && (
                 <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
-                  <p className="text-sm font-semibold text-red-700">Something went wrong</p>
+                  <p className="text-sm font-semibold text-red-700">
+                    Something went wrong
+                  </p>
                   <p className="text-xs text-red-500 mt-1">{error}</p>
                 </div>
               )}
@@ -444,7 +615,8 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
                     <Search className="w-5 h-5 text-slate-400" />
                   </div>
                   <p className="text-sm font-semibold text-slate-600">
-                    No results for "{displayIngredient}"{hasActiveFilters ? " with those filters" : ""}
+                    No results for "{displayIngredient}"
+                    {hasActiveFilters ? " with those filters" : ""}
                   </p>
                   {hasActiveFilters && (
                     <button
@@ -462,11 +634,37 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
               {!loading && !error && data && data.drugs.length > 0 && agg && (
                 <>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    <KpiTile icon={Pill} label="Ingredient" value={displayIngredient} color="teal" isText />
-                    <KpiTile icon={Hash} label="Variants" value={String(data.drugs.length)} color="slate" />
-                    <KpiTile icon={BarChart3} label="Total Rx" value={Number(agg.totalRxs).toLocaleString()} color="cyan" />
-                    <KpiTile icon={DollarSign} label="Total Ins Paid" value={`$${Number(agg.totalInsPaid).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} color="emerald" />
-                    <KpiTile icon={TrendingUp} label="Avg / Unit" value={`$${Number(agg.weightedAvgPerUnit).toFixed(2)}`} color="indigo" />
+                    <KpiTile
+                      icon={Pill}
+                      label="Ingredient"
+                      value={displayIngredient}
+                      color="teal"
+                      isText
+                    />
+                    <KpiTile
+                      icon={Hash}
+                      label="Variants"
+                      value={String(data.drugs.length)}
+                      color="slate"
+                    />
+                    <KpiTile
+                      icon={BarChart3}
+                      label="Total Rx"
+                      value={Number(agg.totalRxs).toLocaleString()}
+                      color="cyan"
+                    />
+                    <KpiTile
+                      icon={DollarSign}
+                      label="Total Ins Paid"
+                      value={`$${Number(agg.totalInsPaid).toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
+                      color="emerald"
+                    />
+                    <KpiTile
+                      icon={TrendingUp}
+                      label="Avg / Unit"
+                      value={`$${Number(agg.weightedAvgPerUnit).toFixed(2)}`}
+                      color="indigo"
+                    />
                   </div>
 
                   {/* Medications Table */}
@@ -482,7 +680,14 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
                     </div>
 
                     <div className="overflow-x-auto">
-                      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", minWidth: 900 }}>
+                      <table
+                        style={{
+                          borderCollapse: "collapse",
+                          width: "100%",
+                          tableLayout: "fixed",
+                          minWidth: 900,
+                        }}
+                      >
                         <colgroup>
                           <col style={{ width: "34%" }} />
                           <col style={{ width: "11%" }} />
@@ -494,116 +699,419 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
                         <thead>
                           <tr style={{ background: "#1e293b" }}>
                             {[
-                              { l1: "Medications", l2: "", a: "left" as const },
-                              { l1: "Avg Qty", l2: "per Rx", a: "right" as const },
-                              { l1: "Avg CoPay", l2: "per Rx", a: "right" as const },
-                              { l1: "Avg Ins Paid", l2: "per Rx", a: "right" as const },
-                              { l1: "Avg Ins Paid", l2: "per Unit", a: "right" as const },
-                              { l1: "Rx Count", l2: "", a: "right" as const },
+                              {
+                                key: "drug_name",
+                                l1: "Medications",
+                                l2: "",
+                                a: "left",
+                              },
+                              {
+                                key: "avg_qty_per_rx",
+                                l1: "Avg Qty",
+                                l2: "per Rx",
+                                a: "right",
+                              },
+                              {
+                                key: "avg_copay_per_rx",
+                                l1: "Avg CoPay",
+                                l2: "per Rx",
+                                a: "right",
+                              },
+                              {
+                                key: "avg_ins_paid_per_rx",
+                                l1: "Avg Ins Paid",
+                                l2: "per Rx",
+                                a: "right",
+                              },
+                              {
+                                key: "avg_ins_paid_per_unit",
+                                l1: "Avg Ins Paid",
+                                l2: "per Unit",
+                                a: "right",
+                              },
+                              {
+                                key: "rx_count",
+                                l1: "Rx Count",
+                                l2: "",
+                                a: "right",
+                              },
                             ].map((h, i) => (
-                              <th key={i} style={{ padding: "10px 12px", textAlign: h.a, fontSize: 10, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase", lineHeight: 1.3 }}>
-                                <div>{h.l1}</div>
-                                {h.l2 && <div style={{ color: "#94a3b8", fontWeight: 500, fontSize: 9 }}>{h.l2}</div>}
+                              // <th
+                              //   key={i}
+                              //   style={{
+                              //     padding: "10px 12px",
+                              //     textAlign: h.a,
+                              //     fontSize: 10,
+                              //     fontWeight: 700,
+                              //     color: "#fff",
+                              //     letterSpacing: "0.06em",
+                              //     textTransform: "uppercase",
+                              //     lineHeight: 1.3,
+                              //   }}
+                              // >
+                              //   <div>{h.l1}</div>
+                              //   {h.l2 && (
+                              //     <div
+                              //       style={{
+                              //         color: "#94a3b8",
+                              //         fontWeight: 500,
+                              //         fontSize: 9,
+                              //       }}
+                              //     >
+                              //       {h.l2}
+                              //     </div>
+                              //   )}
+                              // </th>
+                              <th
+                                key={i}
+                                onClick={() => handleSort(h.key)}
+                                style={{
+                                  padding: "10px 12px",
+                                  textAlign: h.a as "left" | "right",
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  color: "#fff",
+                                  letterSpacing: "0.06em",
+                                  textTransform: "uppercase",
+                                  lineHeight: 1.3,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                <div
+                                  className={`flex items-center gap-1 ${
+                                    h.a === "right"
+                                      ? "justify-end"
+                                      : "justify-start"
+                                  }`}
+                                >
+                                  <span>{h.l1}</span>
+
+                                  {sortConfig?.key === h.key &&
+                                    (sortConfig.direction === "asc"
+                                      ? "↑"
+                                      : "↓")}
+                                </div>
+
+                                {h.l2 && (
+                                  <div
+                                    style={{
+                                      color: "#94a3b8",
+                                      fontWeight: 500,
+                                      fontSize: 9,
+                                    }}
+                                  >
+                                    {h.l2}
+                                  </div>
+                                )}
                               </th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {data.drugs.map((drug, di) => {
+                          {sortedDrugs.map((drug, di) => {
                             const isExp = expandedDrug === drug.drug_name;
                             return (
                               <React.Fragment key={drug.drug_name}>
                                 <tr
-                                  style={{ borderBottom: "1px solid #e2e8f0", background: isExp ? "#eef2ff" : di % 2 === 1 ? "#f8fafc" : "#fff", cursor: "pointer" }}
-                                  onClick={() => setExpandedDrug(isExp ? null : drug.drug_name)}
+                                  style={{
+                                    borderBottom: "1px solid #e2e8f0",
+                                    background: isExp
+                                      ? "#eef2ff"
+                                      : di % 2 === 1
+                                        ? "#f8fafc"
+                                        : "#fff",
+                                    cursor: "pointer",
+                                  }}
+                                  onClick={() =>
+                                    setExpandedDrug(
+                                      isExp ? null : drug.drug_name,
+                                    )
+                                  }
                                   className="hover:bg-teal-50/50 transition-colors"
                                 >
-                                  <td style={{ padding: "11px 12px", fontSize: 13 }}>
+                                  <td
+                                    style={{
+                                      padding: "11px 12px",
+                                      fontSize: 13,
+                                    }}
+                                  >
                                     <div className="flex items-center gap-2">
-                                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${isExp ? "" : "-rotate-90"}`} />
-                                      <span className="text-slate-400 tabular-nums text-[11px] shrink-0">{di + 1}.</span>
-                                      <span className="font-semibold text-slate-800 truncate">{drug.drug_name}</span>
+                                      <ChevronDown
+                                        className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${isExp ? "" : "-rotate-90"}`}
+                                      />
+                                      <span className="text-slate-400 tabular-nums text-[11px] shrink-0">
+                                        {di + 1}.
+                                      </span>
+                                      <span className="font-semibold text-slate-800 truncate">
+                                        {drug.drug_name}
+                                      </span>
                                       {brandPill(drug.brand)}
                                     </div>
                                   </td>
-                                  <td style={{ padding: "11px 12px", fontSize: 13, textAlign: "right" }}>
-                                    <span className="tabular-nums text-slate-700">{Number(drug.avg_qty_per_rx ?? 0).toFixed(0)}</span>
+                                  <td
+                                    style={{
+                                      padding: "11px 12px",
+                                      fontSize: 13,
+                                      textAlign: "right",
+                                    }}
+                                  >
+                                    <span className="tabular-nums text-slate-700">
+                                      {Number(drug.avg_qty_per_rx ?? 0).toFixed(
+                                        0,
+                                      )}
+                                    </span>
                                   </td>
-                                  <td style={{ padding: "11px 12px", fontSize: 13, textAlign: "right", background: "rgba(240,253,250,0.5)" }}>
-                                    <span className="tabular-nums text-slate-700">{drug.avg_copay_per_rx != null ? `$${Number(drug.avg_copay_per_rx).toFixed(2)}` : "—"}</span>
+                                  <td
+                                    style={{
+                                      padding: "11px 12px",
+                                      fontSize: 13,
+                                      textAlign: "right",
+                                      background: "rgba(240,253,250,0.5)",
+                                    }}
+                                  >
+                                    <span className="tabular-nums text-slate-700">
+                                      {drug.avg_copay_per_rx != null
+                                        ? `$${Number(drug.avg_copay_per_rx).toFixed(2)}`
+                                        : "—"}
+                                    </span>
                                   </td>
-                                  <td style={{ padding: "11px 12px", fontSize: 13, textAlign: "right", background: "rgba(240,253,250,0.5)" }}>
-                                    <span className="tabular-nums font-semibold text-slate-800">${Number(drug.avg_ins_paid_per_rx ?? 0).toFixed(2)}</span>
+                                  <td
+                                    style={{
+                                      padding: "11px 12px",
+                                      fontSize: 13,
+                                      textAlign: "right",
+                                      background: "rgba(240,253,250,0.5)",
+                                    }}
+                                  >
+                                    <span className="tabular-nums font-semibold text-slate-800">
+                                      $
+                                      {Number(
+                                        drug.avg_ins_paid_per_rx ?? 0,
+                                      ).toFixed(2)}
+                                    </span>
                                   </td>
-                                  <td style={{ padding: "11px 12px", fontSize: 13, textAlign: "right", background: "rgba(240,253,250,0.5)" }}>
-                                    <span className="tabular-nums text-slate-700">${Number(drug.avg_ins_paid_per_unit ?? 0).toFixed(2)}</span>
+                                  <td
+                                    style={{
+                                      padding: "11px 12px",
+                                      fontSize: 13,
+                                      textAlign: "right",
+                                      background: "rgba(240,253,250,0.5)",
+                                    }}
+                                  >
+                                    <span className="tabular-nums text-slate-700">
+                                      $
+                                      {Number(
+                                        drug.avg_ins_paid_per_unit ?? 0,
+                                      ).toFixed(2)}
+                                    </span>
                                   </td>
-                                  <td style={{ padding: "11px 12px", fontSize: 13, textAlign: "right", background: "rgba(236,254,255,0.5)" }}>
-                                    <span className="tabular-nums font-bold text-cyan-800">{Number(drug.rx_count ?? 0).toLocaleString()}</span>
+                                  <td
+                                    style={{
+                                      padding: "11px 12px",
+                                      fontSize: 13,
+                                      textAlign: "right",
+                                      background: "rgba(236,254,255,0.5)",
+                                    }}
+                                  >
+                                    <span className="tabular-nums font-bold text-cyan-800">
+                                      {Number(
+                                        drug.rx_count ?? 0,
+                                      ).toLocaleString()}
+                                    </span>
                                   </td>
                                 </tr>
 
-                                {isExp && drug.ndcs && drug.ndcs.map((ndc, ni) => (
-                                  <tr key={ndc.ndc} style={{ borderBottom: "1px solid #f1f5f9", background: ni % 2 === 1 ? "#f8fafc" : "#fff" }}>
-                                    <td style={{ padding: "8px 12px 8px 42px", fontSize: 12 }}>
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="text-teal-400 text-sm leading-none shrink-0">◦</span>
-                                        <span className="font-mono text-[11px] text-slate-600 tabular-nums">{ndc.ndc}</span>
-                                        {brandPill(ndc.brand)}
-                                        <button
-                                          onClick={(e) => {
-  e.stopPropagation();
-  setCommunityNdc(ndc.ndc);
-  setCommunityDrugName(drug.drug_name);
-}}
-                                          className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-[10px] font-semibold text-indigo-700 hover:text-indigo-900 transition-colors"
-                                        >
-                                          <Globe className="w-2.5 h-2.5" />
-                                          Community
-                                          <ExternalLink className="w-2.5 h-2.5" />
-                                        </button>
-                                      </div>
-                                    </td>
-                                    <td style={{ padding: "8px 12px", fontSize: 12, textAlign: "right" }}>
-                                      <span className="tabular-nums text-slate-600">{Number(ndc.avg_qty_per_rx ?? 0).toFixed(0)}</span>
-                                    </td>
-                                    <td style={{ padding: "8px 12px", fontSize: 12, textAlign: "right", background: "rgba(240,253,250,0.3)" }}>
-                                      <span className="tabular-nums text-slate-600">{ndc.avg_copay_per_rx != null ? `$${Number(ndc.avg_copay_per_rx).toFixed(2)}` : "—"}</span>
-                                    </td>
-                                    <td style={{ padding: "8px 12px", fontSize: 12, textAlign: "right", background: "rgba(240,253,250,0.3)" }}>
-                                      <span className="tabular-nums text-slate-700">${Number(ndc.avg_ins_paid_per_rx ?? 0).toFixed(2)}</span>
-                                    </td>
-                                    <td style={{ padding: "8px 12px", fontSize: 12, textAlign: "right", background: "rgba(240,253,250,0.3)" }}>
-                                      <span className="tabular-nums text-slate-600">${Number(ndc.avg_ins_paid_per_unit ?? 0).toFixed(2)}</span>
-                                    </td>
-                                    <td style={{ padding: "8px 12px", fontSize: 12, textAlign: "right", background: "rgba(236,254,255,0.3)" }}>
-                                      <span className="tabular-nums font-semibold text-cyan-700">{Number(ndc.rx_count ?? 0).toLocaleString()}</span>
-                                    </td>
-                                  </tr>
-                                ))}
+                                {isExp &&
+                                  drug.ndcs &&
+                                  drug.ndcs.map((ndc, ni) => (
+                                    <tr
+                                      key={ndc.ndc}
+                                      style={{
+                                        borderBottom: "1px solid #f1f5f9",
+                                        background:
+                                          ni % 2 === 1 ? "#f8fafc" : "#fff",
+                                      }}
+                                    >
+                                      <td
+                                        style={{
+                                          padding: "8px 12px 8px 42px",
+                                          fontSize: 12,
+                                        }}
+                                      >
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="text-teal-400 text-sm leading-none shrink-0">
+                                            ◦
+                                          </span>
+                                          <span className="font-mono text-[11px] text-slate-600 tabular-nums">
+                                            {ndc.ndc}
+                                          </span>
+                                          {brandPill(ndc.brand)}
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setCommunityNdc(ndc.ndc);
+                                              setCommunityDrugName(
+                                                drug.drug_name,
+                                              );
+                                            }}
+                                            className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-[10px] font-semibold text-indigo-700 hover:text-indigo-900 transition-colors"
+                                          >
+                                            <Globe className="w-2.5 h-2.5" />
+                                            Community
+                                            <ExternalLink className="w-2.5 h-2.5" />
+                                          </button>
+                                        </div>
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "8px 12px",
+                                          fontSize: 12,
+                                          textAlign: "right",
+                                        }}
+                                      >
+                                        <span className="tabular-nums text-slate-600">
+                                          {Number(
+                                            ndc.avg_qty_per_rx ?? 0,
+                                          ).toFixed(0)}
+                                        </span>
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "8px 12px",
+                                          fontSize: 12,
+                                          textAlign: "right",
+                                          background: "rgba(240,253,250,0.3)",
+                                        }}
+                                      >
+                                        <span className="tabular-nums text-slate-600">
+                                          {ndc.avg_copay_per_rx != null
+                                            ? `$${Number(ndc.avg_copay_per_rx).toFixed(2)}`
+                                            : "—"}
+                                        </span>
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "8px 12px",
+                                          fontSize: 12,
+                                          textAlign: "right",
+                                          background: "rgba(240,253,250,0.3)",
+                                        }}
+                                      >
+                                        <span className="tabular-nums text-slate-700">
+                                          $
+                                          {Number(
+                                            ndc.avg_ins_paid_per_rx ?? 0,
+                                          ).toFixed(2)}
+                                        </span>
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "8px 12px",
+                                          fontSize: 12,
+                                          textAlign: "right",
+                                          background: "rgba(240,253,250,0.3)",
+                                        }}
+                                      >
+                                        <span className="tabular-nums text-slate-600">
+                                          $
+                                          {Number(
+                                            ndc.avg_ins_paid_per_unit ?? 0,
+                                          ).toFixed(2)}
+                                        </span>
+                                      </td>
+                                      <td
+                                        style={{
+                                          padding: "8px 12px",
+                                          fontSize: 12,
+                                          textAlign: "right",
+                                          background: "rgba(236,254,255,0.3)",
+                                        }}
+                                      >
+                                        <span className="tabular-nums font-semibold text-cyan-700">
+                                          {Number(
+                                            ndc.rx_count ?? 0,
+                                          ).toLocaleString()}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
                               </React.Fragment>
                             );
                           })}
                         </tbody>
                         <tfoot>
-                          <tr style={{ background: "#f1f5f9", borderTop: "2px solid #cbd5e1" }}>
-                            <td style={{ padding: "12px", fontSize: 11, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                          <tr
+                            style={{
+                              background: "#f1f5f9",
+                              borderTop: "2px solid #cbd5e1",
+                            }}
+                          >
+                            <td
+                              style={{
+                                padding: "12px",
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: "#475569",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.06em",
+                              }}
+                            >
                               Totals / Weighted Avg
                             </td>
-                            <td style={{ padding: "12px", fontSize: 13, textAlign: "right" }}>
-                              <span className="tabular-nums font-bold text-slate-800">{Number(agg.weightedAvgQty).toFixed(0)}</span>
+                            <td
+                              style={{
+                                padding: "12px",
+                                fontSize: 13,
+                                textAlign: "right",
+                              }}
+                            >
+                              <span className="tabular-nums font-bold text-slate-800">
+                                {Number(agg.weightedAvgQty).toFixed(0)}
+                              </span>
                             </td>
-                            <td style={{ padding: "12px", fontSize: 13, textAlign: "right" }}>
-                              <span className="tabular-nums text-slate-400">—</span>
+                            <td
+                              style={{
+                                padding: "12px",
+                                fontSize: 13,
+                                textAlign: "right",
+                              }}
+                            >
+                              <span className="tabular-nums text-slate-400">
+                                —
+                              </span>
                             </td>
-                            <td style={{ padding: "12px", fontSize: 13, textAlign: "right" }}>
-                              <span className="tabular-nums font-bold text-slate-800">${Number(agg.weightedAvgInsPerRx).toFixed(2)}</span>
+                            <td
+                              style={{
+                                padding: "12px",
+                                fontSize: 13,
+                                textAlign: "right",
+                              }}
+                            >
+                              <span className="tabular-nums font-bold text-slate-800">
+                                ${Number(agg.weightedAvgInsPerRx).toFixed(2)}
+                              </span>
                             </td>
-                            <td style={{ padding: "12px", fontSize: 13, textAlign: "right" }}>
-                              <span className="tabular-nums font-bold text-emerald-700">${Number(agg.weightedAvgPerUnit).toFixed(2)}</span>
+                            <td
+                              style={{
+                                padding: "12px",
+                                fontSize: 13,
+                                textAlign: "right",
+                              }}
+                            >
+                              <span className="tabular-nums font-bold text-emerald-700">
+                                ${Number(agg.weightedAvgPerUnit).toFixed(2)}
+                              </span>
                             </td>
-                            <td style={{ padding: "12px", fontSize: 13, textAlign: "right" }}>
-                              <span className="tabular-nums font-extrabold text-cyan-800">{Number(agg.totalRxs).toLocaleString()}</span>
+                            <td
+                              style={{
+                                padding: "12px",
+                                fontSize: 13,
+                                textAlign: "right",
+                              }}
+                            >
+                              <span className="tabular-nums font-extrabold text-cyan-800">
+                                {Number(agg.totalRxs).toLocaleString()}
+                              </span>
                             </td>
                           </tr>
                         </tfoot>
@@ -619,9 +1127,27 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
                         Insights
                       </h3>
                       <div className="grid md:grid-cols-3 gap-3">
-                        <InsightCard icon={Flame} label="Most Prescribed" drugName={agg.mostPrescribed?.drug_name ?? "—"} subValue={`${Number(agg.mostPrescribed?.rx_count ?? 0).toLocaleString()} prescriptions`} accent="cyan" />
-                        <InsightCard icon={ArrowUpCircle} label="Highest $/Unit" drugName={agg.highestUnit?.drug_name ?? "—"} subValue={`$${Number(agg.highestUnit?.avg_ins_paid_per_unit ?? 0).toFixed(2)} / unit`} accent="red" />
-                        <InsightCard icon={ArrowDownCircle} label="Lowest $/Unit" drugName={agg.lowestUnit?.drug_name ?? "—"} subValue={`$${Number(agg.lowestUnit?.avg_ins_paid_per_unit ?? 0).toFixed(2)} / unit`} accent="emerald" />
+                        <InsightCard
+                          icon={Flame}
+                          label="Most Prescribed"
+                          drugName={agg.mostPrescribed?.drug_name ?? "—"}
+                          subValue={`${Number(agg.mostPrescribed?.rx_count ?? 0).toLocaleString()} prescriptions`}
+                          accent="cyan"
+                        />
+                        <InsightCard
+                          icon={ArrowUpCircle}
+                          label="Highest $/Unit"
+                          drugName={agg.highestUnit?.drug_name ?? "—"}
+                          subValue={`$${Number(agg.highestUnit?.avg_ins_paid_per_unit ?? 0).toFixed(2)} / unit`}
+                          accent="red"
+                        />
+                        <InsightCard
+                          icon={ArrowDownCircle}
+                          label="Lowest $/Unit"
+                          drugName={agg.lowestUnit?.drug_name ?? "—"}
+                          subValue={`$${Number(agg.lowestUnit?.avg_ins_paid_per_unit ?? 0).toFixed(2)} / unit`}
+                          accent="emerald"
+                        />
                       </div>
                     </div>
                   )}
@@ -633,42 +1159,48 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
 
         {/* ╔═══ Community modal (placeholder) ══════════════════════════ */}
         {communityNdc && (
-  <div
-    className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-    onClick={() => { setCommunityNdc(null); setCommunityDrugName(null); }}
-  >
-    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden max-h-[90vh] overflow-y-auto"
-    >
-      <button
-        onClick={() => { setCommunityNdc(null); setCommunityDrugName(null); }}
-        className="absolute top-4 right-4 z-10 h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
-      >
-        <X className="w-4 h-4 text-slate-600" />
-      </button>
-      {/* <DrugLookupComponent
-        ndcNumber={communityNdc}
-        drugName={communityDrugName ?? undefined}
-        mode="state"
-        filters={{
-          bin: urlBin || undefined,
-          pcn: urlPcn || undefined,
-          grp: urlGrp || undefined,
-          range: "last_90_days",
-        }}
-      /> */}
-      <CommunityLinkPageCopy
+          <div
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+            onClick={() => {
+              setCommunityNdc(null);
+              setCommunityDrugName(null);
+            }}
+          >
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative bg-white rounded-xs shadow-2xl max-w-[max-content] w-full overflow-hidden max-h-[90vh] p-12 overflow-y-auto"
+            >
+              <button
+                onClick={() => {
+                  setCommunityNdc(null);
+                  setCommunityDrugName(null);
+                }}
+                className="absolute top-4 right-4 z-10 h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4 text-slate-600" />
+              </button>
+              {/* <DrugLookupComponent
+                ndcNumber={communityNdc}
+                drugName={communityDrugName ?? undefined}
+                mode="state"
+                filters={{
+                  bin: urlBin || undefined,
+                  pcn: urlPcn || undefined,
+                  grp: urlGrp || undefined,
+                  range: "this_year",
+                }}
+              /> */}
+              <CommunityLinkPageCopy
                 ndcNumber={communityNdc}
                 drugName={communityDrugName ?? ""}
                 filterBin={urlBin || undefined}
                 filterPcn={urlPcn || undefined}
                 filterGrp={urlGrp || undefined}
               />
-    </div>
-  </div>
-)}
+            </div>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   );
@@ -678,7 +1210,15 @@ const [communityDrugName, setCommunityDrugName] = useState<string | null>(null);
 // Sub-components
 // ═══════════════════════════════════════════════════════════════════════════
 
-function FilterChip({ label, value, onRemove }: { label: string; value: string; onRemove: () => void }) {
+function FilterChip({
+  label,
+  value,
+  onRemove,
+}: {
+  label: string;
+  value: string;
+  onRemove: () => void;
+}) {
   return (
     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 border border-teal-200 text-[11px] font-semibold text-teal-800">
       <span className="text-teal-500">{label}:</span>
@@ -694,44 +1234,131 @@ function FilterChip({ label, value, onRemove }: { label: string; value: string; 
   );
 }
 
-const COLOR_MAP: Record<string, { bg: string; text: string; iconBg: string; iconBorder: string }> = {
-  teal: { bg: "linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%)", text: "#0f766e", iconBg: "#5eead4", iconBorder: "#14b8a6" },
-  cyan: { bg: "#ecfeff", text: "#0891b2", iconBg: "#cffafe", iconBorder: "#67e8f9" },
-  emerald: { bg: "#ecfdf5", text: "#059669", iconBg: "#d1fae5", iconBorder: "#6ee7b7" },
-  indigo: { bg: "#eef2ff", text: "#4338ca", iconBg: "#e0e7ff", iconBorder: "#a5b4fc" },
-  slate: { bg: "#ffffff", text: "#0f172a", iconBg: "#f1f5f9", iconBorder: "#e2e8f0" },
-  red: { bg: "#fef2f2", text: "#dc2626", iconBg: "#fee2e2", iconBorder: "#fca5a5" },
+const COLOR_MAP: Record<
+  string,
+  { bg: string; text: string; iconBg: string; iconBorder: string }
+> = {
+  teal: {
+    bg: "linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%)",
+    text: "#0f766e",
+    iconBg: "#5eead4",
+    iconBorder: "#14b8a6",
+  },
+  cyan: {
+    bg: "#ecfeff",
+    text: "#0891b2",
+    iconBg: "#cffafe",
+    iconBorder: "#67e8f9",
+  },
+  emerald: {
+    bg: "#ecfdf5",
+    text: "#059669",
+    iconBg: "#d1fae5",
+    iconBorder: "#6ee7b7",
+  },
+  indigo: {
+    bg: "#eef2ff",
+    text: "#4338ca",
+    iconBg: "#e0e7ff",
+    iconBorder: "#a5b4fc",
+  },
+  slate: {
+    bg: "#ffffff",
+    text: "#0f172a",
+    iconBg: "#f1f5f9",
+    iconBorder: "#e2e8f0",
+  },
+  red: {
+    bg: "#fef2f2",
+    text: "#dc2626",
+    iconBg: "#fee2e2",
+    iconBorder: "#fca5a5",
+  },
 };
 
-function KpiTile({ icon: Icon, label, value, color, isText }: { icon: any; label: string; value: string; color: string; isText?: boolean }) {
+function KpiTile({
+  icon: Icon,
+  label,
+  value,
+  color,
+  isText,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+  color: string;
+  isText?: boolean;
+}) {
   const c = COLOR_MAP[color] ?? COLOR_MAP.slate;
   return (
-    <div className="rounded-2xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow" style={{ background: c.bg }}>
+    <div
+      className="rounded-2xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+      style={{ background: c.bg }}
+    >
       <div className="flex items-center gap-2 mb-2">
-        <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: c.iconBg, border: `1px solid ${c.iconBorder}` }}>
+        <div
+          className="h-7 w-7 rounded-lg flex items-center justify-center"
+          style={{ background: c.iconBg, border: `1px solid ${c.iconBorder}` }}
+        >
           <Icon className="w-3.5 h-3.5" style={{ color: c.text }} />
         </div>
-        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: c.text }}>{label}</p>
+        <p
+          className="text-[10px] font-bold uppercase tracking-widest"
+          style={{ color: c.text }}
+        >
+          {label}
+        </p>
       </div>
-      <p className={`${isText ? "text-[15px]" : "text-xl"} font-extrabold tabular-nums leading-tight truncate`} style={{ color: c.text }} title={value}>
+      <p
+        className={`${isText ? "text-[15px]" : "text-xl"} font-extrabold tabular-nums leading-tight truncate`}
+        style={{ color: c.text }}
+        title={value}
+      >
         {value}
       </p>
     </div>
   );
 }
 
-function InsightCard({ icon: Icon, label, drugName, subValue, accent }: { icon: any; label: string; drugName: string; subValue: string; accent: string }) {
+function InsightCard({
+  icon: Icon,
+  label,
+  drugName,
+  subValue,
+  accent,
+}: {
+  icon: any;
+  label: string;
+  drugName: string;
+  subValue: string;
+  accent: string;
+}) {
   const c = COLOR_MAP[accent] ?? COLOR_MAP.slate;
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md hover:border-slate-300 transition-all">
       <div className="flex items-center gap-2 mb-2">
-        <div className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: c.iconBg, border: `1px solid ${c.iconBorder}` }}>
+        <div
+          className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: c.iconBg, border: `1px solid ${c.iconBorder}` }}
+        >
           <Icon className="w-3.5 h-3.5" style={{ color: c.text }} />
         </div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          {label}
+        </p>
       </div>
-      <p className="text-sm font-bold text-slate-900 truncate mb-1" title={drugName}>{drugName}</p>
-      <p className="text-[11px] tabular-nums font-semibold" style={{ color: c.text }}>{subValue}</p>
+      <p
+        className="text-sm font-bold text-slate-900 truncate mb-1"
+        title={drugName}
+      >
+        {drugName}
+      </p>
+      <p
+        className="text-[11px] tabular-nums font-semibold"
+        style={{ color: c.text }}
+      >
+        {subValue}
+      </p>
     </div>
   );
 }

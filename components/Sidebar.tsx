@@ -1235,7 +1235,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
@@ -1254,9 +1254,7 @@ import {
   MessageCircle,
   Boxes
 } from "lucide-react";
-import axios from "axios";
 import api from "@/lib/api";
-import { useRouter } from "next/navigation";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -1267,64 +1265,35 @@ interface SidebarProps {
 
 type Popup = "support" | "account" | "settings" | null;
 
-export default function Sidebar({
-  sidebarOpen,
-  setSidebarOpen,
-  activePanel,
-  setActivePanel,
-}: SidebarProps) {
+export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const router = useRouter();
-
   const pathname = usePathname();
-  const [showSupportPopup, setShowSupportPopup] = useState(false);
-  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+
   const [accountName, setAccountName] = useState("...");
-  const supportRef = useRef<HTMLDivElement>(null);
-  const accountRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const pharmacy = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-
-        const res = await api.get("/auth/pharmacy-details", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log(res.data);
-        localStorage.setItem(
-          "pharmacyName",
-          res?.data?.pharmacy?.pharmacy_name,
-        );
-        localStorage.setItem(
-          "pharmacyNameFor",
-          localStorage.getItem("userEmail") || "",
-        );
-        setAccountName(res?.data?.pharmacy?.pharmacy_name || "Account Name");
-      } catch (err) {
-        console.log("error");
-        setAccountName(localStorage.getItem("pharmacyName") || "Account Name");
-      }
-    };
-    const cachedEmail = localStorage.getItem("userEmail");
-    const cachedPharmacyFor = localStorage.getItem("pharmacyNameFor");
-    const cached = localStorage.getItem("pharmacyName");
-
-    if (cached && cachedPharmacyFor === cachedEmail) {
-      setAccountName(cached);
-    } else {
-      localStorage.removeItem("pharmacyName");
-      localStorage.removeItem("pharmacyNameFor");
-    }
-    pharmacy();
-  }, []);
-
   const [openPopup, setOpenPopup] = useState<Popup>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const toggle = (name: Popup) =>
     setOpenPopup((prev) => (prev === name ? null : name));
+
+  useEffect(() => {
+    const pharmacy = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await api.get("/auth/pharmacy-details", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const name = res?.data?.pharmacy?.pharmacy_name || "Account Name";
+
+        setAccountName(name);
+      } catch {
+        setAccountName(localStorage.getItem("pharmacyName") || "Account Name");
+      }
+    };
+
+    pharmacy();
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -1342,22 +1311,19 @@ export default function Sidebar({
   const isActive = (path: string) => pathname === path;
 
   const navClass = (path: string) =>
-    `w-full flex items-center gap-3 py-3 rounded-lg font-semibold transition-all duration-200
+    `w-full flex items-center gap-3 py-3 rounded-lg font-semibold transition-all duration-200 leading-5
      ${sidebarOpen ? "px-4" : "px-0 justify-center"}
      ${
        isActive(path)
-         ? "bg-gray-200/60 text-gray-700"
+         ? "bg-gray-200/60 text-gray-800"
          : "text-gray-700 hover:bg-gray-100"
      }`;
 
   const handleLogout = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
-
-      // Revoke refresh token on server
       await api.post("/auth/logout", { refreshToken });
     } catch {
-      // Even if API fails, still clear local storage and redirect
     } finally {
       localStorage.clear();
       router.push("/auth");
@@ -1374,8 +1340,19 @@ export default function Sidebar({
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           {sidebarOpen && (
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-gray-900">AuditProRx</span>
+            <div className="flex items-center gap-3">
+              {/* <button className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center bg-white hover:bg-gray-100 transition-colors">
+                <UserLock size={16} className="text-gray-700" />
+              </button> */}
+
+              <div className="flex flex-col items-center ml-12 leading-tight">
+                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                  AuditProRx
+                </span>
+                {/* <span className="ml-12 italic text-[12px] font-semibold text-gray-900 tracking-tight">
+                  AuditProRx
+                </span> */}
+              </div>
             </div>
           )}
           <button
@@ -1395,17 +1372,17 @@ export default function Sidebar({
       <nav className="flex-1 p-4 space-y-2">
         <Link href="/Mainpage" className={navClass("/Mainpage")}>
           <Layers className="w-5 h-5" />
-          {sidebarOpen && <span className="ml-3">Start Audit</span>}
+          {sidebarOpen && <span className="ml-2 text-[14px]">Start Audit</span>}
         </Link>
 
         <Link href="/ReportsPage" className={navClass("/ReportsPage")}>
           <FileText className="w-5 h-5" />
-          {sidebarOpen && <span className="ml-3">Reports</span>}
+          {sidebarOpen && <span className="ml-2 text-[14px]">Reports</span>}
         </Link>
 
         <Link href="/bin-search" className={navClass("/bin-search")}>
           <Search className="w-5 h-5" />
-          {sidebarOpen && <span className="ml-3">Bin Search</span>}
+          {sidebarOpen && <span className="ml-2 text-[14px]">Bin Search</span>}
         </Link>
 
         {/* Was: Tickets — now Drug Lookup */}
@@ -1419,17 +1396,21 @@ export default function Sidebar({
   {sidebarOpen && <span className="ml-3">Inventory View</span>}
 </Link>
 
-        
-
+        {/* <Link href="/marketplace" className={navClass("/marketplace")}>
+          <Store className="w-5 h-5" />
+          {sidebarOpen && (
+            <span className="ml-2 text-[14px]">Inventory View</span>
+          )}
+        </Link> */}
         <Link href="/how-to" className={navClass("/how-to")}>
           <HelpCircle className="w-5 h-5" />
-          {sidebarOpen && <span className="ml-3">How To</span>}
+          {sidebarOpen && <span className="ml-2 text-[14px]">How To</span>}
         </Link>
       </nav>
 
       {/* BOTTOM */}
-      <div className="border-t border-gray-200 p-4 space-y-2 " ref={bottomRef}>
-        {/* ── Customer Support ───────────────────────────────────────── */}
+      <div className="border-t border-gray-200 p-4 space-y-2" ref={bottomRef}>
+        {/* SUPPORT */}
         <div className="relative">
           <button
             onClick={() => toggle("support")}
@@ -1437,32 +1418,29 @@ export default function Sidebar({
               sidebarOpen ? "px-4" : "px-0 justify-center"
             } ${
               openPopup === "support"
-                ? "bg-gray-200/60 text-gray-700"
+                ? "bg-gray-200/60 text-gray-800"
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
-            <LifeBuoy className="w-5 h-5 shrink-0" />
+            <LifeBuoy className="w-5 h-5" />
             {sidebarOpen && (
-              <>
-                <span className="flex-1 text-left ml-3">Customer Support</span>
-                <ChevronRight className="w-4 h-4" />
-              </>
+              <span className="flex-1 text-left ml-2 text-[14px]">
+                Customer Support
+              </span>
             )}
           </button>
 
           {openPopup === "support" && sidebarOpen && (
             <div className="absolute left-full ml-2 bottom-0 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">
+              <div className="p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-semibold text-gray-900">
                     Contact Support
                   </h3>
-                  <button
+                  <X
+                    className="w-4 h-4 cursor-pointer text-gray-500"
                     onClick={() => setOpenPopup(null)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  />
                 </div>
                 <div className="space-y-3">
                   {/* <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
@@ -1510,99 +1488,63 @@ export default function Sidebar({
                       <MessageCircle className="w-5 h-5 text-green-600" />
                     </a>
                   </div>
+                  <Phone className="w-5 h-5 text-gray-600" />
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* ── Account Name ───────────────────────────────────────────── */}
+        {/* ACCOUNT */}
         <div className="relative">
           <button
             onClick={() => toggle("account")}
-            className={`w-full flex items-center gap-3 py-3 rounded-lg border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 ${
-              sidebarOpen ? "px-3" : "px-0 justify-center"
+            className={`w-full flex items-center gap-3 py-3 rounded-lg border-2 border-gray-200 hover:bg-gray-50 ${
+              sidebarOpen ? "px-3" : "justify-center"
             }`}
           >
-            <User className="w-5 h-5 text-gray-700 shrink-0" />
+            <User className="w-5 h-5 text-gray-700" />
             {sidebarOpen && (
-              <>
-                <div className="flex-1 text-left ml-3">
-                  <div className="text-sm font-semibold text-gray-900">
-                    Account Name
-                  </div>
-                  <div className="text-xs text-gray-500 truncate">
-                    {accountName}
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </>
+              <div className="ml-2">
+                <p className="text-xs text-gray-500">Account Name</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {accountName}
+                </p>
+              </div>
             )}
           </button>
 
           {openPopup === "account" && sidebarOpen && (
-            <div className="absolute left-full ml-2 bottom-0 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-3">
-              <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-gray-100">
-                <span className="text-sm font-semibold text-gray-900">
-                  {accountName}
-                </span>
-                <div className="w-6 h-6 rounded-full border-2 border-green-600 flex items-center justify-center shrink-0 ml-2">
-                  <svg
-                    className="w-3.5 h-3.5 text-green-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={3}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-              </div>
+            <div className="absolute left-full ml-2 bottom-0 w-64 bg-white border border-gray-200 rounded-lg shadow-xl p-3">
+              <p className="text-sm font-semibold">{accountName}</p>
             </div>
           )}
         </div>
 
-        {/* ── Settings ───────────────────────────────────────────────── */}
+        {/* SETTINGS */}
         <div className="relative">
           <button
             onClick={() => toggle("settings")}
-            className={`w-full flex items-center gap-3 py-3 rounded-lg font-semibold transition-all duration-200 ${
-              sidebarOpen ? "px-4" : "px-0 justify-center"
-            } ${
-              openPopup === "settings"
-                ? "bg-gray-100 text-gray-900"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`w-full flex items-center gap-3 py-3 rounded-lg font-semibold ${
+              sidebarOpen ? "px-4" : "justify-center"
+            } hover:bg-gray-100`}
           >
-            <Settings className="w-5 h-5 shrink-0" />
-            {sidebarOpen && (
-              <>
-                <span className="flex-1 text-left ml-3">Settings</span>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </>
-            )}
+            <Settings className="w-5 h-5" />
+            {sidebarOpen && <span className="ml-2 text-[14px]">Settings</span>}
           </button>
 
           {openPopup === "settings" && sidebarOpen && (
-            <div className="absolute left-full ml-2 bottom-0 w-52 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+            <div className="absolute left-full ml-2 bottom-0 w-52 bg-white border border-gray-200 rounded-lg shadow-xl">
               <Link
                 href="/settings"
-                className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                onClick={() => setOpenPopup(null)}
+                className="block px-4 gap-3 flex flex-col-2 py-3 text-sm hover:bg-gray-50"
               >
                 <Settings className="w-4 h-4" />
-                <span className="font-medium">Settings</span>
+                <span>Settings</span>
               </Link>
               <button
-                onClick={() => {
-                  setOpenPopup(null);
-                  handleLogout();
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
+                onClick={handleLogout}
+                className="w-full text-left flex flex-col-2 gap-3 px-4 py-3 text-sm border-t hover:bg-gray-50"
               >
                 <svg
                   className="w-4 h-4"
@@ -1617,32 +1559,34 @@ export default function Sidebar({
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                   />
                 </svg>
-                <span className="font-medium">Logout</span>
+                <span>Logout</span>
               </button>
             </div>
           )}
         </div>
 
-        {/* ── Hard Refresh ───────────────────────────────────────────── */}
+        {/* REFRESH */}
         <button
           onClick={() => window.location.reload()}
-          className={`w-full flex items-center gap-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-semibold transition-all duration-200 ${
-            sidebarOpen ? "px-4" : "px-0 justify-center"
+          className={`w-full flex items-center gap-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-semibold ${
+            sidebarOpen ? "px-4" : "justify-center"
           }`}
         >
-          <RefreshCw className="w-5 h-5 shrink-0" />
-          {sidebarOpen && <span className="ml-3">Hard Refresh</span>}
+          <RefreshCw className="w-5 h-5" />
+          {sidebarOpen && (
+            <span className="ml-2 text-[14px]">Hard Refresh</span>
+          )}
         </button>
 
-        {/* ── Version ───────────────────────────────────────────── */}
+        {/* VERSION */}
         <div
-          className={`flex items-center gap-3 py-2 ${sidebarOpen ? "px-4" : "px-0 justify-center"}`}
+          className={`flex items-center gap-3 py-2 ${
+            sidebarOpen ? "px-4" : "justify-center"
+          }`}
         >
-          <GitBranch className="w-5 h-5 text-gray-900 shrink-0" />
+          <GitBranch className="w-5 h-5 text-gray-900" />
           {sidebarOpen && (
-            <span className="text-sm font-semibold text-gray-900 ml-3">
-              Version 1.2
-            </span>
+            <span className="text-sm text-gray-700 ml-2">Version 1.4</span>
           )}
         </div>
       </div>

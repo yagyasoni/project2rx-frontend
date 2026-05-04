@@ -121,9 +121,9 @@ function GroupSubTable({
                 <th className="border border-slate-200 px-2 py-1.5 text-center text-[10px] font-bold uppercase text-slate-500">
                   Rx's
                 </th>
-                <th className="border border-slate-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase text-slate-500">
+                {/* <th className="border border-slate-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase text-slate-500">
                   Rx Numbers
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody>
@@ -158,7 +158,7 @@ function GroupSubTable({
                       <td className="border border-slate-200 px-2 py-1.5 text-center text-slate-700">
                         {Number(g.estimated_rxs).toLocaleString()}
                       </td>
-                      <td className="border border-slate-200 px-2 py-1.5 align-top">
+                      {/* <td className="border border-slate-200 px-2 py-1.5 align-top">
                         {rxList.length > 0 ? (
                           <div className="flex flex-wrap gap-1 max-w-[400px] items-center">
                             {visible.map((rx) => (
@@ -181,7 +181,7 @@ function GroupSubTable({
                         ) : (
                           <span className="text-slate-300 text-xs">—</span>
                         )}
-                      </td>
+                      </td> */}
                     </tr>
                   );
                 })
@@ -220,6 +220,9 @@ export default function DrugLookupComponent({
     key: "estimated_rxs",
     direction: "desc",
   });
+  const [selectedRange, setSelectedRange] = useState<string>(
+    filters.range || "this_year",
+  );
 
   // ─── Fetch main data whenever ndcNumber, filters, or mode changes ───
   useEffect(() => {
@@ -242,7 +245,7 @@ export default function DrugLookupComponent({
         if (filters.bin) params.bin = filters.bin;
         if (filters.pcn) params.pcn = filters.pcn;
         if (filters.grp) params.grp = filters.grp;
-        if (filters.range) params.range = filters.range;
+        if (selectedRange) params.range = selectedRange;
 
         if (mode === "opportunities") {
           const userId = localStorage.getItem("userId") || "";
@@ -265,7 +268,13 @@ export default function DrugLookupComponent({
     };
 
     fetchData();
-  }, [ndcNumber, mode, filters.bin, filters.pcn, filters.grp, filters.range]);
+  }, [ndcNumber, mode, filters.bin, filters.pcn, filters.grp, selectedRange]);
+
+  useEffect(() => {
+    if (filters.range) {
+      setSelectedRange(filters.range);
+    }
+  }, [filters.range]);
 
   // ─── Fetch group rows on expand ─────────────
   const handleToggleRow = async (row: CommunityRow) => {
@@ -288,7 +297,7 @@ export default function DrugLookupComponent({
           mode,
         };
 
-        if (filters.range) params.range = filters.range;
+        if (selectedRange) params.range = selectedRange;
         if (mode === "opportunities") {
           const userId = localStorage.getItem("userId") || "";
           if (userId) params.userId = userId;
@@ -367,6 +376,20 @@ export default function DrugLookupComponent({
             <p className="text-sm font-mono font-semibold text-slate-700 tabular-nums">
               {ndcNumber}
             </p>
+          </div>
+          <div className="items-center gap-2">
+            <p className="text-[10px] font-bold text-slate-400 uppercase">
+              Range
+            </p>
+
+            <select
+              value={selectedRange}
+              onChange={(e) => setSelectedRange(e.target.value)}
+              className="border border-slate-300 rounded-md px-2 py-0 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-black"
+            >
+              <option value="this_year">This Year</option>
+              <option value="last_90_days">Last 90 Days</option>
+            </select>
           </div>
         </div>
       )}

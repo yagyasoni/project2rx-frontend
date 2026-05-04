@@ -11,12 +11,13 @@ import {
   SquareStack,
   FolderOpen,
   ClipboardPlus,
+  UserPen,
 } from "lucide-react";
 import UsersPage from "@/components/settings/UsersPage";
-// import MailingInfoPage from "@/components/settings/MailingInfoPage";
 import SuppliersPage from "@/components/settings/Supplierspage";
 import PMSPage from "@/components/settings/Pmspage";
 import PharmacyDocs from "@/components/settings/PharmacyDocs";
+import Agreements from "@/components/settings/Agreements";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { id: 2, title: "PMS", icon: SquareStack },
   { id: 3, title: "Users", icon: Users },
   { id: 4, title: "Pharmacy", icon: ClipboardPlus },
+  { id: 5, title: "Agreements", icon: UserPen },
 ];
 
 const SettingsLayout = () => {
@@ -106,7 +108,8 @@ const SettingsLayout = () => {
               {active === "Suppliers" && "Manage wholesalers & distributors"}
               {active === "PMS" && "Pharmacy management system settings"}
               {active === "Users" && "Manage accounts & permissions"}
-              {active === "Pharmacy Docs" && "Email & address configuration"}
+              {active === "Pharmacy" && "Email & address configuration"}
+              {active === "Agreements" && "View & download agreements"}
             </p>
           </div>
 
@@ -115,6 +118,7 @@ const SettingsLayout = () => {
             {active === "PMS" && <PMSPage />}
             {active === "Users" && <UsersPage />}
             {active === "Pharmacy" && <PharmacyDocs />}
+            {active === "Agreements" && <Agreements />}
           </main>
         </div>
       </div>

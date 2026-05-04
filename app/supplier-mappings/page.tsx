@@ -14,6 +14,7 @@ import {
   X,
   Copy,
   PencilLine,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -155,6 +156,7 @@ const SupplierMappingPage = () => {
   const [editEmailModal, setEditEmailModal] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [emailInput, setEmailInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -345,6 +347,49 @@ const SupplierMappingPage = () => {
     return savedMappings[supplierId] ? "Mapped" : "Unmapped";
   };
 
+  const filteredSuppliers = React.useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) return suppliers;
+
+    const scoreMatch = (text: string) => {
+      if (!text) return 0;
+
+      const t = text.toLowerCase();
+
+      // 🥇 Best: starts with full string
+      if (t.startsWith(query)) return 100;
+
+      // 🥈 Word starts with (e.g. "health corp" → "hea")
+      const words = t.split(/[\s@._-]+/);
+      if (words.some((w) => w.startsWith(query))) return 80;
+
+      // 🥉 Contains substring
+      if (t.includes(query)) return 50;
+
+      // 🔹 Fuzzy-lite: all chars in order (e.g. "mck" → "mckesson")
+      let qi = 0;
+      for (let i = 0; i < t.length && qi < query.length; i++) {
+        if (t[i] === query[qi]) qi++;
+      }
+      if (qi === query.length) return 30;
+
+      return 0;
+    };
+
+    return suppliers
+      .map((s) => {
+        const nameScore = scoreMatch(s.name || "");
+        const emailScore = scoreMatch(s.email || "");
+
+        const score = Math.max(nameScore, emailScore);
+
+        return { ...s, __score: score };
+      })
+      .filter((s) => s.__score > 0)
+      .sort((a, b) => b.__score - a.__score);
+  }, [suppliers, searchQuery]);
+
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-[2px]">
@@ -370,6 +415,27 @@ const SupplierMappingPage = () => {
             </p>
           </div>
           <div className="flex flex-col-2 gap-3 ">
+            {/* 🔍 Search Input */}
+            <div className="relative flex-1 max-w-sm">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                placeholder="Search suppliers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="px-8 h-8 w-[220px] text-xs"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
             <Button
               onClick={() => setAddModal(true)}
               className="cursor-pointer gap-2 bg-foreground text-background hover:bg-foreground/90 text-xs font-semibold"
@@ -423,7 +489,7 @@ const SupplierMappingPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
-                {suppliers.length === 0 ? (
+                {filteredSuppliers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="text-center py-16">
                       <div className="flex flex-col items-center gap-3">
@@ -435,7 +501,7 @@ const SupplierMappingPage = () => {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-foreground">
-                            No suppliers yet
+                            No suppliers found
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">
                             Add a supplier to start mapping columns.
@@ -445,7 +511,7 @@ const SupplierMappingPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  suppliers.map((supplier, index) => {
+                  filteredSuppliers.map((supplier, index) => {
                     const status = getSupplierMappingStatus(supplier.id);
                     const mapping = savedMappings[supplier.id];
                     const mappedCount = mapping
