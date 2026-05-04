@@ -24,6 +24,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import DrugLookupComponent from "@/components/drugLookup";
+import CommunityLinkPageCopy from "@/components/communityLink";
 
 interface DrugLookupNdc {
   drug_name: string;
@@ -1179,7 +1180,7 @@ function DrugLookupResultsInner() {
               >
                 <X className="w-4 h-4 text-slate-600" />
               </button>
-              <DrugLookupComponent
+              {/* <DrugLookupComponent
                 ndcNumber={communityNdc}
                 drugName={communityDrugName ?? undefined}
                 mode="state"
@@ -1189,6 +1190,13 @@ function DrugLookupResultsInner() {
                   grp: urlGrp || undefined,
                   range: "this_year",
                 }}
+              /> */}
+              <CommunityLinkPageCopy
+                ndcNumber={communityNdc}
+                drugName={communityDrugName ?? ""}
+                filterBin={urlBin || undefined}
+                filterPcn={urlPcn || undefined}
+                filterGrp={urlGrp || undefined}
               />
             </div>
           </div>

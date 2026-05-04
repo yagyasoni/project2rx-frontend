@@ -189,7 +189,10 @@ export default function InactiveAccount() {
 
   let message = "";
 
-  if (paymentStatus === "no_subscription") {
+  if (status === "inactive") {
+    message =
+      "Your account is currently inactive. Please contact support for assistance. Once your details are verified, reactivation may take 24-48 hours.";
+  } else if (paymentStatus === "no_subscription") {
     message = "You do not have an active subscription.";
   } else if (paymentStatus === "past_due") {
     message = "Your payment is past due.";
@@ -197,8 +200,6 @@ export default function InactiveAccount() {
     message = "Your subscription has been canceled.";
   } else if (paymentStatus === "inactive") {
     message = "Your subscription is inactive.";
-  } else if (status === "inactive") {
-    message = "Your account is currently inactive.";
   }
 
   return (
@@ -224,13 +225,14 @@ export default function InactiveAccount() {
             </Button>
           )} */}
           {(paymentStatus === "no_subscription" ||
-            paymentStatus === "inactive") && (
-            <Button className="w-full" onClick={paymentPath}>
-              Proceed with Payment
-            </Button>
-          )}
+            paymentStatus === "inactive") &&
+            status === "active" && (
+              <Button className="w-full" onClick={paymentPath}>
+                Proceed with Payment
+              </Button>
+            )}
 
-          {paymentStatus === "canceled" && (
+          {paymentStatus === "canceled" && status === "active" && (
             <Button className="w-full" onClick={renewSubscription}>
               Renew Subscription
             </Button>
@@ -239,8 +241,14 @@ export default function InactiveAccount() {
           <Button
             variant="outline"
             className="cursor-pointer w-full gap-2"
+            // onClick={() => {
+            //   window.location.href = "mailto:drugdroprx@gmail.com";
+            // }}
             onClick={() => {
-              window.location.href = "mailto:drugdroprx@gmail.com";
+              window.open(
+                "https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com&su=Support%20Request&body=Hi%20Team,",
+                "_blank",
+              );
             }}
           >
             <Mail className="h-4 w-4" />

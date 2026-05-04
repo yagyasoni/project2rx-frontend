@@ -43,9 +43,33 @@ export default function RootLayout({
     setRole(storedRole);
   }, []);
 
+  function BetaBanner() {
+    const subject = encodeURIComponent("Beta Support Request");
+    const body = encodeURIComponent(
+      "Hello Support Team,\n\nI am experiencing an issue while using the beta version of the application.\n\nDetails:\n- Issue:\n- Steps to reproduce:\n\nThank you.",
+    );
+
+    return (
+      <div className="w-full bg-black text-white text-sm py-2 px-4 text-center border-b border-gray-800">
+        <span className="font-semibold">Beta</span> — This application is
+        currently in testing. Some features may not work as expected.{" "}
+        <a
+          href={`https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com&su=${subject}&body=${body}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-300"
+        >
+          Contact support
+        </a>{" "}
+        for any issues or feedback.
+      </div>
+    );
+  }
+
   return (
     <html lang="en">
       <body>
+        <BetaBanner />
         {/* ✅ Only show after role is loaded */}
         {role !== null && role !== "admin" ? <InactiveAccount /> : null}
 

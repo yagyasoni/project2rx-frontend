@@ -258,22 +258,63 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
               </button>
 
               {openPopup === "support" && !collapsed && (
-                <div className="mx-2 my-2 p-4 bg-muted/50 rounded-lg border border-border">
-                  <div className="flex items-center justify-between mb-3">
+                // <div className="mx-2 my-2 p-4 bg-muted/50 rounded-lg border border-border">
+                //   <div className="flex items-center justify-between mb-3">
+                //     <span className="text-xs font-semibold text-gray">
+                //       Contact Support
+                //     </span>
+                //     <button
+                //       onClick={() => setOpenPopup(null)}
+                //       className="text-gray-foreground hover:text-foreground cursor-pointer"
+                //     >
+                //       <X className="cursor-pointer" size={14} />
+                //     </button>
+                //   </div>
+                //   <div className="flex items-center gap-3">
+                //     <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center">
+                //       <User size={14} className="text-brand" />
+                //     </div>
+                //     <div className="flex-1 min-w-0">
+                //       <p className="text-xs font-medium text-gray">
+                //         Support Team
+                //       </p>
+                //       <p className="text-xs text-gray-foreground">
+                //         +1 (551) 229-6466
+                //       </p>
+                //     </div>
+                //     <Phone size={14} className="text-brand shrink-0" />
+                //   </div>
+                // </div>
+
+                <div className="mx-2 my-2 p-4 bg-muted/50 rounded-lg border border-border cursor-pointer hover:bg-muted transition">
+                  <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold text-gray">
                       Contact Support
                     </span>
                     <button
-                      onClick={() => setOpenPopup(null)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // ✅ prevents WhatsApp trigger
+                        setOpenPopup(null);
+                      }}
                       className="text-gray-foreground hover:text-foreground cursor-pointer"
                     >
-                      <X className="cursor-pointer" size={14} />
+                      <X size={14} />
                     </button>
                   </div>
-                  <div className="flex items-center gap-3">
+
+                  <div
+                    onClick={() =>
+                      window.open(
+                        `https://wa.me/15512296466?text=Hello Support Team, I need help regarding the beta application.`,
+                        "_blank",
+                      )
+                    }
+                    className="flex items-center gap-2 bg-white border border-border rounded-lg px-2 py-2"
+                  >
                     <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center">
                       <User size={14} className="text-brand" />
                     </div>
+
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-gray">
                         Support Team
@@ -282,6 +323,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                         +1 (551) 229-6466
                       </p>
                     </div>
+
                     <Phone size={14} className="text-brand shrink-0" />
                   </div>
                 </div>
