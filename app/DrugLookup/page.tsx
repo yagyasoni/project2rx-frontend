@@ -182,7 +182,7 @@ export default function DrugLookupLandingPage() {
 
   return (
     <ProtectedRoute role = "user">
-      <div className="relative w-full bg-white h-screen overflow-hidden">
+      <div className="relative w-full bg-white h-[calc(100vh-37px)] overflow-hidden">
         <div className="relative h-full w-full flex">
           {/* ── Sidebar ── */}
           <div

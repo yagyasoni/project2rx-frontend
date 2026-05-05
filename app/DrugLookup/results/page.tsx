@@ -386,7 +386,7 @@ function DrugLookupResultsInner() {
 
   return (
     <ProtectedRoute role = "user">
-      <div className="relative w-full bg-slate-50 min-h-screen">
+      <div className="relative w-full bg-slate-50 h-[calc(100vh-37px)] overflow-hidden">
         <div className="relative h-full w-full flex">
           <div
             className={`flex-shrink-0 transition-all duration-300 z-[130] ${
