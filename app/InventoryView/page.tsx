@@ -1551,7 +1551,7 @@ function AgreementModal({
           const el = e.currentTarget;
           if (el.scrollHeight - el.scrollTop - el.clientHeight < 30) setScrolled(true);
         }}
-        className="max-h-[420px] space-y-4 overflow-y-auto px-8 py-5 text-sm leading-relaxed text-gray-700"
+        className="max-h-[min(420px,calc(90vh-280px))] space-y-4 overflow-y-auto px-8 py-5 text-sm leading-relaxed text-gray-700"
       >
         <AgrSection title="1. What this network is">
           AuditProRx Network is an information directory. It allows verified
