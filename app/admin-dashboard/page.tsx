@@ -150,7 +150,9 @@ export default function AdminDashboard() {
       setSelected((prev) =>
         prev?.id === user.id ? { ...prev, status: newStatus } : prev,
       );
-      toast.success(`User marked as ${newStatus}`);
+      toast.success(
+        `User marked as ${newStatus === "active" ? "Verified" : "Unverified"}`,
+      );
     } catch {
       toast.error("Failed to update status.");
     } finally {
@@ -572,8 +574,8 @@ export default function AdminDashboard() {
                                     <X size={9} />
                                   )} */}
                                     {user.status === "active"
-                                      ? "Active"
-                                      : "Inactive"}
+                                      ? "Verified"
+                                      : "Unverified"}
                                   </span>
                                 </td>
                                 <td className="px-4 py-3 text-xs text-muted-foreground">
@@ -615,8 +617,8 @@ export default function AdminDashboard() {
                             }`}
                           >
                             {selected.status === "active"
-                              ? "Active"
-                              : "Inactive"}
+                              ? "Verified"
+                              : "Unverified"}
                           </span>
                           <Switch
                             checked={selected.status === "active"}

@@ -386,7 +386,7 @@ export default function InactiveAccount() {
 
   if (status === "inactive") {
     message =
-      "Your account is currently inactive. Please contact support for assistance. Once your details are verified, reactivation may take 24-48 hours.";
+      "Your account is currently inactive. Please contact support for assistance. Once your details are verified, reactivation may take 24-48 hours. Contact no.: +1 (551) 229-6466";
   } else if (paymentStatus === "no_subscription") {
     message = "You do not have an active subscription.";
   } else if (paymentStatus === "past_due") {
@@ -411,14 +411,6 @@ export default function InactiveAccount() {
         </p>
 
         <div className="mt-5 flex flex-col gap-2">
-          {/* ✅ SHOW PAYMENT BUTTON ONLY IF NO SUB */}
-          {/* {(paymentStatus === "no_subscription" ||
-            paymentStatus === "inactive" ||
-            paymentStatus === "canceled") && (
-            <Button className="w-full" onClick={paymentPath}>
-              Proceed with Payment
-            </Button>
-          )} */}
           {(paymentStatus === "no_subscription" ||
             paymentStatus === "inactive") &&
             status === "active" && (
