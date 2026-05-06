@@ -578,7 +578,11 @@ const UploadWholesalersStep = ({
     setIsDrawerOpen(false);
   };
 
-  const uploadedCount = wholesalers.filter((w) => w.file).length;
+  const uploadedCount = wholesalers.filter(
+    (w) =>
+      w.file ||
+      existingWholesalerFiles.some((f) => f.wholesaler_name === w.name),
+  ).length;
 
   const filteredSuppliers = availableForDrawer.filter((s) =>
     s.toLowerCase().includes(drawerSearch.toLowerCase()),
