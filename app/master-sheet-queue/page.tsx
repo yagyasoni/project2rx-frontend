@@ -25,6 +25,7 @@ const PBM_OPTIONS = [
   "EmpiRx",
   "Liviniti (Southern Scripts)",
   "Coupon",
+  "Benecard",
 ];
 
 const PAYER_TYPE_OPTIONS = ["Commercial", "Medicaid", "Medicare", "Coupon"];
