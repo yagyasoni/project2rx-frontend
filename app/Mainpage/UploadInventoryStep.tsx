@@ -202,24 +202,48 @@ const UploadInventoryStep = ({
 
   // ── ORIGINAL — untouched ───────────────────────────────────────────────────
 
+  // const REQUIRED_FIELDS = [
+  //   { key: "rxNumber", label: "Rx Number" },
+  //   { key: "dateFilled", label: "Date Filled" },
+  //   { key: "drugName", label: "Drug Name" },
+  //   { key: "quantity", label: "Quantity" },
+  //   { key: "primaryInsuranceBinNumber", label: "Primary Insurance Bin Number" },
+  //   { key: "primaryInsurancePaid", label: "Primary Insurance Paid" },
+  //   { key: "ndcNumber", label: "Ndc Number" },
+  //   { key: "status", label: "Status" },
+  //   { key: "packageSize", label: "Package Size" },
+  //   {
+  //     key: "secondaryInsuranceBinNumber",
+  //     label: "Secondary Insurance Bin Number",
+  //   },
+  //   { key: "secondaryInsurancePaid", label: "Secondary Insurance Paid" },
+  //   { key: "brand", label: "Brand" },
+  //   { key: "primaryInsurancePcn", label: "Primary Insurance PCN" },
+  //   { key: "primaryInsuranceGroup", label: "Primary Insurance Group" },
+  // ] as const;
+
   const REQUIRED_FIELDS = [
     { key: "rxNumber", label: "Rx Number" },
     { key: "dateFilled", label: "Date Filled" },
     { key: "drugName", label: "Drug Name" },
-    { key: "quantity", label: "Quantity" },
-    { key: "primaryInsuranceBinNumber", label: "Primary Insurance Bin Number" },
-    { key: "primaryInsurancePaid", label: "Primary Insurance Paid" },
     { key: "ndcNumber", label: "Ndc Number" },
-    { key: "status", label: "Status" },
+    { key: "quantity", label: "Quantity" },
     { key: "packageSize", label: "Package Size" },
+    { key: "brand", label: "Brand" },
+    { key: "status", label: "Status" },
+
+    { key: "primaryInsuranceBinNumber", label: "Primary Insurance Bin Number" },
+    { key: "primaryInsurancePcn", label: "Primary Insurance PCN" },
+    { key: "primaryInsuranceGroup", label: "Primary Insurance Group" },
+    { key: "primaryInsurancePaid", label: "Primary Insurance Paid" },
+
     {
       key: "secondaryInsuranceBinNumber",
       label: "Secondary Insurance Bin Number",
     },
+    // { key: "secondaryInsurancePcn", label: "Secondary Insurance PCN" },
+    // { key: "secondaryInsuranceGroup", label: "Secondary Insurance Group" },
     { key: "secondaryInsurancePaid", label: "Secondary Insurance Paid" },
-    { key: "brand", label: "Brand" },
-    { key: "primaryInsurancePcn", label: "Primary Insurance PCN" },
-    { key: "primaryInsuranceGroup", label: "Primary Insurance Group" },
   ] as const;
 
   const STANDARD_FIELD_TO_VALUE: Record<string, string> = {
