@@ -1,5 +1,5 @@
-// import { useState } from "react";
-// import { X } from "lucide-react";
+// import { useState, useEffect } from "react";
+// import { X, ArrowLeft } from "lucide-react";
 // import StepIndicator from "./StepIndicator";
 // import NameReportStep from "./NameReportStep";
 // import DateRangeStep from "./DateRangeStep";
@@ -8,7 +8,6 @@
 //   defaultWholesalers,
 // } from "./UploadWholesalersStep";
 // import { Button } from "@/components/ui/button";
-// // import { toast } from "@/components/ui/use-toast";
 // import { toast } from "sonner";
 
 // interface Wholesaler {
@@ -36,33 +35,29 @@
 //   const [currentStep, setCurrentStep] = useState(initialStep);
 //   const [auditId, setAuditId] = useState<string | null>(initialAuditId);
 
+//   useEffect(() => {
+//     if (initialAuditId) localStorage.setItem("auditId", initialAuditId);
+//   }, [initialAuditId]);
+
 //   // Step 1 state
 //   const [auditName, setAuditName] = useState("");
 //   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
 //   // Step 2 state
-//   const [inventoryStartDate, setInventoryStartDate] = useState<
-//     Date | undefined
-//   >();
+//   const [inventoryStartDate, setInventoryStartDate] = useState<Date | undefined>();
 //   const [inventoryEndDate, setInventoryEndDate] = useState<Date | undefined>();
-//   const [wholesalerStartDate, setWholesalerStartDate] = useState<
-//     Date | undefined
-//   >();
-//   const [wholesalerEndDate, setWholesalerEndDate] = useState<
-//     Date | undefined
-//   >();
+//   const [wholesalerStartDate, setWholesalerStartDate] = useState<Date | undefined>();
+//   const [wholesalerEndDate, setWholesalerEndDate] = useState<Date | undefined>();
 
 //   // Step 3 state
 //   const [inventoryFile, setInventoryFile] = useState<File | null>(null);
-//   const [excludeTransferred, setExcludeTransferred] = useState(false);
-//   const [excludeUnbilled, setExcludeUnbilled] = useState(false);
+// const [excludeTransferred, setExcludeTransferred] = useState(true);
+// const [excludeUnbilled, setExcludeUnbilled] = useState(true);
 
 //   // Step 4 state
-//   const [wholesalers, setWholesalers] =
-//     useState<Wholesaler[]>(defaultWholesalers);
+//   const [wholesalers, setWholesalers] = useState<Wholesaler[]>(defaultWholesalers);
 
 //   const handleClose = () => {
-//     // Reset wizard
 //     setCurrentStep(1);
 //     setAuditName("");
 //     setAgreedToTerms(false);
@@ -76,17 +71,9 @@
 //     setWholesalers(defaultWholesalers);
 //   };
 
-//   const handleStep1Continue = () => {
-//     setCurrentStep(2);
-//   };
-
-//   const handleStep2Continue = () => {
-//     setCurrentStep(3);
-//   };
-
-//   const handleStep3Next = () => {
-//     setCurrentStep(4);
-//   };
+//   const handleStep1Continue = () => setCurrentStep(2);
+//   const handleStep2Continue = () => setCurrentStep(3);
+//   const handleStep3Next = () => setCurrentStep(4);
 
 //   const handleSkip = () => {
 //     toast(`Your audit "${auditName}" has been created successfully.`);
@@ -104,26 +91,31 @@
 //     toast(`Viewing audit "${auditName}"`);
 //   };
 
+//   const handleStepClick = (stepId: number) => {
+//     setCurrentStep(stepId);
+//   };
+
 //   return (
 //     <div className="min-h-screen flex flex-col">
-//       {/* Header with close button */}
-//       <div className="p-4">
-//         {/* <Button
-//           variant="ghost"
-//           size="icon"
-//           onClick={handleClose}
-//           className="rounded-full border border-border"
-//         >
-//           <X className="w-4 h-4" />
-//         </Button> */}
-//       </div>
+//       <div className="p-4" />
 
-//       {/* Main content */}
 //       <div className="flex-1 flex flex-col items-center px-4 py-10">
-//         {/* Step indicator */}
-//         <StepIndicator steps={steps} currentStep={currentStep} />
+//         <StepIndicator
+//           steps={steps}
+//           currentStep={currentStep}
+//           onStepClick={handleStepClick}
+//         />
 
-//         {/* Step content */}
+//         {currentStep > 1 && (
+//           <button
+//             onClick={() => setCurrentStep(currentStep - 1)}
+//             className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors mb-6 self-start"
+//           >
+//             <ArrowLeft className="w-3.5 h-3.5" />
+//             Back
+//           </button>
+//         )}
+
 //         <div className="w-full">
 //           {currentStep === 1 && (
 //             <NameReportStep
@@ -179,6 +171,7 @@
 // export default AuditWizard;
 
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { X, ArrowLeft } from "lucide-react";
 import StepIndicator from "./StepIndicator";
 import NameReportStep from "./NameReportStep";
@@ -215,9 +208,8 @@ const AuditWizard = ({
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [auditId, setAuditId] = useState<string | null>(initialAuditId);
 
-  useEffect(() => {
-    if (initialAuditId) localStorage.setItem("auditId", initialAuditId);
-  }, [initialAuditId]);
+  // ✅ Edit mode: any time we arrive with an existing auditId
+  const isEditMode = !!initialAuditId;
 
   // Step 1 state
   const [auditName, setAuditName] = useState("");
@@ -231,11 +223,39 @@ const AuditWizard = ({
 
   // Step 3 state
   const [inventoryFile, setInventoryFile] = useState<File | null>(null);
-const [excludeTransferred, setExcludeTransferred] = useState(true);
-const [excludeUnbilled, setExcludeUnbilled] = useState(true);
+  const [excludeTransferred, setExcludeTransferred] = useState(true);
+  const [excludeUnbilled, setExcludeUnbilled] = useState(true);
 
   // Step 4 state
   const [wholesalers, setWholesalers] = useState<Wholesaler[]>(defaultWholesalers);
+
+  // ✅ Prefill state from existing audit when in edit mode
+  useEffect(() => {
+    if (!initialAuditId) return;
+    localStorage.setItem("auditId", initialAuditId);
+
+    axios
+      .get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${initialAuditId}`,
+      )
+      .then((res) => {
+        const a = res.data || {};
+        if (a.name) setAuditName(a.name);
+        setAgreedToTerms(true); // already agreed when audit was created
+
+        if (a.inventory_start_date)
+          setInventoryStartDate(new Date(a.inventory_start_date));
+        if (a.inventory_end_date)
+          setInventoryEndDate(new Date(a.inventory_end_date));
+        if (a.wholesaler_start_date)
+          setWholesalerStartDate(new Date(a.wholesaler_start_date));
+        if (a.wholesaler_end_date)
+          setWholesalerEndDate(new Date(a.wholesaler_end_date));
+      })
+      .catch((err) => {
+        console.warn("Failed to prefill audit:", err?.message);
+      });
+  }, [initialAuditId]);
 
   const handleClose = () => {
     setCurrentStep(1);
@@ -271,8 +291,11 @@ const [excludeUnbilled, setExcludeUnbilled] = useState(true);
     toast(`Viewing audit "${auditName}"`);
   };
 
+  // ✅ In edit mode, allow clicking any step. Otherwise, only past steps.
   const handleStepClick = (stepId: number) => {
-    setCurrentStep(stepId);
+    if (isEditMode || stepId < currentStep) {
+      setCurrentStep(stepId);
+    }
   };
 
   return (
@@ -284,6 +307,7 @@ const [excludeUnbilled, setExcludeUnbilled] = useState(true);
           steps={steps}
           currentStep={currentStep}
           onStepClick={handleStepClick}
+          isEditMode={isEditMode}
         />
 
         {currentStep > 1 && (
@@ -304,6 +328,7 @@ const [excludeUnbilled, setExcludeUnbilled] = useState(true);
               agreedToTerms={agreedToTerms}
               setAgreedToTerms={setAgreedToTerms}
               onContinue={handleStep1Continue}
+              isEditMode={isEditMode}
             />
           )}
 
