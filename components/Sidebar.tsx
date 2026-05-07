@@ -1131,7 +1131,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
       {/* HEADER */}
       <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
         {sidebarOpen ? (
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/Mainpage" className="flex items-center gap-3">
             <div className="flex h-8.5 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white overflow-hidden">
               <Image
                 src={l}
