@@ -19,6 +19,11 @@ const ALL_DOCS: Doc[] = [
     name: "Release Agreement",
     fileUrl: "/AuditProRx_Release_Agreement.pdf",
   },
+  {
+    id: 3,
+    name: "Inventory View Agreement",
+    fileUrl: "/AuditProRx_Inventory_View.pdf",
+  },
 ];
 
 export default function Agreements() {
