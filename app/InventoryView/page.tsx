@@ -198,7 +198,7 @@ function getExpiryTag(expiry: string | null): {
 } | null {
   if (!expiry) return null;
   const days = Math.floor(
-    (new Date(expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    (new Date(expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
   );
   if (days < 0) {
     return {
@@ -229,7 +229,7 @@ export default function InventoryViewPage() {
   const [activePanel, setActivePanel] = useState<string | null>(null);
 
   return (
-    <ProtectedRoute role = "user">
+    <ProtectedRoute role="user">
       <div className="relative w-full bg-[#fafafa] h-screen overflow-hidden">
         <div className="relative h-full w-full flex">
           {/* ── Sidebar ── */}
@@ -263,7 +263,9 @@ export default function InventoryViewPage() {
 function InventoryViewContent({ router }: { router: any }) {
   // ── My pharmacy (logged in user) ──
   const [myPharmacy, setMyPharmacy] = useState<PharmacyMini | null>(null);
-  const [myUser, setMyUser] = useState<{ name: string; email: string } | null>(null);
+  const [myUser, setMyUser] = useState<{ name: string; email: string } | null>(
+    null,
+  );
 
   // ── Listings ──
   const [listings, setListings] = useState<InventoryListing[]>([]);
@@ -273,14 +275,20 @@ function InventoryViewContent({ router }: { router: any }) {
   // ── UI state ──
   const [searchQuery, setSearchQuery] = useState("");
   const [reasonFilter, setReasonFilter] = useState<ReasonCode | "all">("all");
-  const [sortBy, setSortBy] = useState<"distance" | "expiry" | "cost">("distance");
-  const [activeTab, setActiveTab] = useState<"search" | "my_listings" | "groups">("search");
+  const [sortBy, setSortBy] = useState<"distance" | "expiry" | "cost">(
+    "distance",
+  );
+  const [activeTab, setActiveTab] = useState<
+    "search" | "my_listings" | "groups"
+  >("search");
   const [groupSubTab, setGroupSubTab] = useState<"my" | "discover">("my");
   const [listingGroupFilter, setListingGroupFilter] = useState<string>("all");
 
   // ── Groups state ──
   const [myGroups, setMyGroups] = useState<InventoryGroup[]>([]);
-  const [discoverableGroups, setDiscoverableGroups] = useState<DiscoverableGroup[]>([]);
+  const [discoverableGroups, setDiscoverableGroups] = useState<
+    DiscoverableGroup[]
+  >([]);
   const [invitations, setInvitations] = useState<MyInvitation[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequestForMe[]>([]);
   const [showInvitations, setShowInvitations] = useState(false);
@@ -288,7 +296,9 @@ function InventoryViewContent({ router }: { router: any }) {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
 
   // ── Modal/panel state ──
-  const [viewingListing, setViewingListing] = useState<InventoryListing | null>(null);
+  const [viewingListing, setViewingListing] = useState<InventoryListing | null>(
+    null,
+  );
   const [agreementAccepted, setAgreementAccepted] = useState(false);
   const [showAgreement, setShowAgreement] = useState(false);
   const [showEmailDraft, setShowEmailDraft] = useState(false);
@@ -339,7 +349,7 @@ function InventoryViewContent({ router }: { router: any }) {
       } catch (err: any) {
         console.warn(
           "Pharmacy details unavailable:",
-          err?.response?.status || err?.message
+          err?.response?.status || err?.message,
         );
         setMyUser({
           name: "Pharmacist",
@@ -438,7 +448,7 @@ function InventoryViewContent({ router }: { router: any }) {
         (l) =>
           (l.drug_name || "").toLowerCase().includes(q) ||
           (l.ndc || "").includes(q) ||
-          (l.manufacturer || "").toLowerCase().includes(q)
+          (l.manufacturer || "").toLowerCase().includes(q),
       );
     }
 
@@ -446,7 +456,7 @@ function InventoryViewContent({ router }: { router: any }) {
       list = list.filter((l) => {
         if (!l.expiry) return false;
         const days = Math.floor(
-          (new Date(l.expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          (new Date(l.expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
         );
         return days <= EXPIRY_SOON_DAYS;
       });
@@ -480,7 +490,9 @@ function InventoryViewContent({ router }: { router: any }) {
 
   const handleAgreementAccept = async () => {
     try {
-      await api.post("/api/inventory-view/agreement/accept", { version: "1.0" });
+      await api.post("/api/inventory-view/agreement/accept", {
+        version: "1.0",
+      });
       setAgreementAccepted(true);
       setShowAgreement(false);
       setShowEmailDraft(true);
@@ -525,7 +537,8 @@ function InventoryViewContent({ router }: { router: any }) {
           </h1>
           <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-gray-500">
             Find verified surplus stock at other pharmacies for patient-specific
-            transfers — fully compliant with DSCSA and NJ Board of Pharmacy rules.
+            transfers — fully compliant with DSCSA and NJ Board of Pharmacy
+            rules.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -588,7 +601,8 @@ function InventoryViewContent({ router }: { router: any }) {
             </div>
           </div>
           <div className="text-right text-xs text-gray-500">
-            Browsing as <span className="font-semibold text-gray-900">{myUser?.name}</span>
+            Browsing as{" "}
+            <span className="font-semibold text-gray-900">{myUser?.name}</span>
           </div>
         </div>
       )}
@@ -596,8 +610,8 @@ function InventoryViewContent({ router }: { router: any }) {
       {/* ============ Compliance Pill ============ */}
       <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-200">
         <AlertTriangle className="h-3.5 w-3.5" />
-        All transfers must be patient-specific Rx transfers under DSCSA. Controlled
-        substances cannot be listed.
+        All transfers must be patient-specific Rx transfers under DSCSA.
+        Controlled substances cannot be listed.
       </div>
 
       {/* ============ Tabs ============ */}
@@ -748,7 +762,9 @@ function InventoryViewContent({ router }: { router: any }) {
               My Groups
               <span
                 className={`rounded-full px-1.5 py-0.5 text-[10px] ${
-                  groupSubTab === "my" ? "bg-white/20" : "bg-gray-100 text-gray-600"
+                  groupSubTab === "my"
+                    ? "bg-white/20"
+                    : "bg-gray-100 text-gray-600"
                 }`}
               >
                 {myGroups.length}
@@ -927,10 +943,12 @@ function ListingCard({
   const tag = getExpiryTag(listing.expiry);
   const daysToExpiry = listing.expiry
     ? Math.floor(
-        (new Date(listing.expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        (new Date(listing.expiry).getTime() - Date.now()) /
+          (1000 * 60 * 60 * 24),
       )
     : null;
-  const expiryUrgent = daysToExpiry !== null && daysToExpiry <= EXPIRY_SOON_DAYS;
+  const expiryUrgent =
+    daysToExpiry !== null && daysToExpiry <= EXPIRY_SOON_DAYS;
 
   return (
     <div className="group rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 transition hover:shadow-md">
@@ -976,7 +994,9 @@ function ListingCard({
             {listing.quantity}
           </div>
           {listing.package_size && (
-            <div className="text-[11px] text-gray-500">{listing.package_size}</div>
+            <div className="text-[11px] text-gray-500">
+              {listing.package_size}
+            </div>
           )}
         </div>
 
@@ -1056,7 +1076,9 @@ function ListingCard({
                 : "bg-gray-50 text-gray-500 hover:bg-gray-100"
             }`}
           >
-            <Bookmark className={`h-3.5 w-3.5 ${bookmarked ? "fill-current" : ""}`} />
+            <Bookmark
+              className={`h-3.5 w-3.5 ${bookmarked ? "fill-current" : ""}`}
+            />
           </button>
           <button
             onClick={onView}
@@ -1099,7 +1121,8 @@ function DetailsPanel({
 
   const daysToExpiry = listing.expiry
     ? Math.floor(
-        (new Date(listing.expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        (new Date(listing.expiry).getTime() - Date.now()) /
+          (1000 * 60 * 60 * 24),
       )
     : null;
 
@@ -1147,8 +1170,14 @@ function DetailsPanel({
             Drug & Inventory
           </SectionHeading>
           <div className="grid grid-cols-2 gap-3">
-            <InfoCard label="Available Quantity" value={listing.quantity.toString()} />
-            <InfoCard label="Package Size" value={listing.package_size || "—"} />
+            <InfoCard
+              label="Available Quantity"
+              value={listing.quantity.toString()}
+            />
+            <InfoCard
+              label="Package Size"
+              value={listing.package_size || "—"}
+            />
             <InfoCard
               label="Expiry"
               value={
@@ -1167,7 +1196,11 @@ function DetailsPanel({
                   : "gray"
               }
             />
-            <InfoCard label="Lot Number" value={listing.lot_number || "—"} mono />
+            <InfoCard
+              label="Lot Number"
+              value={listing.lot_number || "—"}
+              mono
+            />
             <InfoCard
               label="Shelf Cost"
               value={
@@ -1243,7 +1276,10 @@ function DetailsPanel({
                 />
               )}
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <SmallStat label="NPI" value={listing.pharmacy.npi_number || "—"} />
+                <SmallStat
+                  label="NPI"
+                  value={listing.pharmacy.npi_number || "—"}
+                />
                 <SmallStat
                   label="NCPDP"
                   value={listing.pharmacy.ncpdp_number || "—"}
@@ -1265,7 +1301,9 @@ function DetailsPanel({
                 />
                 <InfoCard
                   label="Suggested handoff"
-                  value={listing.distance_miles < 10 ? "Pickup" : "Licensed courier"}
+                  value={
+                    listing.distance_miles < 10 ? "Pickup" : "Licensed courier"
+                  }
                   hint="informational only"
                 />
               </div>
@@ -1390,7 +1428,7 @@ function ReportListingModal({
       console.error("Failed to submit report:", err);
       alert(
         "Failed to submit report. " +
-          (err?.response?.data?.error || "Please try again.")
+          (err?.response?.data?.error || "Please try again."),
       );
       setSubmitting(false);
     }
@@ -1407,8 +1445,8 @@ function ReportListingModal({
             Report Submitted
           </h3>
           <p className="mx-auto mt-2 max-w-sm text-sm text-gray-500">
-            Thank you for flagging this listing. Our compliance team will review it
-            within 24 hours and take appropriate action.
+            Thank you for flagging this listing. Our compliance team will review
+            it within 24 hours and take appropriate action.
           </p>
           <button
             onClick={onClose}
@@ -1481,9 +1519,9 @@ function ReportListingModal({
           </div>
 
           <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 ring-1 ring-inset ring-amber-200">
-            <span className="font-extrabold">Note:</span> Reports are anonymous to
-            the listing pharmacy but logged with your account ID for audit purposes.
-            False reports may result in account suspension.
+            <span className="font-extrabold">Note:</span> Reports are anonymous
+            to the listing pharmacy but logged with your account ID for audit
+            purposes. False reports may result in account suspension.
           </div>
         </div>
 
@@ -1549,23 +1587,24 @@ function AgreementModal({
       <div
         onScroll={(e) => {
           const el = e.currentTarget;
-          if (el.scrollHeight - el.scrollTop - el.clientHeight < 30) setScrolled(true);
+          if (el.scrollHeight - el.scrollTop - el.clientHeight < 30)
+            setScrolled(true);
         }}
         className="max-h-[min(420px,calc(90vh-280px))] space-y-4 overflow-y-auto px-8 py-5 text-sm leading-relaxed text-gray-700"
       >
         <AgrSection title="1. What this network is">
           AuditProRx Network is an information directory. It allows verified
-          pharmacies to discover surplus inventory at other verified pharmacies. The
-          platform does not buy, sell, transfer, ship, or take possession of any
-          pharmaceutical product. The platform does not process payments for drug
-          transactions.
+          pharmacies to discover surplus inventory at other verified pharmacies.
+          The platform does not buy, sell, transfer, ship, or take possession of
+          any pharmaceutical product. The platform does not process payments for
+          drug transactions.
         </AgrSection>
         <AgrSection title="2. Patient-specific transfers only (DSCSA)">
-          Any actual drug transfer between pharmacies discovered through this platform
-          must be a patient-specific prescription transfer permitted under the federal
-          Drug Supply Chain Security Act. You agree not to use this platform to
-          facilitate casual or commercial wholesale distribution of pharmaceutical
-          products without appropriate licensing.
+          Any actual drug transfer between pharmacies discovered through this
+          platform must be a patient-specific prescription transfer permitted
+          under the federal Drug Supply Chain Security Act. You agree not to use
+          this platform to facilitate casual or commercial wholesale
+          distribution of pharmaceutical products without appropriate licensing.
         </AgrSection>
         <AgrSection title="3. EPCIS pedigree obligation">
           Both pharmacies are responsible for exchanging compliant Transaction
@@ -1573,34 +1612,37 @@ function AgreementModal({
           documentation in EPCIS format for every transfer.
         </AgrSection>
         <AgrSection title="4. Controlled substances prohibited">
-          Listings of any controlled substance (Schedule II–V) are prohibited and will
-          be automatically rejected.
+          Listings of any controlled substance (Schedule II–V) are prohibited
+          and will be automatically rejected.
         </AgrSection>
         <AgrSection title="5. License verification">
-          You confirm that the license credentials submitted during onboarding (NJ
-          Board of Pharmacy permit, DEA registration, NPI) are accurate and current.
+          You confirm that the license credentials submitted during onboarding
+          (NJ Board of Pharmacy permit, DEA registration, NPI) are accurate and
+          current.
         </AgrSection>
         <AgrSection title="6. Audit log and records">
-          All actions on this platform are logged with timestamps, user identity, and
-          pharmacist NPI. Records are retained for seven years.
+          All actions on this platform are logged with timestamps, user
+          identity, and pharmacist NPI. Records are retained for seven years.
         </AgrSection>
         <AgrSection title="7. Bilateral transactions; platform is not a party">
-          Any agreement to transfer drugs and any payment for transferred drugs is
-          entered into directly and bilaterally between the two pharmacies. AuditProRx
-          is not a party to any such transaction.
+          Any agreement to transfer drugs and any payment for transferred drugs
+          is entered into directly and bilaterally between the two pharmacies.
+          AuditProRx is not a party to any such transaction.
         </AgrSection>
         <AgrSection title="8. No marketplace, no transaction fees">
-          The platform does not set prices, accept payment, take a transaction fee, or
-          earn revenue tied to the volume or value of any drug transferred.
+          The platform does not set prices, accept payment, take a transaction
+          fee, or earn revenue tied to the volume or value of any drug
+          transferred.
         </AgrSection>
         <AgrSection title="9. Anti-Kickback compliance">
           You confirm that your participation does not involve remuneration in
-          exchange for referrals of business reimbursable under any federal healthcare
-          program.
+          exchange for referrals of business reimbursable under any federal
+          healthcare program.
         </AgrSection>
         <AgrSection title="10. Term and termination">
-          Either party may terminate participation at any time. AuditProRx may suspend
-          or terminate accounts that violate these terms or applicable law.
+          Either party may terminate participation at any time. AuditProRx may
+          suspend or terminate accounts that violate these terms or applicable
+          law.
         </AgrSection>
       </div>
 
@@ -1618,8 +1660,9 @@ function AgreementModal({
               scrolled ? "text-gray-900" : "text-gray-400"
             }`}
           >
-            I have read this agreement in full and I am authorized to bind my pharmacy
-            to its terms. I am the Pharmacist-in-Charge or a designee of the PIC.
+            I have read this agreement in full and I am authorized to bind my
+            pharmacy to its terms. I am the Pharmacist-in-Charge or a designee
+            of the PIC.
           </span>
         </label>
         {!scrolled && (
@@ -1681,14 +1724,16 @@ function EmailDraftModal({
   setRequestData: (d: any) => void;
   onClose: () => void;
 }) {
-  const [step, setStep] = useState<"form" | "preview" | "sending" | "success">("form");
+  const [step, setStep] = useState<"form" | "preview" | "sending" | "success">(
+    "form",
+  );
   const [emailBody, setEmailBody] = useState("");
   const [emailSubject, setEmailSubject] = useState("");
   const [sendError, setSendError] = useState<string | null>(null);
 
   // Build subject/body when entering preview
   const buildEmail = () => {
-    const subject = `Patient-specific transfer inquiry: ${listing.drug_name}${
+    const subject = `Inventory inquiry: ${listing.drug_name}${
       listing.strength ? " " + listing.strength : ""
     }`;
 
@@ -1698,7 +1743,7 @@ I am reaching out regarding your listing for ${listing.drug_name}${
       listing.strength ? " " + listing.strength : ""
     } (NDC ${listing.ndc}).
 
-We have a patient with an active prescription that we are unable to fill from current stock and would like to discuss arranging a patient-specific transfer under DSCSA.
+We have a patient with an active prescription that we are unable to fill from current stock and would like to discuss arranging a inventory transfer under DSCSA.
 
 REQUEST DETAILS
 ───────────────
@@ -1718,9 +1763,7 @@ Address:        ${myPharmacy.address}
 NPI:            ${myPharmacy.npi_number || "—"}
 NCPDP:          ${myPharmacy.ncpdp_number || "—"}
 
-Please confirm availability at your earliest convenience. If you accept, both pharmacies will exchange EPCIS pedigree documentation for the transfer.
-
-Please find the Network Participation Agreement attached for your records.
+Please confirm availability at your earliest convenience. 
 
 Thank you,
 ${myUser.name}
@@ -1731,7 +1774,7 @@ ${myUser.email}`;
   };
 
   const handleProceedToPreview = () => {
-    if (!requestData.patientRx.trim() || requestData.quantity < 1) return;
+    if (requestData.quantity < 1) return;
     const { subject, body } = buildEmail();
     setEmailSubject(subject);
     setEmailBody(body);
@@ -1746,9 +1789,9 @@ ${myUser.email}`;
         listing_id: listing.id,
         seller_pharmacy_id: listing.pharmacy.id,
         seller_email: listing.pharmacy.email,
-        patient_rx: requestData.patientRx,
+        // patient_rx: requestData.patientRx,
         quantity: requestData.quantity,
-        notes: requestData.notes,
+        notes: requestData.notes || null,
         email_subject: emailSubject,
         email_body: emailBody,
       });
@@ -1757,14 +1800,15 @@ ${myUser.email}`;
       } else {
         setSendError(
           res.data?.email_error ||
-            "The request was logged but the email could not be delivered. Please contact the pharmacy directly."
+            "The request was logged but the email could not be delivered. Please contact the pharmacy directly.",
         );
         setStep("preview");
       }
     } catch (err: any) {
       console.error("Failed to send connect request:", err);
       setSendError(
-        err?.response?.data?.error || "Failed to send request. Please try again."
+        err?.response?.data?.error ||
+          "Failed to send request. Please try again.",
       );
       setStep("preview");
     }
@@ -1786,16 +1830,18 @@ ${myUser.email}`;
             <span className="font-bold text-gray-900">
               {listing.pharmacy.pharmacy_name}
             </span>{" "}
-            with the agreement attached. They will reach out to you directly to
-            coordinate the patient-specific transfer.
+            They will reach out to you directly to coordinate the inventory
+            transfer.
           </p>
           <div className="mx-auto mt-6 max-w-md rounded-2xl bg-gray-50 p-4 text-left text-xs">
-            <div className="font-extrabold text-gray-900 text-sm">What happens next</div>
+            <div className="font-extrabold text-gray-900 text-sm">
+              What happens next
+            </div>
             <ol className="mt-2 list-decimal space-y-1 pl-5 text-gray-600">
               <li>Seller pharmacy receives email with full request details</li>
               <li>They reply directly to your email to coordinate</li>
-              <li>Both pharmacies arrange the bilateral transfer</li>
-              <li>EPCIS pedigree is exchanged between both parties</li>
+              {/* <li>Both pharmacies arrange the bilateral transfer</li>
+              <li>EPCIS pedigree is exchanged between both parties</li> */}
             </ol>
           </div>
           <button
@@ -1858,7 +1904,7 @@ ${myUser.email}`;
             <div>
               <FieldLabel>From</FieldLabel>
               <div className="rounded-xl bg-gray-50 px-4 py-2.5 text-sm font-medium text-gray-900">
-                {myUser.name}{" "}
+                {myPharmacy.pharmacy_name}{" "}
                 <span className="text-gray-500">&lt;{myUser.email}&gt;</span>
               </div>
             </div>
@@ -1880,7 +1926,7 @@ ${myUser.email}`;
               </div>
             </div>
 
-            <div>
+            {/* <div>
               <FieldLabel>Attachments</FieldLabel>
               <div className="flex items-center gap-2 rounded-xl bg-violet-50 px-4 py-3 ring-1 ring-inset ring-violet-200">
                 <Paperclip className="h-4 w-4 text-violet-700" />
@@ -1893,7 +1939,7 @@ ${myUser.email}`;
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {sendError && (
@@ -1935,8 +1981,9 @@ ${myUser.email}`;
             Connect Request
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Provide the patient prescription details. We'll generate a professional
-            email to the holding pharmacy with the agreement attached.
+            Provide the patient prescription details. We'll generate a
+            professional email to the holding pharmacy with the agreement
+            attached.
           </p>
         </div>
 
@@ -1947,9 +1994,12 @@ ${myUser.email}`;
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <DataLabel>Requesting from</DataLabel>
-                <div className="mt-0.5 flex items-center gap-1.5 text-sm font-extrabold text-gray-900">
+                <div className="my-0.5 flex items-center gap-1.5 text-sm font-extrabold text-gray-900">
                   {listing.pharmacy.pharmacy_name}
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                </div>
+                <div className="text-xs text-gray-500 truncate">
+                  {listing.pharmacy.email}
                 </div>
                 <div className="text-xs text-gray-500 truncate">
                   {listing.pharmacy.address?.split(",")[0]}
@@ -1969,7 +2019,7 @@ ${myUser.email}`;
 
           {/* Form */}
           <div className="space-y-4 px-7 py-5">
-            <div>
+            {/* <div>
               <FieldLabel required>Patient Rx Number</FieldLabel>
               <input
                 type="text"
@@ -1983,22 +2033,33 @@ ${myUser.email}`;
               <div className="mt-1 text-xs text-gray-500">
                 Required by DSCSA to qualify as a patient-specific transfer.
               </div>
-            </div>
+            </div> */}
 
             <div>
               <FieldLabel required>Quantity Requested</FieldLabel>
               <div className="flex items-center gap-3">
                 <input
                   type="number"
-                  min={1}
+                  min={0}
                   max={listing.quantity}
                   value={requestData.quantity}
-                  onChange={(e) =>
+                  // onChange={(e) =>
+                  //   setRequestData({
+                  //     ...requestData,
+                  //     quantity: Number(e.target.value),
+                  //   })
+                  // }
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+
                     setRequestData({
                       ...requestData,
-                      quantity: Number(e.target.value),
-                    })
-                  }
+                      quantity: Math.max(
+                        0,
+                        Math.min(listing.quantity, value || 0),
+                      ),
+                    });
+                  }}
                   className="h-11 w-32 rounded-xl border-0 bg-gray-50 px-4 text-sm font-semibold outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
                 />
                 <span className="text-sm text-gray-500">
@@ -2023,9 +2084,17 @@ ${myUser.email}`;
             <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 ring-1 ring-inset ring-amber-200">
               <div className="font-extrabold">By proceeding you confirm:</div>
               <ul className="mt-1 list-disc space-y-0.5 pl-5">
-                <li>You hold a current, dispensable prescription for an identified patient</li>
-                <li>The transfer will follow DSCSA patient-specific transfer requirements</li>
-                <li>Both pharmacies will exchange EPCIS pedigree documentation</li>
+                <li>
+                  You hold a current, dispensable prescription for an identified
+                  patient
+                </li>
+                <li>
+                  The transfer will follow DSCSA patient-specific transfer
+                  requirements
+                </li>
+                <li>
+                  Both pharmacies will exchange EPCIS pedigree documentation
+                </li>
               </ul>
             </div>
           </div>
@@ -2040,7 +2109,7 @@ ${myUser.email}`;
           </button>
           <button
             onClick={handleProceedToPreview}
-            disabled={!requestData.patientRx.trim() || requestData.quantity < 1}
+            disabled={requestData.quantity < 1}
             className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             Generate Email
@@ -2065,8 +2134,9 @@ function MyListingsView({
   groups: InventoryGroup[];
   onRefresh: () => void;
 }) {
-  const [editingListing, setEditingListing] =
-    useState<InventoryListing | null>(null);
+  const [editingListing, setEditingListing] = useState<InventoryListing | null>(
+    null,
+  );
   const [delistingListing, setDelistingListing] =
     useState<InventoryListing | null>(null);
 
@@ -2208,7 +2278,7 @@ function EditListingModal({
       console.error("Failed to edit:", err);
       setError(
         err?.response?.data?.error ||
-          "Failed to update listing. Please try again."
+          "Failed to update listing. Please try again.",
       );
       setSubmitting(false);
     }
@@ -2310,7 +2380,7 @@ function DelistConfirmModal({
     } catch (err: any) {
       console.error("Failed to delist:", err);
       setError(
-        err?.response?.data?.error || "Failed to delist. Please try again."
+        err?.response?.data?.error || "Failed to delist. Please try again.",
       );
       setSubmitting(false);
     }
@@ -2428,41 +2498,44 @@ function AddListingModal({
 
   // ── Debounced NDC search ──
   useEffect(() => {
-  const q = form.ndc.trim();
-  if (q.length < 2) {
-    setNdcSuggestions([]);
-    return;
-  }
-
-  setIsSearching(true);
-  const timer = setTimeout(async () => {
-    try {
-      // Single endpoint — handles BOTH drug names and NDCs
-      const res = await api.get(
-        `/api/audits/ndc-suggestions?q=${encodeURIComponent(q)}`
-      );
-      const list: NdcSuggestion[] = (res.data || []).map((s: any) => ({
-        ndc: s.ndc,
-        drug_name: s.drug_name,
-        brand: s.brand ?? null,
-        package_size: s.package_size ?? null,
-      }));
-      setNdcSuggestions(list);
-    } catch (err) {
-      console.error("Suggestion error:", err);
+    const q = form.ndc.trim();
+    if (q.length < 2) {
       setNdcSuggestions([]);
-    } finally {
-      setIsSearching(false);
+      return;
     }
-  }, 250);
 
-  return () => clearTimeout(timer);
-}, [form.ndc]);
+    setIsSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        // Single endpoint — handles BOTH drug names and NDCs
+        const res = await api.get(
+          `/api/audits/ndc-suggestions?q=${encodeURIComponent(q)}`,
+        );
+        const list: NdcSuggestion[] = (res.data || []).map((s: any) => ({
+          ndc: s.ndc,
+          drug_name: s.drug_name,
+          brand: s.brand ?? null,
+          package_size: s.package_size ?? null,
+        }));
+        setNdcSuggestions(list);
+      } catch (err) {
+        console.error("Suggestion error:", err);
+        setNdcSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [form.ndc]);
 
   // ── Click outside closes dropdown ──
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ndcInputRef.current && !ndcInputRef.current.contains(e.target as Node)) {
+      if (
+        ndcInputRef.current &&
+        !ndcInputRef.current.contains(e.target as Node)
+      ) {
         setShowSuggestions(false);
       }
     };
@@ -2470,48 +2543,50 @@ function AddListingModal({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-const pickSuggestion = (s: NdcSuggestion) => {
-  // Strip trailing NDC pattern like " (13668-0081-30)" from the drug name first
-  const cleanName = s.drug_name.replace(/\s*\(\d{5}-\d{4}-\d{2}\)\s*$/, "").trim();
+  const pickSuggestion = (s: NdcSuggestion) => {
+    // Strip trailing NDC pattern like " (13668-0081-30)" from the drug name first
+    const cleanName = s.drug_name
+      .replace(/\s*\(\d{5}-\d{4}-\d{2}\)\s*$/, "")
+      .trim();
 
-  // Smart split: drug name = everything BEFORE the first token containing a digit
-  const tokens = cleanName.split(/\s+/);
-  const firstNumIdx = tokens.findIndex((t) => /\d/.test(t));
+    // Smart split: drug name = everything BEFORE the first token containing a digit
+    const tokens = cleanName.split(/\s+/);
+    const firstNumIdx = tokens.findIndex((t) => /\d/.test(t));
 
-  let namePart: string;
-  let strengthPart: string;
-  if (firstNumIdx > 0) {
-    namePart = tokens.slice(0, firstNumIdx).join(" ");
-    strengthPart = tokens.slice(firstNumIdx).join(" ");
-  } else {
-    namePart = tokens[0] || cleanName;
-    strengthPart = tokens.slice(1).join(" ");
-  }
+    let namePart: string;
+    let strengthPart: string;
+    if (firstNumIdx > 0) {
+      namePart = tokens.slice(0, firstNumIdx).join(" ");
+      strengthPart = tokens.slice(firstNumIdx).join(" ");
+    } else {
+      namePart = tokens[0] || cleanName;
+      strengthPart = tokens.slice(1).join(" ");
+    }
 
-  // Title-case the drug name
-  const titleCased = namePart
-    .toLowerCase()
-    .split(" ")
-    .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : ""))
-    .join(" ");
+    // Title-case the drug name
+    const titleCased = namePart
+      .toLowerCase()
+      .split(" ")
+      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : ""))
+      .join(" ");
 
-  setForm({
-    ...form,
-    ndc: s.ndc,
-    drug_name: titleCased,
-    strength: strengthPart.toLowerCase(),
-    manufacturer: s.brand || form.manufacturer,
-    package_size: s.package_size || form.package_size,
-  });
-  setAutoFilled(true);
-  setShowSuggestions(false);
-};
+    setForm({
+      ...form,
+      ndc: s.ndc,
+      drug_name: titleCased,
+      strength: strengthPart.toLowerCase(),
+      manufacturer: s.brand || form.manufacturer,
+      package_size: s.package_size || form.package_size,
+    });
+    setAutoFilled(true);
+    setShowSuggestions(false);
+  };
 
   const handlePublish = async () => {
     let reasonCode: ReasonCode = "overstock";
     if (form.expiry) {
       const days = Math.floor(
-        (new Date(form.expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        (new Date(form.expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
       );
       if (days <= EXPIRY_SOON_DAYS) reasonCode = "near_expiry";
     }
@@ -2562,22 +2637,22 @@ const pickSuggestion = (s: NdcSuggestion) => {
               <div ref={ndcInputRef} className="relative">
                 <FieldLabel required>NDC Number</FieldLabel>
                 <input
-  type="text"
-  value={form.ndc}
-  readOnly={autoFilled}
-  onChange={(e) => {
-    setForm({ ...form, ndc: e.target.value });
-    setShowSuggestions(true);
-  }}
-  onFocus={() => !autoFilled && setShowSuggestions(true)}
-  placeholder="Type NDC or drug name (e.g. 00002-1495 or Atorvastatin)"
-  className={`h-11 w-full rounded-xl border-0 px-4 font-mono text-sm outline-none ring-1 ring-inset ring-transparent ${
-    autoFilled
-      ? "bg-violet-50/60 text-gray-900 font-semibold cursor-not-allowed"
-      : "bg-gray-50 focus:bg-white focus:ring-gray-900"
-  }`}
-  autoComplete="off"
-/>
+                  type="text"
+                  value={form.ndc}
+                  readOnly={autoFilled}
+                  onChange={(e) => {
+                    setForm({ ...form, ndc: e.target.value });
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => !autoFilled && setShowSuggestions(true)}
+                  placeholder="Type NDC or drug name (e.g. 00002-1495 or Atorvastatin)"
+                  className={`h-11 w-full rounded-xl border-0 px-4 font-mono text-sm outline-none ring-1 ring-inset ring-transparent ${
+                    autoFilled
+                      ? "bg-violet-50/60 text-gray-900 font-semibold cursor-not-allowed"
+                      : "bg-gray-50 focus:bg-white focus:ring-gray-900"
+                  }`}
+                  autoComplete="off"
+                />
 
                 {showSuggestions && form.ndc.trim().length >= 2 && (
                   <div className="absolute left-0 right-0 top-full z-20 mt-1.5 max-h-72 overflow-y-auto rounded-xl bg-white shadow-lg ring-1 ring-gray-200">
@@ -2588,13 +2663,14 @@ const pickSuggestion = (s: NdcSuggestion) => {
                       </div>
                     ) : ndcSuggestions.length === 0 ? (
                       <div className="px-4 py-3 text-xs text-gray-500">
-                        No matches in network. You can still enter the NDC manually.
+                        No matches in network. You can still enter the NDC
+                        manually.
                       </div>
                     ) : (
                       <div className="py-1">
                         <div className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-  From AuditProRx network
-</div>
+                          From AuditProRx network
+                        </div>
                         {ndcSuggestions.map((s) => (
                           <button
                             key={s.ndc}
@@ -2610,9 +2686,9 @@ const pickSuggestion = (s: NdcSuggestion) => {
                                 {s.drug_name}
                               </div>
                               <div className="font-mono text-[11px] text-gray-500">
-  NDC {s.ndc}
-  {s.brand ? ` · ${s.brand}` : ""}
-</div>
+                                NDC {s.ndc}
+                                {s.brand ? ` · ${s.brand}` : ""}
+                              </div>
                             </div>
                             <ArrowRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-violet-600" />
                           </button>
@@ -2628,67 +2704,84 @@ const pickSuggestion = (s: NdcSuggestion) => {
               </div>
 
               <div>
-  <div className="mb-1.5 flex items-center justify-between">
-    <FieldLabel required>Drug Name &amp; Strength</FieldLabel>
-    {autoFilled && (
-      <button
-        type="button"
-        onClick={() => {
-          setAutoFilled(false);
-          setForm({ ...form, ndc: "", drug_name: "", strength: "", manufacturer: "", package_size: "" });
-        }}
-        className="inline-flex items-center gap-1 rounded-md bg-violet-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-700 ring-1 ring-inset ring-violet-300 shadow-sm transition hover:bg-violet-200 hover:text-violet-900 hover:ring-violet-400 active:bg-violet-300"
-      >
-        Clear &amp; edit manually
-      </button>
-    )}
-  </div>
-  <div
-    className={`flex h-11 w-full overflow-hidden rounded-xl ring-1 ring-inset ring-transparent transition ${
-      autoFilled
-        ? "bg-violet-50/60 cursor-not-allowed"
-        : "bg-gray-50 focus-within:bg-white focus-within:ring-gray-900"
-    }`}
-  >
-    <input
-      type="text"
-      value={form.drug_name}
-      readOnly={autoFilled}
-      onChange={(e) => setForm({ ...form, drug_name: e.target.value })}
-      placeholder="Mounjaro"
-      className={`min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${
-        autoFilled ? "text-gray-900 font-semibold cursor-not-allowed" : ""
-      }`}
-    />
-    <div className="my-2 w-px bg-gray-200" />
-    <input
-      type="text"
-      value={form.strength}
-      readOnly={autoFilled}
-      onChange={(e) => setForm({ ...form, strength: e.target.value })}
-      placeholder="7.5 mg/0.5 mL"
-      className={`min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${
-        autoFilled ? "text-gray-900 font-semibold cursor-not-allowed" : ""
-      }`}
-    />
-  </div>
-</div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <FieldLabel required>Drug Name &amp; Strength</FieldLabel>
+                  {autoFilled && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAutoFilled(false);
+                        setForm({
+                          ...form,
+                          ndc: "",
+                          drug_name: "",
+                          strength: "",
+                          manufacturer: "",
+                          package_size: "",
+                        });
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md bg-violet-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-700 ring-1 ring-inset ring-violet-300 shadow-sm transition hover:bg-violet-200 hover:text-violet-900 hover:ring-violet-400 active:bg-violet-300"
+                    >
+                      Clear &amp; edit manually
+                    </button>
+                  )}
+                </div>
+                <div
+                  className={`flex h-11 w-full overflow-hidden rounded-xl ring-1 ring-inset ring-transparent transition ${
+                    autoFilled
+                      ? "bg-violet-50/60 cursor-not-allowed"
+                      : "bg-gray-50 focus-within:bg-white focus-within:ring-gray-900"
+                  }`}
+                >
+                  <input
+                    type="text"
+                    value={form.drug_name}
+                    readOnly={autoFilled}
+                    onChange={(e) =>
+                      setForm({ ...form, drug_name: e.target.value })
+                    }
+                    placeholder="Mounjaro"
+                    className={`min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${
+                      autoFilled
+                        ? "text-gray-900 font-semibold cursor-not-allowed"
+                        : ""
+                    }`}
+                  />
+                  <div className="my-2 w-px bg-gray-200" />
+                  <input
+                    type="text"
+                    value={form.strength}
+                    readOnly={autoFilled}
+                    onChange={(e) =>
+                      setForm({ ...form, strength: e.target.value })
+                    }
+                    placeholder="7.5 mg/0.5 mL"
+                    className={`min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${
+                      autoFilled
+                        ? "text-gray-900 font-semibold cursor-not-allowed"
+                        : ""
+                    }`}
+                  />
+                </div>
+              </div>
 
               <div>
-  <FieldLabel>Package Size</FieldLabel>
-  <input
-    type="text"
-    value={form.package_size}
-    readOnly={autoFilled}
-    onChange={(e) => setForm({ ...form, package_size: e.target.value })}
-    placeholder="4 pens/carton"
-    className={`h-11 w-full rounded-xl border-0 px-4 text-sm outline-none ring-1 ring-inset ring-transparent ${
-      autoFilled
-        ? "bg-violet-50/60 text-gray-900 font-semibold cursor-not-allowed"
-        : "bg-gray-50 focus:bg-white focus:ring-gray-900"
-    }`}
-  />
-</div>
+                <FieldLabel>Package Size</FieldLabel>
+                <input
+                  type="text"
+                  value={form.package_size}
+                  readOnly={autoFilled}
+                  onChange={(e) =>
+                    setForm({ ...form, package_size: e.target.value })
+                  }
+                  placeholder="4 pens/carton"
+                  className={`h-11 w-full rounded-xl border-0 px-4 text-sm outline-none ring-1 ring-inset ring-transparent ${
+                    autoFilled
+                      ? "bg-violet-50/60 text-gray-900 font-semibold cursor-not-allowed"
+                      : "bg-gray-50 focus:bg-white focus:ring-gray-900"
+                  }`}
+                />
+              </div>
 
               <div className="rounded-xl bg-rose-50 p-3 text-xs text-rose-900 ring-1 ring-inset ring-rose-200">
                 <div className="font-extrabold">
@@ -2707,7 +2800,10 @@ const pickSuggestion = (s: NdcSuggestion) => {
                     type="text"
                     value={form.lot_number}
                     onChange={(e) =>
-                      setForm({ ...form, lot_number: e.target.value.slice(0, 10) })
+                      setForm({
+                        ...form,
+                        lot_number: e.target.value.slice(0, 10),
+                      })
                     }
                     maxLength={10}
                     placeholder="B2024-7891"
@@ -2719,7 +2815,9 @@ const pickSuggestion = (s: NdcSuggestion) => {
                   <input
                     type="date"
                     value={form.expiry}
-                    onChange={(e) => setForm({ ...form, expiry: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, expiry: e.target.value })
+                    }
                     className="h-11 w-full rounded-xl border-0 bg-gray-50 px-4 text-sm outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
                   />
                 </div>
@@ -2769,12 +2867,16 @@ const pickSuggestion = (s: NdcSuggestion) => {
               </div>
               <div className="rounded-xl bg-gray-50 p-3 text-xs text-gray-600 ring-1 ring-inset ring-gray-200">
                 <span className="font-extrabold text-gray-900">Limits:</span>{" "}
-                Quantity is capped at <span className="font-semibold">10</span> units per listing,
-                and shelf cost is capped at <span className="font-semibold">$100,000</span> per unit.
+                Quantity is capped at <span className="font-semibold">10</span>{" "}
+                units per listing, and shelf cost is capped at{" "}
+                <span className="font-semibold">$100,000</span> per unit.
               </div>
               <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 ring-1 ring-inset ring-amber-200">
-                <span className="font-extrabold">Listing auto-expires in 30 days.</span>{" "}
-                Visible only to verified pharmacies. Records retained for 7 years.
+                <span className="font-extrabold">
+                  Listing auto-expires in 30 days.
+                </span>{" "}
+                Visible only to verified pharmacies. Records retained for 7
+                years.
               </div>
             </>
           )}
@@ -2799,7 +2901,8 @@ const pickSuggestion = (s: NdcSuggestion) => {
                       Public — visible to all verified pharmacies
                     </div>
                     <div className="mt-0.5 text-xs text-gray-600">
-                      Maximum reach. Recommended unless you specifically want to limit visibility.
+                      Maximum reach. Recommended unless you specifically want to
+                      limit visibility.
                     </div>
                   </div>
                 </button>
@@ -2850,13 +2953,15 @@ const pickSuggestion = (s: NdcSuggestion) => {
                               setSelectedGroupIds((prev) =>
                                 checked
                                   ? prev.filter((id) => id !== g.id)
-                                  : [...prev, g.id]
+                                  : [...prev, g.id],
                               );
                             }}
                             className="h-4 w-4 cursor-pointer rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                           />
                           <Users className="h-3.5 w-3.5 text-violet-600" />
-                          <span className="flex-1 text-sm font-bold text-gray-900">{g.name}</span>
+                          <span className="flex-1 text-sm font-bold text-gray-900">
+                            {g.name}
+                          </span>
                           <span className="text-[11px] text-gray-500">
                             {g.member_count} members
                           </span>
@@ -2889,8 +2994,11 @@ const pickSuggestion = (s: NdcSuggestion) => {
             }}
             disabled={
               (step === 1 && (!form.ndc || !form.drug_name)) ||
-              (step === 2 && (!form.lot_number || !form.expiry || !form.quantity)) ||
-              (step === 3 && visibility === "groups_only" && selectedGroupIds.length === 0)
+              (step === 2 &&
+                (!form.lot_number || !form.expiry || !form.quantity)) ||
+              (step === 3 &&
+                visibility === "groups_only" &&
+                selectedGroupIds.length === 0)
             }
             className="rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
@@ -3002,7 +3110,9 @@ function InfoCard({
       {hint && (
         <div
           className={`mt-0.5 text-[11px] ${
-            hintColor === "rose" ? "text-rose-600 font-semibold" : "text-gray-500"
+            hintColor === "rose"
+              ? "text-rose-600 font-semibold"
+              : "text-gray-500"
           }`}
         >
           {hint}
@@ -3066,8 +3176,8 @@ function EmptyState() {
         No listings available
       </h3>
       <p className="mt-1 text-sm text-gray-500">
-        Be the first to list inventory or check back soon as more pharmacies join the
-        network.
+        Be the first to list inventory or check back soon as more pharmacies
+        join the network.
       </p>
     </div>
   );
@@ -3197,7 +3307,8 @@ function GroupsView({
             No groups yet
           </h3>
           <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
-            Create a group to share inventory privately with trusted pharmacies, or check the Discover tab to find existing groups.
+            Create a group to share inventory privately with trusted pharmacies,
+            or check the Discover tab to find existing groups.
           </p>
         </div>
       ) : (
@@ -3242,7 +3353,9 @@ function GroupsView({
               <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
                 <span className="inline-flex items-center gap-1">
                   <Users className="h-3 w-3" />
-                  <span className="font-bold text-gray-900">{g.member_count}</span>
+                  <span className="font-bold text-gray-900">
+                    {g.member_count}
+                  </span>
                   /{g.max_members} members
                 </span>
               </div>
@@ -3297,7 +3410,8 @@ function DiscoverGroupsView({
           No groups to discover
         </h3>
         <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
-          There are no discoverable groups right now. Be the first — create a public group from the My Groups tab.
+          There are no discoverable groups right now. Be the first — create a
+          public group from the My Groups tab.
         </p>
       </div>
     );
@@ -3321,21 +3435,30 @@ function DiscoverGroupsView({
                 <Users className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-lg font-extrabold text-gray-900">{g.name}</h3>
+                <h3 className="text-lg font-extrabold text-gray-900">
+                  {g.name}
+                </h3>
                 {g.admin_pharmacy_name && (
                   <div className="text-[11px] text-gray-500">
-                    By <span className="font-semibold text-gray-700">{g.admin_pharmacy_name}</span>
+                    By{" "}
+                    <span className="font-semibold text-gray-700">
+                      {g.admin_pharmacy_name}
+                    </span>
                   </div>
                 )}
               </div>
             </div>
             {g.description && (
-              <p className="mt-2 line-clamp-2 text-xs text-gray-600">{g.description}</p>
+              <p className="mt-2 line-clamp-2 text-xs text-gray-600">
+                {g.description}
+              </p>
             )}
             <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
               <span className="inline-flex items-center gap-1">
                 <Users className="h-3 w-3" />
-                <span className="font-bold text-gray-900">{g.member_count}</span>
+                <span className="font-bold text-gray-900">
+                  {g.member_count}
+                </span>
                 /{g.max_members}
               </span>
               <span className="text-gray-400">·</span>
@@ -3459,7 +3582,8 @@ function CreateGroupModal({
             Create a Group
           </h2>
           <p className="mt-1 text-xs text-gray-500">
-            Groups are circles of trusted pharmacies that share listings only with each other.
+            Groups are circles of trusted pharmacies that share listings only
+            with each other.
           </p>
         </div>
 
@@ -3507,7 +3631,8 @@ function CreateGroupModal({
                     Discoverable
                   </div>
                   <div className="mt-0.5 text-[11px] leading-relaxed text-gray-600">
-                    Other pharmacies can find this group and request to join. You approve each request.
+                    Other pharmacies can find this group and request to join.
+                    You approve each request.
                   </div>
                 </div>
               </button>
@@ -3528,7 +3653,8 @@ function CreateGroupModal({
                     Private
                   </div>
                   <div className="mt-0.5 text-[11px] leading-relaxed text-gray-600">
-                    Hidden from discovery. Members can only join via your direct invitation.
+                    Hidden from discovery. Members can only join via your direct
+                    invitation.
                   </div>
                 </div>
               </button>
@@ -3536,7 +3662,9 @@ function CreateGroupModal({
           </div>
 
           <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 ring-1 ring-inset ring-amber-200">
-            <span className="font-extrabold">You'll be the group admin.</span> You can invite up to 25 pharmacies. You can be in at most 5 groups total.
+            <span className="font-extrabold">You'll be the group admin.</span>{" "}
+            You can invite up to 25 pharmacies. You can be in at most 5 groups
+            total.
           </div>
           {error && (
             <div className="rounded-xl bg-rose-50 p-3 text-xs text-rose-800 ring-1 ring-inset ring-rose-200">
@@ -3646,7 +3774,7 @@ function GroupDetailPanel({
     try {
       if (confirmAction.type === "remove" && confirmAction.pharmacyId) {
         await api.delete(
-          `/api/inventory-view/groups/${groupId}/members/${confirmAction.pharmacyId}`
+          `/api/inventory-view/groups/${groupId}/members/${confirmAction.pharmacyId}`,
         );
         setConfirmAction(null);
         load();
@@ -3663,7 +3791,9 @@ function GroupDetailPanel({
         onClose();
       }
     } catch (err: any) {
-      setErrorMessage(err?.response?.data?.error || "Action failed. Please try again.");
+      setErrorMessage(
+        err?.response?.data?.error || "Action failed. Please try again.",
+      );
     } finally {
       setConfirmLoading(false);
     }
@@ -3780,7 +3910,9 @@ function GroupDetailPanel({
                   ) : (
                     <Globe className="h-3 w-3" />
                   )}
-                  {data.group.is_discoverable ? "Make Private" : "Make Discoverable"}
+                  {data.group.is_discoverable
+                    ? "Make Private"
+                    : "Make Discoverable"}
                 </button>
               )}
             </div>
@@ -3792,7 +3924,9 @@ function GroupDetailPanel({
                 data.pending_join_requests.length > 0 && (
                   <div>
                     <div className="mb-3 flex items-center gap-2">
-                      <SectionHeading icon={<UserPlus className="h-3.5 w-3.5" />}>
+                      <SectionHeading
+                        icon={<UserPlus className="h-3.5 w-3.5" />}
+                      >
                         Pending Join Requests
                       </SectionHeading>
                       <span className="inline-flex items-center justify-center rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">
@@ -3811,11 +3945,14 @@ function GroupDetailPanel({
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="text-sm font-bold text-gray-900">
-                                {req.requester_pharmacy_name || "(unnamed pharmacy)"}
+                                {req.requester_pharmacy_name ||
+                                  "(unnamed pharmacy)"}
                               </div>
                               <div className="text-[11px] text-gray-600">
                                 {req.requester_address?.split(",")[0] || "—"}
-                                {req.requester_npi ? ` · NPI ${req.requester_npi}` : ""}
+                                {req.requester_npi
+                                  ? ` · NPI ${req.requester_npi}`
+                                  : ""}
                               </div>
                               {req.message && (
                                 <div className="mt-1.5 rounded-lg bg-white px-2.5 py-1.5 text-[11px] italic text-gray-700 ring-1 ring-violet-100">
@@ -3899,7 +4036,10 @@ function GroupDetailPanel({
                       {data.group.is_admin && m.role !== "admin" && (
                         <button
                           onClick={() =>
-                            requestRemoveMember(m.pharmacy_id, m.pharmacy_name || "this pharmacy")
+                            requestRemoveMember(
+                              m.pharmacy_id,
+                              m.pharmacy_name || "this pharmacy",
+                            )
                           }
                           className="rounded-lg bg-rose-50 px-2.5 py-1 text-[10px] font-semibold text-rose-700 hover:bg-rose-100"
                         >
@@ -3999,8 +4139,8 @@ function GroupDetailPanel({
               </>
             ) : confirmAction.type === "leave" ? (
               <>
-                You'll lose access to listings shared in this group. The admin can
-                re-invite you later if needed.
+                You'll lose access to listings shared in this group. The admin
+                can re-invite you later if needed.
                 {errorMessage && (
                   <div className="mt-3 rounded-lg bg-rose-50 p-2.5 text-xs text-rose-800 ring-1 ring-inset ring-rose-200">
                     {errorMessage}
@@ -4009,8 +4149,9 @@ function GroupDetailPanel({
               </>
             ) : (
               <>
-                All members will lose access. Listings shared with this group will
-                no longer be visible to anyone. This action cannot be undone.
+                All members will lose access. Listings shared with this group
+                will no longer be visible to anyone. This action cannot be
+                undone.
                 {errorMessage && (
                   <div className="mt-3 rounded-lg bg-rose-50 p-2.5 text-xs text-rose-800 ring-1 ring-inset ring-rose-200">
                     {errorMessage}
@@ -4099,7 +4240,8 @@ function InviteMemberModal({
               className="h-11 w-full rounded-xl border-0 bg-gray-50 px-4 text-sm outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
             />
             <div className="mt-1 text-xs text-gray-500">
-              If they're already on AuditProRx, the invite shows in their inbox. Otherwise we email them.
+              If they're already on AuditProRx, the invite shows in their inbox.
+              Otherwise we email them.
             </div>
           </div>
 
@@ -4244,8 +4386,13 @@ function NotificationsInbox({
                     <div className="mt-0.5 text-xs text-gray-500">
                       {inv.inviter_name && (
                         <>
-                          From <span className="font-semibold">{inv.inviter_name}</span>
-                          {inv.inviter_pharmacy ? ` · ${inv.inviter_pharmacy}` : ""}
+                          From{" "}
+                          <span className="font-semibold">
+                            {inv.inviter_name}
+                          </span>
+                          {inv.inviter_pharmacy
+                            ? ` · ${inv.inviter_pharmacy}`
+                            : ""}
                         </>
                       )}
                     </div>
@@ -4287,71 +4434,75 @@ function NotificationsInbox({
                   Join Requests · Pharmacies want to join your groups
                 </div>
                 {joinRequests.map((req) => (
-  <div
-    key={req.id}
-    className="border-b border-gray-100 px-5 py-3"
-  >
-    <div className="text-sm font-bold text-gray-900">
-      {req.requester_pharmacy || req.requester_name || "(unnamed)"}
-    </div>
-    <div className="mt-0.5 text-xs text-gray-500">
-      wants to join{" "}
-      <span className="font-semibold text-gray-900">
-        {req.group_name}
-      </span>
-    </div>
+                  <div
+                    key={req.id}
+                    className="border-b border-gray-100 px-5 py-3"
+                  >
+                    <div className="text-sm font-bold text-gray-900">
+                      {req.requester_pharmacy ||
+                        req.requester_name ||
+                        "(unnamed)"}
+                    </div>
+                    <div className="mt-0.5 text-xs text-gray-500">
+                      wants to join{" "}
+                      <span className="font-semibold text-gray-900">
+                        {req.group_name}
+                      </span>
+                    </div>
 
-    {/* Pharmacy details: address, phone */}
-    <div className="mt-2 space-y-0.5 text-[11px] text-gray-600">
-      {req.requester_address && (
-        <div className="flex items-start gap-1.5">
-          <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-gray-400" />
-          <span className="truncate">{req.requester_address}</span>
-        </div>
-      )}
-      {req.requester_phone && (
-        <div className="flex items-center gap-1.5">
-          <Phone className="h-3 w-3 shrink-0 text-gray-400" />
-          <a
-            href={`tel:${req.requester_phone}`}
-            className="font-medium text-violet-700 hover:underline"
-          >
-            {req.requester_phone}
-          </a>
-        </div>
-      )}
-    </div>
+                    {/* Pharmacy details: address, phone */}
+                    <div className="mt-2 space-y-0.5 text-[11px] text-gray-600">
+                      {req.requester_address && (
+                        <div className="flex items-start gap-1.5">
+                          <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-gray-400" />
+                          <span className="truncate">
+                            {req.requester_address}
+                          </span>
+                        </div>
+                      )}
+                      {req.requester_phone && (
+                        <div className="flex items-center gap-1.5">
+                          <Phone className="h-3 w-3 shrink-0 text-gray-400" />
+                          <a
+                            href={`tel:${req.requester_phone}`}
+                            className="font-medium text-violet-700 hover:underline"
+                          >
+                            {req.requester_phone}
+                          </a>
+                        </div>
+                      )}
+                    </div>
 
-    {req.message && (
-      <div className="mt-2 rounded-lg bg-violet-50 px-2.5 py-1.5 text-[11px] italic text-gray-600">
-        "{req.message}"
-      </div>
-    )}
+                    {req.message && (
+                      <div className="mt-2 rounded-lg bg-violet-50 px-2.5 py-1.5 text-[11px] italic text-gray-600">
+                        "{req.message}"
+                      </div>
+                    )}
 
-    <div className="mt-2 flex items-center gap-2">
-      <button
-        onClick={() => accept(req.id)}
-        disabled={actingId === req.id}
-        className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-      >
-        {actingId === req.id ? (
-          <Loader2 className="h-3 w-3 animate-spin" />
-        ) : (
-          <UserCheck className="h-3 w-3" />
-        )}
-        Approve
-      </button>
-      <button
-        onClick={() => decline(req.id)}
-        disabled={actingId === req.id}
-        className="inline-flex items-center gap-1 rounded-lg bg-gray-50 px-3 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-      >
-        <UserX className="h-3 w-3" />
-        Decline
-      </button>
-    </div>
-  </div>
-))}
+                    <div className="mt-2 flex items-center gap-2">
+                      <button
+                        onClick={() => accept(req.id)}
+                        disabled={actingId === req.id}
+                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        {actingId === req.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <UserCheck className="h-3 w-3" />
+                        )}
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => decline(req.id)}
+                        disabled={actingId === req.id}
+                        className="inline-flex items-center gap-1 rounded-lg bg-gray-50 px-3 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      >
+                        <UserX className="h-3 w-3" />
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </>
             )}
           </>
