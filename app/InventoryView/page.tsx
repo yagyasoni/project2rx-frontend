@@ -2493,6 +2493,7 @@ function AddListingModal({
   const [ndcSuggestions, setNdcSuggestions] = useState<NdcSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [autoFilled, setAutoFilled] = useState(false);
   const ndcInputRef = useRef<HTMLDivElement>(null);
 
   // ── Debounced NDC search ──
@@ -2502,20 +2503,29 @@ function AddListingModal({
       setNdcSuggestions([]);
       return;
     }
+
     setIsSearching(true);
     const timer = setTimeout(async () => {
       try {
+        // Single endpoint — handles BOTH drug names and NDCs
         const res = await api.get(
           `/api/audits/ndc-suggestions?q=${encodeURIComponent(q)}`,
         );
-        setNdcSuggestions(res.data || []);
+        const list: NdcSuggestion[] = (res.data || []).map((s: any) => ({
+          ndc: s.ndc,
+          drug_name: s.drug_name,
+          brand: s.brand ?? null,
+          package_size: s.package_size ?? null,
+        }));
+        setNdcSuggestions(list);
       } catch (err) {
-        console.error("NDC suggestion error:", err);
+        console.error("Suggestion error:", err);
         setNdcSuggestions([]);
       } finally {
         setIsSearching(false);
       }
     }, 250);
+
     return () => clearTimeout(timer);
   }, [form.ndc]);
 
@@ -2534,18 +2544,41 @@ function AddListingModal({
   }, []);
 
   const pickSuggestion = (s: NdcSuggestion) => {
-    const parts = s.drug_name.split(/\s+/);
-    const drugBase = parts[0] || s.drug_name;
-    const strengthGuess = parts.slice(1).join(" ").toLowerCase();
+    // Strip trailing NDC pattern like " (13668-0081-30)" from the drug name first
+    const cleanName = s.drug_name
+      .replace(/\s*\(\d{5}-\d{4}-\d{2}\)\s*$/, "")
+      .trim();
+
+    // Smart split: drug name = everything BEFORE the first token containing a digit
+    const tokens = cleanName.split(/\s+/);
+    const firstNumIdx = tokens.findIndex((t) => /\d/.test(t));
+
+    let namePart: string;
+    let strengthPart: string;
+    if (firstNumIdx > 0) {
+      namePart = tokens.slice(0, firstNumIdx).join(" ");
+      strengthPart = tokens.slice(firstNumIdx).join(" ");
+    } else {
+      namePart = tokens[0] || cleanName;
+      strengthPart = tokens.slice(1).join(" ");
+    }
+
+    // Title-case the drug name
+    const titleCased = namePart
+      .toLowerCase()
+      .split(" ")
+      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : ""))
+      .join(" ");
 
     setForm({
       ...form,
       ndc: s.ndc,
-      drug_name: drugBase.charAt(0) + drugBase.slice(1).toLowerCase(),
-      strength: form.strength || strengthGuess,
-      manufacturer: form.manufacturer || s.brand || "",
-      package_size: form.package_size || s.package_size || "",
+      drug_name: titleCased,
+      strength: strengthPart.toLowerCase(),
+      manufacturer: s.brand || form.manufacturer,
+      package_size: s.package_size || form.package_size,
     });
+    setAutoFilled(true);
     setShowSuggestions(false);
   };
 
@@ -2606,13 +2639,18 @@ function AddListingModal({
                 <input
                   type="text"
                   value={form.ndc}
+                  readOnly={autoFilled}
                   onChange={(e) => {
                     setForm({ ...form, ndc: e.target.value });
                     setShowSuggestions(true);
                   }}
-                  onFocus={() => setShowSuggestions(true)}
-                  placeholder="Type NDC or drug name (e.g. 00002-1495 or Mounjaro)"
-                  className="h-11 w-full rounded-xl border-0 bg-gray-50 px-4 font-mono text-sm outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
+                  onFocus={() => !autoFilled && setShowSuggestions(true)}
+                  placeholder="Type NDC or drug name (e.g. 00002-1495 or Atorvastatin)"
+                  className={`h-11 w-full rounded-xl border-0 px-4 font-mono text-sm outline-none ring-1 ring-inset ring-transparent ${
+                    autoFilled
+                      ? "bg-violet-50/60 text-gray-900 font-semibold cursor-not-allowed"
+                      : "bg-gray-50 focus:bg-white focus:ring-gray-900"
+                  }`}
                   autoComplete="off"
                 />
 
@@ -2666,28 +2704,63 @@ function AddListingModal({
               </div>
 
               <div>
-                <FieldLabel required>Drug Name &amp; Strength</FieldLabel>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <FieldLabel required>Drug Name &amp; Strength</FieldLabel>
+                  {autoFilled && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAutoFilled(false);
+                        setForm({
+                          ...form,
+                          ndc: "",
+                          drug_name: "",
+                          strength: "",
+                          manufacturer: "",
+                          package_size: "",
+                        });
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md bg-violet-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-700 ring-1 ring-inset ring-violet-300 shadow-sm transition hover:bg-violet-200 hover:text-violet-900 hover:ring-violet-400 active:bg-violet-300"
+                    >
+                      Clear &amp; edit manually
+                    </button>
+                  )}
+                </div>
                 <div
-                  className={`flex h-11 w-full overflow-hidden rounded-xl bg-gray-50 ring-1 ring-inset ring-transparent transition focus-within:bg-white focus-within:ring-gray-900`}
+                  className={`flex h-11 w-full overflow-hidden rounded-xl ring-1 ring-inset ring-transparent transition ${
+                    autoFilled
+                      ? "bg-violet-50/60 cursor-not-allowed"
+                      : "bg-gray-50 focus-within:bg-white focus-within:ring-gray-900"
+                  }`}
                 >
                   <input
                     type="text"
                     value={form.drug_name}
+                    readOnly={autoFilled}
                     onChange={(e) =>
                       setForm({ ...form, drug_name: e.target.value })
                     }
                     placeholder="Mounjaro"
-                    className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none"
+                    className={`min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${
+                      autoFilled
+                        ? "text-gray-900 font-semibold cursor-not-allowed"
+                        : ""
+                    }`}
                   />
                   <div className="my-2 w-px bg-gray-200" />
                   <input
                     type="text"
                     value={form.strength}
+                    readOnly={autoFilled}
                     onChange={(e) =>
                       setForm({ ...form, strength: e.target.value })
                     }
                     placeholder="7.5 mg/0.5 mL"
-                    className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none"
+                    className={`min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${
+                      autoFilled
+                        ? "text-gray-900 font-semibold cursor-not-allowed"
+                        : ""
+                    }`}
                   />
                 </div>
               </div>
@@ -2697,11 +2770,16 @@ function AddListingModal({
                 <input
                   type="text"
                   value={form.package_size}
+                  readOnly={autoFilled}
                   onChange={(e) =>
                     setForm({ ...form, package_size: e.target.value })
                   }
                   placeholder="4 pens/carton"
-                  className="h-11 w-full rounded-xl border-0 bg-gray-50 px-4 text-sm outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
+                  className={`h-11 w-full rounded-xl border-0 px-4 text-sm outline-none ring-1 ring-inset ring-transparent ${
+                    autoFilled
+                      ? "bg-violet-50/60 text-gray-900 font-semibold cursor-not-allowed"
+                      : "bg-gray-50 focus:bg-white focus:ring-gray-900"
+                  }`}
                 />
               </div>
 
@@ -2722,8 +2800,12 @@ function AddListingModal({
                     type="text"
                     value={form.lot_number}
                     onChange={(e) =>
-                      setForm({ ...form, lot_number: e.target.value })
+                      setForm({
+                        ...form,
+                        lot_number: e.target.value.slice(0, 10),
+                      })
                     }
+                    maxLength={10}
                     placeholder="B2024-7891"
                     className="h-11 w-full rounded-xl border-0 bg-gray-50 px-4 font-mono text-sm outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
                   />
@@ -2746,10 +2828,16 @@ function AddListingModal({
                   <input
                     type="number"
                     min={1}
+                    max={10}
                     value={form.quantity}
-                    onChange={(e) =>
-                      setForm({ ...form, quantity: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === "" || Number(v) <= 10) {
+                        setForm({ ...form, quantity: v });
+                      } else {
+                        setForm({ ...form, quantity: "10" });
+                      }
+                    }}
                     className="h-11 w-full rounded-xl border-0 bg-gray-50 px-4 text-sm outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
                   />
                 </div>
@@ -2758,10 +2846,17 @@ function AddListingModal({
                   <input
                     type="number"
                     step="0.01"
+                    min={0}
+                    max={100000}
                     value={form.acquisition_cost}
-                    onChange={(e) =>
-                      setForm({ ...form, acquisition_cost: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === "" || Number(v) <= 100000) {
+                        setForm({ ...form, acquisition_cost: v });
+                      } else {
+                        setForm({ ...form, acquisition_cost: "100000" });
+                      }
+                    }}
                     placeholder="0.00"
                     className="h-11 w-full rounded-xl border-0 bg-gray-50 px-4 text-sm outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
                   />
@@ -2769,6 +2864,12 @@ function AddListingModal({
               </div>
               <div className="text-xs text-gray-500">
                 Shelf cost is shown as benchmarking only — not a sale price.
+              </div>
+              <div className="rounded-xl bg-gray-50 p-3 text-xs text-gray-600 ring-1 ring-inset ring-gray-200">
+                <span className="font-extrabold text-gray-900">Limits:</span>{" "}
+                Quantity is capped at <span className="font-semibold">10</span>{" "}
+                units per listing, and shelf cost is capped at{" "}
+                <span className="font-semibold">$100,000</span> per unit.
               </div>
               <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 ring-1 ring-inset ring-amber-200">
                 <span className="font-extrabold">
