@@ -98,6 +98,7 @@ interface Supplier {
   id: string;
   name: string;
   email?: string;
+  phone_number?: string;
   created_at: string;
   mappings?: Record<string, string>; // 👈 ADD THIS
 }
@@ -153,10 +154,12 @@ const SupplierMappingPage = () => {
   const textLight = "hsl(0 0% 95%)"; // Near white
   const [loading, setLoading] = useState(false);
   const [newSupplierEmail, setNewSupplierEmail] = useState("");
+  const [newSupplierPhoneNumber, setNewSupplierPhoneNumber] = useState("");
   const [editEmailModal, setEditEmailModal] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [emailInput, setEmailInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [phoneInput, setPhoneInput] = useState("");
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -199,11 +202,14 @@ const SupplierMappingPage = () => {
         {
           name: newSupplierName.trim(),
           email: newSupplierEmail.trim(),
+          phone_number: newSupplierPhoneNumber.trim(),
         },
       );
 
       setSuppliers((prev) => [...prev, res.data]);
       setNewSupplierName("");
+      setNewSupplierEmail("");
+      setNewSupplierPhoneNumber("");
       setAddModal(false);
       window.location.reload();
       setLoading(false);
@@ -381,8 +387,9 @@ const SupplierMappingPage = () => {
       .map((s) => {
         const nameScore = scoreMatch(s.name || "");
         const emailScore = scoreMatch(s.email || "");
+        const phoneScore = scoreMatch(s.phone_number || "");
 
-        const score = Math.max(nameScore, emailScore);
+        const score = Math.max(nameScore, emailScore, phoneScore);
 
         return { ...s, __score: score };
       })
@@ -471,8 +478,11 @@ const SupplierMappingPage = () => {
                   <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Supplier Name
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] font-semibold">
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Email
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Phone No.
                   </th>
                   <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Mapping Status
@@ -526,13 +536,16 @@ const SupplierMappingPage = () => {
                         <td className="flex ml-4 py-3 text-xs text-muted-foreground font-medium">
                           {index + 1}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 max-w-[150px]">
                           <span className="text-xs font-semibold text-foreground">
                             {supplier.name}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                        <td className="px-4 py-3 max-w-[200px] text-xs text-muted-foreground">
                           {supplier.email || "-"}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {supplier.phone_number || "-"}
                         </td>
                         <td className="px-4 py-3">
                           <span
@@ -593,13 +606,14 @@ const SupplierMappingPage = () => {
                                   onClick={() => {
                                     setEditingSupplier(supplier);
                                     setEmailInput(supplier.email || "");
+                                    setPhoneInput(supplier.phone_number || "");
                                     setEditEmailModal(true);
                                     setActiveMenu(null);
                                   }}
                                   className="w-full px-3 py-2 text-left text-xs hover:bg-muted flex items-center gap-2"
                                 >
                                   <PencilLine size={12} />
-                                  Edit Email
+                                  Edit
                                 </button>
                                 {savedMappings[supplier.id] && (
                                   <button
@@ -735,6 +749,15 @@ const SupplierMappingPage = () => {
                 className="text-xs"
               />
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Phone Number</Label>
+              <Input
+                value={newSupplierPhoneNumber}
+                onChange={(e) => setNewSupplierPhoneNumber(e.target.value)}
+                placeholder="e.g. (555) 123-4567"
+                className="text-xs"
+              />
+            </div>
           </div>
 
           <DialogFooter>
@@ -763,14 +786,21 @@ const SupplierMappingPage = () => {
       {/* Add Email Modal */}
       <Dialog open={editEmailModal} onOpenChange={setEditEmailModal}>
         <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Edit Email</DialogTitle>
-          </DialogHeader>
-
+          <DialogHeader>{/* <DialogTitle>Edit</DialogTitle> */}</DialogHeader>
+          <span className="text-sm text-muted-foreground">Email</span>
           <Input
             value={emailInput}
             onChange={(e) => setEmailInput(e.target.value)}
             placeholder="Enter email"
+            className="text-xs"
+          />
+          <span className="text-sm text-muted-foreground mt-2">
+            Phone Number
+          </span>
+          <Input
+            value={phoneInput}
+            onChange={(e) => setPhoneInput(e.target.value)}
+            placeholder="Enter phone number"
             className="text-xs"
           />
 
@@ -785,7 +815,7 @@ const SupplierMappingPage = () => {
 
                 const res = await axios.put(
                   `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers/${editingSupplier.id}/email`,
-                  { email: emailInput },
+                  { email: emailInput, phone_number: phoneInput },
                 );
 
                 setSuppliers((prev) =>

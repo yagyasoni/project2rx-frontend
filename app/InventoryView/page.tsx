@@ -2210,7 +2210,7 @@ function MyListingsView({
                 className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Delist
+                Delete
               </button>
             </div>
           </div>
@@ -2443,7 +2443,7 @@ function DelistConfirmModal({
           ) : (
             <>
               <Trash2 className="h-3.5 w-3.5" />
-              Yes, Delist
+              Yes, Delete
             </>
           )}
         </button>
@@ -2495,6 +2495,7 @@ function AddListingModal({
   const [isSearching, setIsSearching] = useState(false);
   const [autoFilled, setAutoFilled] = useState(false);
   const ndcInputRef = useRef<HTMLDivElement>(null);
+  const ndcLocked = !autoFilled;
 
   // ── Debounced NDC search ──
   useEffect(() => {
@@ -2713,7 +2714,7 @@ function AddListingModal({
                         setAutoFilled(false);
                         setForm({
                           ...form,
-                          ndc: "",
+
                           drug_name: "",
                           strength: "",
                           manufacturer: "",
@@ -2730,36 +2731,42 @@ function AddListingModal({
                   className={`flex h-11 w-full overflow-hidden rounded-xl ring-1 ring-inset ring-transparent transition ${
                     autoFilled
                       ? "bg-violet-50/60 cursor-not-allowed"
-                      : "bg-gray-50 focus-within:bg-white focus-within:ring-gray-900"
+                      : "bg-gray-50 focus-within:bg-white focus-within:ring-gray-900 "
                   }`}
                 >
                   <input
                     type="text"
                     value={form.drug_name}
+                    disabled={form.ndc === ""}
                     readOnly={autoFilled}
                     onChange={(e) =>
                       setForm({ ...form, drug_name: e.target.value })
                     }
                     placeholder="Mounjaro"
                     className={`min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${
-                      autoFilled
-                        ? "text-gray-900 font-semibold cursor-not-allowed"
-                        : ""
+                      form.ndc === ""
+                        ? "cursor-not-allowed text-gray-400"
+                        : autoFilled
+                          ? "cursor-not-allowed font-semibold text-gray-900"
+                          : ""
                     }`}
                   />
                   <div className="my-2 w-px bg-gray-200" />
                   <input
                     type="text"
                     value={form.strength}
+                    disabled={form.ndc === ""}
                     readOnly={autoFilled}
                     onChange={(e) =>
                       setForm({ ...form, strength: e.target.value })
                     }
                     placeholder="7.5 mg/0.5 mL"
                     className={`min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${
-                      autoFilled
-                        ? "text-gray-900 font-semibold cursor-not-allowed"
-                        : ""
+                      form.ndc === ""
+                        ? "bg-gray-100 opacity-70"
+                        : autoFilled
+                          ? "bg-violet-50/60"
+                          : "bg-gray-50"
                     }`}
                   />
                 </div>
@@ -2770,15 +2777,18 @@ function AddListingModal({
                 <input
                   type="text"
                   value={form.package_size}
+                  disabled={form.ndc === ""}
                   readOnly={autoFilled}
                   onChange={(e) =>
                     setForm({ ...form, package_size: e.target.value })
                   }
                   placeholder="4 pens/carton"
                   className={`h-11 w-full rounded-xl border-0 px-4 text-sm outline-none ring-1 ring-inset ring-transparent ${
-                    autoFilled
-                      ? "bg-violet-50/60 text-gray-900 font-semibold cursor-not-allowed"
-                      : "bg-gray-50 focus:bg-white focus:ring-gray-900"
+                    form.ndc === ""
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : autoFilled
+                        ? "bg-violet-50/60 text-gray-900 font-semibold cursor-not-allowed"
+                        : "bg-gray-50 focus:bg-white focus:ring-gray-900"
                   }`}
                 />
               </div>

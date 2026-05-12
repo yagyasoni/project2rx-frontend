@@ -8536,6 +8536,16 @@ export default function InventoryReportPage() {
                                 textAlign: "left",
                                 padding: "0 8px 0 12px",
                               }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveDrug(row);
+                                setActiveSidebar("drug-lookup");
+                                setExpandedLookupDrug(null);
+                                setOpenDrugSidebar(true);
+                                fetchDrugLookup(
+                                  extractIngredient(row.drugName),
+                                );
+                              }}
                             >
                               <div className="flex items-center gap-1">
                                 {/* Tag pills in drug name cell */}
@@ -8662,16 +8672,16 @@ export default function InventoryReportPage() {
                                 <span
                                   className="text-xs font-semibold text-slate-800 truncate cursor-pointer hover:text-indigo-700"
                                   title={row.drugName}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveDrug(row);
-                                    setActiveSidebar("drug-lookup");
-                                    setExpandedLookupDrug(null);
-                                    setOpenDrugSidebar(true);
-                                    fetchDrugLookup(
-                                      extractIngredient(row.drugName),
-                                    );
-                                  }}
+                                  // onClick={(e) => {
+                                  //   e.stopPropagation();
+                                  //   setActiveDrug(row);
+                                  //   setActiveSidebar("drug-lookup");
+                                  //   setExpandedLookupDrug(null);
+                                  //   setOpenDrugSidebar(true);
+                                  //   fetchDrugLookup(
+                                  //     extractIngredient(row.drugName),
+                                  //   );
+                                  // }}
                                 >
                                   {row.drugName}
                                 </span>
