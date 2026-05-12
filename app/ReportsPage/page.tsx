@@ -54,10 +54,26 @@ export default function ReportsPage() {
   });
 
   const [pharmacyName, setPharmacyName] = useState("Loading...");
+  const [pharmacyEmail, setPharmacyEmail] = useState("");
 
   useEffect(() => {
-    const name = localStorage.getItem("pharmacyName") || "Loading...";
-    setPharmacyName(name);
+    const loadPharmacy = async () => {
+      try {
+        const res = await api.get("/auth/pharmacy-details");
+        const name =
+          res?.data?.pharmacy?.pharmacy_name ||
+          localStorage.getItem("pharmacyName") ||
+          "Your Pharmacy";
+        const email =
+          res?.data?.user?.email || localStorage.getItem("userEmail") || "";
+        setPharmacyName(name);
+        setPharmacyEmail(email);
+      } catch {
+        setPharmacyName(localStorage.getItem("pharmacyName") || "Your Pharmacy");
+        setPharmacyEmail(localStorage.getItem("userEmail") || "");
+      }
+    };
+    loadPharmacy();
   }, []);
 
   const getFilteredReports = () => {
@@ -248,9 +264,14 @@ export default function ReportsPage() {
                           <RotateCw className="w-4 h-4 text-slate-400" />
                         </button>
                       </div>
-                      <p className="text-sm text-slate-500 mt-0.5">
+                      <p className="text-sm font-medium text-slate-600 mt-0.5">
                         {pharmacyName}
                       </p>
+                      {pharmacyEmail && (
+                        <p className="text-xs text-slate-400">
+                          {pharmacyEmail}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -331,7 +352,7 @@ export default function ReportsPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider w-10">
+                      <th className="px-3 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider w-12 whitespace-nowrap">
                         #
                       </th>
                       <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
@@ -393,7 +414,7 @@ export default function ReportsPage() {
                           key={report.id}
                           className="border-b border-slate-100 hover:bg-slate-50/60 transition-colors group"
                         >
-                          <td className="px-4 py-3 text-xs text-slate-400 font-medium">
+                          <td className="px-3 py-3 text-xs text-slate-400 font-medium whitespace-nowrap tabular-nums">
                             {index + 1}
                           </td>
                           <td className="px-4 py-3">

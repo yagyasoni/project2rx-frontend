@@ -17,6 +17,18 @@ import {
   Receipt,
 } from "lucide-react";
 
+// ─── NDC helpers ─────────────────────────────────────────────────────────
+const isNdcLike = (s: string) => {
+  const stripped = s.replace(/-/g, "");
+  return /^\d+$/.test(stripped) && stripped.length >= 4;
+};
+const normalizeNdc = (s: string) => s.replace(/-/g, "");
+const formatNdcDisplay = (ndc: string) => {
+  const d = ndc.replace(/-/g, "");
+  if (d.length === 11) return `${d.slice(0, 5)}-${d.slice(5, 9)}-${d.slice(9)}`;
+  return ndc;
+};
+
 // ─── Trending chips ──────────────────────────────────────────────────────
 // ─── Fallback trending if DB has no searches yet ─────────────────────────
 const FALLBACK_TRENDING = [
@@ -47,6 +59,7 @@ const formatStat = (n: number | undefined) => {
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K+`;
   return n.toLocaleString();
 };
+
 
 // ─── Shape of /drug-lookup-landing response ──────────────────────────────
 type LandingData = {
@@ -103,40 +116,49 @@ export default function DrugLookupLandingPage() {
     })();
   }, []);
 
-  // Autocomplete API with debounce
-  useEffect(() => {
-    const q = query.trim();
-    if (q.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-search?q=${encodeURIComponent(q)}`,
-        );
-        if (!res.ok) throw new Error("Search failed");
-        const data: { name: string; rx_count: number }[] = await res.json();
-        // setSuggestions(data.map((d) => d.name));
+// Autocomplete API with debounce — handles BOTH drug name and NDC
+// Autocomplete API with debounce — handles BOTH drug name and NDC
+useEffect(() => {
+  const q = query.trim();
+  if (q.length < 2) {
+    setSuggestions([]);
+    return;
+  }
 
-        setSuggestions(
-          data
-            .map((d) => d.name)
-            .filter(
-              (name) =>
-                name &&
-                name.length < 100 &&
-                !name.includes(",") &&
-                !name.includes("|"),
-            ),
-        );
-      } catch (err) {
-        console.error("Drug search error:", err);
-        setSuggestions([]);
-      }
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [query]);
+  const ndcMode = isNdcLike(q);
+  const searchTerm = ndcMode ? normalizeNdc(q) : q;
+
+  const timer = setTimeout(async () => {
+    try {
+      const url =
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-search` +
+        `?q=${encodeURIComponent(searchTerm)}` +
+        (ndcMode ? "&type=ndc" : "&type=name");
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Search failed");
+      const data: { name: string; ndc?: string; rx_count: number }[] =
+        await res.json();
+
+      setSuggestions(
+        data
+          .map((d) =>
+            ndcMode && d.ndc ? `${formatNdcDisplay(d.ndc)} — ${d.name}` : d.name,
+          )
+          .filter(
+            (name) =>
+              name &&
+              name.length < 140 &&
+              !name.includes("|"),
+          ),
+      );
+    } catch (err) {
+      console.error("Drug search error:", err);
+      setSuggestions([]);
+    }
+  }, 250);
+  return () => clearTimeout(timer);
+}, [query]);
 
   // Click outside to close dropdown
   useEffect(() => {
@@ -149,31 +171,49 @@ export default function DrugLookupLandingPage() {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  const fillSearch = (term: string) => {
-    setQuery(term);
-    setFocused(false);
-    inputRef.current?.focus();
-    setTimeout(() => {
-      const input = inputRef.current;
-      if (input) {
-        const len = term.length;
-        input.setSelectionRange(len, len);
-      }
-    }, 0);
-  };
-
-  const submit = (term: string) => {
-    const t = term.trim();
-    if (!t) return;
-    try {
-      const next = [t, ...recentSearches.filter((x) => x !== t)].slice(0, 5);
-      setRecentSearches(next);
-      localStorage.setItem("drugLookup_recentSearches", JSON.stringify(next));
-    } catch {
-      /* ignore */
+const fillSearch = (term: string) => {
+  // If suggestion is "NDC — Drug Name", grab just the NDC and submit immediately
+  const ndcMatch = term.match(/^([\d-]{6,})\s*—/);
+  if (ndcMatch) {
+    submit(ndcMatch[1].trim());
+    return;
+  }
+  setQuery(term);
+  setFocused(false);
+  inputRef.current?.focus();
+  setTimeout(() => {
+    const input = inputRef.current;
+    if (input) {
+      const len = term.length;
+      input.setSelectionRange(len, len);
     }
+  }, 0);
+};
+
+const submit = (term: string) => {
+  let t = term.trim();
+  if (!t) return;
+
+  // If user pressed Enter on a suggestion like "73352-0086-60 — DICLOFENAC..."
+  const ndcMatch = t.match(/^([\d-]{6,})\s*—/);
+  if (ndcMatch) t = ndcMatch[1].trim();
+
+  try {
+    const next = [t, ...recentSearches.filter((x) => x !== t)].slice(0, 5);
+    setRecentSearches(next);
+    localStorage.setItem("drugLookup_recentSearches", JSON.stringify(next));
+  } catch {
+    /* ignore */
+  }
+
+  if (isNdcLike(t)) {
+    router.push(
+      `/DrugLookup/results?q=${encodeURIComponent(normalizeNdc(t))}&type=ndc`,
+    );
+  } else {
     router.push(`/DrugLookup/results?q=${encodeURIComponent(t)}`);
-  };
+  }
+};
 
   const clearRecent = () => {
     setRecentSearches([]);
@@ -268,7 +308,7 @@ export default function DrugLookupLandingPage() {
                             inputRef.current?.blur();
                           }
                         }}
-                        placeholder="Type drug name or NDC..."
+                        placeholder="Type drug name or NDC (e.g. Eliquis or 73352-0086-60)..."
                         className="flex-1 h-16 pl-16 pr-4 bg-transparent text-[15px] text-slate-800 placeholder:text-slate-400 focus:outline-none"
                       />
 

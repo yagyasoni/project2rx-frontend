@@ -14,7 +14,7 @@ import {
   Pill,
   BarChart3,
   DollarSign,
-  Hash,
+  Hash,      
   Flame,
   ArrowDownCircle,
   ArrowUpCircle,
@@ -55,6 +55,18 @@ interface DrugLookupResponse {
 const extractIngredient = (term: string) =>
   term.trim().split(/\s+/)[0].toUpperCase();
 
+// ── NDC helpers ──
+const isNdcLike = (s: string) => {
+  const stripped = String(s).replace(/-/g, "");
+  return /^\d+$/.test(stripped) && stripped.length >= 4;
+};
+const normalizeNdc = (s: string) => String(s).replace(/-/g, "");
+const formatNdcDisplay = (ndc: string) => {
+  const d = String(ndc).replace(/-/g, "");
+  if (d.length === 11) return `${d.slice(0, 5)}-${d.slice(5, 9)}-${d.slice(9)}`;
+  return ndc;
+};
+
 const brandPill = (brand: string | null | undefined) => {
   if (!brand) return null;
   const raw = String(brand).trim().toUpperCase();
@@ -81,10 +93,12 @@ function DrugLookupResultsInner() {
   const params = useSearchParams();
 
   // ── URL params are the source of truth ──
-  const urlQ = params.get("q") ?? "";
-  const urlBin = params.get("bin") ?? "";
-  const urlPcn = params.get("pcn") ?? "";
-  const urlGrp = params.get("grp") ?? "";
+const urlQ = params.get("q") ?? "";
+const urlBin = params.get("bin") ?? "";
+const urlPcn = params.get("pcn") ?? "";
+const urlGrp = params.get("grp") ?? "";
+const urlType = params.get("type") ?? "name";
+const isNdcMode = urlType === "ndc" || isNdcLike(urlQ);
 
   // ── Local form state (mirrors URL on load/change) ──
   const [drugName, setDrugName] = useState(urlQ);
@@ -125,62 +139,90 @@ function DrugLookupResultsInner() {
   }, [urlQ, urlBin, urlPcn, urlGrp]);
 
   // ── Fetch drug lookup whenever URL params change ──
-  useEffect(() => {
-    const ingredient = extractIngredient(urlQ);
-    if (!ingredient) {
-      setData(null);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    setExpandedDrug(null);
+ // ── Fetch drug lookup whenever URL params change ──
+useEffect(() => {
+  if (!urlQ.trim()) {
+    setData(null);
+    setLoading(false);
+    return;
+  }
+  setLoading(true);
+  setError(null);
+  setExpandedDrug(null);
 
-    (async () => {
-      try {
-        const p = new URLSearchParams();
+  (async () => {
+    try {
+      const p = new URLSearchParams();
+
+      if (isNdcMode) {
+        p.set("type", "ndc");
+        p.set("ndc", normalizeNdc(urlQ));
+      } else {
+        const ingredient = extractIngredient(urlQ);
+        if (!ingredient) {
+          setData(null);
+          setLoading(false);
+          return;
+        }
         p.set("ingredient", ingredient);
-        if (urlBin) p.set("bin", urlBin);
-        if (urlPcn) p.set("pcn", urlPcn);
-        if (urlGrp) p.set("grp", urlGrp);
-
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-lookup-global?${p.toString()}`,
-        );
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        const json = await res.json();
-        setData(json);
-      } catch (e: any) {
-        console.error(e);
-        setError(e?.message ?? "Failed to load");
-        setData(null);
-      } finally {
-        setLoading(false);
       }
-    })();
-  }, [urlQ, urlBin, urlPcn, urlGrp]);
+
+      if (urlBin) p.set("bin", urlBin);
+      if (urlPcn) p.set("pcn", urlPcn);
+      if (urlGrp) p.set("grp", urlGrp);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-lookup-global?${p.toString()}`,
+      );
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      const json = await res.json();
+      setData(json);
+    } catch (e: any) {
+      console.error(e);
+      setError(e?.message ?? "Failed to load");
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  })();
+}, [urlQ, urlBin, urlPcn, urlGrp, urlType, isNdcMode]);
 
   // ── Autocomplete fetch for Drug Name filter input ──
-  useEffect(() => {
-    const q = drugName.trim();
-    if (q.length < 2) {
+ // ── Autocomplete fetch for Drug Name filter input (handles NDC too) ──
+useEffect(() => {
+  const q = drugName.trim();
+  if (q.length < 2) {
+    setDrugSuggestions([]);
+    return;
+  }
+  const ndcMode = isNdcLike(q);
+  const searchTerm = ndcMode ? normalizeNdc(q) : q;
+
+  const timer = setTimeout(async () => {
+    try {
+      const url =
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-search` +
+        `?q=${encodeURIComponent(searchTerm)}` +
+        (ndcMode ? "&type=ndc" : "&type=name");
+
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const out: { name: string; ndc?: string; rx_count: number }[] =
+        await res.json();
+
+      const formatted = out
+        .map((d) =>
+          ndcMode && d.ndc ? `${formatNdcDisplay(d.ndc)} — ${d.name}` : d.name,
+        )
+        .slice(0, 6);
+
+      setDrugSuggestions(formatted);
+    } catch {
       setDrugSuggestions([]);
-      return;
     }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-search?q=${encodeURIComponent(q)}`,
-        );
-        if (!res.ok) return;
-        const out: { name: string; rx_count: number }[] = await res.json();
-        setDrugSuggestions(out.map((d) => d.name).slice(0, 6));
-      } catch {
-        setDrugSuggestions([]);
-      }
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [drugName]);
+  }, 250);
+  return () => clearTimeout(timer);
+}, [drugName]);
 
   // ── Click-outside for autocomplete ──
   useEffect(() => {
@@ -206,34 +248,49 @@ function DrugLookupResultsInner() {
   }, []);
 
   // ── Apply / clear filters ──
-  const applyFilters = () => {
-    const name = drugName.trim();
-    if (!name) return;
-    const p = new URLSearchParams();
+const applyFilters = () => {
+  let name = drugName.trim();
+  if (!name) return;
+
+  // If user picked a suggestion like "73352-0086-60 — DICLOFENAC..."
+  const ndcMatch = name.match(/^([\d-]{6,})\s*—/);
+  if (ndcMatch) name = ndcMatch[1].trim();
+
+  const p = new URLSearchParams();
+
+  if (isNdcLike(name)) {
+    p.set("q", normalizeNdc(name));
+    p.set("type", "ndc");
+  } else {
     p.set("q", name);
-    if (bin.trim()) p.set("bin", bin.trim());
-    if (pcn.trim()) p.set("pcn", pcn.trim());
-    if (grp.trim()) p.set("grp", grp.trim());
-    router.push(`/DrugLookup/results?${p.toString()}`);
-  };
+  }
 
-  const clearAllFilters = () => {
-    setBin("");
-    setPcn("");
-    setGrp("");
-    const p = new URLSearchParams();
-    p.set("q", drugName.trim() || urlQ);
-    router.push(`/DrugLookup/results?${p.toString()}`);
-  };
+  if (bin.trim()) p.set("bin", bin.trim());
+  if (pcn.trim()) p.set("pcn", pcn.trim());
+  if (grp.trim()) p.set("grp", grp.trim());
 
-  const removeOneFilter = (kind: "bin" | "pcn" | "grp") => {
-    const p = new URLSearchParams();
-    p.set("q", urlQ);
-    if (kind !== "bin" && urlBin) p.set("bin", urlBin);
-    if (kind !== "pcn" && urlPcn) p.set("pcn", urlPcn);
-    if (kind !== "grp" && urlGrp) p.set("grp", urlGrp);
-    router.push(`/DrugLookup/results?${p.toString()}`);
-  };
+  router.push(`/DrugLookup/results?${p.toString()}`);
+};
+
+ const clearAllFilters = () => {
+  setBin("");
+  setPcn("");
+  setGrp("");
+  const p = new URLSearchParams();
+  p.set("q", drugName.trim() || urlQ);
+  if (urlType === "ndc") p.set("type", "ndc");
+  router.push(`/DrugLookup/results?${p.toString()}`);
+};
+
+const removeOneFilter = (kind: "bin" | "pcn" | "grp") => {
+  const p = new URLSearchParams();
+  p.set("q", urlQ);
+  if (urlType === "ndc") p.set("type", "ndc");
+  if (kind !== "bin" && urlBin) p.set("bin", urlBin);
+  if (kind !== "pcn" && urlPcn) p.set("pcn", urlPcn);
+  if (kind !== "grp" && urlGrp) p.set("grp", urlGrp);
+  router.push(`/DrugLookup/results?${p.toString()}`);
+};
 
   const hasActiveFilters = Boolean(urlBin || urlPcn || urlGrp);
 
@@ -271,58 +328,9 @@ function DrugLookupResultsInner() {
     };
   }, [data]);
 
-  const displayIngredient = data?.ingredient ?? extractIngredient(urlQ);
-
-  // const sortedDrugs = useMemo(() => {
-  //   if (!data?.drugs) return [];
-
-  //   const num = (v: any) => Number(v ?? 0) || 0;
-
-  //   // let sortable = [...data.drugs];
-  //   let sortable = data.drugs.slice(); // instead of spread
-
-  //   if (sortConfig !== null) {
-  //     sortable.sort((a, b) => {
-  //       let aVal: any;
-  //       let bVal: any;
-
-  //       switch (sortConfig.key) {
-  //         case "drug_name":
-  //           aVal = a.drug_name?.toLowerCase();
-  //           bVal = b.drug_name?.toLowerCase();
-  //           break;
-  //         case "avg_qty_per_rx":
-  //           aVal = num(a.avg_qty_per_rx);
-  //           bVal = num(b.avg_qty_per_rx);
-  //           break;
-  //         case "avg_copay_per_rx":
-  //           aVal = num(a.avg_copay_per_rx);
-  //           bVal = num(b.avg_copay_per_rx);
-  //           break;
-  //         case "avg_ins_paid_per_rx":
-  //           aVal = num(a.avg_ins_paid_per_rx);
-  //           bVal = num(b.avg_ins_paid_per_rx);
-  //           break;
-  //         case "avg_ins_paid_per_unit":
-  //           aVal = num(a.avg_ins_paid_per_unit);
-  //           bVal = num(b.avg_ins_paid_per_unit);
-  //           break;
-  //         case "rx_count":
-  //           aVal = num(a.rx_count);
-  //           bVal = num(b.rx_count);
-  //           break;
-  //         default:
-  //           return 0;
-  //       }
-
-  //       if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
-  //       if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
-  //       return 0;
-  //     });
-  //   }
-
-  //   return sortable;
-  // }, [data, sortConfig]);
+  const displayIngredient =
+  data?.ingredient ??
+  (isNdcMode ? formatNdcDisplay(urlQ) : extractIngredient(urlQ));
 
   const sortedDrugs = useMemo(() => {
     if (!data?.drugs) return [];
@@ -1362,80 +1370,6 @@ function InsightCard({
     </div>
   );
 }
-
-// function CommunityModal({ ndc, onClose }: { ndc: string; onClose: () => void }) {
-//   return (
-//     <div
-//       className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-//       onClick={onClose}
-//     >
-//       {/* Backdrop */}
-//       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-
-//       {/* Modal */}
-//       <div
-//         onClick={(e) => e.stopPropagation()}
-//         className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden"
-//       >
-//         {/* Header */}
-//         <div className="relative px-6 py-5 bg-gradient-to-br from-indigo-500 via-cyan-500 to-teal-500 text-white">
-//           <button
-//             onClick={onClose}
-//             className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-//           >
-//             <X className="w-4 h-4" />
-//           </button>
-//           <div className="flex items-center gap-2 mb-2">
-//             <Globe className="w-4 h-4" />
-//             <p className="text-[11px] font-bold uppercase tracking-widest">Community Coverage</p>
-//           </div>
-//           <h2 className="text-xl font-bold tabular-nums">NDC {ndc}</h2>
-//         </div>
-
-//         {/* Body */}
-//         <div className="px-6 py-6">
-//           <div className="flex items-center gap-2 mb-3">
-//             <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-bold uppercase tracking-wider">
-//               Coming Soon
-//             </span>
-//           </div>
-//           <p className="text-sm text-slate-600 leading-relaxed mb-5">
-//             Community Coverage will show how this NDC is billed across the network — BIN / PCN / Group
-//             breakdown, average insurance paid per plan, and benchmark pricing compared to your own data.
-//           </p>
-
-//           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-//             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">What you'll get</p>
-//             <ul className="space-y-1.5 text-sm text-slate-700">
-//               <li className="flex items-start gap-2">
-//                 <span className="text-teal-500 mt-0.5">•</span>
-//                 Per-plan billing frequency and average paid amounts
-//               </li>
-//               <li className="flex items-start gap-2">
-//                 <span className="text-teal-500 mt-0.5">•</span>
-//                 State-level and time-range filters
-//               </li>
-//               <li className="flex items-start gap-2">
-//                 <span className="text-teal-500 mt-0.5">•</span>
-//                 Reimbursement outliers vs. community median
-//               </li>
-//             </ul>
-//           </div>
-//         </div>
-
-//         {/* Footer */}
-//         <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
-//           <button
-//             onClick={onClose}
-//             className="px-4 h-9 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors"
-//           >
-//             Got it
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
 
 export default function DrugLookupResultsPage() {
   return (
