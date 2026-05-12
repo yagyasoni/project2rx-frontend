@@ -7105,7 +7105,8 @@ export default function InventoryReportPage() {
         type: r.type ?? r.wholesaler_name ?? "MCKESSON",
         date_ordered: r.date_ordered ?? r.date ?? "",
         quantity: Number(r.quantity ?? 0),
-        is_outside_date_range: false,
+        is_outside_date_range:
+  r.is_outside_date_range ?? r.outside_date_range ?? false,
       }));
       setOrderLines(normalized);
     } catch (err) {
