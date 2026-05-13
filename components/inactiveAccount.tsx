@@ -17,7 +17,7 @@ export default function InactiveAccount() {
   const prevStatusRef = useRef<string | null>(null);
   const prevPaymentRef = useRef<string | null>(null);
 
-//   // 🚧 TEMP: subscription/status gate disabled during development. Remove this line to re-enable.
+  // 🚧 TEMP: subscription/status gate disabled during development. Remove this line to re-enable.
 // return null;
 
   useEffect(() => {
