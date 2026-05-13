@@ -6225,9 +6225,7 @@ export default function InventoryReportPage() {
   const [amountValue, setAmountValue] = useState<number | "">("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
-  const [qtyType, setQtyType] = useState<"UNIT" | "PKG SIZE" | null>(
-    "PKG SIZE",
-  );
+  const [qtyType, setQtyType] = useState<"UNIT" | "PKG SIZE" | null>("UNIT");
   const [openQtyDropdown, setOpenQtyDropdown] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
   const [openDrugSidebar, setOpenDrugSidebar] = useState(false);
@@ -6286,10 +6284,9 @@ export default function InventoryReportPage() {
     color: string;
   }
   const [tags, setTags] = useState<Tag[]>([
-    { id: "1", name: "Caremark", color: "#22c55e" },
-    { id: "2", name: "OXY OPTUM", color: "#3b82f6" },
-    { id: "3", name: "ORDERED", color: "#f97316" },
-    { id: "4", name: "Review", color: "#8b5cf6" },
+    { id: "1", name: "ORDERED", color: "#f97316" },
+    { id: "2", name: "NEED TO ORDER", color: "#3b82f6" },
+    { id: "3", name: "REVIEW", color: "#8b5cf6" },
   ]);
   const [rowTags, setRowTags] = useState<Record<number, string[]>>({}); // rowId -> tagIds[]
   const [openTagsDropdown, setOpenTagsDropdown] = useState(false);
@@ -6865,6 +6862,7 @@ export default function InventoryReportPage() {
   const L_PKG = L_DRUG + (showDrug ? 240 : 0);
   const L_UNIT = L_PKG + (showPkg ? 100 : 0);
   const L_ORDERED = L_UNIT + (showUnit ? 100 : 0);
+  const L_BILLED = L_ORDERED + (showOrdered ? 140 : 0);
 
   // ── Visible cols split by group ───────────────────────────────────────────
 
@@ -6919,9 +6917,11 @@ export default function InventoryReportPage() {
     ? fmt(new Date(auditDates.wholesaler_end_date))
     : "—";
 
-  const shortage = (v: number) =>
+  const shortage = (v: number, zeroAsNumber = false) =>
     v === 0 ? (
-      <span className="text-slate-400">—</span>
+      <span className="text-slate-400 tabular-nums">
+        {zeroAsNumber ? "0" : "—"}
+      </span>
     ) : (
       <span
         className={`font-semibold tabular-nums ${v < 0 ? "text-red-600" : "text-emerald-600"}`}
@@ -6932,7 +6932,7 @@ export default function InventoryReportPage() {
 
   const cellVal = (col: ColDef, row: InventoryRow) => {
     const v = row[col.key] as number;
-    if (col.isShortage) return shortage(v);
+    if (col.isShortage) return shortage(v, col.key === "totalShortage");
     if (col.key === "cost")
       return (
         <span className="tabular-nums text-slate-700">${v.toFixed(2)}</span>
@@ -7937,16 +7937,25 @@ export default function InventoryReportPage() {
             ══════════════════════════════════════════════════ */}
 
             <style jsx global>{`
+              .isc {
+                scrollbar-width: thin;
+                scrollbar-color: #cbd5e1 #f1f5f9;
+              }
               .isc::-webkit-scrollbar {
-                height: 4px;
-                width: 4px;
+                height: 8px;
+                width: 8px;
               }
               .isc::-webkit-scrollbar-track {
-                background: transparent;
+                background: #f1f5f9;
+                border-radius: 8px;
               }
               .isc::-webkit-scrollbar-thumb {
                 background: #cbd5e1;
-                border-radius: 4px;
+                border-radius: 8px;
+                border: 1px solid #f1f5f9;
+              }
+              .isc::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
               }
 
               .srow td {
@@ -8165,7 +8174,7 @@ export default function InventoryReportPage() {
                       {showOrdered && (
                         <th
                           rowSpan={2}
-                          className="sticky z-[110] sl"
+                          className="sticky z-[110] sc"
                           style={{
                             left: L_ORDERED,
                             width: 140,
@@ -8184,28 +8193,37 @@ export default function InventoryReportPage() {
                         </th>
                       )}
 
-                      {/* Base scroll — rowspan 2 */}
-                      {baseScrollCols.map((c) => (
-                        <th
-                          key={c.key}
-                          rowSpan={2}
-                          className="sticky z-50"
-                          style={{ background: "#f8fafc", cursor: "pointer" }}
-                          onClick={(e) => handleSort(c.key, e)}
-                        >
-                          <div className="flex items-center justify-center gap-1 px-3 h-full hover:bg-emerald-50/60 whitespace-nowrap">
-                            {c.dot && (
-                              <span
-                                className={`h-1.5 w-1.5 rounded-full shrink-0 ${c.dot}`}
-                              />
-                            )}
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                              {c.label}
-                            </span>
-                            <SortIcon active={sortDir(c.key)} />
-                          </div>
-                        </th>
-                      ))}
+                      {/* Base scroll — rowspan 2 (Total Billed is pinned left) */}
+                      {baseScrollCols.map((c) => {
+                        const pinned = c.key === "totalBilled";
+                        return (
+                          <th
+                            key={c.key}
+                            rowSpan={2}
+                            className={
+                              pinned ? "sticky z-[110] sl" : "sticky z-50"
+                            }
+                            style={{
+                              background: "#f8fafc",
+                              cursor: "pointer",
+                              ...(pinned ? { left: L_BILLED, width: c.w } : {}),
+                            }}
+                            onClick={(e) => handleSort(c.key, e)}
+                          >
+                            <div className="flex items-center justify-center gap-1 px-3 h-full hover:bg-emerald-50/60 whitespace-nowrap">
+                              {c.dot && (
+                                <span
+                                  className={`h-1.5 w-1.5 rounded-full shrink-0 ${c.dot}`}
+                                />
+                              )}
+                              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                                {c.label}
+                              </span>
+                              <SortIcon active={sortDir(c.key)} />
+                            </div>
+                          </th>
+                        );
+                      })}
 
                       {/* Group parent headers — zIndex:1 stays behind sticky-left cols */}
                       {commercialCols.length > 0 && (
@@ -8704,7 +8722,7 @@ export default function InventoryReportPage() {
                           )}
                           {showOrdered && (
                             <td
-                              className="sticky z-20 sl"
+                              className="sticky z-20 sc"
                               style={{
                                 left: L_ORDERED,
                                 width: 140,
@@ -8720,12 +8738,22 @@ export default function InventoryReportPage() {
                             </td>
                           )}
 
-                          {visCols.map((c) => (
+                          {visCols.map((c) => {
+                            const pinned = c.key === "totalBilled";
+                            return (
                             <td
                               key={c.key}
+                              className={pinned ? "sticky z-20 sl" : undefined}
                               style={{
                                 textAlign: "right",
                                 padding: "0 10px",
+                                ...(pinned
+                                  ? {
+                                      left: L_BILLED,
+                                      width: c.w,
+                                      background: bg,
+                                    }
+                                  : {}),
                                 ...cellBorderStyle(c),
                               }}
                               onClick={
@@ -8744,7 +8772,8 @@ export default function InventoryReportPage() {
                                 {cellVal(c, row)}
                               </span>
                             </td>
-                          ))}
+                            );
+                          })}
                         </tr>
                       );
                     })}
@@ -9798,44 +9827,6 @@ export default function InventoryReportPage() {
                             </div>
                           </div>
                         )}
-
-                      {/* Community Coverage Teaser */}
-                      {/* <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 bg-white/40">
-                        <div className="flex items-start gap-3">
-                          <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-indigo-100 to-cyan-100 flex items-center justify-center shrink-0">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="#6366f1"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <circle cx="12" cy="12" r="10" />
-                              <path d="M2 12h20" />
-                              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                            </svg>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <h4 className="text-[13px] font-bold text-slate-800">
-                                Community Coverage
-                              </h4>
-                              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-bold uppercase tracking-wider">
-                                Coming Soon
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
-                              Compare your pharmacy's pricing against community
-                              benchmarks by BIN/PCN/Group, filtered by state and
-                              time range — coming in a future release.
-                            </p>
-                          </div>
-                        </div>
-                      </div> */}
                     </div>
                   </div>
                 </>
