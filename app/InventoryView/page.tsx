@@ -2495,7 +2495,20 @@ function AddListingModal({
   const [isSearching, setIsSearching] = useState(false);
   const [autoFilled, setAutoFilled] = useState(false);
   const ndcInputRef = useRef<HTMLDivElement>(null);
-  const ndcLocked = !autoFilled;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const getMinDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 31);
+    return d.toISOString().split("T")[0];
+  };
+
+  const getMaxDate = () => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 20);
+    return d.toISOString().split("T")[0];
+  };
 
   // ── Debounced NDC search ──
   useEffect(() => {
@@ -2821,13 +2834,50 @@ function AddListingModal({
                   />
                 </div>
                 <div>
-                  <FieldLabel required>Expiry Date</FieldLabel>
+                  {/* <FieldLabel required>Expiry Date</FieldLabel>
                   <input
                     type="date"
                     value={form.expiry}
                     onChange={(e) =>
                       setForm({ ...form, expiry: e.target.value })
                     }
+                    className="h-11 w-full rounded-xl border-0 bg-gray-50 px-4 text-sm outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
+                  /> */}
+                  <FieldLabel required>Expiry Date</FieldLabel>
+
+                  <input
+                    type="date"
+                    value={form.expiry}
+                    min={getMinDate()}
+                    max={getMaxDate()}
+                    onChange={(e) => {
+                      const selectedDate = new Date(e.target.value);
+
+                      const minDate = new Date();
+                      minDate.setHours(0, 0, 0, 0);
+                      minDate.setDate(minDate.getDate() + 31);
+
+                      const maxDate = new Date();
+                      maxDate.setHours(0, 0, 0, 0);
+                      maxDate.setFullYear(maxDate.getFullYear() + 20);
+
+                      if (selectedDate < minDate) {
+                        alert(
+                          "Expiry date must be at least 31 days from today.",
+                        );
+                        return;
+                      }
+
+                      if (selectedDate > maxDate) {
+                        alert("Expiry date cannot exceed 20 years from today.");
+                        return;
+                      }
+
+                      setForm({
+                        ...form,
+                        expiry: e.target.value,
+                      });
+                    }}
                     className="h-11 w-full rounded-xl border-0 bg-gray-50 px-4 text-sm outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
                   />
                 </div>
