@@ -149,6 +149,22 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
+function normalizeBodyHtml(raw: string | null | undefined): string {
+  if (!raw) return "";
+  let html = String(raw);
+  // Decode HTML entities (handles single OR double encoding from backend/JSON paths)
+  while (/&(amp|lt|gt|quot|#39|nbsp);/.test(html) && !/<[a-z][^>]*>/i.test(html)) {
+    html = html
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, " ");
+  }
+  return html;
+}
+
 function mapPostToNotification(post: any): Notification {
   const rawCat = (post.category || "announcement").toLowerCase();
   const validCats = ["system", "audit", "announcement", "alert", "update"];
@@ -162,7 +178,7 @@ function mapPostToNotification(post: any): Notification {
   return {
     id: post.id,
     title: post.title,
-    body: post.content,
+    body: normalizeBodyHtml(post.content),
     category: category as Category,
     sender_name: "Fahad Mulla",
     sender_role: "Founder, AuditProRx",
@@ -551,9 +567,11 @@ function NotificationCard({
               {n.title}
             </h4>
           )}
-          <p className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap">
-            {n.body}
-          </p>
+          <div
+            className="notification-body text-[14px] text-gray-700 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: n.body || "" }}
+          />
+
         </div>
 
         <div className="mt-4 pl-12 flex items-center justify-between gap-3 flex-wrap">
