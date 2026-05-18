@@ -202,7 +202,7 @@ export default function PublishingPage() {
     }
 
     return rows;
-  }, [posts, search, status]);
+  }, [posts, search, status, locationFilter]);
 
   const fetchPosts = async () => {
     try {
