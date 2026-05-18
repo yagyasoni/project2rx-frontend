@@ -12,7 +12,12 @@ import {
   Pin,
   ChevronDown,
   Smile,
+  MessageSquare,
+  Send,
+  X,
+  Lock,
 } from "lucide-react";
+import { containsProfanity } from "@/lib/profanityFilter";
 import api from "@/lib/api";
 import Sidebar from "@/components/Sidebar"; // <- adjust path to match your project
 
@@ -37,6 +42,17 @@ type Notification = {
   reactions: Reaction[];
   user_reaction?: string | null;
   user_response?: string | null;
+  // ⬇️ NEW: chat metadata from backend
+  // Comment count from /post/client/posts (`responses` field)
+comments_count?: number;
+};
+
+
+type Comment = {
+  id: string;
+  message: string;
+  sender_type: "client" | "admin";
+  created_at: string;
 };
 
 /* ────────────────────────────────────────────────────────────────────────── */
@@ -170,11 +186,8 @@ function mapPostToNotification(post: any): Notification {
   const validCats = ["system", "audit", "announcement", "alert", "update"];
   const category = validCats.includes(rawCat) ? rawCat : "announcement";
 
- const reactions =
-    post.reactions > 0
-      ? [{ emoji: "💡", count: Number(post.reactions) }]
-      : [];
-
+  // ⬇️ CHANGED: don't fake a single "💡" bucket from total count.
+  // Real per-type reaction breakdown is filled in by the engagement fetch.
   return {
     id: post.id,
     title: post.title,
@@ -185,9 +198,11 @@ function mapPostToNotification(post: any): Notification {
     pinned: false,
     created_at: post.created_at,
     read_at: null,
-    reactions,
+    reactions: [],
     user_reaction: null,
     user_response: null,
+    // ⬇️ NEW: carry chat flags from /post/client/posts response
+    comments_count: Number(post.responses) || 0,
   };
 }
 
@@ -209,12 +224,42 @@ export default function NotificationPage() {
   const load = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-     const res = await api.get("/post/client/posts", {
+
+      const res = await api.get("/post/client/posts", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const posts = Array.isArray(res?.data) ? res.data : [];
-      console.log("[Notifications] fetched", posts.length, "posts", posts);
-      setNotifications(posts.map(mapPostToNotification));
+      const baseNotifs = posts.map(mapPostToNotification);
+
+      // ⬇️ NEW: pull /post/engagement/:postId for each post in parallel
+      // so we can show the proper per-type breakdown (Insightful, Helpful, etc)
+      // instead of one fake bucket.
+      const enriched = await Promise.all(
+        baseNotifs.map(async (n) => {
+          try {
+            const eng = await api.get(`/post/engagement/${n.id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+
+            // Aggregate reactions by reaction_type
+            const counts: Record<string, number> = {};
+            (eng.data.reactions || []).forEach((r: any) => {
+              counts[r.reaction_type] = (counts[r.reaction_type] || 0) + 1;
+            });
+
+            const reactions = Object.entries(counts).map(([emoji, count]) => ({
+              emoji,
+              count,
+            }));
+
+            return { ...n, reactions };
+          } catch {
+            return n;
+          }
+        })
+      );
+
+      setNotifications(enriched);
     } catch (err) {
       console.error("[Notifications] failed to fetch:", err);
       setNotifications([]);
@@ -305,12 +350,7 @@ export default function NotificationPage() {
 }
   }, []);
 
-  const handleRespond = useCallback(async (id: string, response: string) => {
-  setResponseDropdownFor(null);
-  setNotifications((prev) =>
-    prev.map((n) => (n.id === id ? { ...n, user_response: response } : n))
-  );
-
+const handleRespond = useCallback(async (id: string, response: string) => {
   const RESPONSE_LABELS: Record<string, string> = {
     need_info: "Need more info",
     working: "Working",
@@ -318,20 +358,31 @@ export default function NotificationPage() {
     acknowledged: "Acknowledged",
   };
 
+  const comment = RESPONSE_LABELS[response] || response;
+
+  // ⬇️ profanity guard — currently a no-op for canned options,
+  // but future-proofs this for free-text replies.
+  if (containsProfanity(comment)) {
+    alert("Please remove inappropriate language before submitting.");
+    return;
+  }
+
+  setResponseDropdownFor(null);
+  setNotifications((prev) =>
+    prev.map((n) => (n.id === id ? { ...n, user_response: response } : n))
+  );
+
   try {
     const token = localStorage.getItem("accessToken");
-    const userId =
-      localStorage.getItem("userId") ||
-      localStorage.getItem("pharmacyId") ||
-      "anonymous";
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      console.warn("[Response] no userId in localStorage — skipping API call");
+      return;
+    }
 
     const res = await api.post(
       "/post/responses",
-      {
-        post_id: id,
-        user_id: userId,
-        comment: RESPONSE_LABELS[response] || response,
-      },
+      { post_id: id, user_id: userId, comment },
       { headers: { Authorization: `Bearer ${token}` } }
     );
     console.log("[Response] saved:", res.data);
@@ -339,6 +390,136 @@ export default function NotificationPage() {
     console.error("[Response] failed:", err);
   }
 }, []);
+
+// ─────────────────────────────────────────────────────────────────
+// Chat with admin (uses /post/chat/:postId, /post/chat/client)
+// ─────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────
+// Comments (Instagram-style) — uses /post/responses + /post/engagement
+// ─────────────────────────────────────────────────────────────────
+
+const [commentsOpenFor, setCommentsOpenFor] = useState<string | null>(null);
+const [comments, setComments] = useState<Comment[]>([]);
+const [commentInput, setCommentInput] = useState("");
+const [commentsLoading, setCommentsLoading] = useState(false);
+const [commentSubmitting, setCommentSubmitting] = useState(false);
+
+const openComments = useCallback(async (postId: string) => {
+  setCommentsOpenFor(postId);
+  setCommentsLoading(true);
+  try {
+    const token = localStorage.getItem("accessToken");
+    // Chat endpoint returns the array directly (ASC order — oldest first)
+    const res = await api.get(`/post/chat/${postId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    // Newest first for Instagram-style display
+    const list = (Array.isArray(res.data) ? res.data : []).sort(
+      (a: Comment, b: Comment) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    setComments(list);
+  } catch (err) {
+    console.error("[Comments] failed to load:", err);
+    setComments([]);
+  } finally {
+    setCommentsLoading(false);
+  }
+}, []);
+
+const closeComments = useCallback(() => {
+  setCommentsOpenFor(null);
+  setComments([]);
+  setCommentInput("");
+}, []);
+
+const submitComment = useCallback(async () => {
+  if (!commentsOpenFor || !commentInput.trim()) return;
+
+  // BAD-WORDS GUARD
+  if (containsProfanity(commentInput)) {
+    alert("Your comment contains inappropriate language. Please revise it.");
+    return;
+  }
+
+  const token = localStorage.getItem("accessToken");
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    alert("You must be logged in to comment.");
+    return;
+  }
+
+  const commentText = commentInput.trim();
+  setCommentInput("");
+  setCommentSubmitting(true);
+
+  // Optimistic insert at top (Instagram-style — newest first)
+  // Optimistic insert at top (Instagram-style — newest first)
+const tempComment: Comment = {
+  id: `temp-${Date.now()}`,
+  message: commentText,
+  sender_type: "client",
+  created_at: new Date().toISOString(),
+};
+setComments((prev) => [tempComment, ...prev]);
+
+try {
+  // Goes into publishing_chat_messages → shows up in admin's Chat panel
+  await api.post(
+    "/post/chat/client",
+    { post_id: commentsOpenFor, user_id: userId, message: commentText },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  // Re-fetch authoritative copy
+  const res = await api.get(`/post/chat/${commentsOpenFor}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const list = (Array.isArray(res.data) ? res.data : []).sort(
+    (a: Comment, b: Comment) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+  setComments(list);
+
+    // Bump the count shown on the card without a full refetch
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.id === commentsOpenFor
+          ? { ...n, comments_count: (n.comments_count || 0) + 1 }
+          : n
+      )
+    );
+  } catch (err: any) {
+    console.error("[Comments] submit failed:", err);
+    setComments((prev) => prev.filter((c) => c.id !== tempComment.id));
+    alert(err?.response?.data?.message || "Failed to post comment");
+  } finally {
+    setCommentSubmitting(false);
+  }
+}, [commentsOpenFor, commentInput]);
+
+// Light polling while modal is open so admin/other-user comments appear
+// Light polling so admin replies appear without manual refresh
+useEffect(() => {
+  if (!commentsOpenFor) return;
+  const interval = setInterval(async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await api.get(`/post/chat/${commentsOpenFor}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const list = (Array.isArray(res.data) ? res.data : []).sort(
+        (a: Comment, b: Comment) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setComments(list);
+    } catch {
+      /* silent */
+    }
+  }, 10000);
+  return () => clearInterval(interval);
+}, [commentsOpenFor]);
 
   useEffect(() => {
     if (!reactionPickerFor && !responseDropdownFor) return;
@@ -452,6 +633,7 @@ export default function NotificationPage() {
                         n={n}
                         onReact={handleReact}
                         onRespond={handleRespond}
+                        onOpenComments={openComments}
                         pickerOpen={reactionPickerFor === n.id}
                         setPicker={setReactionPickerFor}
                         respondOpen={responseDropdownFor === n.id}
@@ -474,6 +656,7 @@ export default function NotificationPage() {
                         n={n}
                         onReact={handleReact}
                         onRespond={handleRespond}
+                        onOpenComments={openComments}
                         pickerOpen={reactionPickerFor === n.id}
                         setPicker={setReactionPickerFor}
                         respondOpen={responseDropdownFor === n.id}
@@ -487,6 +670,121 @@ export default function NotificationPage() {
           )}
         </div>
       </main>
+
+      {/* ⬇️ NEW: Chat modal — admin/client conversation, gated on chat_enabled */}
+      {/* Comments modal — Instagram-style: list of all comments + composer */}
+{commentsOpenFor && (
+  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4">
+    <div className="w-full max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-gray-700" />
+          <h3 className="font-semibold text-gray-900">
+            Comments
+            {comments.length > 0 && (
+              <span className="ml-1.5 text-gray-400 font-normal">
+                ({comments.length})
+              </span>
+            )}
+          </h3>
+        </div>
+        <button
+          onClick={closeComments}
+          className="rounded-md p-1.5 hover:bg-gray-100"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Comments list */}
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        {commentsLoading ? (
+          <p className="text-center text-xs text-gray-400 py-8">Loading…</p>
+        ) : comments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 mb-3">
+              <MessageSquare className="h-5 w-5 text-gray-400" />
+            </div>
+            <p className="text-sm font-medium text-gray-900">
+              No comments yet
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Be the first to comment</p>
+          </div>
+        ) : (
+          // comments.map((c) => (
+          //   <div key={c.id} className="flex items-start gap-3">
+          //     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gray-700 to-gray-900 text-white text-[11px] font-semibold">
+          //       {initials(c.user_name || "U")}
+          //     </div>
+          //     <div className="flex-1 min-w-0">
+          //       <div className="flex items-baseline gap-2 flex-wrap">
+          //         <span className="text-[13px] font-semibold text-gray-900">
+          //           {c.user_name || "User"}
+          //         </span>
+          //         <span className="text-[11px] text-gray-400">
+          //           {timeAgo(c.created_at)}
+          //         </span>
+          //       </div>
+          //       <p className="text-[13px] text-gray-700 leading-relaxed mt-0.5 whitespace-pre-wrap break-words">
+          //         {c.comment}
+          //       </p>
+          //     </div>
+          //   </div>
+          // ))
+          comments.map((c) => {
+  const isAdmin = c.sender_type === "admin";
+  return (
+    <div
+      key={c.id}
+      className={`rounded-xl px-4 py-3 border ${
+        isAdmin
+          ? "border-blue-100 bg-blue-50/60"
+          : "border-gray-100 bg-gray-50/60"
+      }`}
+    >
+      {isAdmin && (
+        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-blue-600">
+          Admin
+        </p>
+      )}
+      <p className="text-[13px] text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
+        {c.message}
+      </p>
+      <p className="mt-1.5 text-[11px] text-gray-400">
+        {timeAgo(c.created_at)}
+      </p>
+    </div>
+  );
+})
+        )}
+      </div>
+
+      {/* Composer */}
+      <div className="border-t border-gray-200 p-3 flex items-center gap-2">
+        <input
+          type="text"
+          value={commentInput}
+          onChange={(e) => setCommentInput(e.target.value)}
+          onKeyDown={(e) =>
+            e.key === "Enter" && !commentSubmitting && submitComment()
+          }
+          placeholder="Add a comment…"
+          disabled={commentSubmitting}
+          maxLength={500}
+          className="flex-1 rounded-full border border-gray-200 px-4 py-2 text-sm outline-none focus:border-gray-400 disabled:opacity-50"
+        />
+        <button
+          onClick={submitComment}
+          disabled={!commentInput.trim() || commentSubmitting}
+          className="rounded-full bg-gray-900 px-4 py-2 text-white text-sm font-medium disabled:opacity-40 transition-opacity"
+        >
+          {commentSubmitting ? "Posting…" : "Post"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
@@ -499,6 +797,7 @@ interface CardProps {
   n: Notification;
   onReact: (id: string, emoji: string) => void;
   onRespond: (id: string, response: string) => void;
+  onOpenComments: (id: string) => void;
   pickerOpen: boolean;
   setPicker: (id: string | null) => void;
   respondOpen: boolean;
@@ -509,6 +808,7 @@ function NotificationCard({
   n,
   onReact,
   onRespond,
+  onOpenComments,
   pickerOpen,
   setPicker,
   respondOpen,
@@ -642,43 +942,61 @@ function NotificationCard({
             </div>
           </div>
 
-          <div className="relative">
-            {userResponseMeta ? (
-              <div className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1 text-[12px] font-medium text-emerald-700 border border-emerald-100">
-                <span>{userResponseMeta.icon}</span>
-                <span>{userResponseMeta.label}</span>
-              </div>
-            ) : (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setRespond(respondOpen ? null : n.id);
-                  setPicker(null);
-                }}
-                className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1 text-[12px] font-medium text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-colors"
-              >
-                Respond
-                <ChevronDown className="h-3 w-3" />
-              </button>
-            )}
+          {/* ⬇️ CHANGED: wrap Respond + new Message-admin button in flex row */}
+          <div className="flex items-center gap-2">
+           
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    onOpenComments(n.id);
+  }}
+  className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1 text-[12px] font-medium text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+>
+  <MessageSquare className="h-3 w-3" />
+  {n.comments_count && n.comments_count > 0
+    ? `Comments · ${n.comments_count}`
+    : "Comment"}
+</button>
 
-            {respondOpen && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 bottom-full mb-2 w-52 rounded-lg border border-gray-200 bg-white p-1 shadow-lg z-20"
-              >
-                {RESPONSE_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => onRespond(n.id, opt.value)}
-                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[13px] text-gray-700 hover:bg-gray-100 transition-colors text-left"
-                  >
-                    <span className="text-base">{opt.icon}</span>
-                    <span>{opt.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* EXISTING: respond block, unchanged below */}
+            <div className="relative">
+              {userResponseMeta ? (
+                <div className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1 text-[12px] font-medium text-emerald-700 border border-emerald-100">
+                  <span>{userResponseMeta.icon}</span>
+                  <span>{userResponseMeta.label}</span>
+                </div>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setRespond(respondOpen ? null : n.id);
+                    setPicker(null);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1 text-[12px] font-medium text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                  Respond
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              )}
+
+              {respondOpen && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 bottom-full mb-2 w-52 rounded-lg border border-gray-200 bg-white p-1 shadow-lg z-20"
+                >
+                  {RESPONSE_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => onRespond(n.id, opt.value)}
+                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[13px] text-gray-700 hover:bg-gray-100 transition-colors text-left"
+                    >
+                      <span className="text-base">{opt.icon}</span>
+                      <span>{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
