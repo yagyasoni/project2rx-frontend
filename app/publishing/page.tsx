@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import axios from "axios";
+import api from "@/lib/api";
+
+import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import LinkExt from "@tiptap/extension-link";
+import UnderlineExt from "@tiptap/extension-underline";
 
 import {
   Search,
@@ -136,7 +141,9 @@ export default function PublishingPage() {
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
-  const [postStatus, setPostStatus] = useState("all");
+  const [postStatus, setPostStatus] = useState<"Published" | "Draft">(
+    "Published",
+  );
 
   const [view, setView] = useState<
     "table" | "create" | "view" | "edit" | "engagement" | "chat"
@@ -176,10 +183,6 @@ export default function PublishingPage() {
     return rows;
   }, [posts, search, status]);
 
-  const executeCommand = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
-  };
-
   // =========================================================
   // FETCH POSTS
   // =========================================================
@@ -214,9 +217,7 @@ export default function PublishingPage() {
 
   const fetchPosts = async () => {
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts`,
-      );
+      const res = await api.get(`/post/posts`);
 
       const formatted = res.data.map((post: any) => ({
         id: post.id,
@@ -262,9 +263,7 @@ export default function PublishingPage() {
 
   const fetchEngagement = async (postId: string) => {
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/engagement/${postId}`,
-      );
+      const res = await api.get(`/post/engagement/${postId}`);
 
       const reactionsData = res.data.reactions.map((r: any) => ({
         id: r.id,
@@ -372,16 +371,14 @@ export default function PublishingPage() {
 
       setTitle("");
       setCategory("");
-
-      if (editorRef.current) {
-        editorRef.current.innerHTML = "";
-      }
+      setPostStatus("Published");
+      editor?.commands.setContent("");
 
       await fetchPosts();
-
       setView("table");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Create post error:", err);
+      alert(err?.response?.data?.message || "Failed to create post.");
     }
   };
 
@@ -405,10 +402,10 @@ export default function PublishingPage() {
       );
 
       await fetchPosts();
-
       setView("table");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Update post error:", err);
+      alert(err?.response?.data?.message || "Failed to update post.");
     }
   };
 
@@ -418,9 +415,7 @@ export default function PublishingPage() {
 
   const deletePost = async (id: number) => {
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts/${id}`,
-      );
+      await api.delete(`/post/posts/${id}`);
 
       await fetchPosts();
     } catch (err) {
@@ -517,7 +512,13 @@ export default function PublishingPage() {
 
                   <Button
                     size="sm"
-                    onClick={() => setView("create")}
+                    onClick={() => {
+                      setTitle("");
+                      setCategory("");
+                      setPostStatus("Published");
+                      editor?.commands.setContent("");
+                      setView("create");
+                    }}
                     className="gap-1.5 text-xs font-semibold"
                   >
                     <Plus size={13} />
@@ -885,69 +886,93 @@ export default function PublishingPage() {
                 </div>
 
                 {/* TOOLBAR */}
+                {/* TOOLBAR */}
                 <div className="flex items-center gap-1 border-b border-border px-4 py-2 flex-wrap bg-muted/30">
-                  {[
-                    {
-                      icon: Bold,
-                      action: () => executeCommand("bold"),
-                    },
-
-                    {
-                      icon: Italic,
-                      action: () => executeCommand("italic"),
-                    },
-
-                    {
-                      icon: Underline,
-                      action: () => executeCommand("underline"),
-                    },
-
-                    {
-                      icon: Heading1,
-                      action: () => executeCommand("formatBlock", "h1"),
-                    },
-
-                    {
-                      icon: Heading2,
-                      action: () => executeCommand("formatBlock", "h2"),
-                    },
-
-                    {
-                      icon: Quote,
-                      action: () => executeCommand("formatBlock", "blockquote"),
-                    },
-
-                    {
-                      icon: List,
-                      action: () => executeCommand("insertUnorderedList"),
-                    },
-
-                    {
-                      icon: ListOrdered,
-                      action: () => executeCommand("insertOrderedList"),
-                    },
-
-                    {
-                      icon: Link2,
-                      action: () => {
-                        const url = prompt("Enter URL");
-
-                        if (url) {
-                          executeCommand("createLink", url);
-                        }
-                      },
-                    },
-                  ].map((item, idx) => (
-                    <Button
-                      key={idx}
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={item.action}
-                    >
-                      <item.icon size={15} />
-                    </Button>
-                  ))}
+                  <ToolBtn
+                    editor={editor}
+                    Icon={Bold}
+                    onClick={() => editor?.chain().focus().toggleBold().run()}
+                    active={editor?.isActive("bold")}
+                  />
+                  <ToolBtn
+                    editor={editor}
+                    Icon={Italic}
+                    onClick={() => editor?.chain().focus().toggleItalic().run()}
+                    active={editor?.isActive("italic")}
+                  />
+                  <ToolBtn
+                    editor={editor}
+                    Icon={Underline}
+                    onClick={() =>
+                      editor?.chain().focus().toggleUnderline().run()
+                    }
+                    active={editor?.isActive("underline")}
+                  />
+                  <ToolBtn
+                    editor={editor}
+                    Icon={Heading1}
+                    onClick={() =>
+                      editor?.chain().focus().toggleHeading({ level: 1 }).run()
+                    }
+                    active={editor?.isActive("heading", { level: 1 })}
+                  />
+                  <ToolBtn
+                    editor={editor}
+                    Icon={Heading2}
+                    onClick={() =>
+                      editor?.chain().focus().toggleHeading({ level: 2 }).run()
+                    }
+                    active={editor?.isActive("heading", { level: 2 })}
+                  />
+                  <ToolBtn
+                    editor={editor}
+                    Icon={Quote}
+                    onClick={() => {
+                      if (!editor) return;
+                      const { from, to, empty } = editor.state.selection;
+                      if (empty) {
+                        editor.chain().focus().insertContent('""').run();
+                        editor.commands.setTextSelection(from + 1);
+                      } else {
+                        const selectedText = editor.state.doc.textBetween(
+                          from,
+                          to,
+                          " ",
+                        );
+                        editor
+                          .chain()
+                          .focus()
+                          .insertContent(`"${selectedText}"`)
+                          .run();
+                      }
+                    }}
+                  />
+                  <ToolBtn
+                    editor={editor}
+                    Icon={List}
+                    onClick={() =>
+                      editor?.chain().focus().toggleBulletList().run()
+                    }
+                    active={editor?.isActive("bulletList")}
+                  />
+                  <ToolBtn
+                    editor={editor}
+                    Icon={ListOrdered}
+                    onClick={() =>
+                      editor?.chain().focus().toggleOrderedList().run()
+                    }
+                    active={editor?.isActive("orderedList")}
+                  />
+                  <ToolBtn
+                    editor={editor}
+                    Icon={Link2}
+                    active={editor?.isActive("link")}
+                    onClick={() => {
+                      const previous = editor?.getAttributes("link").href || "";
+                      setLinkUrl(previous);
+                      setLinkModalOpen(true);
+                    }}
+                  />
                 </div>
 
                 {/* CONTENT */}
@@ -968,10 +993,10 @@ export default function PublishingPage() {
                     />
 
                     <Select
-                      defaultValue={
-                        view === "edit" ? selectedPost?.status : "Published"
+                      value={postStatus}
+                      onValueChange={(v) =>
+                        setPostStatus(v as "Published" | "Draft")
                       }
-                      onValueChange={(value) => setPostStatus(value)}
                     >
                       <SelectTrigger className="w-[150px] h-9 text-xs">
                         <SelectValue />
@@ -1002,12 +1027,9 @@ export default function PublishingPage() {
                     </Select>
                   </div>
 
-                  <div
-                    ref={editorRef}
-                    contentEditable
-                    suppressContentEditableWarning
-                    className="mt-6 min-h-[500px] rounded-md border border-border bg-background p-5 text-[15px] leading-8 outline-none"
-                  />
+                  <div className="mt-6">
+                    <EditorContent editor={editor} />
+                  </div>
                 </div>
               </div>
             )}
@@ -1401,18 +1423,14 @@ export default function PublishingPage() {
                                     <DropdownMenuItem
                                       onClick={() => {
                                         setSelectedPost(post);
-
                                         setTitle(post.title);
-
                                         setCategory(post.category);
-
+                                        setPostStatus(post.status);
                                         setView("edit");
-
                                         setTimeout(() => {
-                                          if (editorRef.current) {
-                                            editorRef.current.innerHTML =
-                                              post.content;
-                                          }
+                                          editor?.commands.setContent(
+                                            post.content || "",
+                                          );
                                         }, 100);
                                       }}
                                     >
@@ -1459,6 +1477,142 @@ export default function PublishingPage() {
           </div>
         </div>
       </div>
+
+      {/* LINK MODAL */}
+      {linkModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setLinkModalOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md mx-4 rounded-xl bg-card border border-border shadow-2xl"
+          >
+            <div className="px-5 py-4 border-b border-border">
+              <h3 className="text-sm font-semibold">Insert Link</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Paste a URL to link the selected text
+              </p>
+            </div>
+            <div className="p-5">
+              <Input
+                autoFocus
+                type="url"
+                placeholder="https://example.com"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    if (linkUrl) {
+                      editor
+                        ?.chain()
+                        .focus()
+                        .extendMarkRange("link")
+                        .setLink({ href: linkUrl })
+                        .run();
+                    } else {
+                      editor
+                        ?.chain()
+                        .focus()
+                        .extendMarkRange("link")
+                        .unsetLink()
+                        .run();
+                    }
+                    setLinkUrl("");
+                    setLinkModalOpen(false);
+                  }
+                  if (e.key === "Escape") setLinkModalOpen(false);
+                }}
+                className="h-10"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border bg-muted/30 rounded-b-xl">
+              {editor?.isActive("link") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    editor
+                      ?.chain()
+                      .focus()
+                      .extendMarkRange("link")
+                      .unsetLink()
+                      .run();
+                    setLinkUrl("");
+                    setLinkModalOpen(false);
+                  }}
+                  className="mr-auto text-red-500 hover:text-red-600"
+                >
+                  Remove link
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLinkModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={!linkUrl}
+                onClick={() => {
+                  if (!editor) return;
+
+                  const { from, to, empty } = editor.state.selection;
+
+                  if (empty) {
+                    // No text selected — insert the URL itself as the link text
+                    editor
+                      .chain()
+                      .focus()
+                      .insertContent(`<a href="${linkUrl}">${linkUrl}</a>`)
+                      .run();
+                  } else {
+                    // Text is selected — wrap it as a link
+                    editor
+                      .chain()
+                      .focus()
+                      .extendMarkRange("link")
+                      .setLink({ href: linkUrl })
+                      .run();
+                  }
+
+                  setLinkUrl("");
+                  setLinkModalOpen(false);
+                }}
+              >
+                Insert link
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
+  );
+}
+
+function ToolBtn({
+  Icon,
+  onClick,
+  active,
+  editor,
+}: {
+  Icon: any;
+  onClick: () => void;
+  active?: boolean;
+  editor: Editor | null;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      onClick={onClick}
+      disabled={!editor}
+      className={`h-8 w-8 ${active ? "bg-muted text-foreground" : ""}`}
+    >
+      <Icon size={15} />
+    </Button>
   );
 }
