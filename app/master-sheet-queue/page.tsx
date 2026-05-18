@@ -15,20 +15,27 @@ import AdminLayout from "@/components/adminLayout";
 import axios from "axios";
 
 /* ── Static options ──────────────────────────────── */
-const PBM_OPTIONS = [
-  "Horizon",
-  "CVS Caremark",
-  "Express Scripts",
-  "Humana Pharmacy",
-  "OptumRx",
-  "Drexi",
-  "EmpiRx",
-  "Liviniti (Southern Scripts)",
-  "Coupon",
-  "Benecard",
-];
+// const PBM_OPTIONS = [
+//   "Horizon",
+//   "CVS Caremark",
+//   "Express Scripts",
+//   "Humana Pharmacy",
+//   "OptumRx",
+//   "Drexi",
+//   "EmpiRx",
+//   "Liviniti (Southern Scripts)",
+//   "Coupon",
+//   "Benecard",
+// ];
 
-const PAYER_TYPE_OPTIONS = ["Commercial", "Medicaid", "Medicare", "Coupon"];
+// const PAYER_TYPE_OPTIONS = ["Commercial", "Medicaid", "Medicare", "Coupon"];
+
+/* ── Dynamic options ──────────────────────────────── */
+
+interface OptionItem {
+  id: string;
+  name: string;
+}
 
 /* ── Types ───────────────────────────────────────── */
 interface FetchedRow {
@@ -57,6 +64,14 @@ const MasterSheetQueue = () => {
     pending: 0,
     added: 0,
   });
+  const [pbmOptions, setPbmOptions] = useState<OptionItem[]>([]);
+  const [payerTypeOptions, setPayerTypeOptions] = useState<OptionItem[]>([]);
+
+  const [newPbm, setNewPbm] = useState("");
+  const [newPayerType, setNewPayerType] = useState("");
+
+  const [addingPbm, setAddingPbm] = useState(false);
+  const [addingPayerType, setAddingPayerType] = useState(false);
 
   const fetchRows = async () => {
     setLoading(true);
@@ -100,8 +115,26 @@ const MasterSheetQueue = () => {
     }
   };
 
+  const fetchOptions = async () => {
+    try {
+      const [pbmRes, payerTypeRes] = await Promise.all([
+        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/pbm-options`),
+        axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/payer-type-options`,
+        ),
+      ]);
+
+      setPbmOptions(pbmRes.data);
+      setPayerTypeOptions(payerTypeRes.data);
+    } catch (err) {
+      console.error(err);
+      toast("Failed to fetch options");
+    }
+  };
+
   useEffect(() => {
     fetchRows();
+    fetchOptions();
   }, []);
 
   const updateSelection = (
@@ -162,6 +195,56 @@ const MasterSheetQueue = () => {
     }
   };
 
+  const handleAddPbmOption = async () => {
+    if (!newPbm.trim()) return;
+
+    try {
+      setAddingPbm(true);
+
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/pbm-options`,
+        {
+          name: newPbm,
+        },
+      );
+
+      setNewPbm("");
+
+      await fetchOptions();
+
+      toast("PBM option added");
+    } catch {
+      toast("Failed to add PBM option");
+    } finally {
+      setAddingPbm(false);
+    }
+  };
+
+  const handleAddPayerTypeOption = async () => {
+    if (!newPayerType.trim()) return;
+
+    try {
+      setAddingPayerType(true);
+
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/payer-type-options`,
+        {
+          name: newPayerType,
+        },
+      );
+
+      setNewPayerType("");
+
+      await fetchOptions();
+
+      toast("Payer type option added");
+    } catch {
+      toast("Failed to add payer type option");
+    } finally {
+      setAddingPayerType(false);
+    }
+  };
+
   const pendingRows = fetchedRows.filter((r) => !addedIds.has(r.id));
   const addedCount = addedIds.size;
 
@@ -201,6 +284,60 @@ const MasterSheetQueue = () => {
               <span>{stats.added} added</span>
             </div>
           )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* PBM OPTION */}
+            <div className="border border-border rounded-lg p-4 space-y-3">
+              <h2 className="text-sm font-semibold">Add PBM Option</h2>
+
+              <div className="flex gap-2">
+                <input
+                  value={newPbm}
+                  onChange={(e) => setNewPbm(e.target.value)}
+                  placeholder="Enter PBM name"
+                  className="flex-1 h-9 rounded-md border border-border bg-background px-3 text-sm"
+                />
+
+                <Button
+                  onClick={handleAddPbmOption}
+                  disabled={addingPbm}
+                  className="h-9 text-xs"
+                >
+                  {addingPbm ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    "Add"
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* PAYER TYPE OPTION */}
+            <div className="border border-border rounded-lg p-4 space-y-3">
+              <h2 className="text-sm font-semibold">Add Payer Type</h2>
+
+              <div className="flex gap-2">
+                <input
+                  value={newPayerType}
+                  onChange={(e) => setNewPayerType(e.target.value)}
+                  placeholder="Enter payer type"
+                  className="flex-1 h-9 rounded-md border border-border bg-background px-3 text-sm"
+                />
+
+                <Button
+                  onClick={handleAddPayerTypeOption}
+                  disabled={addingPayerType}
+                  className="h-9 text-xs"
+                >
+                  {addingPayerType ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    "Add"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
 
           {/* Table */}
           <div className="rounded-lg border border-border">
@@ -301,13 +438,13 @@ const MasterSheetQueue = () => {
                                 <SelectValue placeholder="Select PBM" />
                               </SelectTrigger>
                               <SelectContent>
-                                {PBM_OPTIONS.map((p) => (
+                                {pbmOptions.map((p) => (
                                   <SelectItem
-                                    key={p}
-                                    value={p}
+                                    key={p.id}
+                                    value={p.name}
                                     className="text-xs"
                                   >
-                                    {p}
+                                    {p.name}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -324,13 +461,13 @@ const MasterSheetQueue = () => {
                                 <SelectValue placeholder="Select type" />
                               </SelectTrigger>
                               <SelectContent>
-                                {PAYER_TYPE_OPTIONS.map((t) => (
+                                {payerTypeOptions.map((t) => (
                                   <SelectItem
-                                    key={t}
-                                    value={t}
+                                    key={t.id}
+                                    value={t.name}
                                     className="text-xs"
                                   >
-                                    {t}
+                                    {t.name}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
