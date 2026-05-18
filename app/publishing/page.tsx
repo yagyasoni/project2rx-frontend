@@ -1,13 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
-import api from "@/lib/api";
-
-import { useEditor, EditorContent, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import LinkExt from "@tiptap/extension-link";
-import UnderlineExt from "@tiptap/extension-underline";
+import { useEffect, useMemo, useState, useRef } from "react";
 
 import {
   Search,
@@ -61,6 +54,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
+import axios from "axios";
+import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import LinkExt from "@tiptap/extension-link";
+import UnderlineExt from "@tiptap/extension-underline";
 
 interface Reaction {
   id: number;
@@ -135,7 +133,7 @@ interface ChatMessage {
 }
 
 export default function PublishingPage() {
-  const editorRef = useRef<HTMLDivElement>(null);
+  // const editorRef = useRef<HTMLDivElement>(null);
 
   const [posts, setPosts] = useState<Post[]>([]);
 
@@ -158,6 +156,29 @@ export default function PublishingPage() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   const [adminMessage, setAdminMessage] = useState("");
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      UnderlineExt,
+      LinkExt.configure({
+        openOnClick: false,
+        autolink: true,
+        defaultProtocol: "https",
+      }),
+    ],
+
+    content: "",
+
+    editorProps: {
+      attributes: {
+        class:
+          "min-h-[400px] outline-none prose prose-neutral dark:prose-invert max-w-none text-sm leading-7",
+      },
+    },
+  });
 
   const filteredPosts = useMemo(() => {
     let rows = posts;
@@ -183,41 +204,11 @@ export default function PublishingPage() {
     return rows;
   }, [posts, search, status]);
 
-  // =========================================================
-  // FETCH POSTS
-  // =========================================================
-
-  // const fetchPosts = async () => {
-  //   try {
-  //     const res = await axios.get(
-  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts`,
-  //     );
-
-  //     const formatted = res.data.map((post: any) => ({
-  //       id: post.id,
-  //       articleId: post.article_id,
-  //       title: post.title,
-  //       category: post.category,
-  //       status: post.status,
-  //       location: post.location || "All",
-  //       reactions: post.reactions || 0,
-  //       responses: post.responses || 0,
-  //       views: post.views || 0,
-  //       createdAt: new Date(post.created_at).toLocaleDateString(),
-  //       content: post.content,
-  //       reactionsData: [],
-  //       responsesData: [],
-  //     }));
-
-  //     setPosts(formatted);
-  //   } catch (err) {
-  //     console.error("Fetch posts error:", err);
-  //   }
-  // };
-
   const fetchPosts = async () => {
     try {
-      const res = await api.get(`/post/posts`);
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts`,
+      );
 
       const formatted = res.data.map((post: any) => ({
         id: post.id,
@@ -263,7 +254,9 @@ export default function PublishingPage() {
 
   const fetchEngagement = async (postId: string) => {
     try {
-      const res = await api.get(`/post/engagement/${postId}`);
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/engagement/${postId}`,
+      );
 
       const reactionsData = res.data.reactions.map((r: any) => ({
         id: r.id,
@@ -359,12 +352,13 @@ export default function PublishingPage() {
 
   const createPost = async () => {
     try {
-      if (!title || !editorRef.current?.innerHTML) return;
+      // if (!title || !editorRef.current?.innerHTML) return;
+      if (!title || !editor?.getHTML()) return;
 
       await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts`, {
         title,
         category: category || "General",
-        content: editorRef.current.innerHTML,
+        content: editor?.getHTML(),
         status: postStatus,
         location,
       });
@@ -395,7 +389,7 @@ export default function PublishingPage() {
         {
           title,
           category,
-          content: editorRef.current?.innerHTML,
+          content: editor?.getHTML(),
           status: postStatus,
           location,
         },
@@ -415,7 +409,9 @@ export default function PublishingPage() {
 
   const deletePost = async (id: number) => {
     try {
-      await api.delete(`/post/posts/${id}`);
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts/${id}`,
+      );
 
       await fetchPosts();
     } catch (err) {
