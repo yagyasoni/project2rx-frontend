@@ -241,8 +241,8 @@ const UploadInventoryStep = ({
       key: "secondaryInsuranceBinNumber",
       label: "Secondary Insurance Bin Number",
     },
-    // { key: "secondaryInsurancePcn", label: "Secondary Insurance PCN" },
-    // { key: "secondaryInsuranceGroup", label: "Secondary Insurance Group" },
+    { key: "secondaryInsurancePcn", label: "Secondary Insurance PCN" },
+    { key: "secondaryInsuranceGroup", label: "Secondary Insurance Group" },
     { key: "secondaryInsurancePaid", label: "Secondary Insurance Paid" },
   ] as const;
 
@@ -261,6 +261,8 @@ const UploadInventoryStep = ({
     brand: "brand",
     primaryInsurancePcn: "primary_pcn",
     primaryInsuranceGroup: "primary_group",
+    secondaryInsurancePcn: "secondary_pcn",
+    secondaryInsuranceGroup: "secondary_group",
   };
 
   const HEADER_ALIASES: Record<string, string[]> = {
@@ -330,6 +332,18 @@ const UploadInventoryStep = ({
       "primaryinsurancegroup",
       "patgroup",
     ], // ← "priinspatgroup" already there ✓
+    secondaryInsurancePcn: [
+      "secinspcn",
+      "secondarypcn",
+      "secondary_pcn",
+      "secondaryinsurancepcn",
+    ],
+    secondaryInsuranceGroup: [
+      "secinspatgroup",
+      "secondarygroup",
+      "secondary_group",
+      "secondaryinsurancegroup",
+    ],
   };
 
   const normalizeHeader = (value: string) =>

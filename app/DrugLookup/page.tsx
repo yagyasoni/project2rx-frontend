@@ -83,7 +83,7 @@ export default function DrugLookupLandingPage() {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [landingData, setLandingData] = useState<LandingData | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activePanel, setActivePanel] = useState<string | null>(null);
 
   const searchRef = useRef<HTMLDivElement | null>(null);
