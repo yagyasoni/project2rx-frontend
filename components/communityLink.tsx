@@ -293,7 +293,7 @@ export default function CommunityLinkPageCopy({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search BIN / PCN / Group"
-              className="border border-slate-300 rounded-md px-3 py-[4.9px] text-xs bg-white focus:outline-none focus:ring-1 focus:ring-black w-[220px]"
+              className="border border-slate-300 rounded-md px-3 py-[4.9px] text-xs bg-white focus:outline-none focus:ring-1 focus:ring-black w-[210px]"
             />
           </div>
 
@@ -304,11 +304,12 @@ export default function CommunityLinkPageCopy({
             <select
               value={range}
               onChange={(e) => setRange(e.target.value)}
-              className="w-[100px] border border-slate-300 rounded-md px-2 py-1 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-black"
+              className="w-[110px] border border-slate-300 rounded-md px-2 py-1 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-black"
             >
               <option value="all_time">All Time</option>
               <option value="this_year">This Year</option>
               <option value="last_90_days">Last 90 Days</option>
+              <option value="last_30_days">Last 30 Days</option>
             </select>
           </div>
 

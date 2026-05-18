@@ -1,848 +1,3 @@
-// "use client";
-
-// import { useMemo, useRef, useState } from "react";
-
-// import {
-//   Search,
-//   RefreshCw,
-//   Trash2,
-//   Newspaper,
-//   PencilLine,
-//   Plus,
-//   ArrowLeft,
-//   Bold,
-//   Italic,
-//   Underline,
-//   List,
-//   ListOrdered,
-//   Link2,
-//   Heading1,
-//   Heading2,
-//   Quote,
-//   MoreHorizontal,
-//   Send,
-//   MessageSquare,
-//   MessagesSquare,
-//   TrendingUp,
-//   CircleDot,
-// } from "lucide-react";
-
-// import AdminLayout from "@/components/adminLayout";
-
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select";
-
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuTrigger,
-// } from "@/components/ui/dropdown-menu";
-
-// interface Reaction {
-//   id: number;
-//   user: string;
-//   type: string;
-// }
-
-// interface Response {
-//   id: number;
-//   user: string;
-//   comment: string;
-//   createdAt: string;
-// }
-
-// interface Post {
-//   id: number;
-//   articleId: string;
-//   title: string;
-//   category: string;
-//   status: "Published" | "Draft";
-//   reactions: number;
-//   responses: number;
-//   views: number;
-//   createdAt: string;
-//   content: string;
-//   reactionsData: Reaction[];
-//   responsesData: Response[];
-// }
-
-// export default function PublishingPage() {
-//   const editorRef = useRef<HTMLDivElement>(null);
-
-//   const initialPosts: Post[] = [
-//     {
-//       id: 1,
-//       articleId: "ART-1001",
-//       title: "How AI Is Transforming Modern Healthcare",
-//       category: "Healthcare",
-//       status: "Published",
-//       reactions: 124,
-//       responses: 18,
-//       views: 1890,
-//       createdAt: "12 May 2026",
-//       content:
-//         "<h2>Healthcare & AI</h2><p>Artificial intelligence is transforming modern healthcare systems globally.</p>",
-//       reactionsData: [
-//         {
-//           id: 1,
-//           user: "Rahul Sharma",
-//           type: "Insightful",
-//         },
-//         {
-//           id: 2,
-//           user: "Anjali Verma",
-//           type: "Helpful",
-//         },
-//       ],
-//       responsesData: [
-//         {
-//           id: 1,
-//           user: "Priya",
-//           comment: "Really loved the depth of this article.",
-//           createdAt: "2h ago",
-//         },
-//       ],
-//     },
-
-//     {
-//       id: 2,
-//       articleId: "ART-1002",
-//       title: "Future Of Telemedicine In India",
-//       category: "Technology",
-//       status: "Draft",
-//       reactions: 92,
-//       responses: 10,
-//       views: 960,
-//       createdAt: "10 May 2026",
-//       content:
-//         "<p>Telemedicine is rapidly changing healthcare accessibility.</p>",
-//       reactionsData: [
-//         {
-//           id: 1,
-//           user: "Akshay",
-//           type: "Forward Thinking",
-//         },
-//       ],
-//       responsesData: [
-//         {
-//           id: 1,
-//           user: "Sneha",
-//           comment: "Waiting for the next part.",
-//           createdAt: "1d ago",
-//         },
-//       ],
-//     },
-
-//     {
-//       id: 3,
-//       articleId: "ART-1003",
-//       title: "Digital Prescription Systems Explained",
-//       category: "Business",
-//       status: "Published",
-//       reactions: 211,
-//       responses: 28,
-//       views: 3520,
-//       createdAt: "08 May 2026",
-//       content:
-//         "<p>Digital prescriptions reduce manual errors and improve efficiency.</p>",
-//       reactionsData: [
-//         {
-//           id: 1,
-//           user: "Harshit",
-//           type: "Useful",
-//         },
-//       ],
-//       responsesData: [
-//         {
-//           id: 1,
-//           user: "Simran",
-//           comment: "Very informative and practical.",
-//           createdAt: "3d ago",
-//         },
-//       ],
-//     },
-//   ];
-
-//   const [posts, setPosts] = useState<Post[]>(initialPosts);
-
-//   const [search, setSearch] = useState("");
-//   const [status, setStatus] = useState("all");
-
-//   const [view, setView] = useState<
-//     "table" | "create" | "view" | "edit" | "engagement"
-//   >("table");
-
-//   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-
-//   const [title, setTitle] = useState("");
-//   const [category, setCategory] = useState("");
-
-//   const filteredPosts = useMemo(() => {
-//     let rows = posts;
-
-//     if (status !== "all") {
-//       rows = rows.filter(
-//         (p) => p.status.toLowerCase() === status.toLowerCase(),
-//       );
-//     }
-
-//     if (search.trim()) {
-//       rows = rows.filter((p) =>
-//         p.title.toLowerCase().includes(search.toLowerCase()),
-//       );
-//     }
-
-//     return rows;
-//   }, [posts, search, status]);
-
-//   const executeCommand = (command: string, value?: string) => {
-//     document.execCommand(command, false, value);
-//   };
-
-//   const createPost = () => {
-//     if (!title || !editorRef.current?.innerHTML) return;
-
-//     const newPost: Post = {
-//       id: Date.now(),
-
-//       articleId: `ART-${Math.floor(Math.random() * 9999)}`,
-
-//       title,
-
-//       category: category || "General",
-
-//       status: "Published",
-
-//       reactions: 0,
-
-//       responses: 0,
-
-//       views: 0,
-
-//       createdAt: "Just now",
-
-//       content: editorRef.current.innerHTML,
-
-//       reactionsData: [],
-
-//       responsesData: [],
-//     };
-
-//     setPosts((prev) => [newPost, ...prev]);
-
-//     setTitle("");
-//     setCategory("");
-
-//     if (editorRef.current) {
-//       editorRef.current.innerHTML = "";
-//     }
-
-//     setView("table");
-//   };
-
-//   const deletePost = (id: number) => {
-//     setPosts((prev) => prev.filter((p) => p.id !== id));
-//   };
-
-//   const refreshPosts = () => {
-//     setPosts(initialPosts);
-//     setSearch("");
-//     setStatus("all");
-//   };
-
-//   return (
-//     <AdminLayout>
-//       <div className="min-h-screen bg-background">
-//         <div className="max-w-[1400px] mx-auto px-6 py-0">
-//           <div className="space-y-6">
-//             {/* HEADER */}
-//             <div className="flex items-center justify-between pb-4 border-b border-border">
-//               <div>
-//                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
-//                   PUBLISHING MANAGEMENT
-//                 </h1>
-
-//                 <p className="text-sm text-muted-foreground mt-1">
-//                   Create and manage platform publishing content
-//                 </p>
-//               </div>
-
-//               {view === "table" && (
-//                 <div className="flex items-center gap-2">
-//                   <Button
-//                     variant="outline"
-//                     size="sm"
-//                     onClick={refreshPosts}
-//                     className="gap-1.5 text-xs font-semibold"
-//                   >
-//                     <RefreshCw size={13} />
-//                     Refresh
-//                   </Button>
-
-//                   <Button
-//                     size="sm"
-//                     onClick={() => setView("create")}
-//                     className="gap-1.5 text-xs font-semibold"
-//                   >
-//                     <Plus size={13} />
-//                     Create Post
-//                   </Button>
-//                 </div>
-//               )}
-//             </div>
-
-//             {/* ANALYTICS */}
-//             {view === "table" && (
-//               <div className="flex items-center gap-3 flex-wrap">
-//                 <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2">
-//                   <TrendingUp size={15} className="text-blue-500" />
-
-//                   <div>
-//                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-//                       Total Views
-//                     </p>
-
-//                     <p className="text-sm font-semibold">6,370</p>
-//                   </div>
-//                 </div>
-
-//                 <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2">
-//                   <CircleDot size={15} className="text-emerald-500" />
-
-//                   <div>
-//                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-//                       Engagement
-//                     </p>
-
-//                     <p className="text-sm font-semibold">427</p>
-//                   </div>
-//                 </div>
-
-//                 <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2">
-//                   <MessagesSquare size={15} className="text-violet-500" />
-
-//                   <div>
-//                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-//                       Responses
-//                     </p>
-
-//                     <p className="text-sm font-semibold">56</p>
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-
-//             {/* CREATE / EDIT */}
-//             {(view === "create" || view === "edit") && (
-//               <div className="rounded-lg border border-border bg-card overflow-hidden">
-//                 {/* TOP */}
-//                 <div className="flex items-center justify-between border-b border-border px-5 py-4">
-//                   <div className="flex items-center gap-3">
-//                     <Button
-//                       variant="ghost"
-//                       size="icon"
-//                       onClick={() => setView("table")}
-//                       className="h-8 w-8"
-//                     >
-//                       <ArrowLeft size={16} />
-//                     </Button>
-
-//                     <div>
-//                       <h2 className="text-sm font-semibold uppercase tracking-wider">
-//                         {view === "create" ? "Create Post" : "Edit Post"}
-//                       </h2>
-
-//                       {/* <p className="text-xs text-muted-foreground mt-1">
-//                         Rich content editor
-//                       </p> */}
-//                     </div>
-//                   </div>
-
-//                   <Button
-//                     size="sm"
-//                     onClick={createPost}
-//                     className="gap-1.5 text-xs"
-//                   >
-//                     <Send size={13} />
-//                     Publish Post
-//                   </Button>
-//                 </div>
-
-//                 {/* TOOLBAR */}
-//                 <div className="flex items-center gap-1 border-b border-border px-4 py-2 flex-wrap bg-muted/30">
-//                   {[
-//                     {
-//                       icon: Bold,
-//                       action: () => executeCommand("bold"),
-//                     },
-
-//                     {
-//                       icon: Italic,
-//                       action: () => executeCommand("italic"),
-//                     },
-
-//                     {
-//                       icon: Underline,
-//                       action: () => executeCommand("underline"),
-//                     },
-
-//                     {
-//                       icon: Heading1,
-//                       action: () => executeCommand("formatBlock", "h1"),
-//                     },
-
-//                     {
-//                       icon: Heading2,
-//                       action: () => executeCommand("formatBlock", "h2"),
-//                     },
-
-//                     {
-//                       icon: Quote,
-//                       action: () => executeCommand("formatBlock", "blockquote"),
-//                     },
-
-//                     {
-//                       icon: List,
-//                       action: () => executeCommand("insertUnorderedList"),
-//                     },
-
-//                     {
-//                       icon: ListOrdered,
-//                       action: () => executeCommand("insertOrderedList"),
-//                     },
-
-//                     {
-//                       icon: Link2,
-//                       action: () => {
-//                         const url = prompt("Enter URL");
-
-//                         if (url) {
-//                           executeCommand("createLink", url);
-//                         }
-//                       },
-//                     },
-//                   ].map((item, idx) => (
-//                     <Button
-//                       key={idx}
-//                       variant="ghost"
-//                       size="icon"
-//                       className="h-8 w-8"
-//                       onClick={item.action}
-//                     >
-//                       <item.icon size={15} />
-//                     </Button>
-//                   ))}
-//                 </div>
-
-//                 {/* CONTENT */}
-//                 <div className="p-6">
-//                   <Input
-//                     placeholder="Post title..."
-//                     value={title}
-//                     onChange={(e) => setTitle(e.target.value)}
-//                     className="border-0 shadow-none text-5xl font-semibold px-0 h-auto focus-visible:ring-0"
-//                   />
-
-//                   <div className="flex items-center gap-3 mt-4">
-//                     <Input
-//                       placeholder="Category"
-//                       value={category}
-//                       onChange={(e) => setCategory(e.target.value)}
-//                       className="max-w-[220px] h-9 text-xs"
-//                     />
-
-//                     <Select defaultValue="Published">
-//                       <SelectTrigger className="w-[150px] h-9 text-xs">
-//                         <SelectValue />
-//                       </SelectTrigger>
-
-//                       <SelectContent>
-//                         <SelectItem value="Published">Published</SelectItem>
-
-//                         <SelectItem value="Draft">Draft</SelectItem>
-//                       </SelectContent>
-//                     </Select>
-//                   </div>
-
-//                   <div
-//                     ref={editorRef}
-//                     contentEditable
-//                     suppressContentEditableWarning
-//                     className="mt-6 min-h-[500px] rounded-md border border-border bg-background p-5 text-[15px] leading-8 outline-none"
-//                   />
-//                 </div>
-//               </div>
-//             )}
-
-//             {/* VIEW POST */}
-//             {view === "view" && selectedPost && (
-//               <div className="rounded-lg border border-border bg-card overflow-hidden">
-//                 <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-//                   <Button
-//                     variant="ghost"
-//                     size="icon"
-//                     className="h-8 w-8"
-//                     onClick={() => setView("table")}
-//                   >
-//                     <ArrowLeft size={16} />
-//                   </Button>
-
-//                   <div>
-//                     <h2 className="text-lg font-semibold">
-//                       {selectedPost.title}
-//                     </h2>
-
-//                     <p className="text-xs text-muted-foreground mt-1">
-//                       {selectedPost.articleId} • {selectedPost.category}
-//                     </p>
-//                   </div>
-//                 </div>
-
-//                 <div className="p-6">
-//                   <div
-//                     dangerouslySetInnerHTML={{
-//                       __html: selectedPost.content,
-//                     }}
-//                     className="prose prose-neutral dark:prose-invert max-w-none"
-//                   />
-//                 </div>
-//               </div>
-//             )}
-
-//             {/* ENGAGEMENT */}
-//             {view === "engagement" && selectedPost && (
-//               <div className="rounded-lg border border-border bg-card overflow-hidden">
-//                 <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-//                   <Button
-//                     variant="ghost"
-//                     size="icon"
-//                     className="h-8 w-8"
-//                     onClick={() => setView("table")}
-//                   >
-//                     <ArrowLeft size={16} />
-//                   </Button>
-
-//                   <div>
-//                     <h2 className="text-lg font-semibold">
-//                       Audience Engagement
-//                     </h2>
-
-//                     <p className="text-xs text-muted-foreground mt-1">
-//                       {selectedPost.title}
-//                     </p>
-//                   </div>
-//                 </div>
-
-//                 <div className="grid grid-cols-2 gap-6 p-6">
-//                   {/* REACTIONS */}
-//                   <div>
-//                     <div className="flex items-center gap-2 mb-4">
-//                       <CircleDot size={14} className="text-emerald-500" />
-
-//                       <h3 className="text-sm font-semibold uppercase tracking-wider">
-//                         Reactions
-//                       </h3>
-//                     </div>
-
-//                     <div className="space-y-3">
-//                       {selectedPost.reactionsData.map((reaction) => (
-//                         <div
-//                           key={reaction.id}
-//                           className="rounded-md border border-border px-4 py-3"
-//                         >
-//                           <div className="flex items-center justify-between">
-//                             <p className="text-sm font-medium">
-//                               {reaction.user}
-//                             </p>
-
-//                             <span className="text-xs text-muted-foreground">
-//                               {reaction.type}
-//                             </span>
-//                           </div>
-//                         </div>
-//                       ))}
-//                     </div>
-//                   </div>
-
-//                   {/* RESPONSES */}
-//                   <div>
-//                     <div className="flex items-center gap-2 mb-4">
-//                       <MessagesSquare size={14} className="text-violet-500" />
-
-//                       <h3 className="text-sm font-semibold uppercase tracking-wider">
-//                         Responses
-//                       </h3>
-//                     </div>
-
-//                     <div className="space-y-3">
-//                       {selectedPost.responsesData.map((response) => (
-//                         <div
-//                           key={response.id}
-//                           className="rounded-md border border-border px-4 py-3"
-//                         >
-//                           <div className="flex items-center justify-between">
-//                             <p className="text-sm font-medium">
-//                               {response.user}
-//                             </p>
-
-//                             <span className="text-xs text-muted-foreground">
-//                               {response.createdAt}
-//                             </span>
-//                           </div>
-
-//                           <p className="mt-2 text-sm text-muted-foreground leading-6">
-//                             {response.comment}
-//                           </p>
-//                         </div>
-//                       ))}
-//                     </div>
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-
-//             {/* TABLE */}
-//             {view === "table" && (
-//               <>
-//                 {/* SEARCH */}
-//                 <div className="flex items-center gap-3 flex-wrap">
-//                   <div className="relative flex-1 max-w-sm">
-//                     <Search
-//                       size={14}
-//                       className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-//                     />
-
-//                     <Input
-//                       type="text"
-//                       placeholder="Search posts..."
-//                       value={search}
-//                       onChange={(e) => setSearch(e.target.value)}
-//                       className="pl-9 h-9 text-xs"
-//                     />
-//                   </div>
-
-//                   <Select value={status} onValueChange={setStatus}>
-//                     <SelectTrigger className="w-[140px] h-9 text-xs">
-//                       <SelectValue />
-//                     </SelectTrigger>
-
-//                     <SelectContent>
-//                       <SelectItem value="all">All</SelectItem>
-
-//                       <SelectItem value="published">Published</SelectItem>
-
-//                       <SelectItem value="draft">Draft</SelectItem>
-//                     </SelectContent>
-//                   </Select>
-
-//                   <span className="text-[11px] text-muted-foreground ml-auto">
-//                     {filteredPosts.length} / {posts.length} shown
-//                   </span>
-//                 </div>
-
-//                 {/* TABLE */}
-//                 <div className="rounded-lg border border-border overflow-hidden">
-//                   <div
-//                     className="overflow-auto"
-//                     style={{
-//                       maxHeight: "calc(100vh - 360px)",
-//                     }}
-//                   >
-//                     <table className="min-w-full divide-y divide-border">
-//                       <thead className="bg-muted/50 sticky top-0 z-10">
-//                         <tr>
-//                           <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-//                             Article
-//                           </th>
-
-//                           <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-//                             Status
-//                           </th>
-
-//                           <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-//                             Engagement
-//                           </th>
-
-//                           <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-//                             Views
-//                           </th>
-
-//                           <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-//                             Created At
-//                           </th>
-
-//                           <th className="px-3 py-3 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-24">
-//                             Actions
-//                           </th>
-//                         </tr>
-//                       </thead>
-
-//                       <tbody className="bg-card divide-y divide-border">
-//                         {filteredPosts.map((post) => (
-//                           <tr
-//                             key={post.id}
-//                             className="transition-colors hover:bg-muted/40"
-//                           >
-//                             {/* ARTICLE */}
-//                             <td className="px-3 py-3 min-w-[360px]">
-//                               <div>
-//                                 <p className="text-sm font-medium text-foreground">
-//                                   {post.title}
-//                                 </p>
-
-//                                 <p className="text-[11px] text-muted-foreground mt-1">
-//                                   {post.articleId} • {post.category}
-//                                 </p>
-//                               </div>
-//                             </td>
-
-//                             {/* STATUS */}
-//                             <td className="px-3 py-3">
-//                               <span
-//                                 className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${
-//                                   post.status === "Published"
-//                                     ? "bg-emerald-500/10 text-emerald-600"
-//                                     : "bg-yellow-500/10 text-yellow-600"
-//                                 }`}
-//                               >
-//                                 {post.status}
-//                               </span>
-//                             </td>
-
-//                             {/* ENGAGEMENT */}
-//                             <td className="px-3 py-3">
-//                               <button
-//                                 onClick={() => {
-//                                   setSelectedPost(post);
-
-//                                   setView("engagement");
-//                                 }}
-//                                 className="flex items-center gap-4"
-//                               >
-//                                 <div className="flex items-center gap-1 text-xs">
-//                                   <CircleDot
-//                                     size={13}
-//                                     className="text-emerald-500"
-//                                   />
-
-//                                   <span>{post.reactions}</span>
-//                                 </div>
-
-//                                 <div className="flex items-center gap-1 text-xs">
-//                                   <MessagesSquare
-//                                     size={13}
-//                                     className="text-violet-500"
-//                                   />
-
-//                                   <span>{post.responses}</span>
-//                                 </div>
-//                               </button>
-//                             </td>
-
-//                             {/* VIEWS */}
-//                             <td className="px-3 py-3 text-xs text-muted-foreground">
-//                               {post.views}
-//                             </td>
-
-//                             {/* CREATED */}
-//                             <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">
-//                               {post.createdAt}
-//                             </td>
-
-//                             {/* ACTIONS */}
-//                             <td className="px-3 py-3">
-//                               <div className="flex justify-center">
-//                                 <DropdownMenu>
-//                                   <DropdownMenuTrigger asChild>
-//                                     <Button
-//                                       variant="ghost"
-//                                       size="icon"
-//                                       className="h-8 w-8"
-//                                     >
-//                                       <MoreHorizontal size={15} />
-//                                     </Button>
-//                                   </DropdownMenuTrigger>
-
-//                                   <DropdownMenuContent align="end">
-//                                     <DropdownMenuItem
-//                                       onClick={() => {
-//                                         setSelectedPost(post);
-
-//                                         setView("view");
-//                                       }}
-//                                     >
-//                                       <Newspaper className="mr-2 h-4 w-4" />
-//                                       View Post
-//                                     </DropdownMenuItem>
-
-//                                     <DropdownMenuItem
-//                                       onClick={() => {
-//                                         setSelectedPost(post);
-
-//                                         setTitle(post.title);
-
-//                                         setCategory(post.category);
-
-//                                         setView("edit");
-
-//                                         setTimeout(() => {
-//                                           if (editorRef.current) {
-//                                             editorRef.current.innerHTML =
-//                                               post.content;
-//                                           }
-//                                         }, 100);
-//                                       }}
-//                                     >
-//                                       <PencilLine className="mr-2 h-4 w-4" />
-//                                       Edit Post
-//                                     </DropdownMenuItem>
-
-//                                     <DropdownMenuItem
-//                                       onClick={() => {
-//                                         setSelectedPost(post);
-
-//                                         setView("engagement");
-//                                       }}
-//                                     >
-//                                       <MessageSquare className="mr-2 h-4 w-4" />
-//                                       View Reactions
-//                                     </DropdownMenuItem>
-
-//                                     <DropdownMenuItem
-//                                       onClick={() => deletePost(post.id)}
-//                                       className="text-red-500"
-//                                     >
-//                                       <Trash2 className="mr-2 h-4 w-4" />
-//                                       Delete Post
-//                                     </DropdownMenuItem>
-//                                   </DropdownMenuContent>
-//                                 </DropdownMenu>
-//                               </div>
-//                             </td>
-//                           </tr>
-//                         ))}
-//                       </tbody>
-//                     </table>
-//                   </div>
-//                 </div>
-//               </>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-//     </AdminLayout>
-//   );
-// }
-
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -872,6 +27,13 @@ import {
   MessagesSquare,
   TrendingUp,
   CircleDot,
+  Bell,
+  MessageCircle,
+  BellRing,
+  Shield,
+  Clock3,
+  UserStar,
+  User,
 } from "lucide-react";
 
 import AdminLayout from "@/components/adminLayout";
@@ -893,6 +55,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
 
 interface Reaction {
   id: number;
@@ -907,19 +70,63 @@ interface Response {
   createdAt: string;
 }
 
+// interface Post {
+//   id: number;
+//   articleId: string;
+//   title: string;
+//   category: string;
+//   status: "Published" | "Draft";
+//   location: string;
+//   reactions: number;
+//   responses: number;
+//   views: number;
+//   createdAt: string;
+//   content: string;
+//   reactionsData: Reaction[];
+//   responsesData: Response[];
+
+// }
+
 interface Post {
   id: number;
   articleId: string;
   title: string;
   category: string;
   status: "Published" | "Draft";
+  location: string;
+
   reactions: number;
   responses: number;
   views: number;
+
+  unreadMessages: number;
+
   createdAt: string;
   content: string;
+
   reactionsData: Reaction[];
   responsesData: Response[];
+
+  chatEnabled: boolean;
+}
+
+// interface ChatMessage {
+//   id: string;
+//   message: string;
+//   sender_type: "client" | "admin";
+//   created_at: string;
+//   is_read: boolean;
+// }
+
+interface ChatMessage {
+  id: string;
+  message: string;
+  sender_type: "client" | "admin";
+  created_at: string;
+  is_read: boolean;
+
+  user_name?: string;
+  pharmacy_name?: string;
 }
 
 export default function PublishingPage() {
@@ -932,13 +139,18 @@ export default function PublishingPage() {
   const [postStatus, setPostStatus] = useState("all");
 
   const [view, setView] = useState<
-    "table" | "create" | "view" | "edit" | "engagement"
+    "table" | "create" | "view" | "edit" | "engagement" | "chat"
   >("table");
 
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
+  const [location, setLocation] = useState("New York");
+  const [locationFilter, setLocationFilter] = useState("All");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
+  const [adminMessage, setAdminMessage] = useState("");
 
   const filteredPosts = useMemo(() => {
     let rows = posts;
@@ -946,6 +158,12 @@ export default function PublishingPage() {
     if (status !== "all") {
       rows = rows.filter(
         (p) => p.status.toLowerCase() === status.toLowerCase(),
+      );
+    }
+
+    if (locationFilter !== "All") {
+      rows = rows.filter(
+        (p) => p.location.toLowerCase() === locationFilter.toLowerCase(),
       );
     }
 
@@ -966,6 +184,34 @@ export default function PublishingPage() {
   // FETCH POSTS
   // =========================================================
 
+  // const fetchPosts = async () => {
+  //   try {
+  //     const res = await axios.get(
+  //       `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts`,
+  //     );
+
+  //     const formatted = res.data.map((post: any) => ({
+  //       id: post.id,
+  //       articleId: post.article_id,
+  //       title: post.title,
+  //       category: post.category,
+  //       status: post.status,
+  //       location: post.location || "All",
+  //       reactions: post.reactions || 0,
+  //       responses: post.responses || 0,
+  //       views: post.views || 0,
+  //       createdAt: new Date(post.created_at).toLocaleDateString(),
+  //       content: post.content,
+  //       reactionsData: [],
+  //       responsesData: [],
+  //     }));
+
+  //     setPosts(formatted);
+  //   } catch (err) {
+  //     console.error("Fetch posts error:", err);
+  //   }
+  // };
+
   const fetchPosts = async () => {
     try {
       const res = await axios.get(
@@ -974,16 +220,33 @@ export default function PublishingPage() {
 
       const formatted = res.data.map((post: any) => ({
         id: post.id,
+
         articleId: post.article_id,
+
         title: post.title,
+
         category: post.category,
+
         status: post.status,
+
+        location: post.location || "All",
+
         reactions: post.reactions || 0,
+
         responses: post.responses || 0,
+
         views: post.views || 0,
+
+        unreadMessages: post.unread_messages || 0,
+
+        chatEnabled: post.chat_enabled || false,
+
         createdAt: new Date(post.created_at).toLocaleDateString(),
+
         content: post.content,
+
         reactionsData: [],
+
         responsesData: [],
       }));
 
@@ -1026,6 +289,71 @@ export default function PublishingPage() {
     }
   };
 
+  const fetchChat = async (postId: string) => {
+    try {
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/chat/${postId}`,
+      );
+
+      setChatMessages(res.data);
+
+      await fetchPosts();
+    } catch (err) {
+      console.error("Fetch chat error:", err);
+    }
+  };
+
+  const sendAdminMessage = async () => {
+    try {
+      if (!selectedPost || !adminMessage.trim()) return;
+
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/chat/admin`,
+        {
+          post_id: selectedPost.id,
+          message: adminMessage,
+        },
+      );
+
+      setAdminMessage("");
+
+      await fetchChat(selectedPost.id.toString());
+    } catch (err) {
+      console.error("Send admin message error:", err);
+    }
+  };
+
+  const toggleChatStatus = async (postId: number, currentStatus: boolean) => {
+    try {
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts/${postId}/chat-toggle`,
+        {
+          chat_enabled: !currentStatus,
+        },
+      );
+
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                chatEnabled: !currentStatus,
+              }
+            : post,
+        ),
+      );
+
+      if (selectedPost?.id === postId) {
+        setSelectedPost({
+          ...selectedPost,
+          chatEnabled: !currentStatus,
+        });
+      }
+    } catch (err) {
+      console.error("Toggle chat error:", err);
+    }
+  };
+
   // =========================================================
   // CREATE POST
   // =========================================================
@@ -1039,6 +367,7 @@ export default function PublishingPage() {
         category: category || "General",
         content: editorRef.current.innerHTML,
         status: postStatus,
+        location,
       });
 
       setTitle("");
@@ -1071,6 +400,7 @@ export default function PublishingPage() {
           category,
           content: editorRef.current?.innerHTML,
           status: postStatus,
+          location,
         },
       );
 
@@ -1098,6 +428,48 @@ export default function PublishingPage() {
     }
   };
 
+  const formatChatTime = (dateString: string) => {
+    const date = new Date(dateString);
+
+    const now = new Date();
+
+    const isToday = date.toDateString() === now.toDateString();
+
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+
+    const time = date.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+    if (isToday) {
+      return `Today • ${time}`;
+    }
+
+    if (isYesterday) {
+      return `Yesterday • ${time}`;
+    }
+
+    return `${date.toLocaleDateString([], {
+      month: "short",
+      day: "numeric",
+    })} • ${time}`;
+  };
+
+  const getInitials = (name?: string) => {
+    if (!name) return "A";
+
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  };
+
   // =========================================================
   // REFRESH POSTS
   // =========================================================
@@ -1107,6 +479,7 @@ export default function PublishingPage() {
 
     setSearch("");
     setStatus("all");
+    setLocationFilter("All");
   };
 
   useEffect(() => {
@@ -1196,6 +569,285 @@ export default function PublishingPage() {
                     <p className="text-sm font-semibold">
                       {posts.reduce((acc, post) => acc + post.responses, 0)}
                     </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {view === "chat" && selectedPost && (
+              <div className="rounded-lg border border-border bg-card overflow-hidden">
+                <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setView("table")}
+                    >
+                      <ArrowLeft size={16} />
+                    </Button>
+
+                    <div>
+                      <h2 className="text-lg font-semibold">Admin Chat</h2>
+
+                      {/* <p className="text-xs text-muted-foreground mt-1">
+                        {selectedPost.title}
+                      </p> */}
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-muted-foreground">
+                          {selectedPost.title}
+                        </p>
+
+                        {!selectedPost.chatEnabled && (
+                          <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-500">
+                            Chat Disabled
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedPost.unreadMessages > 0 && (
+                    <div className="flex items-center gap-2 rounded-full bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-500">
+                      <BellRing size={13} />
+                      {selectedPost.unreadMessages} unread
+                    </div>
+                  )}
+                </div>
+
+                {/* <div className="h-[500px] overflow-y-auto p-5 space-y-4 bg-muted/20">
+                  {chatMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${
+                        msg.sender_type === "admin"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[70%] rounded-lg px-4 py-3 ${
+                          msg.sender_type === "admin"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-background border border-border"
+                        }`}
+                      >
+                        {msg.sender_type === "client" && (
+                          <p className="mb-1 text-[11px] font-semibold text-blue-500">
+                            {msg.pharmacy_name || msg.user_name || "Client"}
+                          </p>
+                        )}
+
+                        <p className="text-sm leading-6">{msg.message}</p>
+
+                        <p
+                          className={`mt-2 text-[10px] ${
+                            msg.sender_type === "admin"
+                              ? "text-primary-foreground/70"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {new Date(msg.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div> */}
+
+                {/* <div className="h-[500px] overflow-y-auto bg-muted/20 p-5">
+                  <div className="space-y-5">
+                    {chatMessages.map((msg) => {
+                      const isAdmin = msg.sender_type === "admin";
+
+                      const displayName = isAdmin
+                        ? "Admin Team"
+                        : msg.pharmacy_name || msg.user_name || "Client";
+
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex items-end gap-3 ${
+                            isAdmin ? "justify-end" : "justify-start"
+                          }`}
+                        >
+                          {!isAdmin && (
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background shadow-sm">
+                              <User size={16} className="text-blue-500" />
+                            </div>
+                          )}
+
+                          <div
+                            className={`max-w-[72%] rounded-2xl px-4 py-3 shadow-sm ${
+                              isAdmin
+                                ? "rounded-br-md bg-primary text-primary-foreground"
+                                : "rounded-bl-md border border-border bg-background"
+                            }`}
+                          >
+                            <div className="mb-2 flex items-center gap-2">
+                              <div
+                                className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${
+                                  isAdmin
+                                    ? "bg-primary-foreground/20 text-primary-foreground"
+                                    : "bg-blue-500/10 text-blue-600"
+                                }`}
+                              >
+                                {isAdmin ? (
+                                  <Shield size={12} />
+                                ) : (
+                                  getInitials(displayName)
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <p
+                                  className={`text-xs font-semibold ${
+                                    isAdmin
+                                      ? "text-primary-foreground"
+                                      : "text-foreground"
+                                  }`}
+                                >
+                                  {displayName}
+                                </p>
+
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+                                    isAdmin
+                                      ? "bg-primary-foreground/15 text-primary-foreground/80"
+                                      : "bg-blue-500/10 text-blue-600"
+                                  }`}
+                                >
+                                  {isAdmin ? "Admin" : "Client"}
+                                </span>
+                              </div>
+                            </div>
+
+                            <p className="text-sm leading-7 whitespace-pre-wrap">
+                              {msg.message}
+                            </p>
+
+                            <div
+                              className={`mt-3 flex items-center gap-1 text-[11px] ${
+                                isAdmin
+                                  ? "text-primary-foreground/70"
+                                  : "text-muted-foreground"
+                              }`}
+                            >
+                              <Clock3 size={11} />
+
+                              <span>{formatChatTime(msg.created_at)}</span>
+                            </div>
+                          </div>
+
+                          {isAdmin && (
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                              <Shield size={16} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div> */}
+
+                <div className="h-[500px] overflow-y-auto bg-muted/10 px-6 py-6">
+                  <div className="space-y-6">
+                    {chatMessages.map((msg) => {
+                      const isAdmin = msg.sender_type === "admin";
+
+                      const displayName = isAdmin
+                        ? "Admin"
+                        : msg.pharmacy_name || msg.user_name || "Client";
+
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex ${
+                            isAdmin ? "justify-end" : "justify-start"
+                          }`}
+                        >
+                          <div
+                            className={`flex max-w-[78%] items-end gap-3 ${
+                              isAdmin ? "flex-row-reverse" : "flex-row"
+                            }`}
+                          >
+                            {/* PROFILE */}
+                            <div
+                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border shadow-sm ${
+                                isAdmin
+                                  ? "border-primary/20 bg-primary text-primary-foreground"
+                                  : "border-border bg-background text-blue-600"
+                              }`}
+                            >
+                              {isAdmin ? (
+                                <UserStar size={14} />
+                              ) : (
+                                getInitials(displayName)
+                              )}
+                            </div>
+
+                            {/* MESSAGE */}
+                            <div
+                              className={`rounded-2xl px-4 py-3 shadow-sm ${
+                                isAdmin
+                                  ? "rounded-br-md bg-primary text-primary-foreground"
+                                  : "rounded-bl-md border border-border bg-background"
+                              }`}
+                            >
+                              {/* TOP */}
+                              <div className="mb-2 flex items-center gap-2">
+                                <p
+                                  className={`text-[12px] font-semibold ${
+                                    isAdmin
+                                      ? "text-primary-foreground"
+                                      : "text-foreground"
+                                  }`}
+                                >
+                                  {displayName}
+                                </p>
+
+                                <span
+                                  className={`h-1 w-1 rounded-full ${
+                                    isAdmin
+                                      ? "bg-primary-foreground/50"
+                                      : "bg-muted-foreground/50"
+                                  }`}
+                                />
+
+                                <p
+                                  className={`text-[11px] ${
+                                    isAdmin
+                                      ? "text-primary-foreground/70"
+                                      : "text-muted-foreground"
+                                  }`}
+                                >
+                                  {formatChatTime(msg.created_at)}
+                                </p>
+                              </div>
+
+                              {/* BODY */}
+                              <p className="text-sm leading-7 whitespace-pre-wrap break-words">
+                                {msg.message}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="border-t border-border p-4">
+                  <div className="flex items-center gap-3">
+                    <Input
+                      placeholder="Reply to client..."
+                      value={adminMessage}
+                      onChange={(e) => setAdminMessage(e.target.value)}
+                    />
+
+                    <Button onClick={sendAdminMessage} className="gap-2">
+                      <Send size={14} />
+                      Send
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -1329,6 +981,23 @@ export default function PublishingPage() {
                         <SelectItem value="Published">Published</SelectItem>
 
                         <SelectItem value="Draft">Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      defaultValue={
+                        view === "edit" ? selectedPost?.location : "All"
+                      }
+                      onValueChange={setLocation}
+                    >
+                      <SelectTrigger className="w-[180px] h-9 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="All">All</SelectItem>
+                        <SelectItem value="New Jersey">New Jersey</SelectItem>
+                        <SelectItem value="New York">New York</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1503,6 +1172,23 @@ export default function PublishingPage() {
                     </SelectContent>
                   </Select>
 
+                  <Select
+                    value={locationFilter}
+                    onValueChange={setLocationFilter}
+                  >
+                    <SelectTrigger className="w-[160px] h-9 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value="All">All Locations</SelectItem>
+
+                      <SelectItem value="new york">New York</SelectItem>
+
+                      <SelectItem value="new jersey">New Jersey</SelectItem>
+                    </SelectContent>
+                  </Select>
+
                   <span className="text-[11px] text-muted-foreground ml-auto">
                     {filteredPosts.length} / {posts.length} shown
                   </span>
@@ -1520,6 +1206,14 @@ export default function PublishingPage() {
                         <tr>
                           <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                             Article
+                          </th>
+
+                          <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Chat
+                          </th>
+
+                          <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Chat Toggle
                           </th>
 
                           <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -1557,9 +1251,71 @@ export default function PublishingPage() {
                                 </p>
 
                                 <p className="text-[11px] text-muted-foreground mt-1">
-                                  {post.articleId} • {post.category}
+                                  {post.articleId} • {post.category} •{" "}
+                                  <span
+                                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${
+                                      post.location === "New York"
+                                        ? "bg-violet-500/10 text-violet-600"
+                                        : post.location === "New Jersey"
+                                          ? "bg-emerald-500/10 text-emerald-600"
+                                          : "bg-blue-500/10 text-blue-600"
+                                    }`}
+                                  >
+                                    {post.location}
+                                  </span>
                                 </p>
                               </div>
+                            </td>
+
+                            <td className="px-3 py-3">
+                              {post.status === "Published" ? (
+                                <button
+                                  onClick={async () => {
+                                    setSelectedPost(post);
+
+                                    await fetchChat(post.id.toString());
+
+                                    setView("chat");
+                                  }}
+                                  className="relative flex items-center gap-2 rounded-md border border-border px-3 py-1.5 hover:bg-muted/50 transition-colors"
+                                >
+                                  <MessageCircle
+                                    size={14}
+                                    className={
+                                      post.chatEnabled
+                                        ? "text-blue-500"
+                                        : "text-muted-foreground"
+                                    }
+                                  />
+
+                                  <span className="text-xs font-medium">
+                                    {post.chatEnabled ? "Open" : "Disabled"}
+                                  </span>
+
+                                  {post.unreadMessages > 0 && (
+                                    <span className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                                      {post.unreadMessages}
+                                    </span>
+                                  )}
+                                </button>
+                              ) : null}
+                            </td>
+
+                            <td className="px-3 py-6 flex justify-center">
+                              {post.status === "Published" ? (
+                                <>
+                                  <Switch
+                                    checked={post.chatEnabled}
+                                    onCheckedChange={() =>
+                                      toggleChatStatus(
+                                        post.id,
+                                        post.chatEnabled,
+                                      )
+                                    }
+                                    className="scale-90"
+                                  />
+                                </>
+                              ) : null}
                             </td>
 
                             <td className="px-3 py-3">
@@ -1575,38 +1331,42 @@ export default function PublishingPage() {
                             </td>
 
                             <td className="px-3 py-3">
-                              <button
-                                onClick={async () => {
-                                  setSelectedPost(post);
+                              {post.status === "Published" ? (
+                                <button
+                                  onClick={async () => {
+                                    setSelectedPost(post);
 
-                                  await fetchEngagement(post.id.toString());
+                                    await fetchEngagement(post.id.toString());
 
-                                  setView("engagement");
-                                }}
-                                className="flex items-center gap-4"
-                              >
-                                <div className="flex items-center gap-1 text-xs">
-                                  <CircleDot
-                                    size={13}
-                                    className="text-emerald-500"
-                                  />
+                                    setView("engagement");
+                                  }}
+                                  className="flex items-center gap-4"
+                                >
+                                  <div className="flex items-center gap-1 text-xs">
+                                    <CircleDot
+                                      size={13}
+                                      className="text-emerald-500"
+                                    />
 
-                                  <span>{post.reactions}</span>
-                                </div>
+                                    <span>{post.reactions}</span>
+                                  </div>
 
-                                <div className="flex items-center gap-1 text-xs">
-                                  <MessagesSquare
-                                    size={13}
-                                    className="text-violet-500"
-                                  />
+                                  <div className="flex items-center gap-1 text-xs">
+                                    <MessagesSquare
+                                      size={13}
+                                      className="text-violet-500"
+                                    />
 
-                                  <span>{post.responses}</span>
-                                </div>
-                              </button>
+                                    <span>{post.responses}</span>
+                                  </div>
+                                </button>
+                              ) : null}
                             </td>
 
                             <td className="px-3 py-3 text-xs text-muted-foreground">
-                              {post.views}
+                              {post.status === "Published" ? (
+                                <>{post.views}</>
+                              ) : null}
                             </td>
 
                             <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">
@@ -1660,20 +1420,22 @@ export default function PublishingPage() {
                                       Edit Post
                                     </DropdownMenuItem>
 
-                                    <DropdownMenuItem
-                                      onClick={async () => {
-                                        setSelectedPost(post);
+                                    {post.status === "Published" && (
+                                      <DropdownMenuItem
+                                        onClick={async () => {
+                                          setSelectedPost(post);
 
-                                        await fetchEngagement(
-                                          post.id.toString(),
-                                        );
+                                          await fetchEngagement(
+                                            post.id.toString(),
+                                          );
 
-                                        setView("engagement");
-                                      }}
-                                    >
-                                      <MessageSquare className="mr-2 h-4 w-4" />
-                                      View Reactions
-                                    </DropdownMenuItem>
+                                          setView("engagement");
+                                        }}
+                                      >
+                                        <MessageSquare className="mr-2 h-4 w-4" />
+                                        View Reactions
+                                      </DropdownMenuItem>
+                                    )}
 
                                     <DropdownMenuItem
                                       onClick={() => deletePost(post.id)}

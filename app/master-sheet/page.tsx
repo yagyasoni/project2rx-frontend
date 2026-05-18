@@ -61,9 +61,9 @@ const COL_CONFIG: Record<
   { label: string; width: number; readOnly?: boolean }
 > = {
   id: { label: "ID", width: 70, readOnly: true },
-  bin: { label: "BIN", width: 100 },
-  pcn: { label: "PCN", width: 130 },
-  grp: { label: "GRP", width: 130 },
+  bin: { label: "BIN", width: 100, readOnly: true },
+  pcn: { label: "PCN", width: 130, readOnly: true },
+  grp: { label: "GRP", width: 130, readOnly: true },
   pbm_name: { label: "PBM Name", width: 200 },
   payer_type: { label: "Payer Type", width: 160 },
   // created_at: { label: "Created At", width: 180, readOnly: true },
@@ -75,10 +75,10 @@ const COL_CONFIG: Record<
 // ─────────────────────────────────────────────────────────────
 export default function ExcelEditorModal({
   onClose,
-  onToast,
+  // onToast,
 }: {
   onClose: () => void;
-  onToast: (msg: string, type: "success" | "error") => void;
+  // onToast: (msg: string, type: "success" | "error") => void;
 }) {
   const [data, setData] = useState<ExcelState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,6 +103,10 @@ export default function ExcelEditorModal({
     key: string;
     direction: "asc" | "desc";
   } | null>(null);
+  const [pbmOptions, setPbmOptions] = useState<string[]>([]);
+  const [payerTypeOptions, setPayerTypeOptions] = useState<string[]>([]);
+  const [confirmDeleteRow, setConfirmDeleteRow] = useState<number | null>(null);
+  const [newRowIndexes, setNewRowIndexes] = useState<number[]>([]);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -113,6 +117,7 @@ export default function ExcelEditorModal({
 
   useEffect(() => {
     fetchSheet();
+    fetchDropdownOptions();
   }, []);
 
   const fetchSheet = async () => {
@@ -138,6 +143,21 @@ export default function ExcelEditorModal({
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDropdownOptions = async () => {
+    try {
+      const [pbmRes, payerRes] = await Promise.all([
+        axios.get(`${API_BASE}/admin/pbm-options`),
+        axios.get(`${API_BASE}/admin/payer-type-options`),
+      ]);
+
+      setPbmOptions(pbmRes.data.map((item: any) => item.name));
+      setPayerTypeOptions(payerRes.data.map((item: any) => item.name));
+    } catch (err) {
+      console.error(err);
+      toast("Failed to fetch dropdown options");
     }
   };
 
@@ -193,7 +213,15 @@ export default function ExcelEditorModal({
   const activateCell = useCallback(
     (globalVisIdx: number, ci: number, val: CellValue) => {
       const header = data?.headers[ci] ?? "";
-      if (COL_CONFIG[header]?.readOnly) return;
+      // if (COL_CONFIG[header]?.readOnly) return;
+      const targetRow = filteredRows[globalVisIdx];
+      const realIdx = data?.rows.indexOf(targetRow) ?? -1;
+
+      const isNewRow = newRowIndexes.includes(realIdx);
+
+      if (COL_CONFIG[header]?.readOnly && !isNewRow) {
+        return;
+      }
       setActiveCell({ r: globalVisIdx, c: ci });
       setEditValue(val ?? "");
       setTimeout(() => activeCellInputRef.current?.focus(), 30);
@@ -223,45 +251,104 @@ export default function ExcelEditorModal({
       const targetRow = filteredRows[globalVisIdx];
 
       // ✅ Use ID-based lookup instead of reference equality
-      const idColIdx = data.headers.indexOf(ID_COL);
-      const rowId = targetRow[idColIdx];
+      // const idColIdx = data.headers.indexOf(ID_COL);
+      // const rowId = targetRow[idColIdx];
 
-      const newRows = data.rows.map((row) =>
-        row[idColIdx] === rowId
-          ? row.map((cell, i) => (i === ci ? val : cell))
-          : row,
+      // const newRows = data.rows.map((row) =>
+      //   row[idColIdx] === rowId
+      //     ? row.map((cell, i) => (i === ci ? val : cell))
+      //     : row,
+      // );
+
+      // const realIdx = data.rows.findIndex((row) => row[idColIdx] === rowId);
+      const realIdx = data.rows.indexOf(targetRow);
+
+      if (realIdx === -1) return;
+
+      const newRows = data.rows.map((row, ri) =>
+        ri === realIdx ? row.map((cell, i) => (i === ci ? val : cell)) : row,
       );
-
-      const realIdx = data.rows.findIndex((row) => row[idColIdx] === rowId);
       setData({ ...data, rows: newRows });
       setDirtyRows((prev) => new Set(prev).add(realIdx));
     },
     [data, filteredRows, page],
   );
 
-  const deleteRow = (visibleIdx: number) => {
+  // const deleteRow = (visibleIdx: number) => {
+  //   if (!data) return;
+  //   // const targetRow = filteredRows[visibleIdx];
+  //   const targetRow = filteredRows[page * PAGE_SIZE + visibleIdx];
+  //   const realIdx = data.rows.indexOf(targetRow);
+  //   if (realIdx === -1) return;
+  //   const idColIdx = data.headers.indexOf(ID_COL);
+  //   if (idColIdx !== -1) {
+  //     const rowId = Number(targetRow[idColIdx]);
+  //     if (!isNaN(rowId) && rowId > 0) setDeletedIds((prev) => [...prev, rowId]);
+  //   }
+  //   setData({ ...data, rows: data.rows.filter((_, i) => i !== realIdx) });
+  //   setDirtyRows((prev) => {
+  //     const s = new Set(prev);
+  //     s.delete(realIdx);
+  //     return s;
+  //   });
+  // };
+
+  const deleteRow = (globalVisIdx: number) => {
     if (!data) return;
-    const targetRow = filteredRows[visibleIdx];
-    const realIdx = data.rows.indexOf(targetRow);
-    if (realIdx === -1) return;
+
+    // ✅ globalVisIdx already contains page offset
+    const targetRow = filteredRows[globalVisIdx];
+
+    // ✅ prevent undefined crash
+    if (!targetRow) return;
+
     const idColIdx = data.headers.indexOf(ID_COL);
-    if (idColIdx !== -1) {
-      const rowId = Number(targetRow[idColIdx]);
-      if (!isNaN(rowId) && rowId > 0) setDeletedIds((prev) => [...prev, rowId]);
+
+    if (idColIdx === -1) return;
+
+    const rowId = Number(targetRow[idColIdx]);
+
+    // Track delete for backend
+    if (!isNaN(rowId) && rowId > 0) {
+      setDeletedIds((prev) => [...prev, rowId]);
     }
-    setData({ ...data, rows: data.rows.filter((_, i) => i !== realIdx) });
-    setDirtyRows((prev) => {
-      const s = new Set(prev);
-      s.delete(realIdx);
-      return s;
+
+    // Remove instantly from UI
+    const updatedRows = data.rows.filter(
+      (row) => Number(row[idColIdx]) !== rowId,
+    );
+
+    setData({
+      ...data,
+      rows: updatedRows,
     });
   };
 
+  // const addRow = () => {
+  //   if (!data) return;
+  //   const emptyRow: CellValue[] = data.headers.map(() => "");
+  //   setData({ ...data, rows: [...data.rows, emptyRow] });
+  //   setPage(Math.max(0, Math.ceil((data.rows.length + 1) / PAGE_SIZE) - 1));
+  //   setSearchQuery("");
+  // };
+
   const addRow = () => {
     if (!data) return;
+
     const emptyRow: CellValue[] = data.headers.map(() => "");
-    setData({ ...data, rows: [...data.rows, emptyRow] });
-    setPage(Math.max(0, Math.ceil((data.rows.length + 1) / PAGE_SIZE) - 1));
+
+    const updatedRows = [...data.rows, emptyRow];
+
+    setData({
+      ...data,
+      rows: updatedRows,
+    });
+
+    // Track newly added row index
+    setNewRowIndexes((prev) => [...prev, updatedRows.length - 1]);
+
+    setPage(Math.max(0, Math.ceil(updatedRows.length / PAGE_SIZE) - 1));
+
     setSearchQuery("");
   };
 
@@ -286,14 +373,13 @@ export default function ExcelEditorModal({
         headers: data.headers,
         rows: rowsToSend,
       });
-      onToast(`✓ ${res.data.message}`, "success");
+      // toast.success(`✓ ${res.data.message}`);
       // onClose();
       await fetchSheet(); // refresh from DB
       onClose();
     } catch (err: any) {
-      onToast(
+      console.log(
         err?.response?.data?.error || "Save failed. Please try again.",
-        "error",
       );
     } finally {
       setSaving(false);
@@ -594,64 +680,98 @@ export default function ExcelEditorModal({
                           const isActive =
                             activeCell?.r === globalVisIdx &&
                             activeCell?.c === ci;
-                          const isId = !!cfg.readOnly;
+                          // const isReadOnly = !!cfg.readOnly;
+                          const realIdx = data!.rows.indexOf(row);
+
+                          const isNewRow = newRowIndexes.includes(realIdx);
+
+                          const isReadOnly =
+                            isNewRow && ["bin", "pcn", "grp"].includes(header)
+                              ? false
+                              : !!cfg.readOnly;
                           return (
                             <td
                               key={ci}
-                              // onClick={() =>
-                              //   !isId && activateCell(globalVisIdx, ci, cell)
-                              // }
                               onClick={() => {
-                                if (isId) return;
+                                if (isReadOnly) return;
+
+                                // ✅ Prevent popup reopening while already editing
+                                if (
+                                  activeCell?.r === globalVisIdx &&
+                                  activeCell?.c === ci
+                                ) {
+                                  return;
+                                }
+
                                 setConfirmEditCell({
                                   r: globalVisIdx,
                                   c: ci,
                                   value: cell,
                                 });
                               }}
+                              // onClick={() => {
+                              //   if (isReadOnly) return;
+                              //   setConfirmEditCell({
+                              //     r: globalVisIdx,
+                              //     c: ci,
+                              //     value: cell,
+                              //   });
+                              // }}
                               style={{ width: cfg.width, minWidth: cfg.width }}
                               className={`px-3.5 py-2 border-b border-r border-border text-xs whitespace-nowrap transition-colors ${
                                 isActive
                                   ? "outline outline-2 outline-foreground -outline-offset-1 bg-accent"
                                   : ""
-                              } ${isId ? "cursor-default" : "cursor-cell"}`}
+                              } ${isReadOnly ? "cursor-default" : "cursor-cell"}`}
                             >
                               {isActive ? (
-                                <input
-                                  ref={activeCellInputRef}
-                                  autoFocus
-                                  value={editValue}
-                                  onChange={(e) => {
-                                    setEditValue(e.target.value);
-                                    commitEdit(e.target.value, visIdx, ci);
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      e.preventDefault();
-                                      setActiveCell(null);
-                                    }
-                                    if (e.key === "Escape") setActiveCell(null);
-                                    if (e.key === "Tab") {
-                                      e.preventDefault();
-                                      const headers = data!.headers;
-                                      let nextCi = ci + 1;
-                                      while (
-                                        nextCi < headers.length &&
-                                        COL_CONFIG[headers[nextCi]]?.readOnly
-                                      )
-                                        nextCi++;
-                                      if (nextCi < headers.length)
-                                        activateCell(
-                                          globalVisIdx,
-                                          nextCi,
-                                          pageRows[visIdx][nextCi],
-                                        );
-                                      else setActiveCell(null);
-                                    }
-                                  }}
-                                  className="w-full bg-transparent border-none outline-none text-foreground text-xs p-0"
-                                />
-                              ) : isId ? (
+                                header === "pbm_name" ||
+                                header === "payer_type" ? (
+                                  <select
+                                    ref={activeCellInputRef as any}
+                                    autoFocus
+                                    value={editValue}
+                                    onChange={(e) => {
+                                      setEditValue(e.target.value);
+                                      commitEdit(e.target.value, visIdx, ci);
+                                    }}
+                                    onBlur={() => setActiveCell(null)}
+                                    className="w-full bg-background border border-border rounded px-2 py-1 text-xs outline-none"
+                                  >
+                                    <option value="">Select</option>
+
+                                    {(header === "pbm_name"
+                                      ? pbmOptions
+                                      : payerTypeOptions
+                                    ).map((option) => (
+                                      <option key={option} value={option}>
+                                        {option}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <input
+                                    ref={activeCellInputRef}
+                                    autoFocus
+                                    value={editValue}
+                                    onChange={(e) => {
+                                      setEditValue(e.target.value);
+                                      commitEdit(e.target.value, visIdx, ci);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        setActiveCell(null);
+                                      }
+
+                                      if (e.key === "Escape") {
+                                        setActiveCell(null);
+                                      }
+                                    }}
+                                    className="w-full bg-transparent border-none outline-none text-foreground text-xs p-0"
+                                  />
+                                )
+                              ) : isReadOnly ? (
                                 <span className="text-muted-foreground font-semibold text-[11px]">
                                   {cell !== null && cell !== "" ? (
                                     header === "updated_at" ? (
@@ -714,7 +834,7 @@ export default function ExcelEditorModal({
                         })}
                         <td className="px-1.5 py-2 border-b border-r border-border text-center">
                           <button
-                            onClick={() => deleteRow(globalVisIdx)}
+                            onClick={() => setConfirmDeleteRow(globalVisIdx)}
                             className="text-muted-foreground/40 hover:text-destructive transition-colors p-1 rounded mx-auto flex"
                             title="Delete row"
                           >
@@ -816,6 +936,44 @@ export default function ExcelEditorModal({
                 }}
               >
                 Yes, Edit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {confirmDeleteRow !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-xl shadow-xl p-5 w-[340px]">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="text-red-500" size={18} />
+              <h3 className="text-sm font-semibold text-foreground">
+                Delete Row?
+              </h3>
+            </div>
+
+            <p className="text-xs text-muted-foreground mb-4">
+              Are you sure you want to delete this row? This action cannot be
+              undone.
+            </p>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmDeleteRow(null)}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                size="sm"
+                className="bg-red-600 text-white hover:bg-red-700"
+                onClick={() => {
+                  deleteRow(confirmDeleteRow);
+                  setConfirmDeleteRow(null);
+                }}
+              >
+                Yes, Delete
               </Button>
             </div>
           </div>
