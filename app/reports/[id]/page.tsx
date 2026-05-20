@@ -384,6 +384,22 @@ function SortIcon({ active }: { active?: "asc" | "desc" }) {
   );
 }
 
+// ─── Base drug name ───────────────────────────────────────────────────────────
+// Strips strength / dosage form so the in-cell search matches the whole brand,
+// e.g. "OZEMPIC 2MG/DOSE SOL 2MG/DOSE INJ" → "OZEMPIC".
+function getBaseDrugName(name: string | null | undefined): string {
+  if (!name) return "";
+  const tokens = name.trim().split(/\s+/);
+  const base: string[] = [];
+  for (const tok of tokens) {
+    // Strength/dosage tokens contain a digit (e.g. "0.25", "2MG/DOSE") — stop here.
+    if (/\d/.test(tok)) break;
+    base.push(tok);
+  }
+  // Fall back to the first token if the name begins with a number.
+  return (base.length ? base.join(" ") : tokens[0]) || name;
+}
+
 // ─── Group colours ────────────────────────────────────────────────────────────
 
 const GC = {
@@ -501,6 +517,8 @@ export default function InventoryReportPage() {
   const [inventoryData, setInventoryData] = useState<InventoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [openExportModal, setOpenExportModal] = useState(false);
+  // Bumped by the header refresh button to re-run the data-load effects
+  const [refreshTick, setRefreshTick] = useState(0);
   const [exportFormat, setExportFormat] = useState<"csv" | "excel" | "pdf">(
     "excel",
   );
@@ -559,8 +577,11 @@ export default function InventoryReportPage() {
   const [orderTab, setOrderTab] = useState<"current" | "outside">("current");
   const [orderFilters, setOrderFilters] = useState<string[]>([]);
   const [showOrderFilters, setShowOrderFilters] = useState(false);
+  // Wholesaler names uploaded for this audit — drives the Total Order filter list
+  const [auditWholesalers, setAuditWholesalers] = useState<string[]>([]);
   const [openShortageSidebar, setOpenShortageSidebar] = useState(false);
   const [shortageDrug, setShortageDrug] = useState<InventoryRow | null>(null);
+  const [shortageSource, setShortageSource] = useState<"total" | "highest">("total");
 
   // Notes sidebar
   const [openNotesSidebar, setOpenNotesSidebar] = useState(false);
@@ -985,7 +1006,49 @@ export default function InventoryReportPage() {
       }
     };
     if (auditId) load();
-  }, [auditId]);
+  }, [auditId, refreshTick]);
+
+  // ── Wholesalers for the Total Order filter list ───────────────────────────
+  // Shows ALL selected wholesalers (chosen during audit creation), not just the
+  // ones that already have an uploaded file — union of the user's selected
+  // suppliers and any wholesaler files uploaded for this audit.
+  useEffect(() => {
+    if (!auditId) return;
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const userId =
+      typeof window !== "undefined" ? localStorage.getItem("userId") : null;
+
+    Promise.all([
+      userId
+        ? fetch(`${base}/api/user-suppliers/${userId}`)
+            .then((r) => r.json())
+            .catch(() => [])
+        : Promise.resolve([]),
+      fetch(`${base}/api/audits/${auditId}/wholesaler-files`)
+        .then((r) => r.json())
+        .catch(() => []),
+    ])
+      .then(([suppliers, files]) => {
+        const fromSuppliers = Array.isArray(suppliers)
+          ? suppliers.map((x: any) => x.name)
+          : [];
+        const fromFiles = Array.isArray(files)
+          ? files.map((x: any) => x.wholesaler_name)
+          : [];
+        // Dedupe case-insensitively, keeping the first occurrence's casing.
+        const seen = new Set<string>();
+        const names: string[] = [];
+        for (const n of [...fromSuppliers, ...fromFiles]) {
+          if (!n) continue;
+          const key = String(n).toUpperCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          names.push(n);
+        }
+        setAuditWholesalers(names);
+      })
+      .catch(() => setAuditWholesalers([]));
+  }, [auditId, refreshTick]);
 
   // ── applyQtyMode ──────────────────────────────────────────────────────────
 
@@ -1140,7 +1203,7 @@ export default function InventoryReportPage() {
     return sortedData.filter((r) => {
       const matchesSearch =
         r.drugName.toLowerCase().includes(q) || r.ndc.toLowerCase().includes(q);
-      const matchesAmount = amountValue === "" || r.amount <= amountValue;
+      const matchesAmount = amountValue === "" || r.amount >= amountValue;
       const matchesTags =
         activeTagFilters.length === 0 ||
         activeTagFilters.some((tid) => (rowTags[r.id] ?? []).includes(tid));
@@ -1178,12 +1241,20 @@ export default function InventoryReportPage() {
   const monthOptions = useMemo(() => {
     if (!auditDates?.inventory_start_date || !auditDates?.inventory_end_date)
       return [] as { label: string; value: string }[];
-    const start = new Date(auditDates.inventory_start_date);
-    const end = new Date(auditDates.inventory_end_date);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) return [];
+    // Derive year/month from the date-only string (avoids the UTC→local
+    // day-shift that new Date(dateString) causes in negative-offset zones).
+    const ym = (s: string) => {
+      const m = String(s)
+        .slice(0, 10)
+        .match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      return m ? { y: +m[1], mo: +m[2] - 1 } : null;
+    };
+    const s = ym(auditDates.inventory_start_date);
+    const e = ym(auditDates.inventory_end_date);
+    if (!s || !e) return [];
     const out: { label: string; value: string }[] = [];
-    const cur = new Date(start.getFullYear(), start.getMonth(), 1);
-    const endCur = new Date(end.getFullYear(), end.getMonth(), 1);
+    const cur = new Date(s.y, s.mo, 1);
+    const endCur = new Date(e.y, e.mo, 1);
     while (cur <= endCur) {
       out.push({
         label: cur.toLocaleString("en-US", {
@@ -1256,21 +1327,21 @@ export default function InventoryReportPage() {
 
   // ── Misc helpers ──────────────────────────────────────────────────────────
 
-  const fmt = (d: Date) =>
-    `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}/${d.getFullYear()}`;
+  // Format a date-only value as MM/DD/YYYY without timezone shifting.
+  // Backend returns DATE columns as UTC-midnight ISO strings
+  // (e.g. "2025-10-15T00:00:00.000Z"); new Date() + local getters would
+  // roll the day back in negative-offset timezones.
+  const fmtDate = (s?: string | null) => {
+    const m = String(s ?? "")
+      .slice(0, 10)
+      .match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m ? `${m[2]}/${m[3]}/${m[1]}` : "—";
+  };
 
-  const fromDate = auditDates?.inventory_start_date
-    ? fmt(new Date(auditDates.inventory_start_date))
-    : "—";
-  const toDate = auditDates?.inventory_end_date
-    ? fmt(new Date(auditDates.inventory_end_date))
-    : "—";
-  const wsFrom = auditDates?.wholesaler_start_date
-    ? fmt(new Date(auditDates.wholesaler_start_date))
-    : "—";
-  const wsTo = auditDates?.wholesaler_end_date
-    ? fmt(new Date(auditDates.wholesaler_end_date))
-    : "—";
+  const fromDate = fmtDate(auditDates?.inventory_start_date);
+  const toDate = fmtDate(auditDates?.inventory_end_date);
+  const wsFrom = fmtDate(auditDates?.wholesaler_start_date);
+  const wsTo = fmtDate(auditDates?.wholesaler_end_date);
 
   const shortage = (v: number, zeroAsNumber = false) =>
     v === 0 ? (
@@ -1504,9 +1575,11 @@ export default function InventoryReportPage() {
   const handleOpenShortageSidebar = (
     row: InventoryRow,
     e: React.MouseEvent,
+    source: "total" | "highest" = "total",
   ) => {
     e.stopPropagation();
     setShortageDrug(row);
+    setShortageSource(source);
     setOpenShortageSidebar(true);
     setShortageSort(null);
   };
@@ -1535,6 +1608,32 @@ export default function InventoryReportPage() {
     if (openExportModal || showLeaveDialog || openDrugSidebar || monthModalOpen)
       setSidebarCollapsed(true);
   }, [openExportModal, showLeaveDialog, openDrugSidebar, monthModalOpen]);
+
+  // Close the month dropdown whenever a sidebar/modal opens, so it doesn't
+  // stay floating on top of them.
+  useEffect(() => {
+    if (
+      openDrugSidebar ||
+      openBilledSidebar ||
+      openOrderedSidebar ||
+      openShortageSidebar ||
+      openNotesSidebar ||
+      activeSidebar !== null ||
+      monthModalOpen ||
+      openExportModal
+    ) {
+      setOpenMonthDropdown(false);
+    }
+  }, [
+    openDrugSidebar,
+    openBilledSidebar,
+    openOrderedSidebar,
+    openShortageSidebar,
+    openNotesSidebar,
+    activeSidebar,
+    monthModalOpen,
+    openExportModal,
+  ]);
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -1907,8 +2006,17 @@ export default function InventoryReportPage() {
                   >
                     <Download className="h-3.5 w-3.5" /> Export
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <RotateCw className="h-3.5 w-3.5" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    title="Refresh"
+                    disabled={loading}
+                    onClick={() => setRefreshTick((t) => t + 1)}
+                  >
+                    <RotateCw
+                      className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+                    />
                   </Button>
                 </div>
               </div>
@@ -2450,10 +2558,10 @@ export default function InventoryReportPage() {
 
                 <Input
                   type="number"
-                  placeholder="Max Amount"
+                  placeholder="Min Amount"
                   value={amountValue}
                   onChange={(e) => setAmountValue(Number(e.target.value) || "")}
-                  className="w-[110px] h-8 text-xs border-slate-300"
+                  className="w-[140px] h-8 text-xs border-slate-300"
                 />
 
                 <Select
@@ -3110,12 +3218,13 @@ export default function InventoryReportPage() {
                                     title="Search by drug name"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setDrugNameFilter((prev) =>
-                                        prev === row.drugName
-                                          ? null
-                                          : row.drugName,
+                                      const base = getBaseDrugName(
+                                        row.drugName,
                                       );
-                                      setSearchQuery(row.drugName);
+                                      setDrugNameFilter((prev) =>
+                                        prev === base ? null : base,
+                                      );
+                                      setSearchQuery(base);
                                     }}
                                     className="p-0.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50"
                                   >
@@ -3296,9 +3405,9 @@ export default function InventoryReportPage() {
                                 c.key === "totalBilled"
                                   ? (e) => handleOpenBilledSidebar(row, e)
                                   : c.key === "totalShortage"
-                                    ? (e) => handleOpenShortageSidebar(row, e)
+                                    ? (e) => handleOpenShortageSidebar(row, e, "total")
                                     : c.key === "highestShortage"
-                                      ? (e) => handleOpenShortageSidebar(row, e)
+                                      ? (e) => handleOpenShortageSidebar(row, e, "highest")
                                       : c.group !== "base-scroll" && !c.isShortage
                                         ? (e) => handleOpenBilledSidebar(row, e, c.key)
                                         : undefined
@@ -3552,7 +3661,10 @@ export default function InventoryReportPage() {
                       {["csv", "excel", "pdf"].map((f) => (
                         <div
                           key={f}
-                          className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50"
+                          onClick={() =>
+                            setExportFormat(f as "csv" | "excel" | "pdf")
+                          }
+                          className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer"
                         >
                           <RadioGroupItem value={f} id={f} />
                           <Label
@@ -3571,7 +3683,10 @@ export default function InventoryReportPage() {
                       value={exportScope}
                       onValueChange={(v) => setExportScope(v as any)}
                     >
-                      <div className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50">
+                      <div
+                        onClick={() => setExportScope("visible")}
+                        className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer"
+                      >
                         <RadioGroupItem value="visible" id="vis" />
                         <Label
                           htmlFor="vis"
@@ -3580,7 +3695,10 @@ export default function InventoryReportPage() {
                           Visible Rows
                         </Label>
                       </div>
-                      <div className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50">
+                      <div
+                        onClick={() => setExportScope("all")}
+                        className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer"
+                      >
                         <RadioGroupItem value="all" id="all" />
                         <Label
                           htmlFor="all"
@@ -4811,7 +4929,7 @@ export default function InventoryReportPage() {
                               )
                             : activeLines;
 
-                        // Default ordering (by date desc) when no sort applied
+                        // Default ordering (by date asc — oldest first) when no sort applied
                         const defaultOrdered = [...baseFiltered].sort(
                           (a, b) => {
                             const da = a.date_filled
@@ -4820,7 +4938,7 @@ export default function InventoryReportPage() {
                             const db = b.date_filled
                               ? new Date(b.date_filled).getTime()
                               : 0;
-                            return db - da;
+                            return da - db;
                           },
                         );
 
@@ -5313,37 +5431,35 @@ export default function InventoryReportPage() {
                             </span>
                           </div>
                           <div className="px-4 pb-4 max-h-[400px] overflow-y-auto">
-                            {[
-                              "MCKESSON",
-                              "CARDINAL HEALTH",
-                              "AMERISOURCEBERGEN",
-                              "HD SMITH",
-                              "MORRIS & DICKSON",
-                              "ANDA",
-                              "OTHER",
-                            ].map((name) => (
-                              <label
-                                key={name}
-                                className="flex items-center gap-2.5 py-2 cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1 border-b border-slate-50 last:border-0"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={orderFilters.includes(name)}
-                                  onChange={() =>
-                                    setOrderFilters((prev) =>
-                                      prev.includes(name)
-                                        ? prev.filter((x) => x !== name)
-                                        : [...prev, name],
-                                    )
-                                  }
-                                  className="h-4 w-4 shrink-0 rounded border-slate-300"
-                                  style={{ accentColor: "#1e293b" }}
-                                />
-                                <span className="text-[12px] text-slate-700 font-medium leading-tight">
-                                  {name}
-                                </span>
-                              </label>
-                            ))}
+                            {auditWholesalers.length === 0 ? (
+                              <p className="text-[11px] text-slate-400 py-2">
+                                No wholesaler files found for this audit.
+                              </p>
+                            ) : (
+                              auditWholesalers.map((name) => (
+                                <label
+                                  key={name}
+                                  className="flex items-center gap-2.5 py-2 cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1 border-b border-slate-50 last:border-0"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={orderFilters.includes(name)}
+                                    onChange={() =>
+                                      setOrderFilters((prev) =>
+                                        prev.includes(name)
+                                          ? prev.filter((x) => x !== name)
+                                          : [...prev, name],
+                                      )
+                                    }
+                                    className="h-4 w-4 shrink-0 rounded border-slate-300"
+                                    style={{ accentColor: "#1e293b" }}
+                                  />
+                                  <span className="text-[12px] text-slate-700 font-medium leading-tight">
+                                    {name}
+                                  </span>
+                                </label>
+                              ))
+                            )}
                           </div>
                         </div>
                       )}
@@ -5436,7 +5552,11 @@ export default function InventoryReportPage() {
                         const baseFiltered =
                           orderFilters.length > 0
                             ? activeLines.filter((r) =>
-                                orderFilters.includes(r.type?.toUpperCase()),
+                                orderFilters.some(
+                                  (f) =>
+                                    f.toUpperCase() ===
+                                    (r.type ?? "").toUpperCase(),
+                                ),
                               )
                             : activeLines;
 
@@ -5730,7 +5850,7 @@ export default function InventoryReportPage() {
                       <div className="flex items-center gap-2">
                         <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shrink-0" />
                         <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">
-                          Total Shortage
+                          {shortageSource === "highest" ? "Highest Shortage" : "Total Shortage"}
                         </span>
                       </div>
                     </div>

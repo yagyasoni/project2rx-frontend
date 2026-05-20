@@ -1,94 +1,180 @@
-"use client";
-
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
-import { SupplierProvider } from "@/context/SupplierContext";
-import InactiveAccount from "@/components/inactiveAccount";
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
+import LayoutClient from "./LayoutClient";
+
+const SITE_URL = "https://www.auditprorx.com";
+const SITE_NAME = "AuditProRx";
+const DEFAULT_TITLE = "AuditProRx — Pharmacy Audit Software & PBM Compliance Platform";
+const DEFAULT_DESCRIPTION =
+  "AuditProRx is the all-in-one pharmacy audit software for independent pharmacies. Automate PBM audit responses, reconcile wholesaler invoices (McKesson, AXIA, Kinray, Anda), run NDC inventory audits, and protect revenue — HIPAA compliant, built by pharmacists.";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: DEFAULT_TITLE,
+    template: "%s | AuditProRx",
+  },
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
+  generator: "Next.js",
+  keywords: [
+    "pharmacy audit software",
+    "pharmacy audit management",
+    "PBM audit defense",
+    "PBM audit response software",
+    "pharmacy compliance software",
+    "pharmacy inventory audit",
+    "wholesaler reconciliation",
+    "NDC inventory audit",
+    "invoice to dispense reconciliation",
+    "BIN PCN lookup",
+    "BIN PCN Group lookup",
+    "HIPAA pharmacy software",
+    "independent pharmacy software",
+    "PrimeRx audit reports",
+    "McKesson reconciliation",
+    "AXIA pharmacy reconciliation",
+    "Kinray reconciliation",
+    "Anda pharmacy reconciliation",
+    "pharmacy recoupment recovery",
+    "automated pharmacy audit",
+    "aberrant dispensing report",
+    "pharmacy audit defense platform",
+    "AuditProRx",
+  ],
+  authors: [{ name: "AuditProRx", url: SITE_URL }],
+  creator: "AuditProRx",
+  publisher: "AuditProRx",
+  category: "Healthcare Software",
+  classification: "Pharmacy Audit & Compliance SaaS",
+  referrer: "origin-when-cross-origin",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "AuditProRx — Pharmacy Audit Software & PBM Compliance Platform",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: ["/opengraph-image"],
+    creator: "@auditprorx",
+    site: "@auditprorx",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  // icons are auto-detected from app/icon.tsx and app/apple-icon.tsx (Next.js convention)
+  manifest: "/manifest.webmanifest",
+  verification: {
+    // Add the value from Google Search Console once verified.
+    // google: "REPLACE_WITH_GOOGLE_SEARCH_CONSOLE_VERIFICATION_TOKEN",
+    // yandex: "REPLACE_WITH_YANDEX_TOKEN",
+    other: {
+      // "msvalidate.01": "REPLACE_WITH_BING_VERIFICATION_TOKEN",
+    },
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+  colorScheme: "light dark",
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: SITE_NAME,
+  legalName: "AuditProRx",
+  url: SITE_URL,
+  logo: `${SITE_URL}/icon.png`,
+  description: DEFAULT_DESCRIPTION,
+  email: "drugdroprx@gmail.com",
+  foundingDate: "2024",
+  areaServed: "US",
+  sameAs: [] as string[],
+  contactPoint: [
+    {
+      "@type": "ContactPoint",
+      contactType: "Customer Support",
+      email: "drugdroprx@gmail.com",
+      availableLanguage: ["English"],
+      areaServed: "US",
+    },
+  ],
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE_NAME,
+  url: SITE_URL,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${SITE_URL}/bin-search?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
+  },
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [role, setRole] = useState<string | null>(null);
-  const pathname = usePathname(); // ✅ get current route
-
-  const hideBannerRoutes = ["/", "/admin"];
-
-  const shouldShowBanner = !hideBannerRoutes.includes(pathname);
-
-  useEffect(() => {
-    const storedRole = localStorage.getItem("role");
-    setRole(storedRole);
-  }, []);
-
-  function BetaBanner() {
-    const [visible, setVisible] = useState(true);
-
-    useEffect(() => {
-      const dismissed = localStorage.getItem("betaBannerDismissed");
-      if (dismissed) setVisible(false);
-    }, []);
-
-    const handleClose = () => {
-      localStorage.setItem("betaBannerDismissed", "true");
-      setVisible(false);
-    };
-
-    if (!visible) return null;
-
-    const subject = encodeURIComponent("Beta Support Request");
-    const body = encodeURIComponent(
-      "Hello Support Team,\n\nI am experiencing an issue while using the beta version of the application.\n\nDetails:\n- Issue:\n- Steps to reproduce:\n\nThank you.",
-    );
-
-    return (
-      <div
-        className="fixed bottom-0 left-0 w-full z-50
-    bg-black/40 
-    text-black text-sm
-    py-2 px-4
-    flex items-center justify-center
-    border-t border-white/10"
-      >
-        {/* Content */}
-        <div className="text-center">
-          <span className="font-semibold">Beta</span> — This application is
-          currently in testing. Some features may not work as expected.{" "}
-          <a
-            href={`https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com&su=${subject}&body=${body}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-gray-300"
-          >
-            Contact support
-          </a>{" "}
-          for any issues or feedback.
-        </div>
-
-        {/* Close button */}
-        <button
-          onClick={handleClose}
-          className="absolute right-4 p-1 rounded-md hover:bg-white/10"
-        >
-          <X className="w-4 h-4 text-white" />
-        </button>
-      </div>
-    );
-  }
-
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://js.stripe.com" />
+        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+      </head>
       <body>
-        {shouldShowBanner && <BetaBanner />}
-        {/* ✅ Only show after role is loaded */}
-        {role !== null && role !== "admin" ? <InactiveAccount /> : null}
-
-        <Toaster />
-        <SupplierProvider>{children}</SupplierProvider>
+        <LayoutClient>{children}</LayoutClient>
       </body>
     </html>
   );

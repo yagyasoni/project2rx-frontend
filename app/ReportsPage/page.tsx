@@ -163,14 +163,14 @@ export default function ReportsPage() {
     }
   };
 
+  // Format a date-only value as MM/DD/YYYY without timezone shifting.
+  // Backend returns DATE columns as UTC-midnight ISO strings; new Date() +
+  // local getters would roll the day back in negative-offset timezones.
   const formatDate = (d?: string | null) => {
-    if (!d) return "-";
-    const dt = new Date(d);
-    return dt.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
+    const m = String(d ?? "")
+      .slice(0, 10)
+      .match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m ? `${m[2]}/${m[3]}/${m[1]}` : "-";
   };
 
   const formatRange = (start?: string | null, end?: string | null) => {

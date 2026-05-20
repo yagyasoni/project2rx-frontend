@@ -1,3 +1,38 @@
+import type { Metadata } from "next";
+
+const SITE_URL = "https://www.auditprorx.com";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "Read the AuditProRx privacy policy. Learn how our HIPAA-compliant pharmacy audit software collects, stores, and protects your pharmacy and patient data.",
+  alternates: { canonical: SITE_URL + "/privacy-policy" },
+  openGraph: {
+    type: "article",
+    url: SITE_URL + "/privacy-policy",
+    siteName: "AuditProRx",
+    title: "Privacy Policy | AuditProRx",
+    description:
+      "How AuditProRx collects, stores, and protects pharmacy and patient data — HIPAA-compliant pharmacy audit software.",
+    locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "AuditProRx Privacy Policy",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Privacy Policy | AuditProRx",
+    description:
+      "How AuditProRx collects, stores, and protects pharmacy and patient data.",
+  },
+  robots: { index: true, follow: true },
+};
+
 const PrivacyPolicy = () => {
   return (
     <section

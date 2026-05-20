@@ -1,3 +1,38 @@
+import type { Metadata } from "next";
+
+const SITE_URL = "https://www.auditprorx.com";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "Review the AuditProRx Terms of Service governing use of our pharmacy audit software, PBM compliance platform, and wholesaler reconciliation tools.",
+  alternates: { canonical: SITE_URL + "/terms-of-service" },
+  openGraph: {
+    type: "article",
+    url: SITE_URL + "/terms-of-service",
+    siteName: "AuditProRx",
+    title: "Terms of Service | AuditProRx",
+    description:
+      "Terms governing use of the AuditProRx pharmacy audit & compliance platform.",
+    locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "AuditProRx Terms of Service",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Terms of Service | AuditProRx",
+    description:
+      "Terms governing use of the AuditProRx pharmacy audit & compliance platform.",
+  },
+  robots: { index: true, follow: true },
+};
+
 const TermsOfService = () => {
   return (
     <section
