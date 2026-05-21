@@ -85,7 +85,7 @@ export default function RootLayout({
       <body>
         {shouldShowBanner && <BetaBanner />}
         {/* ✅ Only show after role is loaded */}
-        {role !== null && role !== "admin" ? <InactiveAccount /> : null}
+        {/* {role !== null && role !== "admin" ? <InactiveAccount /> : null} */}
 
         <Toaster />
         <SupplierProvider>{children}</SupplierProvider>
