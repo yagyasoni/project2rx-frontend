@@ -1,3 +1,37 @@
+import type { Metadata } from "next";
+
+const SITE_URL = "https://www.auditprorx.com";
+
+export const metadata: Metadata = {
+  title: "Cancellation & Refund Policy",
+  description:
+    "AuditProRx cancellation and refund terms. Month-to-month pharmacy audit software subscription with no long-term contract and a 7-day free trial.",
+  alternates: { canonical: SITE_URL + "/cancellation-policy" },
+  openGraph: {
+    type: "article",
+    url: SITE_URL + "/cancellation-policy",
+    siteName: "AuditProRx",
+    title: "Cancellation & Refund Policy | AuditProRx",
+    description:
+      "AuditProRx cancellation and refund terms — month-to-month with a 7-day free trial.",
+    locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "AuditProRx Cancellation & Refund Policy",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Cancellation & Refund Policy | AuditProRx",
+    description: "Cancellation and refund terms for AuditProRx.",
+  },
+  robots: { index: true, follow: true },
+};
+
 const CancellationAndRefundPolicy = () => {
   return (
     <section

@@ -152,10 +152,10 @@ const Index = () => {
     "Contact",
   ];
 
-  // const handleSubscribe = async () => {
-  //   const data = await createCheckoutSession(1, "test@example.com");
-  //   window.location.href = data.url;
-  // };
+  const handleSubscribe = async () => {
+    const data = await createCheckoutSession(1, "test@example.com");
+    window.location.href = data.url;
+  };
 
   // Color palette - Silver/Gray accent with black gradients
   const accentColor = "hsl(210 15% 60%)"; // Silver-gray
@@ -172,7 +172,7 @@ const Index = () => {
   const color0D0D0D = "hsl(0 0% 5%)"; // #0D0D0D
 
   return (
-    <div
+    <main
       className="min-h-screen bg-black font-body text-white overflow-x-hidden"
       style={{ background: "hsl(0 0% 5%)" }}
     >
@@ -1616,7 +1616,7 @@ const Index = () => {
                   {/* CTA */}
                   <div className="mt-auto">
                     <Button
-                      // onClick={handleSubscribe}
+                      onClick={handleSubscribe}
                       className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all"
                       style={
                         plan.highlighted
@@ -1930,6 +1930,8 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
+    </main>
   );
 };
+
+export default Index;

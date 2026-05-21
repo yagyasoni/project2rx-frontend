@@ -313,8 +313,8 @@ export default function CommunityLinkPageCopy({
             </select>
           </div>
 
-          {/* Mode toggle */}
-          <div>
+          {/* Mode toggle — hidden for now */}
+          <div className="hidden">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
               Mode
             </p>

@@ -48,6 +48,8 @@ const REQUIRED_FIELD_LABELS = [
   "Sec Ins Pcn (SECINSPCN)",
   "Sec Ins Group (SECINSPATGROUP)",
   "Sec Ins Paid (SECINSPAID)",
+
+  "Patient Copay (PATIENTCOPAY)",
 ];
 
 const DisclaimerBanner = () => {
@@ -241,9 +243,11 @@ const UploadInventoryStep = ({
       key: "secondaryInsuranceBinNumber",
       label: "Secondary Insurance Bin Number",
     },
-    // { key: "secondaryInsurancePcn", label: "Secondary Insurance PCN" },
-    // { key: "secondaryInsuranceGroup", label: "Secondary Insurance Group" },
+    { key: "secondaryInsurancePcn", label: "Secondary Insurance PCN" },
+    { key: "secondaryInsuranceGroup", label: "Secondary Insurance Group" },
     { key: "secondaryInsurancePaid", label: "Secondary Insurance Paid" },
+
+    { key: "patientCopay", label: "Patient Copay" },
   ] as const;
 
   const STANDARD_FIELD_TO_VALUE: Record<string, string> = {
@@ -261,6 +265,9 @@ const UploadInventoryStep = ({
     brand: "brand",
     primaryInsurancePcn: "primary_pcn",
     primaryInsuranceGroup: "primary_group",
+    secondaryInsurancePcn: "secondary_pcn",
+    secondaryInsuranceGroup: "secondary_group",
+    patientCopay: "patient_copay",
   };
 
   const HEADER_ALIASES: Record<string, string[]> = {
@@ -330,6 +337,26 @@ const UploadInventoryStep = ({
       "primaryinsurancegroup",
       "patgroup",
     ], // ← "priinspatgroup" already there ✓
+    secondaryInsurancePcn: [
+      "secinspcn",
+      "secondarypcn",
+      "secondary_pcn",
+      "secondaryinsurancepcn",
+    ],
+    secondaryInsuranceGroup: [
+      "secinspatgroup",
+      "secondarygroup",
+      "secondary_group",
+      "secondaryinsurancegroup",
+    ],
+    patientCopay: [
+      "patientcopay",
+      "patient_copay",
+      "copay",
+      "patcopay",
+      "patpay",
+      "patientpaid",
+    ],
   };
 
   const normalizeHeader = (value: string) =>
