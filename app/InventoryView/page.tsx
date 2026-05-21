@@ -2308,11 +2308,19 @@ function EditListingModal({
             <input
               type="number"
               min={1}
+              max={10}
               autoFocus
               value={quantity}
               onChange={(e) => {
                 setQuantity(e.target.value);
-                setError(null);
+                setError(
+                  quantity === "" ||
+                    isNaN(Number(e.target.value)) ||
+                    Number(e.target.value) < 1 ||
+                    Number(e.target.value) > 10
+                    ? "Please enter a valid quantity (1-10)."
+                    : null,
+                );
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !invalid) handleSave();
@@ -2834,7 +2842,7 @@ function AddListingModal({
                   />
                 </div>
                 <div>
-                  {/* <FieldLabel required>Expiry Date</FieldLabel>
+                  <FieldLabel required>Expiry Date</FieldLabel>
                   <input
                     type="date"
                     value={form.expiry}
@@ -2842,8 +2850,8 @@ function AddListingModal({
                       setForm({ ...form, expiry: e.target.value })
                     }
                     className="h-11 w-full rounded-xl border-0 bg-gray-50 px-4 text-sm outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
-                  /> */}
-                  <FieldLabel required>Expiry Date</FieldLabel>
+                  />
+                  {/* <FieldLabel required>Expiry Date</FieldLabel>
 
                   <input
                     type="date"
@@ -2879,7 +2887,7 @@ function AddListingModal({
                       });
                     }}
                     className="h-11 w-full rounded-xl border-0 bg-gray-50 px-4 text-sm outline-none ring-1 ring-inset ring-transparent focus:bg-white focus:ring-gray-900"
-                  />
+                  /> */}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
