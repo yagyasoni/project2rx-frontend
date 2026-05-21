@@ -98,7 +98,7 @@ const AnimatedSection = ({
   );
 };
 
-const Index = () => {
+export default function Index() {
   const [navOpen, setNavOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -1896,4 +1896,4 @@ const Index = () => {
       </footer>
     </div>
   );
-};
+}
