@@ -83,7 +83,7 @@ export default function LayoutClient({
   return (
     <>
       {shouldShowBanner && <BetaBanner />}
-      {role !== null && role !== "admin" ? <InactiveAccount /> : null}
+      {/* {role !== null && role !== "admin" ? <InactiveAccount /> : null} */}
       <Toaster />
       <SupplierProvider>{children}</SupplierProvider>
     </>

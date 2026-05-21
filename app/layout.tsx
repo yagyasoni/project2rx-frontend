@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import LayoutClient from "./LayoutClient";
+import { SupplierProvider } from "@/context/SupplierContext";
 
 const SITE_URL = "https://www.auditprorx.com";
 const SITE_NAME = "AuditProRx";
@@ -177,12 +178,7 @@ export default function RootLayout({
         />
       </head>
       <body>
-        {shouldShowBanner && <BetaBanner />}
-        {/* ✅ Only show after role is loaded */}
-        {/* {role !== null && role !== "admin" ? <InactiveAccount /> : null} */}
-
-        <Toaster />
-        <SupplierProvider>{children}</SupplierProvider>
+        <LayoutClient>{children}</LayoutClient>
       </body>
     </html>
   );
