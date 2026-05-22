@@ -28,7 +28,6 @@ const formatNdcDisplay = (ndc: string) => {
   if (d.length === 11) return `${d.slice(0, 5)}-${d.slice(5, 9)}-${d.slice(9)}`;
   return ndc;
 };
-
 // ─── Trending chips ──────────────────────────────────────────────────────
 // ─── Fallback trending if DB has no searches yet ─────────────────────────
 const FALLBACK_TRENDING = [
@@ -59,7 +58,6 @@ const formatStat = (n: number | undefined) => {
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K+`;
   return n.toLocaleString();
 };
-
 
 // ─── Shape of /drug-lookup-landing response ──────────────────────────────
 type LandingData = {
@@ -116,49 +114,46 @@ export default function DrugLookupLandingPage() {
     })();
   }, []);
 
-// Autocomplete API with debounce — handles BOTH drug name and NDC
-// Autocomplete API with debounce — handles BOTH drug name and NDC
-useEffect(() => {
-  const q = query.trim();
-  if (q.length < 2) {
-    setSuggestions([]);
-    return;
-  }
-
-  const ndcMode = isNdcLike(q);
-  const searchTerm = ndcMode ? normalizeNdc(q) : q;
-
-  const timer = setTimeout(async () => {
-    try {
-      const url =
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-search` +
-        `?q=${encodeURIComponent(searchTerm)}` +
-        (ndcMode ? "&type=ndc" : "&type=name");
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Search failed");
-      const data: { name: string; ndc?: string; rx_count: number }[] =
-        await res.json();
-
-      setSuggestions(
-        data
-          .map((d) =>
-            ndcMode && d.ndc ? `${formatNdcDisplay(d.ndc)} — ${d.name}` : d.name,
-          )
-          .filter(
-            (name) =>
-              name &&
-              name.length < 140 &&
-              !name.includes("|"),
-          ),
-      );
-    } catch (err) {
-      console.error("Drug search error:", err);
+  // Autocomplete API with debounce — handles BOTH drug name and NDC
+  // Autocomplete API with debounce — handles BOTH drug name and NDC
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
       setSuggestions([]);
+      return;
     }
-  }, 250);
-  return () => clearTimeout(timer);
-}, [query]);
+
+    const ndcMode = isNdcLike(q);
+    const searchTerm = ndcMode ? normalizeNdc(q) : q;
+
+    const timer = setTimeout(async () => {
+      try {
+        const url =
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-search` +
+          `?q=${encodeURIComponent(searchTerm)}` +
+          (ndcMode ? "&type=ndc" : "&type=name");
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Search failed");
+        const data: { name: string; ndc?: string; rx_count: number }[] =
+          await res.json();
+
+        setSuggestions(
+          data
+            .map((d) =>
+              ndcMode && d.ndc
+                ? `${formatNdcDisplay(d.ndc)} — ${d.name}`
+                : d.name,
+            )
+            .filter((name) => name && name.length < 140 && !name.includes("|")),
+        );
+      } catch (err) {
+        console.error("Drug search error:", err);
+        setSuggestions([]);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   // Click outside to close dropdown
   useEffect(() => {
@@ -171,49 +166,49 @@ useEffect(() => {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-const fillSearch = (term: string) => {
-  // If suggestion is "NDC — Drug Name", grab just the NDC and submit immediately
-  const ndcMatch = term.match(/^([\d-]{6,})\s*—/);
-  if (ndcMatch) {
-    submit(ndcMatch[1].trim());
-    return;
-  }
-  setQuery(term);
-  setFocused(false);
-  inputRef.current?.focus();
-  setTimeout(() => {
-    const input = inputRef.current;
-    if (input) {
-      const len = term.length;
-      input.setSelectionRange(len, len);
+  const fillSearch = (term: string) => {
+    // If suggestion is "NDC — Drug Name", grab just the NDC and submit immediately
+    const ndcMatch = term.match(/^([\d-]{6,})\s*—/);
+    if (ndcMatch) {
+      submit(ndcMatch[1].trim());
+      return;
     }
-  }, 0);
-};
+    setQuery(term);
+    setFocused(false);
+    inputRef.current?.focus();
+    setTimeout(() => {
+      const input = inputRef.current;
+      if (input) {
+        const len = term.length;
+        input.setSelectionRange(len, len);
+      }
+    }, 0);
+  };
 
-const submit = (term: string) => {
-  let t = term.trim();
-  if (!t) return;
+  const submit = (term: string) => {
+    let t = term.trim();
+    if (!t) return;
 
-  // If user pressed Enter on a suggestion like "73352-0086-60 — DICLOFENAC..."
-  const ndcMatch = t.match(/^([\d-]{6,})\s*—/);
-  if (ndcMatch) t = ndcMatch[1].trim();
+    // If user pressed Enter on a suggestion like "73352-0086-60 — DICLOFENAC..."
+    const ndcMatch = t.match(/^([\d-]{6,})\s*—/);
+    if (ndcMatch) t = ndcMatch[1].trim();
 
-  try {
-    const next = [t, ...recentSearches.filter((x) => x !== t)].slice(0, 5);
-    setRecentSearches(next);
-    localStorage.setItem("drugLookup_recentSearches", JSON.stringify(next));
-  } catch {
-    /* ignore */
-  }
+    try {
+      const next = [t, ...recentSearches.filter((x) => x !== t)].slice(0, 5);
+      setRecentSearches(next);
+      localStorage.setItem("drugLookup_recentSearches", JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
 
-  if (isNdcLike(t)) {
-    router.push(
-      `/DrugLookup/results?q=${encodeURIComponent(normalizeNdc(t))}&type=ndc`,
-    );
-  } else {
-    router.push(`/DrugLookup/results?q=${encodeURIComponent(t)}`);
-  }
-};
+    if (isNdcLike(t)) {
+      router.push(
+        `/DrugLookup/results?q=${encodeURIComponent(normalizeNdc(t))}&type=ndc`,
+      );
+    } else {
+      router.push(`/DrugLookup/results?q=${encodeURIComponent(t)}`);
+    }
+  };
 
   const clearRecent = () => {
     setRecentSearches([]);
@@ -221,7 +216,7 @@ const submit = (term: string) => {
   };
 
   return (
-    <ProtectedRoute role = "user">
+    <ProtectedRoute role="user">
       <div className="relative w-full bg-white h-screen overflow-hidden">
         <div className="relative h-full w-full flex">
           {/* ── Sidebar ── */}
@@ -423,12 +418,19 @@ const submit = (term: string) => {
 
               {/* Stats strip pinned to bottom of hero */}
               {/* Stats strip (live from DB) */}
-<div className="relative border-t border-white/10 bg-white/5 backdrop-blur-sm">
-  <div className="max-w-6xl mx-auto px-8 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-    {(["drugs_indexed", "ndc_codes", "total_prescriptions", "unique_rx"] as const).map((key) => {
-      const meta = STAT_META[key];
-      const Icon = meta.icon;
-      const value = landingData?.stats?.[key];
+              <div className="relative border-t border-white/10 bg-white/5 backdrop-blur-sm">
+                <div className="max-w-6xl mx-auto px-8 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {(
+                    [
+                      "drugs_indexed",
+                      "ndc_codes",
+                      "total_prescriptions",
+                      "unique_rx",
+                    ] as const
+                  ).map((key) => {
+                    const meta = STAT_META[key];
+                    const Icon = meta.icon;
+                    const value = landingData?.stats?.[key];
 
                     return (
                       <div key={key} className="flex items-center gap-3">

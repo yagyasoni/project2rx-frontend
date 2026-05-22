@@ -124,6 +124,13 @@ export default function AdminDashboard() {
   const [subStatus, setSubStatus] = useState("inactive");
   const [updatingSub, setUpdatingSub] = useState(false);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
+  const [accessControls, setAccessControls] = useState({
+    inventory_reports_access: false,
+    inventory_view_access: false,
+    drug_lookup_access: false,
+    leads_access: false,
+    full_access: false,
+  });
 
   useEffect(() => {
     setNow(new Date());
@@ -270,35 +277,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // const handleSelectUser = async (user: PharmacyUser) => {
-  //   setSelected(user);
-  //   setSubLoading(true);
-
-  //   try {
-  //     if (!user?.id) {
-  //       throw new Error("Invalid user ID");
-  //     }
-
-  //     const res = await axios.get(`${API_BASE}/pay/subscription/${user.id}`);
-
-  //     console.log("Subscription API response:", res.data);
-
-  //     // ✅ SAFE ACCESS
-  //     const sub = res?.data?.subscription ?? null;
-
-  //     setSubscription(sub);
-  //   } catch (err: any) {
-  //     console.error("❌ Failed to fetch subscription:", err);
-
-  //     // ✅ Better UX instead of silent fail
-  //     toast.error("Failed to fetch subscription");
-
-  //     setSubscription(null);
-  //   } finally {
-  //     setSubLoading(false);
-  //   }
-  // };
-
   const handleSelectUser = async (user: PharmacyUser) => {
     setSelected(user);
     setSubLoading(true);
@@ -308,6 +286,18 @@ export default function AdminDashboard() {
       const sub = res?.data?.subscription ?? null;
 
       setSubscription(sub);
+
+      setAccessControls({
+        inventory_reports_access: sub?.inventory_reports_access || false,
+
+        inventory_view_access: sub?.inventory_view_access || false,
+
+        drug_lookup_access: sub?.drug_lookup_access || false,
+
+        leads_access: sub?.leads_access || false,
+
+        full_access: sub?.full_access || false,
+      });
 
       // ✅ SET DROPDOWN VALUE
       if (sub?.status) {
@@ -324,25 +314,52 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUpdateSubscriptionStatus = async () => {
-    if (!selected) return;
+  const toggleAccess = (key: string) => {
+    setAccessControls((prev: any) => {
+      const updated = {
+        ...prev,
+        [key]: !prev[key],
+      };
 
+      // FULL ACCESS
+      if (key === "full_access") {
+        const enabled = !prev.full_access;
+
+        return {
+          inventory_reports_access: enabled,
+          inventory_view_access: enabled,
+          drug_lookup_access: enabled,
+          leads_access: enabled,
+          full_access: enabled,
+        };
+      }
+
+      // BASE REQUIRED
+      if (
+        !updated.inventory_reports_access &&
+        (updated.inventory_view_access ||
+          updated.drug_lookup_access ||
+          updated.leads_access)
+      ) {
+        updated.inventory_reports_access = true;
+      }
+
+      return updated;
+    });
+  };
+
+  const saveAccessControls = async () => {
     try {
-      setUpdatingSub(true);
-
-      await axios.post(`${API_BASE}/pay/admin/update-subscription`, {
-        userId: selected.id,
-        status: subStatus,
+      await axios.post(`${API_BASE}/pay/admin/grant-access`, {
+        userId: selected?.id,
+        ...accessControls,
       });
 
-      toast.success("Subscription status updated");
+      toast.success("Access updated");
 
-      // ✅ REFRESH DATA
-      handleSelectUser(selected);
+      handleSelectUser(selected!); // refresh details
     } catch {
-      toast.error("Failed to update subscription");
-    } finally {
-      setUpdatingSub(false);
+      toast.error("Failed to update access");
     }
   };
 
@@ -630,7 +647,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Detail Body */}
-                    <div className="flex-1 p-5 space-y-5">
+                    <div className="overflow-y-auto flex-1 p-5 space-y-5">
                       {/* User Information */}
                       <div>
                         <h3 className="text-xs font-semibold text-foreground mb-3">
@@ -695,6 +712,36 @@ export default function AdminDashboard() {
                             </div>
                           ))}
                         </div>
+                      </div>
+
+                      <div className="rounded-lg border border-border p-4 space-y-4">
+                        <h3 className="text-xs font-semibold">
+                          Access Controls
+                        </h3>
+
+                        {[
+                          ["inventory_reports_access", "Inventory Reports"],
+                          ["inventory_view_access", "Inventory View"],
+                          ["drug_lookup_access", "Drug Lookup"],
+                          ["leads_access", "Leads"],
+                          ["full_access", "Full Access"],
+                        ].map(([key, label]) => (
+                          <div
+                            key={key}
+                            className="flex items-center justify-between"
+                          >
+                            <span className="text-sm">{label}</span>
+
+                            <Switch
+                              checked={(accessControls as any)[key]}
+                              onCheckedChange={() => toggleAccess(key)}
+                            />
+                          </div>
+                        ))}
+
+                        <Button onClick={saveAccessControls} className="w-full">
+                          Save Access
+                        </Button>
                       </div>
 
                       {/* Portal Access */}

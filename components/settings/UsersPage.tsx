@@ -145,6 +145,46 @@ const UsersPage = () => {
     );
   }
 
+  const handleCancelSubscription = async () => {
+    try {
+      const userId = localStorage.getItem("userId");
+
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/cancel-subscription`,
+        {
+          userId,
+        },
+      );
+
+      toast.success("Subscription will cancel at period end");
+
+      setCancelAtPeriodEnd(true);
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to cancel subscription");
+    }
+  };
+
+  const handleUpdateSubscription = async () => {
+    try {
+      const userId = localStorage.getItem("userId");
+
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/update-subscription`,
+        {
+          userId,
+        },
+      );
+
+      window.location.href = res.data.url;
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to open billing portal");
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6">
       {/* SAME as Pharmacy */}
@@ -209,6 +249,87 @@ const UsersPage = () => {
                   <Copy size={14} />
                 </button>
               </div>
+            </div>
+
+            {/* SUBSCRIPTION DETAILS */}
+
+            <div className="bg-card border border-border rounded-2xl p-6 mt-6">
+              <h2 className="text-lg font-semibold mb-6">
+                Subscription Details
+              </h2>
+
+              {subLoading ? (
+                <p className="text-muted-foreground">Loading subscription...</p>
+              ) : subscription ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between border-b border-border pb-2">
+                    <span className="text-muted-foreground">Status :</span>
+
+                    <span className="font-medium capitalize">
+                      {subscription.status}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between border-b border-border pb-2">
+                    <span className="text-muted-foreground">
+                      Subscription :
+                    </span>
+
+                    <span className="font-medium">
+                      {subscription.subscription_type || "None"}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between border-b border-border pb-2">
+                    <span className="text-muted-foreground">
+                      Current Period End :
+                    </span>
+
+                    <span className="font-medium">
+                      {subscription.current_period_end
+                        ? new Date(
+                            subscription.current_period_end,
+                          ).toLocaleDateString()
+                        : "N/A"}
+                    </span>
+                  </div>
+
+                  {cancelAtPeriodEnd && (
+                    <div className="flex justify-between border-b border-border pb-2">
+                      <span className="text-muted-foreground">
+                        Grace Period Ends :
+                      </span>
+
+                      <span className="font-medium text-yellow-500">
+                        {subscription.grace_period_end
+                          ? new Date(
+                              subscription.grace_period_end,
+                            ).toLocaleDateString()
+                          : "Scheduled"}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-4">
+                    <Button onClick={handleUpdateSubscription}>
+                      Update Subscription
+                    </Button>
+
+                    {!cancelAtPeriodEnd && (
+                      <Button
+                        variant="destructive"
+                        onClick={handleCancelSubscription}
+                      >
+                        Cancel Subscription
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">
+                  No active subscription found.
+                </p>
+              )}
             </div>
 
             {/* Footer */}
