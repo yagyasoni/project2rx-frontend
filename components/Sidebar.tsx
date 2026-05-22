@@ -76,6 +76,32 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
       }
     };
 
+    // INITIAL FETCH
+    fetchSubscription();
+
+    // AUTO REFRESH EVERY 5 SECONDS
+    const interval = setInterval(() => {
+      fetchSubscription();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // const fetchSubscription = async () => {
+    //   try {
+    //     const userId = localStorage.getItem("userId");
+
+    //     if (!userId) return;
+
+    //     const res = await api.get(`/pay/subscription/${userId}`);
+
+    //     setSubscription(res.data.subscription);
+    //   } catch (err) {
+    //     console.error(err);
+    //   }
+    // };
+
     const pharmacy = async () => {
       try {
         const token = localStorage.getItem("accessToken");
@@ -88,7 +114,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         setAccountName(localStorage.getItem("pharmacyName") || "Account Name");
       }
     };
-    fetchSubscription();
+    // fetchSubscription();
     pharmacy();
   }, []);
 
