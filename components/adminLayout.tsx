@@ -23,6 +23,7 @@ import {
   LogOut,
   Search,
   TextInitial,
+  Sheet,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
@@ -37,6 +38,7 @@ const navItems = [
     icon: ListStart,
     path: "/master-sheet-queue",
   },
+  { title: "NDC Sheet", icon: Sheet, path: "/ndc-sheet" },
   { title: "Lead Publishing", icon: TextInitial, path: "/publishing" },
   { title: "Feedbacks", icon: MessageSquareReply, path: "/feedbacks" },
 ];
