@@ -334,7 +334,8 @@ export default function InactiveAccount() {
     pathname.startsWith("/publishing") ||
     pathname.startsWith("/supplier-mappings") ||
     pathname.startsWith("/master-sheet") ||
-    pathname.startsWith("/master-sheet-queue")
+    pathname.startsWith("/master-sheet-queue") ||
+    pathname.startsWith("/ndc-sheet")
   ) {
     return null;
   }

@@ -10,6 +10,7 @@ import {
   Download,
   SlidersHorizontal,
   MoveLeftIcon,
+  Lock,
 } from "lucide-react";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CommunityLinkPageCopy from "@/components/communityLink";
+import axios from "axios";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -554,10 +556,20 @@ export default function InventoryReportPage() {
   const [monthModalLabel, setMonthModalLabel] = useState("");
   const [monthStatsLoading, setMonthStatsLoading] = useState(false);
   const [monthStats, setMonthStats] = useState<{
-    totalClaims: number; totalAmount: number;
-    aberrantClaims: number; aberrantAmount: number;
-    claimsPct: number; amountPct: number;
-    ndcs: { ndc: string; drugName: string; rxCount: number; amount: number; totalBilled: number; totalOrdered: number }[];
+    totalClaims: number;
+    totalAmount: number;
+    aberrantClaims: number;
+    aberrantAmount: number;
+    claimsPct: number;
+    amountPct: number;
+    ndcs: {
+      ndc: string;
+      drugName: string;
+      rxCount: number;
+      amount: number;
+      totalBilled: number;
+      totalOrdered: number;
+    }[];
   } | null>(null);
   const [rowsPerPage, setRowsPerPage] = useState(100);
   const [currentPage, setCurrentPage] = useState(1);
@@ -583,7 +595,9 @@ export default function InventoryReportPage() {
   const [auditWholesalers, setAuditWholesalers] = useState<string[]>([]);
   const [openShortageSidebar, setOpenShortageSidebar] = useState(false);
   const [shortageDrug, setShortageDrug] = useState<InventoryRow | null>(null);
-  const [shortageSource, setShortageSource] = useState<"total" | "highest">("total");
+  const [shortageSource, setShortageSource] = useState<"total" | "highest">(
+    "total",
+  );
 
   // Notes sidebar
   const [openNotesSidebar, setOpenNotesSidebar] = useState(false);
@@ -594,6 +608,8 @@ export default function InventoryReportPage() {
 
   // Drug name search filter
   const [drugNameFilter, setDrugNameFilter] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<any>(null);
+  const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
 
   // Tags system
   interface Tag {
@@ -693,6 +709,47 @@ export default function InventoryReportPage() {
   const [orderedSort, setOrderedSort] = useState<DrawerSortState>(null);
   const [shortageSort, setShortageSort] = useState<DrawerSortState>(null);
   const [lookupSort, setLookupSort] = useState<DrawerSortState>(null);
+
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+
+        if (!userId) {
+          setSubscriptionLoaded(true);
+          return;
+        }
+
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
+        );
+
+        setSubscription(res.data.subscription);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setSubscriptionLoaded(true);
+      }
+    };
+
+    fetchSubscription();
+
+    const interval = setInterval(async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+
+        if (!userId) return;
+
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
+        );
+
+        setSubscription(res.data.subscription);
+      } catch {}
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Cycle: none → asc → desc → none
   const cycleDrawerSort = (
@@ -1439,10 +1496,7 @@ export default function InventoryReportPage() {
     router.push(pendingHref ?? "/ReportsPage");
   };
 
-  const rxLineMatchesColumn = (
-    r: RxLine,
-    colKey: ColKey | null,
-  ): boolean => {
+  const rxLineMatchesColumn = (r: RxLine, colKey: ColKey | null): boolean => {
     if (!colKey) return true;
     if (colKey === "njBilled") {
       return r.pbm_column === "medicare" || r.pbm_column === "njMedicaid";
@@ -1563,7 +1617,7 @@ export default function InventoryReportPage() {
         date_ordered: r.date_ordered ?? r.date ?? "",
         quantity: Number(r.quantity ?? 0),
         is_outside_date_range:
-  r.is_outside_date_range ?? r.outside_date_range ?? false,
+          r.is_outside_date_range ?? r.outside_date_range ?? false,
       }));
       setOrderLines(normalized);
     } catch (err) {
@@ -1854,16 +1908,14 @@ export default function InventoryReportPage() {
                       </span>
                       <span className="text-xs font-semibold text-slate-800 leading-none flex items-center gap-1">
                         {selectedMonth
-                          ? monthOptions.find((m) => m.value === selectedMonth)
-                              ?.label ?? "All"
+                          ? (monthOptions.find((m) => m.value === selectedMonth)
+                              ?.label ?? "All")
                           : "All"}
                         <ChevronDown className="h-3 w-3" />
                       </span>
                     </Button>
                     {openMonthDropdown && (
-                      <div
-                        className="absolute right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-lg shadow-2xl z-[300] w-44 max-h-72 overflow-y-auto"
-                      >
+                      <div className="absolute right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-lg shadow-2xl z-[300] w-44 max-h-72 overflow-y-auto">
                         <button
                           className={`w-full text-left px-3 py-2 text-xs hover:bg-slate-50 ${selectedMonth === null ? "font-bold text-emerald-700" : "text-slate-700"}`}
                           onClick={() => {
@@ -1889,10 +1941,18 @@ export default function InventoryReportPage() {
                               )
                                 .then((r) => r.json())
                                 .then((data) => {
-                                  const tc = Number(data.summary?.total_claims ?? 0);
-                                  const ta = Number(data.summary?.total_amount ?? 0);
-                                  const ac = Number(data.summary?.aberrant_claims ?? 0);
-                                  const aa = Number(data.summary?.aberrant_amount ?? 0);
+                                  const tc = Number(
+                                    data.summary?.total_claims ?? 0,
+                                  );
+                                  const ta = Number(
+                                    data.summary?.total_amount ?? 0,
+                                  );
+                                  const ac = Number(
+                                    data.summary?.aberrant_claims ?? 0,
+                                  );
+                                  const aa = Number(
+                                    data.summary?.aberrant_amount ?? 0,
+                                  );
                                   setMonthStats({
                                     totalClaims: tc,
                                     totalAmount: ta,
@@ -1900,14 +1960,23 @@ export default function InventoryReportPage() {
                                     aberrantAmount: aa,
                                     claimsPct: tc ? (ac / tc) * 100 : 0,
                                     amountPct: ta ? (aa / ta) * 100 : 0,
-                                    ndcs: (data.ndcs ?? []).map((r: { ndc: string; drug_name: string; rx_count: string | number; amount: string | number; total_billed: string | number; total_ordered: string | number }) => ({
-                                      ndc: r.ndc,
-                                      drugName: r.drug_name ?? "—",
-                                      rxCount: Number(r.rx_count),
-                                      amount: Number(r.amount),
-                                      totalBilled: Number(r.total_billed),
-                                      totalOrdered: Number(r.total_ordered),
-                                    })),
+                                    ndcs: (data.ndcs ?? []).map(
+                                      (r: {
+                                        ndc: string;
+                                        drug_name: string;
+                                        rx_count: string | number;
+                                        amount: string | number;
+                                        total_billed: string | number;
+                                        total_ordered: string | number;
+                                      }) => ({
+                                        ndc: r.ndc,
+                                        drugName: r.drug_name ?? "—",
+                                        rxCount: Number(r.rx_count),
+                                        amount: Number(r.amount),
+                                        totalBilled: Number(r.total_billed),
+                                        totalOrdered: Number(r.total_ordered),
+                                      }),
+                                    ),
                                   });
                                 })
                                 .catch(() => setMonthStats(null))
@@ -1976,7 +2045,10 @@ export default function InventoryReportPage() {
                             Aberrant Amount
                           </p>
                           <p className="text-xs font-bold text-slate-800 tabular-nums leading-tight">
-                            ${Math.round(aberrantStats.aberrantAmount).toLocaleString()}
+                            $
+                            {Math.round(
+                              aberrantStats.aberrantAmount,
+                            ).toLocaleString()}
                           </p>
                         </div>
                         <div>
@@ -1984,7 +2056,10 @@ export default function InventoryReportPage() {
                             Total Amount
                           </p>
                           <p className="text-xs font-bold text-slate-800 tabular-nums leading-tight">
-                            ${Math.round(aberrantStats.totalAmount).toLocaleString()}
+                            $
+                            {Math.round(
+                              aberrantStats.totalAmount,
+                            ).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -3388,39 +3463,57 @@ export default function InventoryReportPage() {
                           {visCols.map((c) => {
                             const pinned = c.key === "totalBilled";
                             return (
-                            <td
-                              key={c.key}
-                              className={pinned ? "sticky z-20 sl" : undefined}
-                              style={{
-                                textAlign: "right",
-                                padding: "0 10px",
-                                ...(pinned
-                                  ? {
-                                      left: L_BILLED,
-                                      width: c.w,
-                                      background: bg,
-                                    }
-                                  : {}),
-                                ...cellBorderStyle(c),
-                              }}
-                              onClick={
-                                c.key === "totalBilled"
-                                  ? (e) => handleOpenBilledSidebar(row, e)
-                                  : c.key === "totalShortage"
-                                    ? (e) => handleOpenShortageSidebar(row, e, "total")
-                                    : c.key === "highestShortage"
-                                      ? (e) => handleOpenShortageSidebar(row, e, "highest")
-                                      : c.group !== "base-scroll" && !c.isShortage
-                                        ? (e) => handleOpenBilledSidebar(row, e, c.key)
-                                        : undefined
-                              }
-                            >
-                              <span
-                                className={`text-xs ${c.key === "totalBilled" || c.key === "totalShortage" || c.key === "highestShortage" || (c.group !== "base-scroll" && !c.isShortage) ? "cursor-pointer" : ""}`}
+                              <td
+                                key={c.key}
+                                className={
+                                  pinned ? "sticky z-20 sl" : undefined
+                                }
+                                style={{
+                                  textAlign: "right",
+                                  padding: "0 10px",
+                                  ...(pinned
+                                    ? {
+                                        left: L_BILLED,
+                                        width: c.w,
+                                        background: bg,
+                                      }
+                                    : {}),
+                                  ...cellBorderStyle(c),
+                                }}
+                                onClick={
+                                  c.key === "totalBilled"
+                                    ? (e) => handleOpenBilledSidebar(row, e)
+                                    : c.key === "totalShortage"
+                                      ? (e) =>
+                                          handleOpenShortageSidebar(
+                                            row,
+                                            e,
+                                            "total",
+                                          )
+                                      : c.key === "highestShortage"
+                                        ? (e) =>
+                                            handleOpenShortageSidebar(
+                                              row,
+                                              e,
+                                              "highest",
+                                            )
+                                        : c.group !== "base-scroll" &&
+                                            !c.isShortage
+                                          ? (e) =>
+                                              handleOpenBilledSidebar(
+                                                row,
+                                                e,
+                                                c.key,
+                                              )
+                                          : undefined
+                                }
                               >
-                                {cellVal(c, row)}
-                              </span>
-                            </td>
+                                <span
+                                  className={`text-xs ${c.key === "totalBilled" || c.key === "totalShortage" || c.key === "highestShortage" || (c.group !== "base-scroll" && !c.isShortage) ? "cursor-pointer" : ""}`}
+                                >
+                                  {cellVal(c, row)}
+                                </span>
+                              </td>
                             );
                           })}
                         </tr>
@@ -3503,7 +3596,8 @@ export default function InventoryReportPage() {
                     Aberrant Risk — {monthModalLabel}
                   </DialogTitle>
                   <DialogDescription className="text-xs text-slate-500">
-                    CVS Caremark aberrant product exposure for this calendar month
+                    CVS Caremark aberrant product exposure for this calendar
+                    month
                   </DialogDescription>
                 </DialogHeader>
 
@@ -3531,7 +3625,9 @@ export default function InventoryReportPage() {
                         <p className="text-xl font-bold text-slate-800 leading-tight mt-1">
                           25.00%
                         </p>
-                        <p className="text-[9px] text-slate-400 mt-0.5">Threshold</p>
+                        <p className="text-[9px] text-slate-400 mt-0.5">
+                          Threshold
+                        </p>
                       </div>
 
                       {/* Claims Risk */}
@@ -3560,8 +3656,14 @@ export default function InventoryReportPage() {
                           </div>
                         </div>
                         <div className="flex flex-col items-center gap-1">
-                          <DonutChart pct={monthStats.claimsPct} size={40} stroke={5} />
-                          <p className={`text-sm font-bold tabular-nums ${monthStats.claimsPct >= 25 ? "text-red-600" : "text-emerald-600"}`}>
+                          <DonutChart
+                            pct={monthStats.claimsPct}
+                            size={40}
+                            stroke={5}
+                          />
+                          <p
+                            className={`text-sm font-bold tabular-nums ${monthStats.claimsPct >= 25 ? "text-red-600" : "text-emerald-600"}`}
+                          >
                             {monthStats.claimsPct.toFixed(2)}%
                           </p>
                         </div>
@@ -3579,7 +3681,10 @@ export default function InventoryReportPage() {
                                 Aberrant Amount
                               </p>
                               <p className="text-sm font-bold text-slate-800 tabular-nums leading-tight">
-                                ${Math.round(monthStats.aberrantAmount).toLocaleString()}
+                                $
+                                {Math.round(
+                                  monthStats.aberrantAmount,
+                                ).toLocaleString()}
                               </p>
                             </div>
                             <div>
@@ -3587,14 +3692,23 @@ export default function InventoryReportPage() {
                                 Total Amount
                               </p>
                               <p className="text-sm font-bold text-slate-800 tabular-nums leading-tight">
-                                ${Math.round(monthStats.totalAmount).toLocaleString()}
+                                $
+                                {Math.round(
+                                  monthStats.totalAmount,
+                                ).toLocaleString()}
                               </p>
                             </div>
                           </div>
                         </div>
                         <div className="flex flex-col items-center gap-1">
-                          <DonutChart pct={monthStats.amountPct} size={40} stroke={5} />
-                          <p className={`text-sm font-bold tabular-nums ${monthStats.amountPct >= 25 ? "text-red-600" : "text-emerald-600"}`}>
+                          <DonutChart
+                            pct={monthStats.amountPct}
+                            size={40}
+                            stroke={5}
+                          />
+                          <p
+                            className={`text-sm font-bold tabular-nums ${monthStats.amountPct >= 25 ? "text-red-600" : "text-emerald-600"}`}
+                          >
                             {monthStats.amountPct.toFixed(2)}%
                           </p>
                         </div>
@@ -3611,23 +3725,52 @@ export default function InventoryReportPage() {
                           <table className="w-full text-xs">
                             <thead className="sticky top-0 bg-slate-50 border-b border-slate-200">
                               <tr>
-                                <th className="text-left px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">NDC</th>
-                                <th className="text-left px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">Drug Name</th>
-                                <th className="text-right px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">RX Count</th>
-                                <th className="text-right px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">Amount</th>
-                                <th className="text-right px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">Total Billed</th>
-                                <th className="text-right px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">Total Ordered</th>
+                                <th className="text-left px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">
+                                  NDC
+                                </th>
+                                <th className="text-left px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">
+                                  Drug Name
+                                </th>
+                                <th className="text-right px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">
+                                  RX Count
+                                </th>
+                                <th className="text-right px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">
+                                  Amount
+                                </th>
+                                <th className="text-right px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">
+                                  Total Billed
+                                </th>
+                                <th className="text-right px-3 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[9px]">
+                                  Total Ordered
+                                </th>
                               </tr>
                             </thead>
                             <tbody>
                               {monthStats.ndcs.map((row, i) => (
-                                <tr key={row.ndc} className={i % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
-                                  <td className="px-3 py-2 font-mono text-slate-700">{row.ndc}</td>
-                                  <td className="px-3 py-2 text-slate-800">{row.drugName}</td>
-                                  <td className="px-3 py-2 text-right tabular-nums text-slate-700">{row.rxCount.toLocaleString()}</td>
-                                  <td className="px-3 py-2 text-right tabular-nums text-slate-700">${Math.round(row.amount).toLocaleString()}</td>
-                                  <td className="px-3 py-2 text-right tabular-nums text-slate-700">{row.totalBilled.toLocaleString()}</td>
-                                  <td className="px-3 py-2 text-right tabular-nums text-slate-700">{row.totalOrdered.toLocaleString()}</td>
+                                <tr
+                                  key={row.ndc}
+                                  className={
+                                    i % 2 === 0 ? "bg-white" : "bg-slate-50/50"
+                                  }
+                                >
+                                  <td className="px-3 py-2 font-mono text-slate-700">
+                                    {row.ndc}
+                                  </td>
+                                  <td className="px-3 py-2 text-slate-800">
+                                    {row.drugName}
+                                  </td>
+                                  <td className="px-3 py-2 text-right tabular-nums text-slate-700">
+                                    {row.rxCount.toLocaleString()}
+                                  </td>
+                                  <td className="px-3 py-2 text-right tabular-nums text-slate-700">
+                                    ${Math.round(row.amount).toLocaleString()}
+                                  </td>
+                                  <td className="px-3 py-2 text-right tabular-nums text-slate-700">
+                                    {row.totalBilled.toLocaleString()}
+                                  </td>
+                                  <td className="px-3 py-2 text-right tabular-nums text-slate-700">
+                                    {row.totalOrdered.toLocaleString()}
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
@@ -3955,6 +4098,40 @@ export default function InventoryReportPage() {
                       boxShadow: "-4px 0 24px rgba(0,0,0,0.15)",
                     }}
                   >
+                    {/* {!subscription?.drug_lookup_access && (
+                      <div className="absolute inset-0 z-[500] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
+                        <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
+                          <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
+
+                          <div className="relative flex flex-col items-center text-center">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 border border-amber-200 shadow-sm mb-4">
+                              <Lock className="h-8 w-8 text-amber-600" />
+                            </div>
+
+                            <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
+                              Drug Lookup Locked
+                            </h3>
+
+                            <p className="mt-2 text-[14px] leading-6 text-slate-500 max-w-[280px]">
+                              Upgrade your subscription to unlock advanced drug
+                              lookup, pricing intelligence, NDC breakdowns and
+                              community insights.
+                            </p>
+
+                            <button
+                              onClick={() => router.push("/settings")}
+                              className="mt-5 inline-flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-amber-500/20"
+                            >
+                              Subscribe to Unlock
+                            </button>
+
+                            <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-amber-600">
+                              Pro Feature
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )} */}
                     {/* Top Bar */}
                     <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white flex-shrink-0">
                       <div className="flex items-center gap-2.5">
@@ -4921,9 +5098,7 @@ export default function InventoryReportPage() {
                               ? !r.is_outside_date_range
                               : r.is_outside_date_range,
                           )
-                          .filter((r) =>
-                            rxLineMatchesColumn(r, billedColumn),
-                          );
+                          .filter((r) => rxLineMatchesColumn(r, billedColumn));
                         const baseFiltered =
                           rxFilters.length > 0
                             ? activeLines.filter((r) =>
@@ -5852,7 +6027,9 @@ export default function InventoryReportPage() {
                       <div className="flex items-center gap-2">
                         <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shrink-0" />
                         <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">
-                          {shortageSource === "highest" ? "Highest Shortage" : "Total Shortage"}
+                          {shortageSource === "highest"
+                            ? "Highest Shortage"
+                            : "Total Shortage"}
                         </span>
                       </div>
                     </div>
