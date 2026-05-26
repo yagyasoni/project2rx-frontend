@@ -88,6 +88,10 @@ type NdcSuggestion = {
   package_size: string | null;
 };
 
+// Strips a trailing NDC like " (00002-1495-80)" from a drug name string.
+const stripNdc = (name: string) =>
+  (name || "").replace(/\s*\(\d{5}-\d{4}-\d{2}\)\s*$/, "").trim();
+
 type Visibility = "public" | "groups_only";
 
 interface InventoryGroup {
@@ -2483,7 +2487,8 @@ function AddListingModal({
   const [availableGroups, setAvailableGroups] = useState<InventoryGroup[]>([]);
 
   useEffect(() => {
-    api
+    api+
+    0
       .get("/api/inventory-view/groups")
       .then((res) => setAvailableGroups(res.data || []))
       .catch(() => setAvailableGroups([]));
@@ -2559,9 +2564,7 @@ function AddListingModal({
 
   const pickSuggestion = (s: NdcSuggestion) => {
     // Strip trailing NDC pattern like " (13668-0081-30)" from the drug name first
-    const cleanName = s.drug_name
-      .replace(/\s*\(\d{5}-\d{4}-\d{2}\)\s*$/, "")
-      .trim();
+    const cleanName = stripNdc(s.drug_name);
 
     // Smart split: drug name = everything BEFORE the first token containing a digit
     const tokens = cleanName.split(/\s+/);
@@ -2697,11 +2700,7 @@ function AddListingModal({
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-sm font-bold text-gray-900">
-                                {s.drug_name}
-                              </div>
-                              <div className="font-mono text-[11px] text-gray-500">
-                                NDC {s.ndc}
-                                {s.brand ? ` · ${s.brand}` : ""}
+                                {stripNdc(s.drug_name)}
                               </div>
                             </div>
                             <ArrowRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-violet-600" />

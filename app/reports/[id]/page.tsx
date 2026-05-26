@@ -115,6 +115,8 @@ interface InventoryRow {
   // Aberrant report
   claimsCount: number;
   isAberrant: boolean;
+  aberrantCaremarkClaims: number;
+  aberrantCaremarkAmount: number;
 }
 
 interface RxLine {
@@ -963,6 +965,8 @@ export default function InventoryReportPage() {
             // Aberrant report
             claimsCount: n(row.claims_count),
             isAberrant: Boolean(row.is_aberrant),
+            aberrantCaremarkClaims: n(row.aberrant_caremark_claims),
+            aberrantCaremarkAmount: n(row.aberrant_caremark_amount),
           };
         });
 
@@ -1220,10 +1224,8 @@ export default function InventoryReportPage() {
     for (const r of inventoryData) {
       totalClaims += r.claimsCount;
       totalAmount += r.amount;
-      if (r.isAberrant) {
-        aberrantClaims += r.claimsCount;
-        aberrantAmount += r.amount;
-      }
+      aberrantClaims += r.aberrantCaremarkClaims;
+      aberrantAmount += r.aberrantCaremarkAmount;
     }
     const claimsPct = totalClaims ? (aberrantClaims / totalClaims) * 100 : 0;
     const amountPct = totalAmount ? (aberrantAmount / totalAmount) * 100 : 0;
@@ -6237,9 +6239,7 @@ export default function InventoryReportPage() {
                                           : "#059669",
                                   }}
                                 >
-                                  {row.shortage === 0
-                                    ? "—"
-                                    : row.shortage.toLocaleString()}
+                                  {row.shortage.toLocaleString()}
                                 </td>
                               </tr>
                             ))}
