@@ -2495,8 +2495,7 @@ function AddListingModal({
   const [availableGroups, setAvailableGroups] = useState<InventoryGroup[]>([]);
 
   useEffect(() => {
-    api+
-    0
+    api
       .get("/api/inventory-view/groups")
       .then((res) => setAvailableGroups(res.data || []))
       .catch(() => setAvailableGroups([]));
