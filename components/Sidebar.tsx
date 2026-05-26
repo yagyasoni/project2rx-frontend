@@ -36,6 +36,18 @@ interface SidebarProps {
 
 type Popup = "support" | "account" | "settings" | null;
 
+// Key must match the one used in page.tsx
+const READ_IDS_KEY = "notif_read_ids";
+
+function getReadIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(READ_IDS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
 export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -44,11 +56,52 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const [openPopup, setOpenPopup] = useState<Popup>(null);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [subscription, setSubscription] = useState<any>(null);
 
   const toggle = (name: Popup) =>
     setOpenPopup((prev) => (prev === name ? null : name));
 
   useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+
+        if (!userId) return;
+
+        const res = await api.get(`/pay/subscription/${userId}`);
+
+        setSubscription(res.data.subscription);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    // INITIAL FETCH
+    fetchSubscription();
+
+    // AUTO REFRESH EVERY 5 SECONDS
+    const interval = setInterval(() => {
+      fetchSubscription();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // const fetchSubscription = async () => {
+    //   try {
+    //     const userId = localStorage.getItem("userId");
+
+    //     if (!userId) return;
+
+    //     const res = await api.get(`/pay/subscription/${userId}`);
+
+    //     setSubscription(res.data.subscription);
+    //   } catch (err) {
+    //     console.error(err);
+    //   }
+    // };
+
     const pharmacy = async () => {
       try {
         const token = localStorage.getItem("accessToken");
@@ -61,18 +114,12 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         setAccountName(localStorage.getItem("pharmacyName") || "Account Name");
       }
     };
+    // fetchSubscription();
     pharmacy();
   }, []);
 
-  /* ───────────────────────────────────────────────────────────────
-   PATCH: replace the unread-count useEffect in Sidebar.tsx
-   with this version. Adds a window event listener so the badge
-   clears INSTANTLY when the user opens /Notification, instead of
-   waiting up to 60s for the next poll.
-   ─────────────────────────────────────────────────────────────── */
-
-  // Fetch unread notification count
-  // Fetch unread notification count from publishing posts
+  // Compute unread count by comparing total posts against persisted read IDs
+  // This stays in sync with the notification page via localStorage + custom event
   useEffect(() => {
     const fetchUnread = async () => {
       try {
@@ -81,24 +128,21 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
           headers: { Authorization: `Bearer ${token}` },
         });
         const posts = Array.isArray(res?.data) ? res.data : [];
-
-        // Show count of posts from last 7 days as "unread" approximation
-        const sevenDaysAgo = Date.now() - 7 * 86400000;
-        const recentCount = posts.filter(
-          (p: any) => new Date(p.created_at).getTime() > sevenDaysAgo
-        ).length;
-
-        setUnreadCount(recentCount);
+        const readIds = getReadIds();
+        // A post is "unread" if its id is NOT in the persisted read set
+        const count = posts.filter((p: any) => !readIds.has(p.id)).length;
+        setUnreadCount(count);
       } catch {
         setUnreadCount(0);
       }
     };
+
     fetchUnread();
 
     // Poll every 60 seconds for new posts
     const interval = setInterval(fetchUnread, 60000);
 
-    // Listen for instant updates from the Notification page
+    // Listen for instant badge clear when notification page marks posts as read
     const handleUpdate = () => fetchUnread();
     window.addEventListener("notifications-updated", handleUpdate);
 
@@ -150,14 +194,52 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
     }
   };
 
+  // const navItems = [
+  //   { path: "/Mainpage", label: "Start Audit", icon: FileText },
+  //   { path: "/ReportsPage", label: "Reports", icon: Layers },
+  //   { path: "/bin-search", label: "Bin Search", icon: Search },
+  //   { path: "/DrugLookup", label: "Drug Lookup", icon: Pill },
+  //   { path: "/InventoryView", label: "Inventory View", icon: Boxes },
+  //   { path: "/how-to", label: "How To", icon: HelpCircle },
+  // ];
+
   const navItems = [
-    { path: "/Mainpage", label: "Start Audit", icon: FileText },
-    { path: "/ReportsPage", label: "Reports", icon: Layers },
-    { path: "/bin-search", label: "Bin Search", icon: Search },
-    { path: "/DrugLookup", label: "Drug Lookup", icon: Pill },
-    { path: "/InventoryView", label: "Inventory View", icon: Boxes },
-    { path: "/how-to", label: "How To", icon: HelpCircle },
-  ];
+    subscription?.inventory_reports_access && {
+      path: "/Mainpage",
+      label: "Start Audit",
+      icon: FileText,
+    },
+
+    subscription?.inventory_reports_access && {
+      path: "/ReportsPage",
+      label: "Reports",
+      icon: Layers,
+    },
+
+    subscription?.inventory_reports_access && {
+      path: "/bin-search",
+      label: "Bin Search",
+      icon: Search,
+    },
+
+    subscription?.drug_lookup_access && {
+      path: "/DrugLookup",
+      label: "Drug Lookup",
+      icon: Pill,
+    },
+
+    subscription?.inventory_view_access && {
+      path: "/InventoryView",
+      label: "Inventory View",
+      icon: Boxes,
+    },
+
+    {
+      path: "/how-to",
+      label: "How To",
+      icon: HelpCircle,
+    },
+  ].filter(Boolean);
 
   return (
     <aside
@@ -222,31 +304,33 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         ))}
 
         {/* UPDATES SECTION */}
-        {sidebarOpen && (
+        {sidebarOpen && subscription?.leads_access && (
           <p className="px-3 pt-5 pb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
             Updates
           </p>
         )}
         {!sidebarOpen && <div className="my-3 mx-2 border-t border-gray-100" />}
 
-        <Link href="/Notification" className={navClass("/Notification")}>
-          <div className="relative shrink-0">
-            <Bell className={iconClass("/Notification")} />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-            )}
-          </div>
-          {sidebarOpen && (
-            <div className="flex-1 flex items-center justify-between min-w-0">
-              <span className="truncate">Leads</span>
+        {subscription?.leads_access && (
+          <Link href="/Notification" className={navClass("/Notification")}>
+            <div className="relative shrink-0">
+              <Bell className={iconClass("/Notification")} />
               {unreadCount > 0 && (
-                <span className="ml-2 rounded-full bg-red-500 text-white text-[10px] font-semibold px-1.5 py-0.5 min-w-[18px] text-center leading-tight">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
+                <span className="absolute -top-1 -right-1 flex h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
               )}
             </div>
-          )}
-        </Link>
+            {sidebarOpen && (
+              <div className="flex-1 flex items-center justify-between min-w-0">
+                <span className="truncate">Leads</span>
+                {unreadCount > 0 && (
+                  <span className="ml-2 rounded-full bg-red-500 text-white text-[10px] font-semibold px-1.5 py-0.5 min-w-[18px] text-center leading-tight">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </div>
+            )}
+          </Link>
+        )}
       </nav>
 
       {/* BOTTOM */}

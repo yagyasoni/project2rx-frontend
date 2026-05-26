@@ -56,9 +56,13 @@ import {
 import { Switch } from "@/components/ui/switch";
 import axios from "axios";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import LinkExt from "@tiptap/extension-link";
 import UnderlineExt from "@tiptap/extension-underline";
+import StarterKit from "@tiptap/starter-kit";
+import Heading from "@tiptap/extension-heading";
+import BulletList from "@tiptap/extension-bullet-list";
+import OrderedList from "@tiptap/extension-ordered-list";
+import ListItem from "@tiptap/extension-list-item";
 
 interface Reaction {
   id: number;
@@ -72,23 +76,6 @@ interface Response {
   comment: string;
   createdAt: string;
 }
-
-// interface Post {
-//   id: number;
-//   articleId: string;
-//   title: string;
-//   category: string;
-//   status: "Published" | "Draft";
-//   location: string;
-//   reactions: number;
-//   responses: number;
-//   views: number;
-//   createdAt: string;
-//   content: string;
-//   reactionsData: Reaction[];
-//   responsesData: Response[];
-
-// }
 
 interface Post {
   id: number;
@@ -112,14 +99,6 @@ interface Post {
 
   chatEnabled: boolean;
 }
-
-// interface ChatMessage {
-//   id: string;
-//   message: string;
-//   sender_type: "client" | "admin";
-//   created_at: string;
-//   is_read: boolean;
-// }
 
 interface ChatMessage {
   id: string;
@@ -162,7 +141,9 @@ export default function PublishingPage() {
   const editor = useEditor({
     extensions: [
       StarterKit,
+
       UnderlineExt,
+
       LinkExt.configure({
         openOnClick: false,
         autolink: true,
@@ -175,10 +156,67 @@ export default function PublishingPage() {
     editorProps: {
       attributes: {
         class:
-          "min-h-[400px] outline-none prose prose-neutral dark:prose-invert max-w-none text-sm leading-7",
+          "min-h-[400px] outline-none prose prose-neutral dark:prose-invert max-w-none text-sm leading-7 focus:outline-none",
       },
     },
   });
+
+  // const editor = useEditor({
+  //   extensions: [
+  //     StarterKit.configure({
+  //       heading: false,
+  //       bulletList: false,
+  //       orderedList: false,
+  //       listItem: false,
+  //     }),
+
+  //     Heading.configure({
+  //       levels: [1, 2],
+  //     }),
+
+  //     BulletList,
+  //     OrderedList,
+  //     ListItem,
+
+  //     UnderlineExt,
+
+  //     LinkExt.configure({
+  //       openOnClick: false,
+  //       autolink: true,
+  //       defaultProtocol: "https",
+  //     }),
+  //   ],
+
+  //   content: "",
+  //   editorProps: {
+  //     attributes: {
+  //       // ✅ Put prose HERE — directly on the contenteditable element
+  //       class:
+  //         "min-h-[400px] outline-none prose prose-neutral dark:prose-invert max-w-none text-sm leading-7 focus:outline-none",
+  //     },
+  //   },
+  // });
+
+  // const editor = useEditor({
+  //   extensions: [
+  //     StarterKit,
+  //     UnderlineExt,
+  //     LinkExt.configure({
+  //       openOnClick: false,
+  //       autolink: true,
+  //       defaultProtocol: "https",
+  //     }),
+  //   ],
+
+  //   content: "",
+
+  //   editorProps: {
+  //     attributes: {
+  //       class:
+  //         "min-h-[400px] outline-none prose prose-neutral dark:prose-invert max-w-none text-sm leading-7",
+  //     },
+  //   },
+  // });
 
   const filteredPosts = useMemo(() => {
     let rows = posts;
@@ -1023,7 +1061,10 @@ export default function PublishingPage() {
                     </Select>
                   </div>
 
-                  <div className="mt-6">
+                  {/* <div className="mt-6">
+                    <EditorContent editor={editor} />
+                  </div> */}
+                  <div className="mt-6 prose prose-neutral dark:prose-invert max-w-none">
                     <EditorContent editor={editor} />
                   </div>
                 </div>

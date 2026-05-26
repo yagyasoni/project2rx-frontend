@@ -4,7 +4,8 @@ import LayoutClient from "./LayoutClient";
 
 const SITE_URL = "https://www.auditprorx.com";
 const SITE_NAME = "AuditProRx";
-const DEFAULT_TITLE = "AuditProRx — Pharmacy Audit Software & PBM Compliance Platform";
+const DEFAULT_TITLE =
+  "AuditProRx — Pharmacy Audit Software & PBM Compliance Platform";
 const DEFAULT_DESCRIPTION =
   "AuditProRx is the all-in-one pharmacy audit software for independent pharmacies. Automate PBM audit responses, reconcile wholesaler invoices (McKesson, AXIA, Kinray, Anda), run NDC inventory audits, and protect revenue — HIPAA compliant, built by pharmacists.";
 
@@ -165,7 +166,9 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
         />
         <script
           type="application/ld+json"

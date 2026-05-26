@@ -314,7 +314,7 @@ export default function CommunityLinkPageCopy({
           </div>
 
           {/* Mode toggle — hidden for now */}
-          <div className="hidden">
+          {/* <div className="hidden">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
               Mode
             </p>
@@ -329,7 +329,7 @@ export default function CommunityLinkPageCopy({
               >
                 Market
               </button>
-              {/* <button
+              <button
                 className={`cursor-pointer px-4 py-1 text-xs rounded-md transition ${
                   active === "opportunities"
                     ? "bg-white shadow text-black"
@@ -338,9 +338,9 @@ export default function CommunityLinkPageCopy({
                 onClick={() => setActive("opportunities")}
               >
                 User Centric
-              </button> */}
+              </button>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

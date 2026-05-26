@@ -124,6 +124,13 @@ export default function AdminDashboard() {
   const [subStatus, setSubStatus] = useState("inactive");
   const [updatingSub, setUpdatingSub] = useState(false);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
+  const [accessControls, setAccessControls] = useState({
+    inventory_reports_access: false,
+    inventory_view_access: false,
+    drug_lookup_access: false,
+    leads_access: false,
+    full_access: false,
+  });
 
   useEffect(() => {
     setNow(new Date());
@@ -270,35 +277,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // const handleSelectUser = async (user: PharmacyUser) => {
-  //   setSelected(user);
-  //   setSubLoading(true);
-
-  //   try {
-  //     if (!user?.id) {
-  //       throw new Error("Invalid user ID");
-  //     }
-
-  //     const res = await axios.get(`${API_BASE}/pay/subscription/${user.id}`);
-
-  //     console.log("Subscription API response:", res.data);
-
-  //     // ✅ SAFE ACCESS
-  //     const sub = res?.data?.subscription ?? null;
-
-  //     setSubscription(sub);
-  //   } catch (err: any) {
-  //     console.error("❌ Failed to fetch subscription:", err);
-
-  //     // ✅ Better UX instead of silent fail
-  //     toast.error("Failed to fetch subscription");
-
-  //     setSubscription(null);
-  //   } finally {
-  //     setSubLoading(false);
-  //   }
-  // };
-
   const handleSelectUser = async (user: PharmacyUser) => {
     setSelected(user);
     setSubLoading(true);
@@ -308,6 +286,18 @@ export default function AdminDashboard() {
       const sub = res?.data?.subscription ?? null;
 
       setSubscription(sub);
+
+      setAccessControls({
+        inventory_reports_access: sub?.inventory_reports_access || false,
+
+        inventory_view_access: sub?.inventory_view_access || false,
+
+        drug_lookup_access: sub?.drug_lookup_access || false,
+
+        leads_access: sub?.leads_access || false,
+
+        full_access: sub?.full_access || false,
+      });
 
       // ✅ SET DROPDOWN VALUE
       if (sub?.status) {
@@ -324,25 +314,52 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUpdateSubscriptionStatus = async () => {
-    if (!selected) return;
+  const toggleAccess = (key: string) => {
+    setAccessControls((prev: any) => {
+      const updated = {
+        ...prev,
+        [key]: !prev[key],
+      };
 
+      // FULL ACCESS
+      if (key === "full_access") {
+        const enabled = !prev.full_access;
+
+        return {
+          inventory_reports_access: enabled,
+          inventory_view_access: enabled,
+          drug_lookup_access: enabled,
+          leads_access: enabled,
+          full_access: enabled,
+        };
+      }
+
+      // BASE REQUIRED
+      if (
+        !updated.inventory_reports_access &&
+        (updated.inventory_view_access ||
+          updated.drug_lookup_access ||
+          updated.leads_access)
+      ) {
+        updated.inventory_reports_access = true;
+      }
+
+      return updated;
+    });
+  };
+
+  const saveAccessControls = async () => {
     try {
-      setUpdatingSub(true);
-
-      await axios.post(`${API_BASE}/pay/admin/update-subscription`, {
-        userId: selected.id,
-        status: subStatus,
+      await axios.post(`${API_BASE}/pay/admin/grant-access`, {
+        userId: selected?.id,
+        ...accessControls,
       });
 
-      toast.success("Subscription status updated");
+      toast.success("Access updated");
 
-      // ✅ REFRESH DATA
-      handleSelectUser(selected);
+      handleSelectUser(selected!); // refresh details
     } catch {
-      toast.error("Failed to update subscription");
-    } finally {
-      setUpdatingSub(false);
+      toast.error("Failed to update access");
     }
   };
 
@@ -630,7 +647,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Detail Body */}
-                    <div className="flex-1 p-5 space-y-5">
+                    <div className="overflow-y-auto flex-1 p-5 space-y-5">
                       {/* User Information */}
                       <div>
                         <h3 className="text-xs font-semibold text-foreground mb-3">
@@ -697,224 +714,36 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
-                      <div>
-                        <h3 className="text-xs font-semibold text-foreground mb-3">
-                          Payment Information
+                      <div className="rounded-lg border border-border p-4 space-y-4">
+                        <h3 className="text-xs font-semibold">
+                          Access Controls
                         </h3>
 
-                        {subLoading ? (
-                          <p className="text-xs text-muted-foreground">
-                            Loading...
-                          </p>
-                        ) : subscription ? (
-                          <div className="space-y-2">
-                            {/* 🔥 CASE 1: SUBSCRIPTION NOT YET SYNCED (WEBHOOK DELAY) */}
-                            {!subscription.stripe_subscription_id ? (
-                              <div className="rounded-lg border border-gray-300 bg-gray-50 p-3 space-y-2">
-                                <div>
-                                  <div className="text-xs justify-between flex font-semibold text-foreground mb-2">
-                                    <span> Subscription Control </span>
+                        {[
+                          ["inventory_reports_access", "Inventory Reports"],
+                          ["inventory_view_access", "Inventory View"],
+                          ["drug_lookup_access", "Drug Lookup"],
+                          ["leads_access", "Leads"],
+                          ["full_access", "Full Access"],
+                        ].map(([key, label]) => (
+                          <div
+                            key={key}
+                            className="flex items-center justify-between"
+                          >
+                            <span className="text-sm">{label}</span>
 
-                                    <span className="text-destructive">
-                                      {" "}
-                                      {subscription && (
-                                        <div className="text-[10px] text-muted-foreground">
-                                          Current:{" "}
-                                          <span className="font-semibold text-foreground">
-                                            {subscription.status}
-                                          </span>
-                                        </div>
-                                      )}
-                                    </span>
-                                  </div>
-
-                                  {subLoading ? (
-                                    <p className="text-xs text-muted-foreground">
-                                      Loading...
-                                    </p>
-                                  ) : (
-                                    <div className="space-y-3">
-                                      {/* STATUS DROPDOWN */}
-                                      <select
-                                        className="w-full border p-2 rounded text-xs"
-                                        value={subStatus}
-                                        onChange={(e) =>
-                                          setSubStatus(e.target.value)
-                                        }
-                                      >
-                                        {/* <option value="trialing">
-                                          Trialing
-                                        </option> */}
-                                        <option value="active">Active</option>
-
-                                        <option value="inactive">
-                                          Inactive
-                                        </option>
-                                      </select>
-
-                                      {/* UPDATE BUTTON */}
-                                      <Button
-                                        onClick={handleUpdateSubscriptionStatus}
-                                        disabled={updatingSub}
-                                        className="w-full text-xs"
-                                      >
-                                        {updatingSub
-                                          ? "Updating..."
-                                          : "Update Status"}
-                                      </Button>
-
-                                      {/* CURRENT STATUS DISPLAY */}
-                                      {/* {subscription && (
-                                        <div className="text-[10px] text-muted-foreground">
-                                          Current:{" "}
-                                          <span className="font-semibold text-foreground">
-                                            {subscription.status}
-                                          </span>
-                                        </div>
-                                      )} */}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                {/* ✅ STATUS */}
-                                <div className="flex-col-2 rounded-lg border border-border p-3">
-                                  <div className="text-[10px] text-muted-foreground">
-                                    Status :{" "}
-                                    <span
-                                      className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                                        subscription.status === "active"
-                                          ? "bg-green-100 text-green-700"
-                                          : subscription.status === "trialing"
-                                            ? "bg-blue-100 text-blue-700"
-                                            : subscription.status === "past_due"
-                                              ? "bg-yellow-100 text-yellow-700"
-                                              : "bg-red-100 text-red-700"
-                                      }`}
-                                    >
-                                      {subscription.status}
-                                    </span>
-                                  </div>
-
-                                  {/* {(subscription.status === "active" ||
-                                    subscription.status === "trialing" ||
-                                    subscription.status === "past_due") && (
-                                    <Button
-                                      onClick={async () => {
-                                        try {
-                                          await axios.post(
-                                            `${API_BASE}/pay/cancel-subscription`,
-                                            {
-                                              userId: selected.id,
-                                            },
-                                          );
-
-                                          toast.success(
-                                            "Subscription will be canceled",
-                                          );
-                                          handleSelectUser(selected);
-                                        } catch {
-                                          toast.error(
-                                            "Failed to cancel subscription",
-                                          );
-                                        }
-                                      }}
-                                      variant="destructive"
-                                      className="w-full mt-2 text-xs"
-                                    >
-                                      Cancel Subscription
-                                    </Button>
-                                  )} */}
-                                  {(subscription.status === "active" ||
-                                    subscription.status === "trialing" ||
-                                    subscription.status === "past_due") && (
-                                    <Button
-                                      onClick={async () => {
-                                        try {
-                                          await axios.post(
-                                            `${API_BASE}/pay/cancel-subscription`,
-                                            { userId: selected.id },
-                                          );
-                                          toast.success(
-                                            "Subscription will be canceled after period ends",
-                                          );
-                                          setCancelAtPeriodEnd(true); // ← instantly disables
-                                        } catch {
-                                          toast.error(
-                                            "Failed to cancel subscription",
-                                          );
-                                        }
-                                      }}
-                                      variant="destructive"
-                                      className="w-full mt-2 text-xs"
-                                      disabled={cancelAtPeriodEnd} // ← disabled if already canceled
-                                    >
-                                      {cancelAtPeriodEnd
-                                        ? "Cancellation Scheduled"
-                                        : "Cancel Subscription"}
-                                    </Button>
-                                  )}
-                                </div>
-                              </>
-                            )}
+                            <Switch
+                              checked={(accessControls as any)[key]}
+                              onCheckedChange={() => toggleAccess(key)}
+                            />
                           </div>
-                        ) : (
-                          <div className="rounded-lg border border-gray-300 bg-gray-50 p-3 space-y-2">
-                            <div>
-                              <div className="text-xs justify-between flex font-semibold text-foreground mb-2">
-                                <span> Subscription Control </span>
+                        ))}
 
-                                <span className="text-destructive">
-                                  {" "}
-                                  {subscription && (
-                                    <div className="text-[10px] text-muted-foreground">
-                                      Current:{" "}
-                                      <span className="font-semibold text-foreground">
-                                        {subscription.status}
-                                      </span>
-                                    </div>
-                                  )}
-                                </span>
-                              </div>
-
-                              {subLoading ? (
-                                <p className="text-xs text-muted-foreground">
-                                  Loading...
-                                </p>
-                              ) : (
-                                <div className="space-y-3">
-                                  {/* STATUS DROPDOWN */}
-                                  <select
-                                    className="w-full border p-2 rounded text-xs"
-                                    value={subStatus}
-                                    onChange={(e) =>
-                                      setSubStatus(e.target.value)
-                                    }
-                                  >
-                                    {/* <option value="trialing">Trialing</option> */}
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                  </select>
-
-                                  {/* UPDATE BUTTON */}
-                                  <Button
-                                    onClick={handleUpdateSubscriptionStatus}
-                                    disabled={updatingSub}
-                                    className="w-full text-xs"
-                                  >
-                                    {updatingSub
-                                      ? "Updating..."
-                                      : "Update Status"}
-                                  </Button>
-
-                                  {/* CURRENT STATUS DISPLAY */}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
+                        <Button onClick={saveAccessControls} className="w-full">
+                          Save Access
+                        </Button>
                       </div>
+
                       {/* Portal Access */}
                       <div>
                         <h3 className="text-xs font-semibold text-foreground mb-3">

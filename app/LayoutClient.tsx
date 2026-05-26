@@ -6,6 +6,7 @@ import InactiveAccount from "@/components/inactiveAccount";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
+import Feedback from "@/components/Feedback";
 
 export default function LayoutClient({
   children,
@@ -16,8 +17,18 @@ export default function LayoutClient({
   const pathname = usePathname();
 
   const hideBannerRoutes = ["/", "/admin"];
+  const showFeedbackRoutes = [
+    "/Mainpage",
+    "/bin-search",
+    "/InventoryView",
+    "/Notification",
+    "/how-to",
+    "/ReportsPage",
+    "/DrugLookup",
+  ];
 
   const shouldShowBanner = !hideBannerRoutes.includes(pathname);
+  const showFeedback = showFeedbackRoutes.includes(pathname);
 
   useEffect(() => {
     const storedRole = localStorage.getItem("role");
@@ -83,6 +94,7 @@ export default function LayoutClient({
   return (
     <>
       {shouldShowBanner && <BetaBanner />}
+      {showFeedback && <Feedback />}
       {role !== null && role !== "admin" ? <InactiveAccount /> : null}
       <Toaster />
       <SupplierProvider>{children}</SupplierProvider>

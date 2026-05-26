@@ -75,6 +75,10 @@ const config = {
       },
     },
   },
+   plugins: [
+    require("tailwindcss-animate"),       // for accordion animations
+    require("@tailwindcss/typography"),   // ✅ THIS is what makes prose work
+  ],
 } satisfies Config
 
 export default config
