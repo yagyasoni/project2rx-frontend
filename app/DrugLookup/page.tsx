@@ -91,46 +91,46 @@ export default function DrugLookupLandingPage() {
   const [subscription, setSubscription] = useState<any>(null);
   const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
 
-  // useEffect(() => {
-  //   const fetchSubscription = async () => {
-  //     try {
-  //       const userId = localStorage.getItem("userId");
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
 
-  //       if (!userId) {
-  //         setSubscriptionLoaded(true);
-  //         return;
-  //       }
+        if (!userId) {
+          setSubscriptionLoaded(true);
+          return;
+        }
 
-  //       const res = await axios.get(
-  //         `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
-  //       );
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
+        );
 
-  //       setSubscription(res.data.subscription);
-  //     } catch (err) {
-  //       console.error(err);
-  //     } finally {
-  //       setSubscriptionLoaded(true);
-  //     }
-  //   };
+        setSubscription(res.data.subscription);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setSubscriptionLoaded(true);
+      }
+    };
 
-  //   fetchSubscription();
+    fetchSubscription();
 
-  //   const interval = setInterval(async () => {
-  //     try {
-  //       const userId = localStorage.getItem("userId");
+    const interval = setInterval(async () => {
+      try {
+        const userId = localStorage.getItem("userId");
 
-  //       if (!userId) return;
+        if (!userId) return;
 
-  //       const res = await axios.get(
-  //         `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
-  //       );
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
+        );
 
-  //       setSubscription(res.data.subscription);
-  //     } catch {}
-  //   }, 5000);
+        setSubscription(res.data.subscription);
+      } catch {}
+    }, 5000);
 
-  //   return () => clearInterval(interval);
-  // }, []);
+    return () => clearInterval(interval);
+  }, []);
 
   // Load recent searches
   useEffect(() => {
@@ -278,10 +278,9 @@ export default function DrugLookupLandingPage() {
             />
           </div>
 
-          {/* {!subscription?.drug_lookup_access && (
+          {subscriptionLoaded && !subscription?.drug_lookup_access && (
             <div className="absolute inset-0 z-[500] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
               <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
-
                 <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
 
                 <div className="relative flex flex-col items-center text-center">
@@ -311,7 +310,7 @@ export default function DrugLookupLandingPage() {
                 </div>
               </div>
             </div>
-          )} */}
+          )}
 
           {/* ── Main (single screen) ── */}
           <div className="flex-1 min-w-0 flex flex-col">
