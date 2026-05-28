@@ -314,7 +314,7 @@ const ContactModal = ({
 
   return (
     <div className="fixed inset-0 z-50 mt-12 flex items-center justify-center bg-black/50 p-4 backdrop-blur-md">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-[#0B0B0F]/95 shadow-[0_20px_80px_rgba(0,0,0,0.65)] animate-scaleIn">
+      <div className="relative w-full max-w-md overflow-hidden rounded-lg border border-white/10 bg-[#0B0B0F]/95 shadow-[0_20px_80px_rgba(0,0,0,0.65)] animate-scaleIn">
         {/* Ambient Glow */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-24 right-[-60px] h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" />
@@ -324,11 +324,11 @@ const ContactModal = ({
         {/* Header */}
         <div className="relative flex items-start justify-between border-b border-white/10 px-6 py-5">
           <div>
-            <h3 className="text-[22px] font-semibold tracking-tight text-white">
+            <h3 className="text-xl font-semibold tracking-tight">
               Contact Support
             </h3>
 
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="text-xs text-muted-foreground">
               Fastest way to reach our team
             </p>
           </div>
@@ -348,7 +348,7 @@ const ContactModal = ({
             href={`https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(
               `Hi Fahad,
 
-I would like to get in touch regarding AuditRx.
+I would like to get in touch regarding AuditProRx.
 
 Please let me know a convenient time to connect.
 
@@ -356,23 +356,23 @@ Thank you.`,
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-all duration-300 hover:border-emerald-500/30 hover:bg-emerald-500/[0.08]"
+            className="group relative flex items-center gap-4 overflow-hidden rounded-lg border border-white/10 bg-white/[0.03] p-4 transition-all duration-300 hover:border-emerald-500/30 hover:bg-emerald-500/[0.08]"
           >
             <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl" />
             </div>
 
-            <div className="relative grid h-14 w-14 place-items-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
+            {/* <div className="relative grid h-14 w-14 place-items-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
               <Phone className="h-6 w-6 text-emerald-400" />
-            </div>
+            </div> */}
 
             <div className="relative flex-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                WhatsApp
-              </p>
-
-              <p className="mt-1 text-sm font-semibold text-white">{phone}</p>
-
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white">
+                WhatsApp &bull;
+              </span>{" "}
+              <span className="mt-1 text-sm font-semibold text-white">
+                {phone}
+              </span>
               <p className="mt-1 text-xs text-zinc-400">
                 Instant support & quick responses
               </p>
@@ -398,11 +398,11 @@ Thank you.`,
           {/* Gmail */}
           <a
             href={`https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${encodeURIComponent(
-              "AuditRx Inquiry",
+              "AuditProRx Inquiry",
             )}&body=${encodeURIComponent(
               `Hi Fahad,
 
-I wanted to get in touch regarding AuditRx and had a few questions.
+I wanted to get in touch regarding AuditProRx and had a few questions.
 
 Looking forward to your response.
 
@@ -410,23 +410,23 @@ Best regards,`,
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative flex items-center gap-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-all duration-300 hover:border-blue-500/30 hover:bg-blue-500/[0.08]"
+            className="group relative flex items-center gap-4 overflow-hidden rounded-lg border border-white/10 bg-white/[0.03] p-4 transition-all duration-300 hover:border-blue-500/30 hover:bg-blue-500/[0.08]"
           >
             <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-blue-500/10 blur-2xl" />
             </div>
-
+            {/* 
             <div className="relative grid h-14 w-14 place-items-center rounded-2xl border border-blue-500/20 bg-blue-500/10">
               <FileText className="h-6 w-6 text-blue-400" />
-            </div>
+            </div> */}
 
             <div className="relative flex-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                Gmail
-              </p>
-
-              <p className="mt-1 text-sm font-semibold text-white">{email}</p>
-
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white">
+                Gmail &bull;
+              </span>{" "}
+              <span className="mt-1 text-sm font-semibold text-white">
+                {email}
+              </span>
               <p className="mt-1 text-xs text-zinc-400">
                 Best for detailed discussions
               </p>
@@ -450,18 +450,18 @@ Best regards,`,
           </a>
 
           {/* Footer Note */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-            <p className="text-center text-xs leading-relaxed text-zinc-400">
-              Typically responds within a few business hours.
-            </p>
-          </div>
+          {/* <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"> */}
+          <p className="text-center text-xs leading-relaxed text-zinc-400">
+            Typically responds within a few business hours.
+          </p>
+          {/* </div> */}
         </div>
 
         {/* Footer */}
         <div className="relative border-t border-white/10 p-6">
           <button
             onClick={onClose}
-            className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition-all duration-300 hover:scale-[1.01] hover:bg-zinc-200 active:scale-[0.99]"
+            className="w-full rounded-lg bg-white px-4 py-3 text-sm font-semibold text-black transition-all duration-300 hover:scale-[1.01] hover:bg-zinc-200 active:scale-[0.99]"
           >
             Close
           </button>
