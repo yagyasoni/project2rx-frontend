@@ -43,6 +43,7 @@ import {
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Link from "next/link";
+import Image from "next/image";
 import "./landing.css";
 
 const plans = [
@@ -256,11 +257,17 @@ const Pill = ({ children }: { children: React.ReactNode }) => (
 );
 
 const Logo = () => (
-  <div className="flex items-center gap-2">
-    {/* <div className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-zinc-100 to-zinc-400">
-      <Asterisk className="h-4 w-4 text-background" strokeWidth={2.5} />
-    </div> */}
-    <span className="text-lg font-semibold tracking-tight">AuditProRx</span>
+  <div className="flex items-center">
+    <div className="relative h-30 w-40 shrink-0">
+      <Image
+        src="/l1.png"
+        alt="AuditProRx"
+        fill
+        priority
+        sizes="160px"
+        className="object-contain object-left"
+      />
+    </div>
   </div>
 );
 
