@@ -31,6 +31,13 @@ import {
   X,
   Mail,
   HelpCircle,
+  Boxes,
+  SearchCode,
+  AlertTriangle,
+  Network,
+  Settings2,
+  LifeBuoy,
+  Users,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -967,37 +974,37 @@ export default function Index() {
               to protect revenue and simplify operations.
             </p>
           </div>
-          <div className="mt-14 grid gap-5 md:grid-cols-3">
+          {/* <div className="mt-14 grid gap-5 md:grid-cols-3">
             {[
               [
-                Shield,
-                "Audit Protection",
-                "Comprehensive audit defense with automated documentation, response generation, and real-time tracking built for pharmacy operations.",
-              ],
-              [
-                Zap,
-                "Accelerated Processing",
-                "Process complex audits in minutes. Our intelligent engine handles documentation, cross-referencing, and deadline management automatically.",
-              ],
-              [
-                BarChart3,
-                "Smart Analytics",
-                "Real-time dashboards exposing audit trends, risk exposure areas, and revenue savings opportunities across your entire portfolio.",
-              ],
-              [
                 FileText,
-                "Auto Documentation",
-                "Generate fully compliant documentation for every audit response — standardized, audit-ready, and tailored to payer requirements.",
+                "Inventory Audit Reports",
+                "Generate detailed pharmacy audit reports across multiple wholesalers. Track every NDC, drug, and unit billed vs. ordered — pre-built templates and one-click exports ready for any PBM audit.",
               ],
               [
-                Clock,
-                "Deadline Intelligence",
-                "Never miss a critical deadline. Automated reminders, priority queuing, and intelligent progress tracking keep every audit on track.",
+                SearchCode,
+                "Digital Drug Lookup",
+                "Search any drug by brand name, generic name, or NDC against a 60K+ database. Instantly access pricing, GPI group, and reference data sourced directly from the industry's most trusted catalogs.",
               ],
               [
-                Lock,
-                "HIPAA-Grade Security",
-                "Enterprise security architecture ensuring all patient and pharmacy data remains encrypted, compliant, and fully protected.",
+                AlertTriangle,
+                "Aberrant Risk Detection",
+                "Surface high-risk billing patterns before PBMs do. Automated flagging on quantity outliers, refill anomalies, and NDC-level discrepancies — so you can fix exposure before it becomes a chargeback.",
+              ],
+              [
+                Network,
+                "Pharmacy Inventory Network",
+                "Connect with fellow pharmacies to source short-dated or excess inventory in a private, trusted marketplace. Post once, move stock, and recover capital that would otherwise sit on your shelves.",
+              ],
+              [
+                Settings2,
+                "Admin Automation",
+                "Streamline day-to-day pharmacy admin — credentialing reminders, document organization, and operational workflows handled in the background so your team stays focused on patient care.",
+              ],
+              [
+                LifeBuoy,
+                "Product Support Hub",
+                "Direct access to pharmacy-savvy support, onboarding guides, and a growing knowledge base. Real humans who understand independent pharmacy operations — not generic ticket queues.",
               ],
             ].map(([Icon, t, d]: any, idx) => (
               <div
@@ -1022,6 +1029,80 @@ export default function Index() {
                 </p>
               </div>
             ))}
+          </div> */}
+          <div className="mt-16 divide-y divide-border/70 border-y border-border/70">
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              {[
+                [
+                  FileText,
+                  "Inventory Audit Reports",
+                  "Generate pharmacy audit reports with wholesaler, NDC, and billing reconciliation in minutes.",
+                ],
+
+                [
+                  SearchCode,
+                  "Digital Drug Lookup",
+                  "Search 60K+ drugs by NDC, brand, or generic name with real-time PBM reference data.",
+                ],
+
+                [
+                  Users,
+                  "Pharmacy Leads",
+                  "Access admin-curated reimbursement opportunities, profitable drug leads, and payer insights.",
+                ],
+
+                [
+                  Network,
+                  "Pharmacy Inventory Network",
+                  "Connect with pharmacies to buy, sell, and manage short-dated or excess inventory efficiently.",
+                ],
+
+                [
+                  Settings2,
+                  "Admin Automation",
+                  "Simplify pharmacy operations with automated workflows, reminders, and document management.",
+                ],
+
+                [
+                  LifeBuoy,
+                  "Product Support Hub",
+                  "Get direct access to onboarding help, support resources, and pharmacy-focused assistance.",
+                ],
+              ].map(([Icon, t, d]: any, idx) => (
+                <div
+                  key={t}
+                  className="group border-b border-border/70 p-6 animate-fadeInUp transition-colors hover:bg-surface/40"
+                  style={{ animationDelay: `${0.1 + idx * 0.08}s` }}
+                >
+                  <div className="grid grid-cols-12 gap-6">
+                    {/* Index number */}
+                    <div className="col-span-12 md:col-span-1">
+                      <span className="font-mono text-sm tracking-widest text-muted-foreground">
+                        {String(idx + 1).padStart(2, "0")}
+                      </span>
+                    </div>
+
+                    {/* Icon */}
+                    <div className="col-span-12 md:col-span-2">
+                      <div className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-surface-2 transition-transform group-hover:-translate-y-0.5">
+                        <Icon className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="col-span-12 md:col-span-9">
+                      <h3 className="text-xl font-semibold tracking-tight">
+                        {t}
+                      </h3>
+
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                        {d}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
