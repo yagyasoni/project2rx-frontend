@@ -654,6 +654,45 @@ export default function Index() {
       <section className="relative overflow-hidden border-b border-border/60">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.06),transparent_60%)]" />
         <div className="relative mx-auto max-w-[1440px] px-7 pt-20 pb-16 text-center">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div
+              className="absolute top-[20%] left-0 w-[1600px] h-[1600px] rounded-full blur-[220px]"
+              style={{
+                background:
+                  "radial-gradient(circle, hsl(210 15% 50% / 0.05), transparent 70%)",
+              }}
+            />
+
+            <div
+              className="absolute bottom-[-300px] right-0 w-[1000px] h-[1000px] rounded-full blur-[200px]"
+              style={{
+                background:
+                  "radial-gradient(circle, hsl(0 0% 30% / 0.1), transparent 70%)",
+              }}
+            />
+
+            {/* Outer Circle - moved more downward */}
+            <div
+              className="absolute top-[75%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1500px] h-[1500px] rounded-full border"
+              style={{ borderColor: "hsl(0 0% 15%)" }}
+            />
+
+            {/* Inner Circle - moved more downward */}
+            <div
+              className="absolute top-[75%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1100px] h-[1100px] rounded-full border"
+              style={{ borderColor: "hsl(0 0% 10%)" }}
+            />
+
+            {/* Grid pattern */}
+            <div
+              className="absolute inset-0 opacity-[0.03]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(hsl(0 0% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(0 0% 50%) 1px, transparent 1px)",
+                backgroundSize: "200px 200px",
+              }}
+            />
+          </div>
           <Pill>Enterprise Pharmacy Operations Platform</Pill>
           <h1 className="mx-auto mt-8 max-w-5xl text-6xl font-semibold leading-[1.05] tracking-tight md:text-7xl animate-fadeInUp stagger-1">
             Precision Audit Intelligence
