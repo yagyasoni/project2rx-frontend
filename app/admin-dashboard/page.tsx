@@ -410,12 +410,12 @@ export default function AdminDashboard() {
               <StatCard
                 icon={<Users size={16} className="text-muted-foreground" />}
                 label="Total Users"
-                value={users.length}
+                value={users.length - 1}
               />
               <StatCard
                 icon={<Activity size={16} className="text-muted-foreground" />}
                 label="Active Users"
-                value={activeCount}
+                value={activeCount - 1}
               />
               <StatCard
                 icon={
