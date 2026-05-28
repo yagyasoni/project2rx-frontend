@@ -1339,6 +1339,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const hasAccess = (accessKey: string | null) =>
     !accessKey || !!subscription?.[accessKey];
 
+  // const hasAccess = (accessKey: string | null) => true; // TEMP localhost bypass — restore before deploy
+
   const navLinkClass = (path: string) =>
     `group w-full flex items-center gap-3 py-[11px] rounded-xl font-medium text-[15px] transition-all duration-150
      ${sidebarOpen ? "px-3.5" : "px-0 justify-center"}
