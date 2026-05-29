@@ -4,7 +4,7 @@ import AuthClient from "./AuthClient";
 const SITE_URL = "https://www.auditprorx.com";
 const TITLE = "Sign In or Create a Free AuditProRx Account";
 const DESCRIPTION =
-  "Log in to AuditProRx or register your independent pharmacy in minutes. Start a 7-day free trial of the pharmacy audit software trusted to automate PBM responses, wholesaler reconciliation, and NDC inventory audits.";
+  "Sign in or start a 7-day free trial of AuditProRx — pharmacy audit software trusted by independent pharmacies to automate PBM audits & reconciliation.";
 
 export const metadata: Metadata = {
   title: TITLE,

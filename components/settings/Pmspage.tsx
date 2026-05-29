@@ -14,7 +14,7 @@ const ALL_PMS = [
 ];
 
 export default function PMSPage() {
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>(["PRIMERX"]);
   const [search, setSearch] = useState("");
 
   const filtered = ALL_PMS.filter((p) =>
@@ -22,9 +22,7 @@ export default function PMSPage() {
   );
 
   const toggle = (name: string) => {
-    setSelected((prev) =>
-      prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name]
-    );
+    setSelected([name]);
   };
 
   return (
