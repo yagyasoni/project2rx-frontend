@@ -61,7 +61,7 @@ const plans = [
     ],
     highlighted: false,
     addOns: [
-      { name: "Audit Reports", price: "$199" },
+      { name: "Inventory View", price: "$199" },
       { name: "Drug Lookup", price: "$199" },
       { name: "Leads", price: "$199" },
     ],
@@ -74,7 +74,7 @@ const plans = [
     description: "Complete platform access including all premium modules.",
     features: [
       "Inventory reports",
-      "Audit reports",
+      "Inventory View",
       "Drug lookup",
       "Leads system",
       "All premium modules",
@@ -260,7 +260,9 @@ const Logo = () => (
     {/* <div className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-zinc-100 to-zinc-400">
       <Asterisk className="h-4 w-4 text-background" strokeWidth={2.5} />
     </div> */}
-    <span className="text-lg font-semibold tracking-tight">AuditProRx</span>
+    <a href="/">
+      <span className="text-lg font-semibold tracking-tight">AuditProRx</span>
+    </a>
   </div>
 );
 
@@ -516,7 +518,7 @@ export default function Index() {
       a: "No. Our plans are flexible with no long-term commitments, allowing you to scale or cancel based on your operational needs.",
     },
   ];
-  const contactEmail = "drugdroprx@gmail.com";
+  const contactEmail = "auditprorx@gmail.com";
   const contactPhone = "+1 (551) 229-6466"; // Replace with actual phone number
 
   const fetchStats = async () => {
@@ -583,7 +585,7 @@ export default function Index() {
   }, []);
 
   const scheduleConsultation = () => {
-    window.open("https://calendar.app.google/7Rn6HL2t4StUuvEw7", "_blank");
+    window.open("https://calendar.app.google/ekTAPx65xrwq2Qiv6", "_blank");
   };
 
   const handleRequestInfo = () => {
@@ -701,7 +703,7 @@ export default function Index() {
               for Modern Pharmacies
             </span>
           </h1>
-          <p className="mx-auto mt-7 max-w-xl text-[15px] leading-relaxed text-muted-foreground animate-fadeInUp stagger-3">
+          <p className="mx-auto mt-7 max-w-3xl text-[15px] leading-relaxed text-muted-foreground animate-fadeInUp stagger-3">
             Automate audit workflows, protect revenue, access drug intelligence,
             and collaborate across pharmacy networks — all in one platform built
             for pharmacy teams.
@@ -2359,10 +2361,14 @@ export default function Index() {
               groups nationwide.
             </p>
             <div className="mt-5 flex gap-2">
-              {[Twitter, Linkedin, Github].map((I, i) => (
+              {[Twitter, Linkedin].map((I, i) => (
                 <a
                   key={i}
-                  href="#"
+                  href={
+                    i === 1
+                      ? "https://www.linkedin.com/company/auditprorx/"
+                      : "#"
+                  }
                   className="grid h-8 w-8 place-items-center rounded-md border border-border bg-surface text-muted-foreground hover:text-foreground transition-colors animate-fadeInUp"
                   style={{ animationDelay: `${i * 0.1}s` }}
                 >

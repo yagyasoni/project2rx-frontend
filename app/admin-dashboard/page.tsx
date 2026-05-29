@@ -521,7 +521,7 @@ export default function AdminDashboard() {
                       ) : (
                         filtered
                           .filter(
-                            (user) => user.email !== "drugdroprx@gmail.com",
+                            (user) => user.email !== "auditprorx@gmail.com",
                           )
                           .map((user, index) => {
                             const isSelected = selected?.id === user.id;
