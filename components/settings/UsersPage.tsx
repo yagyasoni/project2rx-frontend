@@ -301,7 +301,21 @@ const UsersPage = () => {
 
       toast.success("Subscription updated successfully");
 
-      await fetchSubscription();
+      // await fetchSubscription();
+      // optimistic UI update immediately
+      // optimistic UI update immediately
+      setSubscription((prev: any) => ({
+        ...prev,
+        active_plans: [...selectedPlans],
+      }));
+
+      // also sync manage plans immediately
+      setSelectedPlans([...selectedPlans]);
+
+      // small delay so Stripe webhook finishes
+      setTimeout(async () => {
+        await fetchSubscription();
+      }, 2500);
     } catch (error: any) {
       console.error(error);
 
