@@ -348,7 +348,7 @@ export default function InactiveAccount() {
   //   (paymentStatus === "active" || !paymentStatus) &&
   //   (status === "active" || !status)
   // ) {
-  //   return null;
+  //    return null; 
   // }
 
   const hasPlatformAccess = paymentStatus === "active";
