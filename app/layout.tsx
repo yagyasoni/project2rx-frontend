@@ -5,9 +5,9 @@ import LayoutClient from "./LayoutClient";
 const SITE_URL = "https://www.auditprorx.com";
 const SITE_NAME = "AuditProRx";
 const DEFAULT_TITLE =
-  "AuditProRx — Pharmacy Audit Software & PBM Compliance Platform";
+  "AuditProRx | Pharmacy Audit Software & PBM Compliance Platform";
 const DEFAULT_DESCRIPTION =
-  "AuditProRx is the all-in-one pharmacy audit software for independent pharmacies. Automate PBM audit responses, reconcile wholesaler invoices (McKesson, AXIA, Kinray, Anda), run NDC inventory audits, and protect revenue — HIPAA compliant, built by pharmacists.";
+  "Pharmacy audit software for independent pharmacies. Automate PBM audit defense, reconcile wholesaler invoices, and protect revenue — HIPAA compliant.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -98,7 +98,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   verification: {
     // Add the value from Google Search Console once verified.
-    // google: "REPLACE_WITH_GOOGLE_SEARCH_CONSOLE_VERIFICATION_TOKEN",
+    google: "SoCFhHj5dE1nCqezRhJhRTUMKTBvsuq199YSisXoVso",
     // yandex: "REPLACE_WITH_YANDEX_TOKEN",
     other: {
       // "msvalidate.01": "REPLACE_WITH_BING_VERIFICATION_TOKEN",
@@ -128,7 +128,7 @@ const organizationJsonLd = {
   email: "drugdroprx@gmail.com",
   foundingDate: "2024",
   areaServed: "US",
-  sameAs: [] as string[],
+  sameAs: ["https://www.linkedin.com/company/auditprorx/"],
   contactPoint: [
     {
       "@type": "ContactPoint",

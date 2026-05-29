@@ -1696,7 +1696,7 @@ const AgreementsPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [wholesalerAccepted, setWholesalerAccepted] = useState(false);
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
-  const [selectedPMS, setSelectedPMS] = useState<string[]>([]);
+  const [selectedPMS, setSelectedPMS] = useState<string[]>(["PRIMERX"]);
   const documentRef = useRef<HTMLDivElement>(null);
 
   const totalSteps = STEPS.length;
@@ -1719,10 +1719,7 @@ const AgreementsPage = () => {
       prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name],
     );
 
-  const togglePMS = (name: string) =>
-    setSelectedPMS((prev) =>
-      prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name],
-    );
+  const togglePMS = (name: string) => setSelectedPMS([name]);
 
   // const advance = async (wholesalerChoice?: boolean) => {
   //   setIsSubmitting(true);
