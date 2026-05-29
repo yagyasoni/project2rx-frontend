@@ -4209,7 +4209,7 @@ export default function Index() {
                     className="grid grid-cols-12 items-center gap-2 border-t border-border px-3 py-2.5 text-xs"
                   >
                     <div className="col-span-6 flex items-center gap-1.5 font-medium">
-                      <span className="text-muted-foreground">{idx + 1}.</span>
+                      <span className="text-muted-foreground">{idx + 1}</span>
                       <span className="truncate">{r[0]}</span>
                       <span className="rounded bg-success/15 px-1 text-[8px] font-semibold text-success">
                         B
