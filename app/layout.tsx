@@ -5,7 +5,7 @@ import LayoutClient from "./LayoutClient";
 const SITE_URL = "https://www.auditprorx.com";
 const SITE_NAME = "AuditProRx";
 const DEFAULT_TITLE =
-  "AuditProRx — Pharmacy Audit Software & PBM Compliance Platform";
+  "AuditProRx | Pharmacy Audit Software & PBM Compliance Platform";
 const DEFAULT_DESCRIPTION =
   "Pharmacy audit software for independent pharmacies. Automate PBM audit defense, reconcile wholesaler invoices, and protect revenue — HIPAA compliant.";
 
