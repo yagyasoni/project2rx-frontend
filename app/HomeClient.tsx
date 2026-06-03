@@ -6181,59 +6181,59 @@ const ContactModal = ({
 
         {/* Content */}
         <div className="relative space-y-4 p-6">
-          <p className="mt-1 text-xs text-zinc-400">
-            Instant support & quick responses
-          </p>
           {/* WhatsApp */}
-          <div className="flex-col-2 gap-4 flex">
-            <a
-              href={`https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(
-                `Hi Fahad,
+          {/* <div className="flex-col-2 gap-4 flex"> */}
+          <a
+            href={`https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+              `Hi Fahad,
 
 I would like to get in touch regarding AuditProRx.
 
 Please let me know a convenient time to connect.
 
 Thank you.`,
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative flex items-center gap-4 overflow-hidden rounded-lg border border-white/10 bg-white/[0.03] p-4 transition-all duration-300 hover:border-emerald-500/30 hover:bg-emerald-500/[0.08]"
-            >
-              <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl" />
-              </div>
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative flex items-center gap-4 overflow-hidden rounded-lg border border-white/10 bg-white/[0.03] p-4 transition-all duration-300 hover:border-emerald-500/30 hover:bg-emerald-500/[0.08]"
+          >
+            <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl" />
+            </div>
 
-              {/* <div className="relative grid h-14 w-14 place-items-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
+            {/* <div className="relative grid h-14 w-14 place-items-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
               <Phone className="h-6 w-6 text-emerald-400" />
             </div> */}
 
-              <div className="relative flex-1">
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white">
-                  WhatsApp &bull;
-                </span>{" "}
-                <span className="mt-1 text-sm font-semibold text-white">
-                  {phone}
-                </span>
-              </div>
+            <div className="relative flex-1">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white">
+                WhatsApp &bull;
+              </span>{" "}
+              <span className="mt-1 text-sm font-semibold text-white">
+                {phone}
+              </span>
+              <p className="mt-1 text-xs text-zinc-400">
+                Instant support & quick responses
+              </p>
+            </div>
 
-              <div className="relative opacity-60 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100">
-                <svg
-                  className="h-5 w-5 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                  />
-                </svg>
-              </div>
-            </a>
-            <a
+            <div className="relative opacity-60 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100">
+              <svg
+                className="h-5 w-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </div>
+          </a>
+          {/* <a
               href={`https://wa.me/${"+1 (201) 490-0776".replace(/\D/g, "")}?text=${encodeURIComponent(
                 `Hi Fahad,
 
@@ -6251,9 +6251,6 @@ Thank you.`,
                 <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl" />
               </div>
 
-              {/* <div className="relative grid h-14 w-14 place-items-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
-              <Phone className="h-6 w-6 text-emerald-400" />
-            </div> */}
 
               <div className="relative flex-1">
                 <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white">
@@ -6279,8 +6276,8 @@ Thank you.`,
                   />
                 </svg>
               </div>
-            </a>
-          </div>
+            </a> */}
+          {/* </div> */}
 
           {/* Gmail */}
           <a
