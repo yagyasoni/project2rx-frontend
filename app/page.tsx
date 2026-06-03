@@ -5215,7 +5215,6 @@ const softwareApplicationJsonLd = {
       reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
       reviewBody:
         "AuditProRx has really streamlined how we handle audits. It saves us time and helps us stay more organized.",
-      itemReviewed: { "@type": "SoftwareApplication", name: "AuditProRx" },
       publisher: { "@type": "Organization", name: "Life Care Pharmacy" },
     },
     {
@@ -5224,7 +5223,6 @@ const softwareApplicationJsonLd = {
       reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
       reviewBody:
         "Managing documentation and claims has become much easier. The system is simple and very efficient.",
-      itemReviewed: { "@type": "SoftwareApplication", name: "AuditProRx" },
       publisher: { "@type": "Organization", name: "Bergen Road Pharmacy" },
     },
     {
@@ -5233,7 +5231,6 @@ const softwareApplicationJsonLd = {
       reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
       reviewBody:
         "The workflow is smooth and easy to follow. It's a helpful tool for improving our overall audit process.",
-      itemReviewed: { "@type": "SoftwareApplication", name: "AuditProRx" },
       publisher: { "@type": "Organization", name: "United Drugs" },
     },
   ],

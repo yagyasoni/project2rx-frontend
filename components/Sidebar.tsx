@@ -1140,6 +1140,7 @@ import {
   LogOut,
   Bell,
   Lock,
+  Group,
 } from "lucide-react";
 
 import api from "@/lib/api";
@@ -1176,6 +1177,12 @@ const ALL_NAV_ITEMS = [
     path: "/ReportsPage",
     label: "Reports",
     icon: Layers,
+    accessKey: "inventory_reports_access",
+  },
+  {
+    path: "/group-reports",
+    label: "Group Reports",
+    icon: Group,
     accessKey: "inventory_reports_access",
   },
   {
@@ -1390,7 +1397,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
           <Lock className="h-[13px] w-[13px] text-amber-500 shrink-0" />
 
           <span className="truncate text-[12.5px] font-semibold text-amber-600 leading-none">
-            {label} — Subscribe to unlock
+            {label}
           </span>
         </div>
 
