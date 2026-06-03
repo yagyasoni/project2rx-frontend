@@ -16,7 +16,13 @@ export default function LayoutClient({
   const [role, setRole] = useState<string | null>(null);
   const pathname = usePathname();
 
-  const hideBannerRoutes = ["/", "/admin"];
+  const hideBannerRoutes = [
+    "/",
+    "/admin",
+    "/terms-of-service",
+    "/privacy-policy",
+    "/cancellation-policy",
+  ];
   const showFeedbackRoutes = [
     "/Mainpage",
     "/bin-search",

@@ -6570,7 +6570,7 @@ export default function Index() {
               onClick={scheduleConsultation}
               className="cursor-pointer rounded-lg bg-gradient-to-b from-zinc-100 to-zinc-300 px-4 py-2 text-sm font-medium text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] hover:from-white animate-fadeInUp stagger-0"
             >
-              Schedule a Consultation
+              <span className="cursor-pointer"> Schedule a Consultation</span>
             </button>
           </div>
           {/* Mobile menu toggle */}
