@@ -325,6 +325,9 @@ export default function InactiveAccount() {
 
   if (
     pathname === "/" ||
+    pathname.startsWith("/privacy-policy") ||
+    pathname.startsWith("/terms-of-service") ||
+    pathname.startsWith("/cancellation-policy") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/admin-dashboard") ||
@@ -348,7 +351,7 @@ export default function InactiveAccount() {
   //   (paymentStatus === "active" || !paymentStatus) &&
   //   (status === "active" || !status)
   // ) {
-  //    return null; 
+  //    return null;
   // }
 
   const hasPlatformAccess = paymentStatus === "active";
