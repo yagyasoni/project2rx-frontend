@@ -1140,7 +1140,7 @@ import {
   LogOut,
   Bell,
   Lock,
-  Group,
+  Users,
 } from "lucide-react";
 
 import api from "@/lib/api";
@@ -1182,7 +1182,7 @@ const ALL_NAV_ITEMS = [
   {
     path: "/group-reports",
     label: "Group Reports",
-    icon: Group,
+    icon: Users,
     accessKey: "inventory_reports_access",
   },
   {

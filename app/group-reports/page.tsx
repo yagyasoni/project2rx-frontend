@@ -974,6 +974,7 @@
 
 import React, { useEffect, useState, useRef, Suspense } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -1072,6 +1073,8 @@ export default function AuditGroupsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [activePanel, setActivePanel] = useState<string | null>(null);
+
+  const router = useRouter();
 
   //
   // USER
@@ -1454,30 +1457,30 @@ export default function AuditGroupsPage() {
   };
 
   //
-  // OPEN REPORTS DRAWER (DUMMY DATA)
-  // Replace the dummy block with a real fetch once report data is wired up.
+  // OPEN REPORTS DRAWER — real reports from the group-reports API
   //
 
-  const openReports = (group: Group) => {
+  const openReports = async (group: Group) => {
     setSelectedReportsGroup(group);
-
-    const count = group.reports_count > 0 ? group.reports_count : 3;
-
-    const dummy: ReportItem[] = Array.from({ length: count }, (_, i) => ({
-      id: `${group.id}-report-${i + 1}`,
-      name: `Audit Report ${i + 1}`,
-      created_at: new Date(
-        Date.now() - i * 7 * 24 * 60 * 60 * 1000,
-      ).toISOString(),
-    }));
-
-    setGroupReports(dummy);
-
+    setGroupReports([]);
     setReportsSearch("");
-
     setReportsModal(true);
-
     setTimeout(() => setReportsShow(true), 10);
+
+    try {
+      const res = await api.get(
+        `/api/inventory-view/groups/${group.id}/reports`,
+      );
+      const reports: ReportItem[] = (res.data || []).map((r: any) => ({
+        id: r.id,
+        name: r.label || r.pharmacy_name,
+        created_at: r.created_at,
+      }));
+      setGroupReports(reports);
+    } catch (err) {
+      console.error("Failed to load group reports:", err);
+      setGroupReports([]);
+    }
   };
 
   const closeReports = () => {
@@ -1491,21 +1494,55 @@ export default function AuditGroupsPage() {
   };
 
   //
-  // OPEN A SINGLE REPORT (DUMMY LINK)
-  // TODO: navigate / open the real report URL here.
+  // OPEN A SINGLE REPORT — full report page
   //
 
   const handleOpenReport = (report: ReportItem) => {
-    toast(`Opening report: ${report.name}`);
+    if (!selectedReportsGroup) return;
+    router.push(`/group-reports/${selectedReportsGroup.id}/${report.id}`);
   };
 
   //
-  // DOWNLOAD A REPORT (DUMMY)
-  // TODO: trigger the real download here.
+  // DOWNLOAD A REPORT — fetch the merged report and export CSV
   //
 
-  const handleDownloadReport = (report: ReportItem) => {
-    toast(`Downloading: ${report.name}`);
+  const handleDownloadReport = async (report: ReportItem) => {
+    if (!selectedReportsGroup) return;
+    try {
+      const res = await api.get(
+        `/api/inventory-view/groups/${selectedReportsGroup.id}/reports/${report.id}`,
+      );
+      const pharmacies: string[] = res.data?.pharmacies || [];
+      const rows: any[] = res.data?.rows || [];
+      const header = ["Rank", "NDC", "Drug Name", "Pkg Size", ...pharmacies];
+      const csv = [
+        header.join(","),
+        ...rows.map((r, idx) =>
+          [
+            r.rank ?? idx + 1,
+            r.ndc,
+            r.drug_name,
+            r.package_size,
+            ...pharmacies.map((ph) => r.values?.[ph]),
+          ]
+            .map((v) => JSON.stringify(v ?? ""))
+            .join(","),
+        ),
+      ].join("\n");
+      const safeName = (report.name || "report")
+        .replace(/[^a-z0-9]+/gi, "_")
+        .toLowerCase();
+      const a = Object.assign(document.createElement("a"), {
+        href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })),
+        download: `${safeName}.csv`,
+      });
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Download failed:", err);
+      toast.error("Failed to download report");
+    }
   };
 
   //
@@ -2310,7 +2347,7 @@ export default function AuditGroupsPage() {
 
                             <div className="flex items-center gap-1.5 shrink-0">
                               <span className="hidden sm:inline-flex text-[10px] font-bold text-slate-400 border border-slate-200 rounded-md px-1.5 py-0.5 uppercase tracking-wider">
-                                PDF
+                                CSV
                               </span>
 
                               <button

@@ -74,17 +74,15 @@ interface SortRule {
   dir: "asc" | "desc";
 }
 
-// Shape returned by GET /api/inventory-view/groups (shared with InventoryView)
+// Shape returned by GET /audit-groups/user/:userId (teammate's group system)
 interface InventoryGroup {
   id: string;
   name: string;
-  description: string | null;
-  member_count: number;
-  is_admin: boolean;
+  created_by: string;
   created_at: string;
-  max_members: number;
-  is_discoverable: boolean;
-  pending_join_requests: number;
+  role: string;
+  members_count: number;
+  reports_count: number;
 }
 
 // A shared report inside a group (multiple pharmacies each add a column)
@@ -1709,9 +1707,8 @@ export default function InventoryReportPage() {
     setShortageSort(null);
   };
 
-  // Teammate's separate Inventory Group page (app/InventoryGroup/page.tsx).
-  // TODO: confirm exact folder name/spelling once she creates it.
-  const INVENTORY_GROUPS_ROUTE = "/InventoryGroup";
+  // Teammate's Group Reports page (manage groups / invites / members).
+  const INVENTORY_GROUPS_ROUTE = "/group-reports";
 
   const handleOpenGroupsModal = async () => {
     setAddNotice(null);
@@ -1724,7 +1721,9 @@ export default function InventoryReportPage() {
     setOpenGroupsModal(true);
     setGroupsLoading(true);
     try {
-      const res = await api.get("/api/inventory-view/groups");
+      // Groups come from the teammate's audit-share-groups system
+      const uid = localStorage.getItem("userId");
+      const res = await api.get(`/audit-groups/user/${uid}`);
       setGroups(res.data || []);
     } catch {
       setGroups([]);
@@ -4264,8 +4263,8 @@ export default function InventoryReportPage() {
                                       </p>
                                       <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
                                         <Users className="h-3 w-3" />
-                                        {g.member_count}{" "}
-                                        {g.member_count === 1
+                                        {g.members_count}{" "}
+                                        {g.members_count === 1
                                           ? "member"
                                           : "members"}
                                       </p>
@@ -4410,7 +4409,13 @@ export default function InventoryReportPage() {
                                           ? "Open report"
                                           : "Add your data first to open"
                                       }
-                                      onClick={() => handleOpenReport(rep.id)}
+                                      onClick={() => {
+                                        if (!viewingGroup) return;
+                                        setOpenGroupsModal(false);
+                                        router.push(
+                                          `/group-reports/${viewingGroup.id}/${rep.id}`,
+                                        );
+                                      }}
                                     >
                                       Open
                                     </Button>
