@@ -5984,6 +5984,39 @@ const animationStyles = `
     animation: pulseGlow 2s ease-in-out infinite;
   }
 
+  @keyframes floatY {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  .animate-floatY {
+    animation: floatY 6s ease-in-out infinite;
+  }
+
+  @keyframes blobPulse {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.08); }
+  }
+
+  .animate-blobPulse {
+    animation: blobPulse 6s ease-in-out infinite;
+  }
+
+  @keyframes textShimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  .text-shimmer {
+    background: linear-gradient(90deg, #71717a 0%, #fafafa 50%, #71717a 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: textShimmer 4s linear infinite;
+  }
+
   .stagger-0 { animation-delay: 0s; }
   .stagger-1 { animation-delay: 0.1s; }
   .stagger-2 { animation-delay: 0.2s; }
@@ -7646,12 +7679,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ANALYTICS / OVERVIEW VIDEO */}
-      <section
-        id="overview"
-        className="scroll-mt-20 border-b border-border/60 py-16 sm:py-24"
-      >
-        <div className="mx-auto grid max-w-[800px] grid-cols-1 items-center gap-12 px-7 lg:grid-cols-1">
+      {/* ANALYTICS */}
+      <section className="border-b border-border/60 py-16 sm:py-24">
+        <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-12 px-7 lg:grid-cols-2">
           {/* <div className="rounded-2xl border border-border bg-surface p-6 animate-slideInLeft">
             <div className="animate-fadeInUp stagger-0">
               <h4 className="font-semibold">Audit Savings — Last 6 Months</h4>
@@ -7704,8 +7734,78 @@ export default function Index() {
               </div>
             </div>
           </div> */}
-          <div className="animate-slideInRight">
+          {/* LEFT — copy + feature list */}
+          <div className="animate-slideInLeft">
             <Pill>Demonstration Walkthrough</Pill>
+            <h2 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl animate-fadeInUp stagger-1">
+              See <span className="text-shimmer">AuditProRx</span> in motion
+            </h2>
+            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted-foreground animate-fadeInUp stagger-2">
+              Watch how pharmacies turn a stack of wholesaler invoices and
+              inventory exports into a defensible, PBM-ready audit report — in
+              minutes, not days.
+            </p>
+            <ul className="mt-8 space-y-4">
+              {[
+                [
+                  Clock,
+                  "Minutes, not weeks",
+                  "Upload, map, and generate a complete audit response in a single sitting.",
+                ],
+                [
+                  ShieldCheck,
+                  "Defensible by design",
+                  "Every NDC is matched to BIN/PCN/Group PBM data automatically.",
+                ],
+                [
+                  BarChart3,
+                  "Numbers that hold up",
+                  "Per-NDC financials roll into board-ready compliance reports.",
+                ],
+              ].map(([Icon, title, desc]: any, idx) => (
+                <li
+                  key={title}
+                  className="flex items-start gap-4 animate-fadeInUp"
+                  style={{ animationDelay: `${0.25 + idx * 0.12}s` }}
+                >
+                  <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-surface-2">
+                    <Icon className="h-5 w-5 text-zinc-200" />
+                  </span>
+                  <div>
+                    <div className="font-medium">{title}</div>
+                    <div className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      {desc}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-9 flex flex-wrap items-center gap-6 animate-fadeInUp stagger-7">
+              <div>
+                <div className="text-2xl font-semibold">~2 min</div>
+                <div className="text-xs text-muted-foreground">
+                  avg. report time
+                </div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div>
+                <div className="text-2xl font-semibold">24K+</div>
+                <div className="text-xs text-muted-foreground">
+                  NDCs benchmarked
+                </div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div>
+                <div className="text-2xl font-semibold">94%</div>
+                <div className="text-xs text-muted-foreground">
+                  audit success
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT — portrait demo video */}
+          <div className="animate-slideInRight">
             {/* <h2 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl animate-fadeInUp stagger-1">
               Data-Driven Audit Intelligence
             </h2>
@@ -7714,19 +7814,33 @@ export default function Index() {
               trends, identify vulnerabilities, and make informed decisions to
               protect your pharmacy's bottom line.
             </p> */}
-            <div className="mt-6 relative rounded-2xl border border-border bg-surface-2 overflow-hidden animate-fadeInUp stagger-3">
-              {/* Video Container */}
-              <div className="relative w-full aspect-video bg-black flex items-center justify-center">
-                {/* Coming Soon Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-zinc-900/80 to-zinc-800/80 flex flex-col items-center justify-center backdrop-blur-sm">
-                  <div className="text-center animate-fadeInUp stagger-4">
-                    <Play className="h-16 w-16 text-zinc-400 mx-auto mb-4" />
-                    <h3 className="text-2xl font-semibold text-white mb-2 animate-fadeInUp stagger-5">
-                      Coming Soon
-                    </h3>
-                    <p className="text-sm text-zinc-300 animate-fadeInUp stagger-6">
-                      Platform demonstration video
-                    </p>
+            <div className="relative mx-auto w-full max-w-[320px] animate-scaleIn stagger-3">
+              {/* decorative glow behind the device */}
+              <div className="pointer-events-none absolute -inset-8 -z-10 rounded-full bg-gradient-to-tr from-zinc-600/25 via-zinc-400/10 to-transparent blur-3xl animate-blobPulse" />
+
+              {/* floating device frame */}
+              <div className="animate-floatY">
+                <div className="relative rounded-[2rem] border border-border bg-surface-2 p-2 shadow-2xl">
+                  <div className="relative overflow-hidden rounded-[1.5rem] bg-black">
+                    <video
+                      src="/v1.mp4"
+                      className="block h-auto w-full"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      controls
+                      preload="metadata"
+                    />
+
+                    {/* live badge */}
+                    <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur-sm">
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                      </span>
+                      Live demo
+                    </div>
                   </div>
                 </div>
               </div>
@@ -8776,18 +8890,28 @@ export default function Index() {
               groups nationwide.
             </p>
             <div className="mt-5 flex gap-2">
-              {[Twitter, Linkedin].map((I, i) => (
+              {[
+                {
+                  Icon: Twitter,
+                  href: "https://x.com/auditprorx",
+                  label: "AuditProRx on X (Twitter)",
+                },
+                {
+                  Icon: Linkedin,
+                  href: "https://www.linkedin.com/company/auditprorx/",
+                  label: "AuditProRx on LinkedIn",
+                },
+              ].map(({ Icon, href, label }, i) => (
                 <a
                   key={i}
-                  href={
-                    i === 1
-                      ? "https://www.linkedin.com/company/auditprorx/"
-                      : "#"
-                  }
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer me"
+                  aria-label={label}
                   className="grid h-8 w-8 place-items-center rounded-md border border-border bg-surface text-muted-foreground hover:text-foreground transition-colors animate-fadeInUp"
                   style={{ animationDelay: `${i * 0.1}s` }}
                 >
-                  <I className="h-4 w-4" />
+                  <Icon className="h-4 w-4" />
                 </a>
               ))}
             </div>

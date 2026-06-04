@@ -128,7 +128,10 @@ const organizationJsonLd = {
   email: "drugdroprx@gmail.com",
   foundingDate: "2024",
   areaServed: "US",
-  sameAs: ["https://www.linkedin.com/company/auditprorx/"],
+  sameAs: [
+    "https://www.linkedin.com/company/auditprorx/",
+    "https://x.com/auditprorx",
+  ],
   contactPoint: [
     {
       "@type": "ContactPoint",
