@@ -67,7 +67,7 @@ const ALL_NAV_ITEMS = [
     path: "/group-reports",
     label: "Group Reports",
     icon: Users,
-    accessKey: "inventory_view_access",
+    accessKey: "leads_access",
   },
   {
     path: "/bin-search",
