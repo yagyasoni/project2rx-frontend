@@ -156,6 +156,8 @@ interface InventoryRow {
   isAberrant: boolean;
   aberrantCaremarkClaims: number;
   aberrantCaremarkAmount: number;
+  caremarkClaimsCount: number;
+  caremarkAmountTotal: number;
 }
 
 interface RxLine {
@@ -1091,6 +1093,8 @@ export default function InventoryReportPage() {
             isAberrant: Boolean(row.is_aberrant),
             aberrantCaremarkClaims: n(row.aberrant_caremark_claims),
             aberrantCaremarkAmount: n(row.aberrant_caremark_amount),
+            caremarkClaimsCount: n(row.caremark_claims_count),
+            caremarkAmountTotal: n(row.caremark_amount_total),
           };
         });
 
@@ -1346,8 +1350,8 @@ export default function InventoryReportPage() {
       totalAmount = 0,
       aberrantAmount = 0;
     for (const r of inventoryData) {
-      totalClaims += r.claimsCount;
-      totalAmount += r.amount;
+      totalClaims += r.caremarkClaimsCount;
+      totalAmount += r.caremarkAmountTotal;
       aberrantClaims += r.aberrantCaremarkClaims;
       aberrantAmount += r.aberrantCaremarkAmount;
     }
