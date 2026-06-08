@@ -69,7 +69,9 @@ export default function ReportsPage() {
         setPharmacyName(name);
         setPharmacyEmail(email);
       } catch {
-        setPharmacyName(localStorage.getItem("pharmacyName") || "Your Pharmacy");
+        setPharmacyName(
+          localStorage.getItem("pharmacyName") || "Your Pharmacy",
+        );
         setPharmacyEmail(localStorage.getItem("userEmail") || "");
       }
     };

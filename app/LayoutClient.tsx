@@ -101,7 +101,8 @@ export default function LayoutClient({
     <>
       {shouldShowBanner && <BetaBanner />}
       {showFeedback && <Feedback />}
-      {role !== null && role !== "admin" ? <InactiveAccount /> : null}
+      {/* {role !== null && role !== "admin" ? <InactiveAccount /> : null} */}
+      <InactiveAccount />
       <Toaster />
       <SupplierProvider>{children}</SupplierProvider>
     </>

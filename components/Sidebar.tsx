@@ -67,7 +67,7 @@ const ALL_NAV_ITEMS = [
     path: "/group-reports",
     label: "Group Reports",
     icon: Users,
-    accessKey: "leads_access",
+    accessKey: "inventory_view_access",
   },
   {
     path: "/bin-search",
@@ -269,7 +269,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
     icon: React.ElementType;
     label: string;
   }) => (
-    <div className="relative overflow-visible rounded-xl z-[9999]">
+    <div className="relative overflow-visible rounded-xl z-[9999] my-1">
       <div className="flex items-center gap-3 py-[11px] px-3.5 text-[15px] font-medium text-gray-200">
         <Icon className="h-[18px] w-[18px] shrink-0" />
 
@@ -304,15 +304,15 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
     label: string;
   }) => (
     <div className="group relative flex justify-center z-[9999]">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl cursor-not-allowed opacity-40">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl opacity-40">
         <Icon className="h-[18px] w-[18px] text-gray-500" />
       </div>
 
-      <span className="pointer-events-none absolute bottom-0.5 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-400 ring-1 ring-white">
+      <span className=" absolute bottom-0.5 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-400 ring-1 ring-white">
         <Lock className="h-[8px] w-[8px] text-white" />
       </span>
 
-      <div className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-3 py-1.5 text-[13px] font-medium text-white shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-[9999]">
+      <div className=" absolute left-full ml-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-3 py-1.5 text-[13px] font-medium text-white shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-[9999]">
         {label} — Subscribe to unlock
         <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
       </div>
@@ -420,7 +420,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
 
           if (!sidebarOpen) {
             return locked ? (
-              <LockedIcon key={path} icon={Icon} label={label} />
+              <Link key={path} href={path}>
+                <LockedIcon key={path} icon={Icon} label={label} />
+              </Link>
             ) : (
               <CollapsedNavItem
                 key={path}
@@ -432,7 +434,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
           }
 
           return locked ? (
-            <LockedRow key={path} icon={Icon} label={label} />
+            <Link key={path} href={path}>
+              <LockedRow key={path} icon={Icon} label={label} />
+            </Link>
           ) : (
             <Link key={path} href={path} className={navLinkClass(path)}>
               <Icon className={navIconClass(path)} />
@@ -473,7 +477,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 </div>
               </Link>
             ) : subscriptionLoaded ? (
-              <LockedRow icon={Bell} label="Leads" />
+              <Link key="/Notification" href="/Notification">
+                <LockedRow icon={Bell} label="Leads" />
+              </Link>
             ) : (
               <div className="flex items-center gap-3 py-[11px] px-3.5 text-[15px] font-medium text-gray-200 rounded-xl">
                 <Bell className="h-[18px] w-[18px] shrink-0" />
@@ -498,7 +504,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 }
               />
             ) : subscriptionLoaded ? (
-              <LockedIcon icon={Bell} label="Leads" />
+              <Link key="/Notification" href="/Notification">
+                <LockedIcon icon={Bell} label="Leads" />
+              </Link>
             ) : (
               <div className="flex h-10 w-10 items-center justify-center rounded-xl mx-auto opacity-30">
                 <Bell className="h-[18px] w-[18px] text-gray-500" />

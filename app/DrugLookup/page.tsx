@@ -278,40 +278,6 @@ export default function DrugLookupLandingPage() {
             />
           </div>
 
-          {subscriptionLoaded && !subscription?.drug_lookup_access && (
-            <div className="absolute inset-0 z-[500] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
-              <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
-                <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
-
-                <div className="relative flex flex-col items-center text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 border border-amber-200 shadow-sm mb-4">
-                    <Lock className="h-8 w-8 text-amber-600" />
-                  </div>
-
-                  <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
-                    Drug Lookup Locked
-                  </h3>
-
-                  <p className="mt-2 text-[14px] leading-6 text-slate-500 max-w-[280px]">
-                    Upgrade your subscription to unlock advanced drug lookup,
-                    pricing intelligence, NDC breakdowns and community insights.
-                  </p>
-
-                  <button
-                    onClick={() => router.push("/settings")}
-                    className="mt-5 inline-flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-amber-500/20"
-                  >
-                    Subscribe to Unlock
-                  </button>
-
-                  <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-amber-600">
-                    Pro Feature
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* ── Main (single screen) ── */}
           <div className="flex-1 min-w-0 flex flex-col">
             <section
@@ -321,6 +287,40 @@ export default function DrugLookupLandingPage() {
                   "linear-gradient(135deg, #0f766e 0%, #134e4a 45%, #0f172a 100%)",
               }}
             >
+              {subscriptionLoaded && !subscription?.drug_lookup_access && (
+                <div className="absolute inset-0 z-[129] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
+                  <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
+                    <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
+
+                    <div className="relative flex flex-col items-center text-center">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 border border-amber-200 shadow-sm mb-4">
+                        <Lock className="h-8 w-8 text-amber-600" />
+                      </div>
+
+                      <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
+                        Drug Lookup Locked
+                      </h3>
+
+                      <p className="mt-2 text-[14px] leading-6 text-slate-500 max-w-[280px]">
+                        Upgrade your subscription to unlock advanced drug
+                        lookup, pricing intelligence, NDC breakdowns and
+                        community insights.
+                      </p>
+
+                      <button
+                        onClick={() => router.push("/settings")}
+                        className="mt-5 inline-flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-amber-500/20"
+                      >
+                        Subscribe to Unlock
+                      </button>
+
+                      <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-amber-600">
+                        Pro Feature
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* Decorative layers */}
               <div
                 className="absolute inset-0 opacity-20 pointer-events-none"

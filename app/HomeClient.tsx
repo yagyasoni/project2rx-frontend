@@ -64,9 +64,9 @@ const plans = [
     ],
     highlighted: false,
     addOns: [
-      { name: "Inventory Exchange Network", price: "$199" },
+      { name: "Inventory Visibility & Group Reporting", price: "$249" },
       { name: "Drug Intelligence Hub", price: "$199" },
-      { name: "Market Insights & Reports", price: "$249" },
+      { name: "Live Pharmacy Leads", price: "$199" },
     ],
   },
   {

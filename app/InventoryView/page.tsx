@@ -41,7 +41,7 @@ import {
   UserCheck,
   UserX,
 } from "lucide-react";
-
+import axios from "axios";
 type ReasonCode = "shortage_relief" | "near_expiry" | "overstock";
 
 interface PharmacyMini {
@@ -231,6 +231,49 @@ export default function InventoryViewPage() {
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<any>(null);
+  const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
+
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+
+        if (!userId) {
+          setSubscriptionLoaded(true);
+          return;
+        }
+
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
+        );
+
+        setSubscription(res.data.subscription);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setSubscriptionLoaded(true);
+      }
+    };
+
+    fetchSubscription();
+
+    const interval = setInterval(async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+
+        if (!userId) return;
+
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
+        );
+
+        setSubscription(res.data.subscription);
+      } catch {}
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <ProtectedRoute role="user">
@@ -252,6 +295,39 @@ export default function InventoryViewPage() {
 
           {/* ── Main scrollable content ── */}
           <div className="flex-1 min-w-0 overflow-y-auto">
+            {subscriptionLoaded && !subscription?.inventory_view_access && (
+              <div className="absolute inset-0 z-[129] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
+                <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
+                  <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
+
+                  <div className="relative flex flex-col items-center text-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 border border-amber-200 shadow-sm mb-4">
+                      <Lock className="h-8 w-8 text-amber-600" />
+                    </div>
+
+                    <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
+                      Inventory View Locked
+                    </h3>
+
+                    <p className="mt-2 text-[14px] leading-6 text-slate-500 max-w-[280px]">
+                      Upgrade your subscription to unlock advanced inventory
+                      viewing, group collaboration, and patient transfer tools.
+                    </p>
+
+                    <button
+                      onClick={() => router.push("/settings")}
+                      className="mt-5 inline-flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-amber-500/20"
+                    >
+                      Subscribe to Unlock
+                    </button>
+
+                    <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-amber-600">
+                      Pro Feature
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             <InventoryViewContent router={router} />
           </div>
         </div>
