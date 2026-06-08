@@ -448,6 +448,16 @@ const DateRangeStep = ({
   setWholesalerEndDate,
   onContinue,
 }: DateRangeStepProps) => {
+  const handleSetInventoryStartDate = (date: Date | undefined) => {
+    setInventoryStartDate(date);
+    if (date && !wholesalerStartDate) setWholesalerStartDate(date);
+  };
+
+  const handleSetInventoryEndDate = (date: Date | undefined) => {
+    setInventoryEndDate(date);
+    if (date && !wholesalerEndDate) setWholesalerEndDate(date);
+  };
+
   const formatDate = (date?: Date) =>
     date
       ? `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
@@ -514,7 +524,7 @@ const DateRangeStep = ({
                 </Label>
                 <SmartDateInput
                   date={inventoryStartDate}
-                  setDate={setInventoryStartDate}
+                  setDate={handleSetInventoryStartDate}
                   rangeEnd={inventoryEndDate}
                 />
               </div>
@@ -525,7 +535,7 @@ const DateRangeStep = ({
                 </Label>
                 <SmartDateInput
                   date={inventoryEndDate}
-                  setDate={setInventoryEndDate}
+                  setDate={handleSetInventoryEndDate}
                   rangeStart={inventoryStartDate}
                 />
               </div>
