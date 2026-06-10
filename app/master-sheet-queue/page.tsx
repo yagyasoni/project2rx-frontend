@@ -288,7 +288,7 @@ const MasterSheetQueue = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* PBM OPTION */}
             <div className="border border-border rounded-lg p-4 space-y-3">
-              <h2 className="text-sm font-semibold">Add PBM Option</h2>
+              <h2 className="text-sm font-semibold">Add PBM Name</h2>
 
               <div className="flex gap-2">
                 <input
