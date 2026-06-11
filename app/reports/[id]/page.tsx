@@ -2366,9 +2366,13 @@ export default function InventoryReportPage() {
                           </p>
                           <p className="text-xs font-bold text-slate-800 tabular-nums leading-tight">
                             $
-                            {Math.round(
-                              aberrantStats.aberrantAmount,
-                            ).toLocaleString()}
+                            {aberrantStats.aberrantAmount.toLocaleString(
+                              undefined,
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              },
+                            )}
                           </p>
                         </div>
                         <div>
@@ -2377,9 +2381,13 @@ export default function InventoryReportPage() {
                           </p>
                           <p className="text-xs font-bold text-slate-800 tabular-nums leading-tight">
                             $
-                            {Math.round(
-                              aberrantStats.totalAmount,
-                            ).toLocaleString()}
+                            {aberrantStats.totalAmount.toLocaleString(
+                              undefined,
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              },
+                            )}
                           </p>
                         </div>
                       </div>
@@ -4011,9 +4019,13 @@ export default function InventoryReportPage() {
                               </p>
                               <p className="text-sm font-bold text-slate-800 tabular-nums leading-tight">
                                 $
-                                {Math.round(
-                                  monthStats.aberrantAmount,
-                                ).toLocaleString()}
+                                {monthStats.aberrantAmount.toLocaleString(
+                                  undefined,
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  },
+                                )}
                               </p>
                             </div>
                             <div>
@@ -4022,9 +4034,13 @@ export default function InventoryReportPage() {
                               </p>
                               <p className="text-sm font-bold text-slate-800 tabular-nums leading-tight">
                                 $
-                                {Math.round(
-                                  monthStats.totalAmount,
-                                ).toLocaleString()}
+                                {monthStats.totalAmount.toLocaleString(
+                                  undefined,
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  },
+                                )}
                               </p>
                             </div>
                           </div>
@@ -4092,7 +4108,11 @@ export default function InventoryReportPage() {
                                     {row.rxCount.toLocaleString()}
                                   </td>
                                   <td className="px-3 py-2 text-right tabular-nums text-slate-700">
-                                    ${Math.round(row.amount).toLocaleString()}
+                                    $
+                                    {row.amount.toLocaleString(undefined, {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}
                                   </td>
                                   <td className="px-3 py-2 text-right tabular-nums text-slate-700">
                                     {row.totalBilled.toLocaleString()}
