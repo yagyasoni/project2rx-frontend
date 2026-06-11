@@ -496,7 +496,7 @@ export default function NdcSheetPage() {
                                   onChange={(e) =>
                                     setEditingValue(e.target.value)
                                   }
-                                  className="h-9 text-xs"
+                                  className="h-9 text-xs uppercase"
                                 />
 
                                 <Button
@@ -504,7 +504,7 @@ export default function NdcSheetPage() {
                                   className="h-9 text-xs"
                                   onClick={async () => {
                                     await updateNdc(row.id, {
-                                      drug_name: editingValue,
+                                      drug_name: editingValue.toUpperCase(),
                                     });
 
                                     setEditingId(null);

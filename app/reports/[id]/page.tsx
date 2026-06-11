@@ -1791,9 +1791,7 @@ export default function InventoryReportPage() {
         await refetchGroupReports(group.id);
       }
     } catch (err: any) {
-      setAddNotice(
-        err?.response?.data?.error || "Failed to create report.",
-      );
+      setAddNotice(err?.response?.data?.error || "Failed to create report.");
     } finally {
       setAddingTo(null);
     }
@@ -1828,7 +1826,9 @@ export default function InventoryReportPage() {
     setAddName("");
     setGroupReportsLoading(true);
     try {
-      const res = await api.get(`/api/inventory-view/groups/${group.id}/reports`);
+      const res = await api.get(
+        `/api/inventory-view/groups/${group.id}/reports`,
+      );
       setGroupReports(res.data || []);
     } catch {
       setGroupReports([]);
@@ -1888,7 +1888,10 @@ export default function InventoryReportPage() {
 
   // Get a row's value for a sort key (base field or a pharmacy column name).
   const reportSortValue = (row: GroupReportRow, key: string) =>
-    key === "rank" || key === "ndc" || key === "drug_name" || key === "package_size"
+    key === "rank" ||
+    key === "ndc" ||
+    key === "drug_name" ||
+    key === "package_size"
       ? (row as any)[key]
       : row.values[key];
 
@@ -4139,463 +4142,513 @@ export default function InventoryReportPage() {
             {/* ── Inventory Group drawer ───────────────────────────────────
                 Portaled to document.body + z-[10000]/z-[10001] so its overlay
                 sits ABOVE the app sidebar (z-[9999]) and hides it while open. */}
+
             {openGroupsModal &&
               typeof document !== "undefined" &&
               createPortal(
                 <>
-                <div
-                  className="fixed inset-0 bg-black/40 z-[10000]"
-                  onClick={() => setOpenGroupsModal(false)}
-                />
-                <div
-                  className="fixed top-0 right-0 h-full z-[10001] flex flex-col bg-white"
-                  style={{
-                    width: groupView === "report" ? "70%" : "40%",
-                    maxWidth: "100vw",
-                    boxShadow: "-4px 0 24px rgba(0,0,0,0.15)",
-                  }}
-                >
-                  {/* Top Bar */}
-                  <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-100 flex-shrink-0">
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <button
-                        onClick={() => setOpenGroupsModal(false)}
-                        className="h-7 w-7 flex-shrink-0 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                      {groupView !== "list" && (
-                        <button
-                          onClick={() =>
-                            setGroupView(
-                              groupView === "report" ? "reports" : "list",
-                            )
-                          }
-                          className="flex flex-shrink-0 items-center gap-1 rounded-md px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
-                        >
-                          <MoveLeftIcon className="h-4 w-4" /> Back
-                        </button>
-                      )}
-                      <span className="h-2.5 w-2.5 rounded-full bg-indigo-500 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-bold uppercase tracking-widest text-slate-800">
-                          {groupView === "list"
-                            ? "Inventory Groups"
-                            : groupView === "reports"
-                              ? viewingGroup?.name
-                              : openReport?.report.label ||
-                                openReport?.report.pharmacy_name ||
-                                "Report"}
-                        </p>
-                        <p className="truncate text-[11px] font-medium normal-case tracking-normal text-slate-400">
-                          {groupView === "list"
-                            ? "Pharmacies sharing shortage reports"
-                            : groupView === "reports"
-                              ? "Reports in this group"
-                              : "Highest shortage report"}
-                        </p>
-                      </div>
-                    </div>
+                  <div
+                    className="fixed inset-0 bg-black/40 z-[10000]"
+                    onClick={() => setOpenGroupsModal(false)}
+                  />
+                  <div
+                    className="fixed top-0 right-0 h-full z-[10001] flex flex-col bg-white"
+                    style={{
+                      width: groupView === "report" ? "70%" : "40%",
+                      maxWidth: "100vw",
+                      boxShadow: "-4px 0 24px rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    {subscriptionLoaded &&
+                      !subscription?.inventory_view_access && (
+                        <div className="absolute inset-0 z-[500] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
+                          <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
+                            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
 
-                    {/* Contextual action */}
-                    {groupView === "list" && (
-                      <Button
-                        size="sm"
-                        className="flex-shrink-0 gap-1.5"
-                        onClick={() => router.push(INVENTORY_GROUPS_ROUTE)}
-                      >
-                        <Plus className="h-3.5 w-3.5" /> Create a group
-                      </Button>
-                    )}
-                    {groupView === "reports" &&
-                      viewingGroup &&
-                      !addFormOpen && (
+                            <div className="relative flex flex-col items-center text-center">
+                              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 border border-amber-200 shadow-sm mb-4">
+                                <Lock className="h-8 w-8 text-amber-600" />
+                              </div>
+
+                              <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
+                                Group Reports Locked
+                              </h3>
+
+                              <p className="mt-2 text-[14px] leading-6 text-slate-500 max-w-[280px]">
+                                Upgrade your subscription to unlock advanced
+                                group reporting and inventory visibility.
+                              </p>
+
+                              <button
+                                onClick={() => router.push("/settings")}
+                                className="mt-5 inline-flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-amber-500/20"
+                              >
+                                Subscribe to Unlock
+                              </button>
+
+                              <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-amber-600">
+                                Pro Feature
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    {/* Top Bar */}
+                    <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-100 flex-shrink-0">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <button
+                          onClick={() => setOpenGroupsModal(false)}
+                          className="h-7 w-7 flex-shrink-0 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        {groupView !== "list" && (
+                          <button
+                            onClick={() =>
+                              setGroupView(
+                                groupView === "report" ? "reports" : "list",
+                              )
+                            }
+                            className="flex flex-shrink-0 items-center gap-1 rounded-md px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
+                          >
+                            <MoveLeftIcon className="h-4 w-4" /> Back
+                          </button>
+                        )}
+                        <span className="h-2.5 w-2.5 rounded-full bg-indigo-500 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold uppercase tracking-widest text-slate-800">
+                            {groupView === "list"
+                              ? "Inventory Groups"
+                              : groupView === "reports"
+                                ? viewingGroup?.name
+                                : openReport?.report.label ||
+                                  openReport?.report.pharmacy_name ||
+                                  "Report"}
+                          </p>
+                          <p className="truncate text-[11px] font-medium normal-case tracking-normal text-slate-400">
+                            {groupView === "list"
+                              ? "Pharmacies sharing shortage reports"
+                              : groupView === "reports"
+                                ? "Reports in this group"
+                                : "Highest shortage report"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Contextual action */}
+                      {groupView === "list" && (
                         <Button
                           size="sm"
                           className="flex-shrink-0 gap-1.5"
-                          onClick={() => {
-                            setAddFormOpen(true);
-                            setAddName("");
-                            setAddNotice(null);
-                          }}
+                          onClick={() => router.push(INVENTORY_GROUPS_ROUTE)}
                         >
-                          <Plus className="h-3.5 w-3.5" /> Add to this group
+                          <Plus className="h-3.5 w-3.5" /> Create a group
                         </Button>
                       )}
-                    {groupView === "report" && openReport && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-shrink-0 gap-1.5"
-                        onClick={handleDownloadReportCsv}
-                      >
-                        <Download className="h-3.5 w-3.5" /> Download CSV
-                      </Button>
-                    )}
-                  </div>
+                      {groupView === "reports" &&
+                        viewingGroup &&
+                        !addFormOpen && (
+                          <Button
+                            size="sm"
+                            className="flex-shrink-0 gap-1.5"
+                            onClick={() => {
+                              setAddFormOpen(true);
+                              setAddName("");
+                              setAddNotice(null);
+                            }}
+                          >
+                            <Plus className="h-3.5 w-3.5" /> Add to this group
+                          </Button>
+                        )}
+                      {groupView === "report" && openReport && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-shrink-0 gap-1.5"
+                          onClick={handleDownloadReportCsv}
+                        >
+                          <Download className="h-3.5 w-3.5" /> Download CSV
+                        </Button>
+                      )}
+                    </div>
 
-                  {/* Body */}
-                  <div className="flex-1 overflow-auto px-5 py-4">
-                    {groupView === "list" && (
-                      <>
-                        {groupsLoading ? (
-                          <div className="py-10 text-center text-sm text-slate-500">
-                            Loading groups…
-                          </div>
-                        ) : groups.length === 0 ? (
-                          <div className="flex flex-col items-center gap-3 py-10 text-center">
-                            <Users className="h-8 w-8 text-slate-300" />
-                            <p className="text-sm text-slate-500">
-                              You don&apos;t have any groups yet.
-                            </p>
-                            <Button
-                              size="sm"
-                              className="gap-1.5"
-                              onClick={() =>
-                                router.push(INVENTORY_GROUPS_ROUTE)
-                              }
-                            >
-                              <Plus className="h-3.5 w-3.5" /> Create a group
-                            </Button>
-                          </div>
-                        ) : (
-                          <>
-                            <p className="mb-2 px-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                              {groups.length}{" "}
-                              {groups.length === 1 ? "group" : "groups"}
-                            </p>
-                            <div className="space-y-2.5">
-                              {groups.map((g) => (
-                                <button
-                                  key={g.id}
-                                  onClick={() => handleViewReports(g)}
-                                  className="group flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-left transition-all hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm"
-                                >
-                                  <div className="flex min-w-0 items-center gap-3">
-                                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-bold text-white">
-                                      {g.name
-                                        .trim()
-                                        .split(/\s+/)
-                                        .map((w) => w[0])
-                                        .slice(0, 2)
-                                        .join("")
-                                        .toUpperCase()}
-                                    </div>
-                                    <div className="min-w-0">
-                                      <p className="truncate text-sm font-semibold text-slate-800">
-                                        {g.name}
-                                      </p>
-                                      <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
-                                        <Users className="h-3 w-3" />
-                                        {g.members_count}{" "}
-                                        {g.members_count === 1
-                                          ? "member"
-                                          : "members"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <span className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors group-hover:border-indigo-300 group-hover:text-indigo-600">
-                                    <FileText className="h-3.5 w-3.5" /> View
-                                    reports
-                                  </span>
-                                </button>
-                              ))}
+                    {/* Body */}
+                    <div className="flex-1 overflow-auto px-5 py-4">
+                      {groupView === "list" && (
+                        <>
+                          {groupsLoading ? (
+                            <div className="py-10 text-center text-sm text-slate-500">
+                              Loading groups…
                             </div>
-                          </>
-                        )}
-
-                        {addNotice && (
-                          <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-center text-xs text-emerald-700">
-                            {addNotice}
-                          </p>
-                        )}
-                      </>
-                    )}
-
-                    {groupView === "reports" && (
-                      <>
-                        {addFormOpen && (
-                          <div className="mb-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
-                            <Input
-                              autoFocus
-                              value={addName}
-                              onChange={(e) => setAddName(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (
-                                  e.key === "Enter" &&
-                                  addName.trim() &&
-                                  viewingGroup
-                                )
-                                  handleAddToGroup(viewingGroup, addName);
-                              }}
-                              placeholder="Report name…"
-                              className="h-8 text-xs"
-                            />
-                            <Button
-                              size="sm"
-                              className="flex-shrink-0 text-xs"
-                              disabled={
-                                !addName.trim() ||
-                                addingTo === viewingGroup?.id
-                              }
-                              onClick={() =>
-                                viewingGroup &&
-                                handleAddToGroup(viewingGroup, addName)
-                              }
-                            >
-                              {addingTo === viewingGroup?.id
-                                ? "Adding…"
-                                : "Add"}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="flex-shrink-0 text-xs"
-                              onClick={() => {
-                                setAddFormOpen(false);
-                                setAddName("");
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        )}
-
-                        {groupReportsLoading ? (
-                          <div className="py-10 text-center text-sm text-slate-500">
-                            Loading reports…
-                          </div>
-                        ) : groupReports.length === 0 ? (
-                          <div className="py-10 text-center text-sm text-slate-500">
-                            No reports yet. Use “Add to this group” to add one.
-                          </div>
-                        ) : (
-                          <>
-                            <p className="mb-2 px-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                              {groupReports.length}{" "}
-                              {groupReports.length === 1 ? "report" : "reports"}
-                            </p>
-                            <div className="space-y-2.5">
-                              {groupReports.map((rep) => (
-                                <div
-                                  key={rep.id}
-                                  className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3"
-                                >
-                                  <div className="flex min-w-0 items-center gap-3">
-                                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
-                                      <FileText className="h-4 w-4" />
-                                    </div>
-                                    <div className="min-w-0">
-                                      <p className="truncate text-sm font-semibold text-slate-800">
-                                        {rep.label || rep.pharmacy_name}
-                                      </p>
-                                      <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-slate-500">
-                                        <Users className="h-3 w-3" />
-                                        {rep.contributor_count}{" "}
-                                        {rep.contributor_count === 1
-                                          ? "pharmacy"
-                                          : "pharmacies"}{" "}
-                                        ·{" "}
-                                        {new Date(
-                                          rep.created_at,
-                                        ).toLocaleDateString()}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="flex flex-shrink-0 items-center gap-2">
-                                    <Button
-                                      variant={
-                                        rep.has_contributed
-                                          ? "ghost"
-                                          : "default"
-                                      }
-                                      size="sm"
-                                      className="text-xs"
-                                      disabled={
-                                        rep.has_contributed ||
-                                        addingTo === rep.id
-                                      }
-                                      onClick={() => handleContribute(rep)}
-                                    >
-                                      {rep.has_contributed
-                                        ? "Added"
-                                        : addingTo === rep.id
-                                          ? "Adding…"
-                                          : "Add to this report"}
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="text-xs"
-                                      disabled={!rep.has_contributed}
-                                      title={
-                                        rep.has_contributed
-                                          ? "Open report"
-                                          : "Add your data first to open"
-                                      }
-                                      onClick={() => {
-                                        if (!viewingGroup) return;
-                                        setOpenGroupsModal(false);
-                                        router.push(
-                                          `/group-reports/${viewingGroup.id}/${rep.id}`,
-                                        );
-                                      }}
-                                    >
-                                      Open
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
-                                      disabled={deletingReport === rep.id}
-                                      onClick={() => handleDeleteReport(rep.id)}
-                                      aria-label="Delete report"
-                                      title="Delete report"
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-
-                            <p className="mt-3 truncate rounded-md bg-amber-50 px-3 py-2 text-center text-[11px] text-amber-700">
-                              Open a report only after adding your own data.
-                            </p>
-                          </>
-                        )}
-
-                        {addNotice && (
-                          <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-center text-xs text-emerald-700">
-                            {addNotice}
-                          </p>
-                        )}
-                      </>
-                    )}
-
-                    {groupView === "report" && (
-                      <>
-                        {reportLoading ? (
-                          <div className="py-10 text-center text-sm text-slate-500">
-                            Loading report…
-                          </div>
-                        ) : !openReport ? (
-                          <div className="py-10 text-center text-sm text-slate-500">
-                            Could not load this report.
-                          </div>
-                        ) : (
-                          <>
-                            <div className="relative mb-2 w-64 max-w-full">
-                              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                              <Input
-                                value={reportSearch}
-                                onChange={(e) =>
-                                  setReportSearch(e.target.value)
+                          ) : groups.length === 0 ? (
+                            <div className="flex flex-col items-center gap-3 py-10 text-center">
+                              <Users className="h-8 w-8 text-slate-300" />
+                              <p className="text-sm text-slate-500">
+                                You don&apos;t have any groups yet.
+                              </p>
+                              <Button
+                                size="sm"
+                                className="gap-1.5"
+                                onClick={() =>
+                                  router.push(INVENTORY_GROUPS_ROUTE)
                                 }
-                                placeholder="Search drug name or NDC…"
-                                className="h-8 pl-8 text-xs"
-                              />
+                              >
+                                <Plus className="h-3.5 w-3.5" /> Create a group
+                              </Button>
                             </div>
-                            <div className="max-h-[55vh] overflow-auto">
-                              <div className="inline-block min-w-full rounded-lg border border-slate-200">
-                            {(() => {
-                              // Fixed columns + one per contributor pharmacy
-                              const baseColumns: {
-                                key: string;
-                                label: string;
-                                mono?: boolean;
-                              }[] = [
-                                { key: "rank", label: "Rank" },
-                                { key: "ndc", label: "NDC", mono: true },
-                                { key: "drug_name", label: "Drug Name" },
-                                { key: "package_size", label: "Pkg Size" },
-                              ];
-                              const pharmacyCols = openReport.pharmacies.map(
-                                (ph) => ({ key: ph, label: ph, mono: false }),
-                              );
-                              const allColumns = [
-                                ...baseColumns,
-                                ...pharmacyCols,
-                              ];
-                              const isPharmacyKey = (key: string) =>
-                                openReport.pharmacies.includes(key);
-                              return (
-                                <table className="w-full text-left text-xs">
-                                  <thead className="sticky top-0 bg-slate-50 text-slate-600">
-                                    <tr>
-                                      {allColumns.map((col) => {
-                                        const active =
-                                          reportSort?.key === col.key;
-                                        const right = isPharmacyKey(col.key);
-                                        return (
-                                          <th
-                                            key={col.key}
-                                            className={`whitespace-nowrap px-3 py-2 font-semibold ${right ? "text-right" : ""}`}
-                                          >
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                toggleReportSort(col.key)
-                                              }
-                                              className={`inline-flex items-center gap-1 hover:text-slate-900 ${right ? "flex-row-reverse" : ""}`}
-                                            >
-                                              {col.label}
-                                              {active ? (
-                                                <ChevronDown
-                                                  className={`h-3 w-3 transition-transform ${reportSort?.dir === "asc" ? "rotate-180" : ""}`}
-                                                />
-                                              ) : (
-                                                <ArrowUpDown className="h-3 w-3 text-slate-300" />
-                                              )}
-                                            </button>
-                                          </th>
-                                        );
-                                      })}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {getSortedReportRows().map((row, i) => (
-                                      <tr
-                                        key={i}
-                                        className="border-t border-slate-100"
-                                      >
-                                        {allColumns.map((col) => {
-                                          const pharmacy = isPharmacyKey(
-                                            col.key,
-                                          );
-                                          const val = pharmacy
-                                            ? row.values[col.key]
-                                            : (row as any)[col.key];
-                                          const num = Number(val ?? 0);
-                                          const has =
-                                            val !== null && val !== undefined;
-                                          return (
-                                            <td
-                                              key={col.key}
-                                              className={`whitespace-nowrap px-3 py-1.5 ${col.mono ? "font-mono" : ""} ${pharmacy ? "text-right" : ""} ${pharmacy && has ? `font-medium ${num < 0 ? "text-red-600" : "text-slate-700"}` : ""}`}
-                                            >
-                                              {pharmacy
-                                                ? has
-                                                  ? num
-                                                  : "—"
-                                                : (val ?? "")}
-                                            </td>
-                                          );
-                                        })}
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              );
-                            })()}
+                          ) : (
+                            <>
+                              <p className="mb-2 px-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                {groups.length}{" "}
+                                {groups.length === 1 ? "group" : "groups"}
+                              </p>
+                              <div className="space-y-2.5">
+                                {groups.map((g) => (
+                                  <button
+                                    key={g.id}
+                                    onClick={() => handleViewReports(g)}
+                                    className="group flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-left transition-all hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm"
+                                  >
+                                    <div className="flex min-w-0 items-center gap-3">
+                                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-bold text-white">
+                                        {g.name
+                                          .trim()
+                                          .split(/\s+/)
+                                          .map((w) => w[0])
+                                          .slice(0, 2)
+                                          .join("")
+                                          .toUpperCase()}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="truncate text-sm font-semibold text-slate-800">
+                                          {g.name}
+                                        </p>
+                                        <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
+                                          <Users className="h-3 w-3" />
+                                          {g.members_count}{" "}
+                                          {g.members_count === 1
+                                            ? "member"
+                                            : "members"}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <span className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors group-hover:border-indigo-300 group-hover:text-indigo-600">
+                                      <FileText className="h-3.5 w-3.5" /> View
+                                      reports
+                                    </span>
+                                  </button>
+                                ))}
                               </div>
+                            </>
+                          )}
+
+                          {addNotice && (
+                            <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-center text-xs text-emerald-700">
+                              {addNotice}
+                            </p>
+                          )}
+                        </>
+                      )}
+
+                      {groupView === "reports" && (
+                        <>
+                          {addFormOpen && (
+                            <div className="mb-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                              <Input
+                                autoFocus
+                                value={addName}
+                                onChange={(e) => setAddName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (
+                                    e.key === "Enter" &&
+                                    addName.trim() &&
+                                    viewingGroup
+                                  )
+                                    handleAddToGroup(viewingGroup, addName);
+                                }}
+                                placeholder="Report name…"
+                                className="h-8 text-xs"
+                              />
+                              <Button
+                                size="sm"
+                                className="flex-shrink-0 text-xs"
+                                disabled={
+                                  !addName.trim() ||
+                                  addingTo === viewingGroup?.id
+                                }
+                                onClick={() =>
+                                  viewingGroup &&
+                                  handleAddToGroup(viewingGroup, addName)
+                                }
+                              >
+                                {addingTo === viewingGroup?.id
+                                  ? "Adding…"
+                                  : "Add"}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="flex-shrink-0 text-xs"
+                                onClick={() => {
+                                  setAddFormOpen(false);
+                                  setAddName("");
+                                }}
+                              >
+                                Cancel
+                              </Button>
                             </div>
-                          </>
-                        )}
-                      </>
-                    )}
+                          )}
+
+                          {groupReportsLoading ? (
+                            <div className="py-10 text-center text-sm text-slate-500">
+                              Loading reports…
+                            </div>
+                          ) : groupReports.length === 0 ? (
+                            <div className="py-10 text-center text-sm text-slate-500">
+                              No reports yet. Use “Add to this group” to add
+                              one.
+                            </div>
+                          ) : (
+                            <>
+                              <p className="mb-2 px-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                {groupReports.length}{" "}
+                                {groupReports.length === 1
+                                  ? "report"
+                                  : "reports"}
+                              </p>
+                              <div className="space-y-2.5">
+                                {groupReports.map((rep) => (
+                                  <div
+                                    key={rep.id}
+                                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3"
+                                  >
+                                    <div className="flex min-w-0 items-center gap-3">
+                                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
+                                        <FileText className="h-4 w-4" />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="truncate text-sm font-semibold text-slate-800">
+                                          {rep.label || rep.pharmacy_name}
+                                        </p>
+                                        <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-slate-500">
+                                          <Users className="h-3 w-3" />
+                                          {rep.contributor_count}{" "}
+                                          {rep.contributor_count === 1
+                                            ? "pharmacy"
+                                            : "pharmacies"}{" "}
+                                          ·{" "}
+                                          {new Date(
+                                            rep.created_at,
+                                          ).toLocaleDateString()}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-shrink-0 items-center gap-2">
+                                      <Button
+                                        variant={
+                                          rep.has_contributed
+                                            ? "ghost"
+                                            : "default"
+                                        }
+                                        size="sm"
+                                        className="text-xs"
+                                        disabled={
+                                          rep.has_contributed ||
+                                          addingTo === rep.id
+                                        }
+                                        onClick={() => handleContribute(rep)}
+                                      >
+                                        {rep.has_contributed
+                                          ? "Added"
+                                          : addingTo === rep.id
+                                            ? "Adding…"
+                                            : "Add to this report"}
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-xs"
+                                        disabled={!rep.has_contributed}
+                                        title={
+                                          rep.has_contributed
+                                            ? "Open report"
+                                            : "Add your data first to open"
+                                        }
+                                        onClick={() => {
+                                          if (!viewingGroup) return;
+                                          setOpenGroupsModal(false);
+                                          router.push(
+                                            `/group-reports/${viewingGroup.id}/${rep.id}`,
+                                          );
+                                        }}
+                                      >
+                                        Open
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
+                                        disabled={deletingReport === rep.id}
+                                        onClick={() =>
+                                          handleDeleteReport(rep.id)
+                                        }
+                                        aria-label="Delete report"
+                                        title="Delete report"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <p className="mt-3 truncate rounded-md bg-amber-50 px-3 py-2 text-center text-[11px] text-amber-700">
+                                Open a report only after adding your own data.
+                              </p>
+                            </>
+                          )}
+
+                          {addNotice && (
+                            <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-center text-xs text-emerald-700">
+                              {addNotice}
+                            </p>
+                          )}
+                        </>
+                      )}
+
+                      {groupView === "report" && (
+                        <>
+                          {reportLoading ? (
+                            <div className="py-10 text-center text-sm text-slate-500">
+                              Loading report…
+                            </div>
+                          ) : !openReport ? (
+                            <div className="py-10 text-center text-sm text-slate-500">
+                              Could not load this report.
+                            </div>
+                          ) : (
+                            <>
+                              <div className="relative mb-2 w-64 max-w-full">
+                                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                                <Input
+                                  value={reportSearch}
+                                  onChange={(e) =>
+                                    setReportSearch(e.target.value)
+                                  }
+                                  placeholder="Search drug name or NDC…"
+                                  className="h-8 pl-8 text-xs"
+                                />
+                              </div>
+                              <div className="max-h-[55vh] overflow-auto">
+                                <div className="inline-block min-w-full rounded-lg border border-slate-200">
+                                  {(() => {
+                                    // Fixed columns + one per contributor pharmacy
+                                    const baseColumns: {
+                                      key: string;
+                                      label: string;
+                                      mono?: boolean;
+                                    }[] = [
+                                      { key: "rank", label: "Rank" },
+                                      { key: "ndc", label: "NDC", mono: true },
+                                      { key: "drug_name", label: "Drug Name" },
+                                      {
+                                        key: "package_size",
+                                        label: "Pkg Size",
+                                      },
+                                    ];
+                                    const pharmacyCols =
+                                      openReport.pharmacies.map((ph) => ({
+                                        key: ph,
+                                        label: ph,
+                                        mono: false,
+                                      }));
+                                    const allColumns = [
+                                      ...baseColumns,
+                                      ...pharmacyCols,
+                                    ];
+                                    const isPharmacyKey = (key: string) =>
+                                      openReport.pharmacies.includes(key);
+                                    return (
+                                      <table className="w-full text-left text-xs">
+                                        <thead className="sticky top-0 bg-slate-50 text-slate-600">
+                                          <tr>
+                                            {allColumns.map((col) => {
+                                              const active =
+                                                reportSort?.key === col.key;
+                                              const right = isPharmacyKey(
+                                                col.key,
+                                              );
+                                              return (
+                                                <th
+                                                  key={col.key}
+                                                  className={`whitespace-nowrap px-3 py-2 font-semibold ${right ? "text-right" : ""}`}
+                                                >
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      toggleReportSort(col.key)
+                                                    }
+                                                    className={`inline-flex items-center gap-1 hover:text-slate-900 ${right ? "flex-row-reverse" : ""}`}
+                                                  >
+                                                    {col.label}
+                                                    {active ? (
+                                                      <ChevronDown
+                                                        className={`h-3 w-3 transition-transform ${reportSort?.dir === "asc" ? "rotate-180" : ""}`}
+                                                      />
+                                                    ) : (
+                                                      <ArrowUpDown className="h-3 w-3 text-slate-300" />
+                                                    )}
+                                                  </button>
+                                                </th>
+                                              );
+                                            })}
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {getSortedReportRows().map(
+                                            (row, i) => (
+                                              <tr
+                                                key={i}
+                                                className="border-t border-slate-100"
+                                              >
+                                                {allColumns.map((col) => {
+                                                  const pharmacy =
+                                                    isPharmacyKey(col.key);
+                                                  const val = pharmacy
+                                                    ? row.values[col.key]
+                                                    : (row as any)[col.key];
+                                                  const num = Number(val ?? 0);
+                                                  const has =
+                                                    val !== null &&
+                                                    val !== undefined;
+                                                  return (
+                                                    <td
+                                                      key={col.key}
+                                                      className={`whitespace-nowrap px-3 py-1.5 ${col.mono ? "font-mono" : ""} ${pharmacy ? "text-right" : ""} ${pharmacy && has ? `font-medium ${num < 0 ? "text-red-600" : "text-slate-700"}` : ""}`}
+                                                    >
+                                                      {pharmacy
+                                                        ? has
+                                                          ? num
+                                                          : "—"
+                                                        : (val ?? "")}
+                                                    </td>
+                                                  );
+                                                })}
+                                              </tr>
+                                            ),
+                                          )}
+                                        </tbody>
+                                      </table>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
                 </>,
                 document.body,
               )}

@@ -21,6 +21,8 @@ import {
 import { containsProfanity } from "@/lib/profanityFilter";
 import api from "@/lib/api";
 import Sidebar from "@/components/Sidebar";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  TYPES                                                                     */
@@ -264,6 +266,51 @@ export default function NotificationPage() {
   const [responseDropdownFor, setResponseDropdownFor] = useState<string | null>(
     null,
   );
+  const [subscription, setSubscription] = useState<any>(null);
+  const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+
+        if (!userId) {
+          setSubscriptionLoaded(true);
+          return;
+        }
+
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
+        );
+
+        setSubscription(res.data.subscription);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setSubscriptionLoaded(true);
+      }
+    };
+
+    fetchSubscription();
+
+    const interval = setInterval(async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+
+        if (!userId) return;
+
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
+        );
+
+        setSubscription(res.data.subscription);
+      } catch {}
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -590,6 +637,39 @@ export default function NotificationPage() {
       />
 
       <main className="flex-1 overflow-y-auto bg-gray-50/40">
+        {subscriptionLoaded && !subscription?.leads_access && (
+          <div className="absolute inset-0 z-[129] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
+            <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
+              <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
+
+              <div className="relative flex flex-col items-center text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 border border-amber-200 shadow-sm mb-4">
+                  <Lock className="h-8 w-8 text-amber-600" />
+                </div>
+
+                <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
+                  Leads Locked
+                </h3>
+
+                <p className="mt-2 text-[14px] leading-6 text-slate-500 max-w-[280px]">
+                  Upgrade your subscription to unlock advanced group reporting
+                  and leads overview.
+                </p>
+
+                <button
+                  onClick={() => router.push("/settings")}
+                  className="mt-5 inline-flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-amber-500/20"
+                >
+                  Subscribe to Unlock
+                </button>
+
+                <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-amber-600">
+                  Pro Feature
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         {/* HEADER */}
         <div className="sticky top-0 z-10 bg-white/85 backdrop-blur-md border-b border-gray-200">
           <div className="max-w-3xl mx-auto px-6 py-5">

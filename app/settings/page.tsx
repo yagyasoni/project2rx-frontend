@@ -29,7 +29,7 @@ const navItems = [
 ];
 
 const SettingsLayout = () => {
-  const [active, setActive] = useState("Suppliers");
+  const [active, setActive] = useState("Users");
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -86,7 +86,6 @@ const SettingsLayout = () => {
               );
             })}
           </nav>
-
 
           {/* Collapse toggle */}
           <button

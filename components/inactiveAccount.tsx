@@ -351,7 +351,7 @@ export default function InactiveAccount() {
   //   (paymentStatus === "active" || !paymentStatus) &&
   //   (status === "active" || !status)
   // ) {
-    //  return null;
+  //  return null;
   // }
 
   const hasPlatformAccess = paymentStatus === "active";
@@ -388,7 +388,7 @@ export default function InactiveAccount() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center">
+      <div className="fixed inset-0 z-[13000] bg-black/70 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
@@ -400,7 +400,7 @@ export default function InactiveAccount() {
 
   if (!showPlans) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-black/55 backdrop-blur-sm flex items-center justify-center px-4">
+      <div className="fixed inset-0 z-[13000] bg-black/55 backdrop-blur-sm flex items-center justify-center px-4">
         <div className="w-full max-w-md border border-zinc-200 bg-white rounded-lg shadow-2xl p-7">
           <div className="flex items-start gap-4">
             <div className="h-11 w-11 rounded-md bg-red-50 flex items-center justify-center shrink-0">
@@ -479,7 +479,7 @@ export default function InactiveAccount() {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] overflow-auto"
+      className="fixed inset-0 z-[13000] overflow-auto"
       style={{
         background: `linear-gradient(180deg, ${color0D0D0D} 0%, ${color262626} 50%, ${color0D0D0D} 100%)`,
       }}
