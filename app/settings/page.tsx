@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   ArrowLeft,
   Package,
-  Users,
+  User,
   Mail,
   ChevronLeft,
   ChevronRight,
@@ -12,24 +12,26 @@ import {
   FolderOpen,
   ClipboardPlus,
   UserPen,
+  BadgeCheck,
+  UserCheck,
+  CheckCircle2,
+  Check,
 } from "lucide-react";
 import UsersPage from "@/components/settings/UsersPage";
 import SuppliersPage from "@/components/settings/Supplierspage";
 import PMSPage from "@/components/settings/Pmspage";
-import PharmacyDocs from "@/components/settings/PharmacyDocs";
 import Agreements from "@/components/settings/Agreements";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const navItems = [
   { id: 1, title: "Suppliers", icon: Package },
   { id: 2, title: "PMS", icon: SquareStack },
-  { id: 3, title: "Users", icon: Users },
-  { id: 4, title: "Pharmacy", icon: ClipboardPlus },
+  { id: 3, title: "User", icon: User },
   { id: 5, title: "Agreements", icon: UserPen },
 ];
 
 const SettingsLayout = () => {
-  const [active, setActive] = useState("Users");
+  const [active, setActive] = useState("User");
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -100,13 +102,14 @@ const SettingsLayout = () => {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Top bar */}
           <div className="bg-white border-b border-slate-200 px-8 py-5 shrink-0">
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 tracking-tight">
               {active}
+              {active === "User" && <Check className="h-5 w-5 text-teal-800" />}
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
               {active === "Suppliers" && "Manage wholesalers & distributors"}
               {active === "PMS" && "Pharmacy management system settings"}
-              {active === "Users" && "Manage accounts & permissions"}
+              {active === "User" && "Manage accounts & permissions"}
               {active === "Pharmacy" && "Email & address configuration"}
               {active === "Agreements" && "View & download agreements"}
             </p>
@@ -115,8 +118,7 @@ const SettingsLayout = () => {
           <main className="flex-1 p-8 overflow-auto">
             {active === "Suppliers" && <SuppliersPage />}
             {active === "PMS" && <PMSPage />}
-            {active === "Users" && <UsersPage />}
-            {active === "Pharmacy" && <PharmacyDocs />}
+            {active === "User" && <UsersPage />}
             {active === "Agreements" && <Agreements />}
           </main>
         </div>

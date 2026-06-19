@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -8,7 +10,7 @@ import {
   Loader2,
   CalendarDays,
   CreditCard,
-  ShieldCheck,
+  ShieldCheck,BadgeCheck,
 } from "lucide-react";
 
 import axios from "axios";
@@ -21,46 +23,50 @@ import { Badge } from "@/components/ui/badge";
 
 import { Button } from "@/components/ui/button";
 
+// =========================================
+// THREE FIXED TIERS — must match backend
+//   base         → $99  → Inventory Reports
+//   professional → $249 → Reports + Inventory View
+//   full_access  → $499 → Everything
+// =========================================
+
 const PLAN_LABELS: Record<string, string> = {
-  base: "Inventory Reports",
-  inventory_view: "Inventory View",
-  drug_lookup: "Drug Lookup",
-  leads: "Leads",
-  full_access: "Complete Suite",
+  base: "Base — Inventory Reports",
+  professional: "Professional",
+  full_access: "Full Access",
 };
 
 const AVAILABLE_PLANS = [
   {
     key: "base",
-    label: "Inventory Reports",
-    description: "Core reporting & analytics access",
+    label: "Base",
+    description: "Core inventory reporting & analytics access",
     price: "$99/mo",
   },
   {
-    key: "inventory_view",
-    label: "Inventory View",
-    description: "Advanced inventory visibility",
-    price: "$199/mo",
-  },
-  {
-    key: "drug_lookup",
-    label: "Drug Lookup",
-    description: "Drug search & lookup tools",
-    price: "$199/mo",
-  },
-  {
-    key: "leads",
-    label: "Leads",
-    description: "Lead generation tools",
-    price: "$199/mo",
+    key: "professional",
+    label: "Professional",
+    description: "Reports plus live inventory visibility & insights",
+    price: "$249/mo",
   },
   {
     key: "full_access",
-    label: "Complete Suite",
-    description: "Everything included",
+    label: "Full Access",
+    description: "Everything included — all premium modules",
     price: "$499/mo",
   },
 ];
+
+// =========================================
+// PHARMACY TYPE (merged in from pharmacy page)
+// =========================================
+
+interface Pharmacy {
+  pharmacy_name: string;
+  address: string;
+  phone: string;
+  fax: string;
+}
 
 const UsersPage = () => {
   const [loading, setLoading] = useState(true);
@@ -77,11 +83,20 @@ const UsersPage = () => {
     },
   ]);
 
+  // =========================================
+  // PHARMACY STATE (merged in)
+  // =========================================
+
+  const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
+
+  const [pharmacyLoading, setPharmacyLoading] = useState(true);
+
   const [subscription, setSubscription] = useState<any>(null);
 
   const [subLoading, setSubLoading] = useState(false);
 
-  const [selectedPlans, setSelectedPlans] = useState<string[]>([]);
+  // Single-select now (one tier at a time)
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
   const [updatingSubscription, setUpdatingSubscription] = useState(false);
 
@@ -115,7 +130,6 @@ const UsersPage = () => {
         ]);
       } catch (err) {
         console.error(err);
-
         toast.error("Failed to fetch user details");
       } finally {
         setLoading(false);
@@ -126,16 +140,39 @@ const UsersPage = () => {
   }, []);
 
   // =========================================
+  // FETCH PHARMACY (merged in)
+  // =========================================
+
+  useEffect(() => {
+    const fetchPharmacy = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+
+        const res = await api.get("/auth/pharmacy-details", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setPharmacy(res?.data?.pharmacy);
+      } catch (err) {
+        console.log("Error fetching pharmacy details");
+      } finally {
+        setPharmacyLoading(false);
+      }
+    };
+
+    fetchPharmacy();
+  }, []);
+
+  // =========================================
   // FETCH SUBSCRIPTION
   // =========================================
 
   const fetchSubscription = async () => {
     try {
       const userId = localStorage.getItem("userId");
-
-      if (!userId) {
-        return;
-      }
+      if (!userId) return;
 
       setSubLoading(true);
 
@@ -144,17 +181,18 @@ const UsersPage = () => {
       );
 
       const sub = res?.data?.subscription;
-
       console.log("SUB DATA:", sub);
 
       setSubscription(sub);
 
-      setSelectedPlans(
-        Array.isArray(sub?.active_plans) ? sub.active_plans : [],
+      // active_plans is a single-element array now: ["base"] | ["professional"] | ["full_access"]
+      setSelectedPlan(
+        Array.isArray(sub?.active_plans) && sub.active_plans.length
+          ? sub.active_plans[0]
+          : null,
       );
     } catch (error) {
       console.error(error);
-
       toast.error("Failed to load subscription");
     } finally {
       setSubLoading(false);
@@ -171,7 +209,6 @@ const UsersPage = () => {
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-
     toast.success(`${label} copied`);
   };
 
@@ -180,9 +217,7 @@ const UsersPage = () => {
   // =========================================
 
   const formatDate = (date: string | null) => {
-    if (!date) {
-      return "N/A";
-    }
+    if (!date) return "N/A";
 
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
@@ -211,63 +246,17 @@ const UsersPage = () => {
   }, [subscription]);
 
   // =========================================
-  // PLAN TOGGLE
+  // PLAN SELECT (single-select)
   // =========================================
 
-  const togglePlan = (plan: string) => {
-    if (subscription?.cancel_at_period_end) {
-      return;
-    }
-
-    setSelectedPlans((prev) => {
-      let updated = [...prev];
-
-      // =====================================
-      // FULL ACCESS
-      // =====================================
-
-      if (plan === "full_access") {
-        if (updated.includes("full_access")) {
-          return [];
-        }
-
-        return ["full_access"];
-      }
-
-      // REMOVE FULL ACCESS
-      updated = updated.filter((p) => p !== "full_access");
-
-      // =====================================
-      // TOGGLE
-      // =====================================
-
-      if (updated.includes(plan)) {
-        updated = updated.filter((p) => p !== plan);
-      } else {
-        updated.push(plan);
-      }
-
-      // =====================================
-      // ADDONS REQUIRE BASE
-      // =====================================
-
-      const addonPlans = ["inventory_view", "drug_lookup", "leads"];
-
-      const hasAddon = updated.some((p) => addonPlans.includes(p));
-
-      // AUTO ADD BASE
-      if (hasAddon && !updated.includes("base")) {
-        updated.push("base");
-      }
-
-      // REMOVE ADDONS IF BASE REMOVED
-      if (!updated.includes("base")) {
-        updated = updated.filter((p) => !addonPlans.includes(p));
-      }
-
-      return updated;
-    });
+  const selectPlan = (plan: string) => {
+    if (subscription?.cancel_at_period_end) return;
+    setSelectedPlan(plan);
   };
+
+  const currentPlan: string | null = Array.isArray(subscription?.active_plans)
+    ? subscription.active_plans[0] || null
+    : null;
 
   // =========================================
   // UPDATE SUBSCRIPTION
@@ -276,49 +265,42 @@ const UsersPage = () => {
   const handleUpdateSubscription = async () => {
     try {
       const userId = localStorage.getItem("userId");
-
-      if (!userId) {
-        return toast.error("User not found");
-      }
+      if (!userId) return toast.error("User not found");
 
       if (subscription?.cancel_at_period_end) {
         return toast.error("Canceled subscriptions cannot be updated");
       }
 
-      if (selectedPlans.length === 0) {
-        return toast.error("Please select at least one plan");
+      if (!selectedPlan) {
+        return toast.error("Please select a plan");
+      }
+
+      if (selectedPlan === currentPlan) {
+        return toast.error("You are already on this plan");
       }
 
       setUpdatingSubscription(true);
 
-      await axios.post(
+      const res = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/update-subscription-plans`,
         {
           userId,
-          plans: selectedPlans,
+          plan: selectedPlan, // single string — matches new backend
         },
       );
 
-      toast.success("Subscription updated successfully");
+      // Backend returns a message describing upgrade (immediate) vs
+      // downgrade (scheduled at period end).
+      toast.success(res?.data?.message || "Subscription updated successfully");
 
-      // await fetchSubscription();
-      // optimistic UI update immediately
-      // optimistic UI update immediately
-      setSubscription((prev: any) => ({
-        ...prev,
-        active_plans: [...selectedPlans],
-      }));
-
-      // also sync manage plans immediately
-      setSelectedPlans([...selectedPlans]);
-
-      // small delay so Stripe webhook finishes
-      setTimeout(async () => {
-        await fetchSubscription();
+      // Refetch after a short delay so the Stripe webhook has time to sync.
+      // (No optimistic active_plans change — a downgrade only takes effect
+      // at period end, so the current plan should stay until then.)
+      setTimeout(() => {
+        fetchSubscription();
       }, 2500);
     } catch (error: any) {
       console.error(error);
-
       toast.error(
         error?.response?.data?.error || "Failed to update subscription",
       );
@@ -337,9 +319,7 @@ const UsersPage = () => {
 
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/cancel-subscription`,
-        {
-          userId,
-        },
+        { userId },
       );
 
       toast.success(
@@ -347,11 +327,9 @@ const UsersPage = () => {
       );
 
       setShowCancelModal(false);
-
       await fetchSubscription();
     } catch (error) {
       console.error(error);
-
       toast.error("Failed to cancel subscription");
     }
   };
@@ -367,6 +345,21 @@ const UsersPage = () => {
       </div>
     );
   }
+
+  // Renewal / trial / valid-until label + date used in the summary card
+  const renewalLabel = subscription?.cancel_at_period_end
+    ? "Valid until"
+    : subscription?.status === "trialing"
+      ? "Trial ends"
+      : "Renews";
+
+  const renewalDate = subscription
+    ? formatDate(
+        subscription.status === "trialing"
+          ? subscription.trial_end
+          : subscription.grace_period_end || subscription.current_period_end,
+      )
+    : "N/A";
 
   return (
     <>
@@ -451,16 +444,120 @@ const UsersPage = () => {
               </div>
 
               {/* ===================================== */}
+              {/* PHARMACY DETAILS (merged in) */}
+              {/* ===================================== */}
+
+              <div className="">
+                <h3 className="text-2xl font-semibold text-foreground mb-6">
+                  Pharmacy Details
+                </h3>
+
+                {pharmacyLoading ? (
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <Loader2 size={18} className="animate-spin" />
+                    Loading pharmacy details...
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* PHARMACY NAME */}
+                    <div className="flex justify-between border-b border-border pb-3">
+                      <span className="text-muted-foreground">
+                        Pharmacy Name
+                      </span>
+
+                      <div className="flex items-center gap-2 max-w-[60%]">
+                        <span className="font-medium text-right">
+                          {pharmacy?.pharmacy_name || "-"}
+                        </span>
+
+                        <button
+                          onClick={() =>
+                            copyToClipboard(
+                              pharmacy?.pharmacy_name || "",
+                              "Name",
+                            )
+                          }
+                          className="text-muted-foreground hover:text-foreground shrink-0"
+                        >
+                          <Copy size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* ADDRESS */}
+                    <div className="flex justify-between border-b border-border pb-3">
+                      <span className="text-muted-foreground">Address</span>
+
+                      <div className="flex items-center gap-2 max-w-[60%]">
+                        <span className="font-medium text-right">
+                          {pharmacy?.address || "-"}
+                        </span>
+
+                        <button
+                          onClick={() =>
+                            copyToClipboard(pharmacy?.address || "", "Address")
+                          }
+                          className="text-muted-foreground hover:text-foreground shrink-0"
+                        >
+                          <Copy size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* PHONE */}
+                    <div className="flex justify-between border-b border-border pb-3">
+                      <span className="text-muted-foreground">Phone</span>
+
+                      <div className="flex items-center gap-2 max-w-[60%]">
+                        <span className="font-medium text-right">
+                          {pharmacy?.phone || "-"}
+                        </span>
+
+                        <button
+                          onClick={() =>
+                            copyToClipboard(pharmacy?.phone || "", "Phone")
+                          }
+                          className="text-muted-foreground hover:text-foreground shrink-0"
+                        >
+                          <Copy size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* FAX */}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Fax</span>
+
+                      <div className="flex items-center gap-2 max-w-[60%]">
+                        <span className="font-medium text-right">
+                          {pharmacy?.fax || "-"}
+                        </span>
+
+                        <button
+                          onClick={() =>
+                            copyToClipboard(pharmacy?.fax || "", "Fax")
+                          }
+                          className="text-muted-foreground hover:text-foreground shrink-0"
+                        >
+                          <Copy size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ===================================== */}
               {/* SUBSCRIPTION */}
               {/* ===================================== */}
 
-              <div className="bg-background border border-border rounded-3xl p-6">
-                <div className="flex items-center justify-between mb-8">
+              <div className="border-t border-border pt-8">
+                <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-2xl font-semibold">Subscription</h2>
 
                     <p className="text-muted-foreground mt-1">
-                      Manage your billing & plans
+                      Manage your billing & plan
                     </p>
                   </div>
 
@@ -474,186 +571,180 @@ const UsersPage = () => {
                   </div>
                 ) : subscription ? (
                   <div className="space-y-6">
-                    {/* ================================= */}
-                    {/* TOP STATS */}
-                    {/* ================================= */}
+                    {/* ============================================= */}
+                    {/* CONSOLIDATED SUMMARY CARD                     */}
+                    {/* One card replaces the old 5 stacked boxes:    */}
+                    {/* plan • status • auto-renew • price • date     */}
+                    {/* ============================================= */}
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* STATUS */}
+                    <div className="border border-border rounded-2xl p-6">
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        {/* LEFT — plan + status + auto-renew */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            <h3 className="text-xl font-semibold leading-none">
+                              {currentPlan
+                                ? PLAN_LABELS[currentPlan] || currentPlan
+                                : "No active plan"}
+                            </h3>
 
-                      <div className="border border-border rounded-2xl p-5">
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Status
-                        </p>
-
-                        <p
-                          className={`text-lg font-semibold capitalize ${
-                            subscription.status === "active"
-                              ? "text-green-500"
-                              : "text-yellow-500"
-                          }`}
-                        >
-                          {subscription.status}
-                        </p>
-                      </div>
-
-                      {/* BILLING */}
-
-                      <div className="border border-border rounded-2xl p-5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CreditCard size={16} />
-
-                          <p className="text-sm text-muted-foreground">
-                            Next Payment
-                          </p>
-                        </div>
-
-                        <p className="text-lg font-semibold">
-                          {formattedPrice}
-                        </p>
-                      </div>
-
-                      {/* DATE */}
-
-                      <div className="border border-border rounded-2xl p-5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CalendarDays size={16} />
-
-                          <p className="text-sm text-muted-foreground">
-                            {subscription.cancel_at_period_end
-                              ? "Valid Until"
-                              : "Renewal Date"}
-                          </p>
-                        </div>
-
-                        <p className="text-lg font-semibold">
-                          {formatDate(
-                            subscription.grace_period_end ||
-                              subscription.current_period_end,
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* CURRENT PLAN */}
-
-                    <div className="border border-border rounded-2xl p-5">
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Current Plan
-                      </p>
-
-                      <div className="flex flex-wrap gap-2">
-                        {Array.isArray(subscription.active_plans) &&
-                        subscription.active_plans.length > 0 ? (
-                          subscription.active_plans.map((plan: string) => (
-                            <Badge
-                              key={plan}
-                              className="rounded-full px-3 py-1"
+                            <span
+                              className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${
+                                subscription.status === "active"
+                                  ? "bg-green-500/10 text-green-600"
+                                  : subscription.status === "trialing"
+                                    ? "bg-blue-500/10 text-blue-600"
+                                    : "bg-yellow-500/10 text-yellow-600"
+                              }`}
                             >
-                              {PLAN_LABELS[plan] || plan}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-muted-foreground">
-                            No active plan
-                          </span>
-                        )}
+                              {subscription.status}
+                            </span>
+
+                            {subscription.admin_override && (
+                              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600">
+                                Admin granted
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                            <span
+                              className={
+                                subscription.auto_renew
+                                  ? "text-green-500"
+                                  : "text-yellow-500"
+                              }
+                            >
+                              ●
+                            </span>
+                            Auto-renewal{" "}
+                            {subscription.auto_renew ? "enabled" : "disabled"}
+                          </p>
+                        </div>
+
+                        {/* RIGHT — price + renewal date */}
+                        <div className="text-right">
+                          <p className="text-2xl font-bold leading-none flex items-center justify-end gap-1.5">
+                            <CreditCard
+                              size={18}
+                              className="text-muted-foreground"
+                            />
+                            {formattedPrice}
+                          </p>
+
+                          <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1.5 justify-end">
+                            <CalendarDays size={14} />
+                            {renewalLabel} {renewalDate}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* AUTO RENEW */}
-
-                    <div className="flex justify-between border-b border-border pb-5">
-                      <span className="text-muted-foreground">
-                        Auto Renewal
-                      </span>
-
-                      <span
-                        className={`font-semibold ${
-                          subscription.auto_renew
-                            ? "text-green-500"
-                            : "text-yellow-500"
-                        }`}
-                      >
-                        {subscription.auto_renew ? "Enabled" : "Disabled"}
-                      </span>
+                      {/* Scheduled downgrade (pending_plan) */}
+                      {subscription.pending_plan &&
+                        subscription.pending_plan !== currentPlan && (
+                          <p className="text-xs text-yellow-600 mt-4 pt-4 border-t border-border">
+                            Scheduled change to{" "}
+                            <strong>
+                              {PLAN_LABELS[subscription.pending_plan] ||
+                                subscription.pending_plan}
+                            </strong>{" "}
+                            at the end of the current billing period.
+                          </p>
+                        )}
                     </div>
 
                     {/* ================================= */}
                     {/* PLAN MANAGEMENT */}
+                    {/* Hidden for admin-granted clients — they have no */}
+                    {/* Stripe subscription, so plan changes don't apply. */}
                     {/* ================================= */}
 
-                    {!subscription.cancel_at_period_end && (
-                      <div className="pt-2">
-                        <div className="flex items-center justify-between mb-5">
-                          <div>
-                            <h3 className="text-lg font-semibold">
-                              Manage Plans
-                            </h3>
+                    {!subscription.cancel_at_period_end &&
+                      !subscription.admin_override && (
+                        <div className="pt-2">
+                          <div className="flex items-center justify-between mb-5">
+                            <div>
+                              <h3 className="text-lg font-semibold">
+                                Change Plan
+                              </h3>
 
-                            <p className="text-sm text-muted-foreground">
-                              Select the plans you want included in your
-                              subscription
-                            </p>
+                              <p className="text-sm text-muted-foreground">
+                                Upgrades apply immediately (prorated).
+                                Downgrades take effect at the end of your
+                                billing period.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {AVAILABLE_PLANS.map((plan) => {
+                              const checked = selectedPlan === plan.key;
+                              const isCurrent = currentPlan === plan.key;
+
+                              return (
+                                <button
+                                  key={plan.key}
+                                  onClick={() => selectPlan(plan.key)}
+                                  className={`rounded-2xl border p-5 text-left transition-all duration-200 ${
+                                    checked
+                                      ? "border-primary bg-primary/5 ring-2 ring-primary/10"
+                                      : "border-border hover:border-primary/40"
+                                  }`}
+                                >
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                      <h4 className="font-semibold">
+                                        {plan.label}
+                                      </h4>
+
+                                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                                        {plan.description}
+                                      </p>
+
+                                      <p className="text-sm font-semibold mt-3 text-foreground">
+                                        {plan.price}
+                                      </p>
+                                    </div>
+
+                                    {isCurrent ? (
+                                      <span className="text-xs font-medium text-muted-foreground shrink-0">
+                                        Current
+                                      </span>
+                                    ) : (
+                                      checked && (
+                                        <div className="flex items-center gap-1 text-green-500 shrink-0">
+                                          <Check size={18} />
+                                          <span className="text-xs font-medium">
+                                            Selected
+                                          </span>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {AVAILABLE_PLANS.map((plan) => {
-                            const checked = selectedPlans.includes(plan.key);
-
-                            return (
-                              <button
-                                key={plan.key}
-                                onClick={() => togglePlan(plan.key)}
-                                className={`rounded-2xl border p-5 text-left transition-all duration-200 ${
-                                  checked
-                                    ? "border-primary bg-primary/5 ring-2 ring-primary/10"
-                                    : "border-border hover:border-primary/40"
-                                }`}
-                              >
-                                <div className="flex items-start justify-between gap-4">
-                                  <div>
-                                    <h4 className="font-semibold">
-                                      {plan.label}
-                                    </h4>
-
-                                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                                      {plan.description}
-                                    </p>
-
-                                    <p className="text-sm font-semibold mt-3 text-foreground">
-                                      {plan.price}
-                                    </p>
-                                  </div>
-
-                                  {checked && (
-                                    <div className="flex items-center gap-1 text-green-500">
-                                      <Check size={18} />
-
-                                      <span className="text-xs font-medium">
-                                        Active
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* ================================= */}
                     {/* ACTIONS */}
+                    {/* Hidden for admin-granted clients. */}
                     {/* ================================= */}
 
-                    <div className="flex flex-wrap gap-3 pt-4">
+                    <div
+                      className={`flex flex-wrap gap-3 pt-4 ${
+                        subscription.admin_override ? "hidden" : ""
+                      }`}
+                    >
                       <Button
                         onClick={handleUpdateSubscription}
                         disabled={
                           updatingSubscription ||
-                          subscription.cancel_at_period_end
+                          subscription.cancel_at_period_end ||
+                          !selectedPlan ||
+                          selectedPlan === currentPlan
                         }
                       >
                         {updatingSubscription ? (
