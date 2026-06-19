@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import Loader from "@/components/Loader";
 import {
   Upload,
-  MoreVertical,
+  Trash2,
   Plus,
   Eye,
   Check,
@@ -60,23 +61,23 @@ const DisclaimerBanner = () => {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-xl border border-amber-200/80 bg-gradient-to-r from-amber-50 to-orange-50 overflow-hidden mb-5 shadow-sm">
+    <div className="rounded-xl border-2 border-dashed border-disclaimer-50 bg-gradient-to-r from-sky-50 to-sky-100 overflow-hidden mb-5 shadow-sm">
       <div className="flex items-start gap-3 px-5 py-4">
-        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <AlertTriangle className="w-4 h-4 text-amber-600" />
+        <div className="w-8 h-8 rounded-lg bg-disclaimer-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <AlertTriangle className="w-4 h-4 text-disclaimer-100" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-amber-900">
+          <p className="text-sm font-semibold text-disclaimer-50">
             File requirements — read before uploading
           </p>
-          <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+          <p className="text-xs text-disclaimer-100 mt-0.5 leading-relaxed">
             Each wholesaler CSV must include all required columns. Missing
             columns will block processing.
           </p>
         </div>
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-amber-700 hover:text-amber-900 transition-all bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg border border-amber-200"
+          className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-disclaimer-100 hover:text-disclaimer-50 transition-all bg-disclaimer-600 hover:bg-disclaimer-500 px-3 py-1.5 rounded-lg border border-disclaimer-500"
         >
           {expanded ? (
             <>
@@ -91,7 +92,7 @@ const DisclaimerBanner = () => {
       </div>
 
       {expanded && (
-        <div className="border-t border-amber-200/60 bg-white/80 px-5 py-5 space-y-5">
+        <div className="border-t border-disclaimer-500/60 bg-white/80 px-5 py-5 space-y-5">
           <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
             <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
             <div>
@@ -196,9 +197,9 @@ const DisclaimerBanner = () => {
             </div>
           </div>
 
-          <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-start gap-2.5">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <p className="text-[11px] text-amber-700 leading-relaxed">
+          <div className="rounded-xl bg-disclaimer-700 border border-disclaimer-500 px-4 py-3 flex items-start gap-2.5">
+            <AlertTriangle className="w-3.5 h-3.5 text-disclaimer-200 flex-shrink-0 mt-0.5" />
+            <p className="text-[11px] text-disclaimer-200 leading-relaxed">
               <span className="font-semibold">Important:</span> After uploading
               each file, verify all required columns are correctly mapped before
               clicking <span className="font-semibold">Upload</span>.
@@ -713,27 +714,15 @@ const UploadWholesalersStep = ({
                         accept=".csv"
                       />
                     </label>
-                    <div className="relative">
-                      <button
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                        onClick={() => {
-                          setEdit(!edit || editId !== wholesaler.id);
-                          setEditId(wholesaler.id);
-                        }}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                      {edit && editId === wholesaler.id && (
-                        <div className="absolute right-0 top-8 w-32 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
-                          <button
-                            onClick={() => handleDelete(wholesaler.id)}
-                            className="w-full px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(wholesaler.id)}
+                      title="Delete supplier"
+                      aria-label="Delete supplier"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
 
@@ -743,7 +732,7 @@ const UploadWholesalersStep = ({
                     <div className="mx-4 mb-3 rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                       <div className="flex items-center justify-between bg-gray-50 border-b border-gray-200 px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                          <Sparkles className="w-3.5 h-3.5 text-disclaimer-50" />
                           <span className="text-xs font-semibold text-gray-700">
                             {wholesaler.name} — Column Mapping
                           </span>
@@ -1029,44 +1018,23 @@ const UploadWholesalersStep = ({
         </div>
       )}
 
-      {isUploading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-8 flex flex-col items-center text-center">
-            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-5 relative">
-              <Upload className="w-7 h-7 text-blue-600" />
-              <div className="absolute -inset-1 rounded-[18px] border-2 border-transparent border-t-blue-500 border-r-blue-300 animate-spin" />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">
-              Uploading Wholesalers...
-            </h3>
-            <p className="text-sm text-gray-500 mb-5">
-              {wholesalers.filter((w) => w.file).length} file
-              {wholesalers.filter((w) => w.file).length !== 1 ? "s" : ""}{" "}
-              uploading
-            </p>
-            <div className="w-full space-y-2">
-              <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                <div
-                  className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-300 ease-out"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400">
-                  {uploadProgress < 90
-                    ? "Uploading files..."
-                    : uploadProgress < 100
-                      ? "Processing on server..."
-                      : "Finalizing..."}
-                </span>
-                <span className="text-xs font-bold text-blue-600 tabular-nums">
-                  {uploadProgress}%
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Loader
+        show={isUploading}
+        variant="card"
+        tone="dark"
+        progress={uploadProgress}
+        title="Uploading Wholesalers..."
+        subtitle={`${wholesalers.filter((w) => w.file).length} file${
+          wholesalers.filter((w) => w.file).length !== 1 ? "s" : ""
+        } uploading`}
+        progressLabel={
+          uploadProgress < 90
+            ? "Uploading files..."
+            : uploadProgress < 100
+              ? "Processing on server..."
+              : "Finalizing..."
+        }
+      />
     </div>
   );
 };

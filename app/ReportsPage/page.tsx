@@ -11,11 +11,17 @@ import {
   Plus,
   Search,
   ChevronDown,
+  Calendar,
+  X,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from "lucide-react";
 import Loading from "./loading";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Loader from "@/components/Loader";
 
 interface Report {
   id: string;
@@ -23,11 +29,20 @@ interface Report {
   status: "Ready" | "Started" | "Completed";
   inventoryDates: string;
   wholesalerDates: string;
+  // Raw ISO (YYYY-MM-DD) values kept for date-range filtering.
+  inventoryStart: string;
+  inventoryEnd: string;
+  wholesalerStart: string;
+  wholesalerEnd: string;
   type: "INVENTORY" | "PBM" | "ABERRANT";
   createdDate: string;
 }
 
 type FilterType = "all" | "inventory" | "aberrant" | "optum";
+
+// Number of report rows shown per page — chosen to fit a standard laptop
+// viewport without the table needing to scroll.
+const REPORTS_PER_PAGE = 10;
 
 export default function ReportsPage() {
   const [deleteModal, setDeleteModal] = useState(false);
@@ -46,6 +61,18 @@ export default function ReportsPage() {
     left: number;
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  // Sort reports by audit name: cycles none → asc → desc on header click.
+  const [nameSort, setNameSort] = useState<"none" | "asc" | "desc">("none");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<"all" | "Ready" | "Started">(
+    "all",
+  );
+  const [statusFilterOpen, setStatusFilterOpen] = useState(false);
+  const [dateFilterOpen, setDateFilterOpen] = useState(false);
+  const [dateFilterMode, setDateFilterMode] = useState<
+    "inventory" | "wholesaler"
+  >("inventory");
+  const [dateFilterValue, setDateFilterValue] = useState("");
   const [editForm, setEditForm] = useState({
     inventory_start_date: "",
     inventory_end_date: "",
@@ -91,12 +118,54 @@ export default function ReportsPage() {
         reports = reportsData.filter((r) => r.type === "PBM");
         break;
     }
+    if (statusFilter !== "all") {
+      reports = reports.filter((r) => r.status === statusFilter);
+    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       reports = reports.filter((r) => r.auditName.toLowerCase().includes(q));
     }
+    if (dateFilterValue) {
+      // Keep reports whose chosen date range contains the selected date.
+      reports = reports.filter((r) => {
+        let start =
+          dateFilterMode === "inventory" ? r.inventoryStart : r.wholesalerStart;
+        let end =
+          dateFilterMode === "inventory" ? r.inventoryEnd : r.wholesalerEnd;
+        // Fallback: derive ISO range from the formatted "MM/DD/YYYY - MM/DD/YYYY"
+        // string when raw fields are absent (e.g. rows cached before this field existed).
+        if (!start || !end) {
+          const label =
+            dateFilterMode === "inventory"
+              ? r.inventoryDates
+              : r.wholesalerDates;
+          const m = String(label).match(
+            /(\d{2})\/(\d{2})\/(\d{4})\s*-\s*(\d{2})\/(\d{2})\/(\d{4})/,
+          );
+          if (m) {
+            start = `${m[3]}-${m[1]}-${m[2]}`;
+            end = `${m[6]}-${m[4]}-${m[5]}`;
+          }
+        }
+        if (!start || !end) return false;
+        return start <= dateFilterValue && dateFilterValue <= end;
+      });
+    }
+    if (nameSort !== "none") {
+      // Spread to avoid mutating reportsData when no filter narrowed the list.
+      reports = [...reports].sort((a, b) => {
+        const cmp = a.auditName.localeCompare(b.auditName, undefined, {
+          sensitivity: "base",
+          numeric: true,
+        });
+        return nameSort === "asc" ? cmp : -cmp;
+      });
+    }
     return reports;
   };
+
+  const toggleNameSort = () =>
+    setNameSort((s) => (s === "none" ? "asc" : s === "asc" ? "desc" : "none"));
 
   const handleDelete = async () => {
     if (!deletingReportId) return;
@@ -180,6 +249,12 @@ export default function ReportsPage() {
     return `${formatDate(start)} - ${formatDate(end)}`;
   };
 
+  // Raw ISO date (YYYY-MM-DD) for range comparisons; "" if missing/invalid.
+  const isoDate = (d?: string | null) => {
+    const s = String(d ?? "").slice(0, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : "";
+  };
+
   const mapStatus = (s?: string | null): Report["status"] => {
     const v = (s || "").toLowerCase();
     if (v === "ready") return "Ready";
@@ -206,6 +281,10 @@ export default function ReportsPage() {
             a.wholesaler_start_date,
             a.wholesaler_end_date,
           ),
+          inventoryStart: isoDate(a.inventory_start_date),
+          inventoryEnd: isoDate(a.inventory_end_date),
+          wholesalerStart: isoDate(a.wholesaler_start_date),
+          wholesalerEnd: isoDate(a.wholesaler_end_date),
           type: "INVENTORY",
           createdDate: formatDate(a.created_at),
         }));
@@ -221,6 +300,26 @@ export default function ReportsPage() {
   }, []);
 
   const filteredReports = getFilteredReports();
+
+  // ── Pagination ──
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredReports.length / REPORTS_PER_PAGE),
+  );
+  // Reset to the first page whenever the filtered result set changes so we
+  // never end up stranded on a now-empty page.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, activeFilter, dateFilterValue, statusFilter, nameSort]);
+  // Clamp the current page if the list shrinks (e.g. after a delete).
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+  const pageStart = (currentPage - 1) * REPORTS_PER_PAGE;
+  const pageReports = filteredReports.slice(
+    pageStart,
+    pageStart + REPORTS_PER_PAGE,
+  );
 
   const filterCounts = {
     all: reportsData.length,
@@ -280,15 +379,15 @@ export default function ReportsPage() {
                   {/* Right: Stats + New Audit */}
                   <div className="flex items-center gap-4">
                     <div className="hidden md:flex items-center gap-3 mr-2">
-                      <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                        <span className="text-xs font-semibold text-emerald-700">
+                      <div className="flex items-center gap-1.5 bg-emerald-700 border border-emerald-700 rounded-lg px-3 py-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-300" />
+                        <span className="text-xs font-semibold text-white">
                           {readyCount} Ready
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
-                        <span className="w-2 h-2 rounded-full bg-amber-500" />
-                        <span className="text-xs font-semibold text-amber-700">
+                      <div className="flex items-center gap-1.5 bg-disclaimer-100 border border-disclaimer-300 rounded-lg px-3 py-1.5">
+                        <span className="w-2 h-2 rounded-full bg-disclaimer-600" />
+                        <span className="text-xs font-semibold text-disclaimer-700">
                           {startedCount} In Progress
                         </span>
                       </div>
@@ -345,6 +444,179 @@ export default function ReportsPage() {
                     </button>
                   ))}
                 </div>
+
+                {/* ── Status filter (Ready / Started) ── */}
+                <div className="relative">
+                  <button
+                    onClick={() => setStatusFilterOpen((v) => !v)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all ${
+                      statusFilter !== "all"
+                        ? "bg-slate-900 text-white border-slate-900"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        statusFilter === "Ready"
+                          ? "bg-emerald-400"
+                          : statusFilter === "Started"
+                            ? "bg-disclaimer-500"
+                            : "bg-slate-400"
+                      }`}
+                    />
+                    {statusFilter === "all" ? "Status" : statusFilter}
+                    {statusFilter !== "all" ? (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStatusFilter("all");
+                          setStatusFilterOpen(false);
+                        }}
+                        className="ml-0.5 rounded p-0.5 hover:bg-white/20"
+                        title="Clear status filter"
+                      >
+                        <X className="w-3 h-3" />
+                      </span>
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+
+                  {statusFilterOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setStatusFilterOpen(false)}
+                      />
+                      <div className="absolute right-0 top-full mt-2 z-50 w-44 bg-white border border-slate-200 rounded-xl shadow-xl p-1.5">
+                        {[
+                          { key: "all" as const, label: "All Statuses", dot: "bg-slate-400" },
+                          { key: "Ready" as const, label: "Ready", dot: "bg-emerald-400" },
+                          { key: "Started" as const, label: "Started", dot: "bg-disclaimer-500" },
+                        ].map((opt) => (
+                          <button
+                            key={opt.key}
+                            onClick={() => {
+                              setStatusFilter(opt.key);
+                              setStatusFilterOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                              statusFilter === opt.key
+                                ? "bg-slate-900 text-white"
+                                : "text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            <span className={`w-2 h-2 rounded-full ${opt.dot}`} />
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* ── Date filter (by inventory or wholesaler date) ── */}
+                <div className="relative">
+                  <button
+                    onClick={() => setDateFilterOpen((v) => !v)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all ${
+                      dateFilterValue
+                        ? "bg-slate-900 text-white border-slate-900"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    {dateFilterValue
+                      ? `${
+                          dateFilterMode === "inventory"
+                            ? "Inventory"
+                            : "Wholesaler"
+                        }: ${formatDate(dateFilterValue)}`
+                      : "Date"}
+                    {dateFilterValue ? (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDateFilterValue("");
+                          setDateFilterOpen(false);
+                        }}
+                        className="ml-0.5 rounded p-0.5 hover:bg-white/20"
+                        title="Clear date filter"
+                      >
+                        <X className="w-3 h-3" />
+                      </span>
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+
+                  {dateFilterOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setDateFilterOpen(false)}
+                      />
+                      <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+                          Search by
+                        </p>
+                        <div className="flex items-center bg-slate-100 rounded-lg p-0.5 mb-3">
+                          {[
+                            { key: "inventory", label: "Inventory Date" },
+                            { key: "wholesaler", label: "Wholesaler Date" },
+                          ].map((m) => (
+                            <button
+                              key={m.key}
+                              onClick={() =>
+                                setDateFilterMode(
+                                  m.key as "inventory" | "wholesaler",
+                                )
+                              }
+                              className={`flex-1 px-2 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
+                                dateFilterMode === m.key
+                                  ? "bg-white text-slate-900 shadow-sm"
+                                  : "text-slate-500 hover:text-slate-700"
+                              }`}
+                            >
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          type="date"
+                          value={dateFilterValue}
+                          onChange={(e) => setDateFilterValue(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:bg-white"
+                        />
+                        <p className="mt-2 text-[11px] text-slate-400 leading-snug">
+                          Shows audits whose{" "}
+                          {dateFilterMode === "inventory"
+                            ? "inventory"
+                            : "wholesaler"}{" "}
+                          date range includes the selected date.
+                        </p>
+                        <div className="flex items-center justify-between mt-3">
+                          <button
+                            onClick={() => setDateFilterValue("")}
+                            className="text-xs font-semibold text-slate-500 hover:text-slate-700"
+                          >
+                            Clear
+                          </button>
+                          <button
+                            onClick={() => setDateFilterOpen(false)}
+                            className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800"
+                          >
+                            Done
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -358,7 +630,23 @@ export default function ReportsPage() {
                         #
                       </th>
                       <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        Audit Name
+                        <button
+                          type="button"
+                          onClick={toggleNameSort}
+                          title="Sort by audit name"
+                          className={`group inline-flex items-center gap-1 uppercase tracking-wider transition-colors hover:text-slate-700 ${
+                            nameSort !== "none" ? "text-slate-900" : ""
+                          }`}
+                        >
+                          Audit Name
+                          {nameSort === "asc" ? (
+                            <ArrowUp className="w-3 h-3" />
+                          ) : nameSort === "desc" ? (
+                            <ArrowDown className="w-3 h-3" />
+                          ) : (
+                            <ArrowUpDown className="w-3 h-3 text-slate-300 group-hover:text-slate-400" />
+                          )}
+                        </button>
                       </th>
                       <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                         Status
@@ -384,12 +672,7 @@ export default function ReportsPage() {
                     {loadingReports ? (
                       <tr>
                         <td colSpan={8} className="py-16 text-center">
-                          <div className="flex flex-col items-center gap-3">
-                            <div className="w-8 h-8 rounded-full border-2 border-slate-300 border-t-slate-600 animate-spin" />
-                            <span className="text-sm text-slate-400">
-                              Loading reports...
-                            </span>
-                          </div>
+                          <Loader variant="inline" title="Loading reports..." />
                         </td>
                       </tr>
                     ) : filteredReports.length === 0 ? (
@@ -403,21 +686,23 @@ export default function ReportsPage() {
                               No reports found
                             </p>
                             <p className="text-xs text-slate-400">
-                              {searchQuery
-                                ? "Try a different search term"
+                              {searchQuery ||
+                              dateFilterValue ||
+                              statusFilter !== "all"
+                                ? "Try a different search term or filter"
                                 : "Create a new audit to get started"}
                             </p>
                           </div>
                         </td>
                       </tr>
                     ) : (
-                      filteredReports.map((report, index) => (
+                      pageReports.map((report, index) => (
                         <tr
                           key={report.id}
                           className="border-b border-slate-100 hover:bg-slate-50/60 transition-colors group"
                         >
                           <td className="px-3 py-3 text-xs text-slate-400 font-medium whitespace-nowrap tabular-nums">
-                            {index + 1}
+                            {pageStart + index + 1}
                           </td>
                           <td className="px-4 py-3">
                             <Link
@@ -432,14 +717,14 @@ export default function ReportsPage() {
                               className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
                                 report.status === "Ready"
                                   ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                  : "bg-amber-50 text-amber-700 border border-amber-200"
+                                  : "bg-disclaimer-100 text-disclaimer-700 border border-disclaimer-300"
                               }`}
                             >
                               <span
                                 className={`w-1.5 h-1.5 rounded-full ${
                                   report.status === "Ready"
                                     ? "bg-emerald-500"
-                                    : "bg-amber-500"
+                                    : "bg-disclaimer-600"
                                 }`}
                               />
                               {report.status}
@@ -452,7 +737,7 @@ export default function ReportsPage() {
                             {report.wholesalerDates}
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                            <span className="text-[10px] font-bold text-white bg-slate-900 border border-slate-900 px-2 py-0.5 rounded">
                               {report.type}
                             </span>
                           </td>
@@ -489,13 +774,55 @@ export default function ReportsPage() {
 
                 {/* Footer */}
                 {filteredReports.length > 0 && (
-                  <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                  <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-4">
                     <span className="text-xs text-slate-500">
                       Showing{" "}
+                      <b className="text-slate-700">{pageStart + 1}</b>–
+                      <b className="text-slate-700">
+                        {pageStart + pageReports.length}
+                      </b>{" "}
+                      of{" "}
                       <b className="text-slate-700">{filteredReports.length}</b>{" "}
-                      of <b className="text-slate-700">{reportsData.length}</b>{" "}
                       reports
                     </span>
+
+                    {totalPages > 1 && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() =>
+                            setCurrentPage((p) => Math.max(1, p - 1))
+                          }
+                          disabled={currentPage === 1}
+                          className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Prev
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                          (page) => (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`min-w-[28px] px-2 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                                page === currentPage
+                                  ? "bg-slate-900 text-white border-slate-900"
+                                  : "text-slate-600 border-slate-200 bg-white hover:bg-slate-50"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ),
+                        )}
+                        <button
+                          onClick={() =>
+                            setCurrentPage((p) => Math.min(totalPages, p + 1))
+                          }
+                          disabled={currentPage === totalPages}
+                          className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

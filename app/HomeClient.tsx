@@ -106,7 +106,7 @@ const testimonials = [
     initials: "IA",
     name: "Dr. Irfan Ali",
     role: "Pharmacy Owner",
-    gradient: "from-amber-300 to-yellow-500",
+    gradient: "from-cyan-300 to-cyan-500",
   },
   {
     quote:
@@ -960,7 +960,7 @@ export default function Index() {
             <div className="flex -space-x-2">
               {[
                 { initial: "UC", gradients: "from-blue-400 to-cyan-300" },
-                { initial: "IA", gradients: "from-amber-300 to-yellow-500" },
+                { initial: "IA", gradients: "from-cyan-300 to-cyan-500" },
                 { initial: "KA", gradients: "from-pink-300 to-rose-400" },
               ].map((item, i) => (
                 <div

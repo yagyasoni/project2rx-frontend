@@ -1676,13 +1676,13 @@ export default function InventoryReportPage() {
             onClick={() => setOpenQtyDropdown(false)}
           />
           <div
-            className="fixed z-[1000] w-48 rounded-lg border border-gray-200 bg-white shadow-2xl"
+            className="fixed z-[1000] w-32 rounded-lg border border-gray-200 bg-white shadow-2xl"
             style={{ top: "78px", left: "50%", transform: "translateX(250%)" }}
           >
-            <div className="flex items-center justify-between border-b px-3 py-2 text-xs font-semibold uppercase text-gray-700">
+            <div className="flex items-center justify-between border-b px-2.5 py-1.5 text-[10px] font-semibold uppercase text-gray-700">
               Quantity Type
               <button onClick={() => setOpenQtyDropdown(false)}>
-                <X className="h-3 w-3 text-gray-400 hover:text-gray-600" />
+                <X className="h-2.5 w-2.5 text-gray-400 hover:text-gray-600" />
               </button>
             </div>
             <button
@@ -1690,10 +1690,10 @@ export default function InventoryReportPage() {
                 setQtyType("UNIT");
                 setOpenQtyDropdown(false);
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50"
+              className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-xs hover:bg-gray-50"
             >
               <span
-                className={`h-4 w-4 rounded border flex items-center justify-center ${qtyType === "UNIT" ? "border-emerald-600 bg-emerald-600 text-white" : "border-gray-300"}`}
+                className={`h-3.5 w-3.5 rounded border flex items-center justify-center text-[10px] ${qtyType === "UNIT" ? "border-emerald-600 bg-emerald-600 text-white" : "border-gray-300"}`}
               >
                 {qtyType === "UNIT" && "✓"}
               </span>
@@ -1704,10 +1704,10 @@ export default function InventoryReportPage() {
                 setQtyType("PKG SIZE");
                 setOpenQtyDropdown(false);
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50"
+              className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-xs hover:bg-gray-50"
             >
               <span
-                className={`h-4 w-4 rounded border flex items-center justify-center ${qtyType === "PKG SIZE" ? "border-emerald-600 bg-emerald-600 text-white" : "border-gray-300"}`}
+                className={`h-3.5 w-3.5 rounded border flex items-center justify-center text-[10px] ${qtyType === "PKG SIZE" ? "border-emerald-600 bg-emerald-600 text-white" : "border-gray-300"}`}
               >
                 {qtyType === "PKG SIZE" && "✓"}
               </span>
@@ -2166,14 +2166,14 @@ export default function InventoryReportPage() {
                 ["rank", "RANK", null],
                 ["pkgSize", "PKG SIZE", null],
                 ["totalOrdered", "TOTAL ORDERED", "green"],
-                ["totalBilled", "TOTAL BILLED", "yellow"],
+                ["totalBilled", "TOTAL BILLED", "cyan"],
                 ["totalShortage", "TOTAL SHORTAGE", "red"],
-                ["highestShortage", "HIGHEST SHORTAGE", "yellow"],
+                ["highestShortage", "HIGHEST SHORTAGE", "cyan"],
                 ["cost", "COST", null],
                 ["horizon", "BILLED HORIZON", "red"],
-                ["shortageHorizon", "SHORTAGE HORIZON", "yellow"],
+                ["shortageHorizon", "SHORTAGE HORIZON", "cyan"],
                 ["express", "BILLED EXPRESS", "red"],
-                ["shortageExpress", "SHORTAGE EXPRESS", "yellow"],
+                ["shortageExpress", "SHORTAGE EXPRESS", "cyan"],
               ].map(
                 ([key, label, dotColor]) =>
                   columnFilters[key as keyof typeof columnFilters] && (
@@ -2197,8 +2197,8 @@ export default function InventoryReportPage() {
                               className={`w-2 h-2 rounded-full ${
                                 dotColor === "red"
                                   ? "bg-red-500"
-                                  : dotColor === "yellow"
-                                    ? "bg-yellow-400"
+                                  : dotColor === "cyan"
+                                    ? "bg-cyan-400"
                                     : dotColor === "green"
                                       ? "bg-emerald-500"
                                       : ""

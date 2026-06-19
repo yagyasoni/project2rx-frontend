@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import AppSidebar from "@/components/Sidebar";
+import Loader from "@/components/Loader";
 import {
   Search,
   X,
@@ -272,7 +273,7 @@ const ALL_COLS: ColDef[] = [
     label: "Total Shortage",
     w: 120,
     group: "base-scroll",
-    dot: "bg-amber-400",
+    dot: "bg-cyan-400",
     isShortage: true,
   },
   {
@@ -280,7 +281,7 @@ const ALL_COLS: ColDef[] = [
     label: "Highest Short",
     w: 120,
     group: "base-scroll",
-    dot: "bg-amber-400",
+    dot: "bg-cyan-400",
     isShortage: true,
   },
   {
@@ -1480,7 +1481,7 @@ export default function InventoryReportPage() {
       </span>
     ) : (
       <span
-        className={`font-semibold tabular-nums ${v < 0 ? "text-red-600" : "text-emerald-600"}`}
+        className={`font-semibold tabular-nums ${v < 0 ? "text-red-500" : "text-emerald-600"}`}
       >
         {v.toLocaleString()}
       </span>
@@ -1519,7 +1520,7 @@ export default function InventoryReportPage() {
       );
     if (col.group === "mAndM")
       return (
-        <span className="tabular-nums font-semibold text-amber-700">
+        <span className="tabular-nums font-semibold text-cyan-700">
           {v.toLocaleString()}
         </span>
       );
@@ -1528,7 +1529,7 @@ export default function InventoryReportPage() {
     );
   };
 
-  // Brand pill: Y → "B" (cyan, brand), N → "G" (amber, generic)
+  // Brand pill: Y → "B" (light cyan, brand), N → "G" (light purple, generic)
   const brandPill = (brand: string | null | undefined) => {
     if (!brand) return null;
     const raw = String(brand).trim().toUpperCase();
@@ -1539,9 +1540,9 @@ export default function InventoryReportPage() {
       <span
         className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase"
         style={{
-          background: isBrand ? "#cffafe" : "#fef3c7",
-          color: isBrand ? "#155e75" : "#92400e",
-          border: `1px solid ${isBrand ? "#67e8f9" : "#fcd34d"}`,
+          background: isBrand ? "#cffafe" : "#f3e8ff",
+          color: isBrand ? "#155e75" : "#6b21a8",
+          border: `1px solid ${isBrand ? "#67e8f9" : "#d8b4fe"}`,
         }}
         title={isBrand ? "Brand" : "Generic"}
       >
@@ -2133,60 +2134,23 @@ export default function InventoryReportPage() {
           </div>
 
           {/* Loading overlay */}
-          {loading && (
-            <div
-              className={`absolute inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-sm transition-opacity duration-400 ${loadingDone ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-            >
-              <div className="flex flex-col items-center gap-6 w-72">
-                <div className="relative">
-                  <div className="h-16 w-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm">
-                    <svg
-                      className="h-8 w-8 text-emerald-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="absolute -inset-1 rounded-[18px] border-2 border-transparent border-t-emerald-500 border-r-emerald-300 animate-spin" />
-                </div>
-                <div className="text-center space-y-1">
-                  <p className="text-sm font-semibold text-slate-700 tracking-wide">
-                    {loadingProgress < 30
-                      ? "Fetching inventory data..."
-                      : loadingProgress < 60
-                        ? "Processing records..."
-                        : loadingProgress < 90
-                          ? "Calculating analytics..."
-                          : "Finalizing report..."}
-                  </p>
-                  <p className="text-xs text-slate-400">Please wait a moment</p>
-                </div>
-                <div className="w-full space-y-2">
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-300 ease-out"
-                      style={{ width: `${Math.min(loadingProgress, 100)}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">
-                      Loading report
-                    </span>
-                    <span className="text-xs font-bold text-emerald-600 tabular-nums">
-                      {Math.min(Math.round(loadingProgress), 100)}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          <Loader
+            show={loading}
+            done={loadingDone}
+            fixed={false}
+            progress={loadingProgress}
+            progressLabel="Loading report"
+            subtitle="Please wait a moment"
+            title={
+              loadingProgress < 30
+                ? "Fetching inventory data..."
+                : loadingProgress < 60
+                  ? "Processing records..."
+                  : loadingProgress < 90
+                    ? "Calculating analytics..."
+                    : "Finalizing report..."
+            }
+          />
 
           <div className="flex-1 min-w-0 flex flex-col overflow-hidden z-0">
             {/* ── Page Header ── */}
@@ -2464,7 +2428,12 @@ export default function InventoryReportPage() {
                     variant="outline"
                     size="sm"
                     className="h-8 gap-1.5 text-xs border-slate-300"
-                    onClick={() => setOpenFilter(!openFilter)}
+                    onClick={() => {
+                      setOpenFilter((v) => !v);
+                      // Only one filter dropdown open at a time
+                      setOpenQtyDropdown(false);
+                      setOpenTagsDropdown(false);
+                    }}
                   >
                     <SlidersHorizontal className="h-3.5 w-3.5" /> Columns{" "}
                     <ChevronDown className="h-3 w-3" />
@@ -2692,7 +2661,14 @@ export default function InventoryReportPage() {
                 {/* QTY */}
                 <DropdownMenu
                   open={openQtyDropdown}
-                  onOpenChange={setOpenQtyDropdown}
+                  onOpenChange={(open) => {
+                    setOpenQtyDropdown(open);
+                    // Only one filter dropdown open at a time
+                    if (open) {
+                      setOpenFilter(false);
+                      setOpenTagsDropdown(false);
+                    }
+                  }}
                 >
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -2736,6 +2712,9 @@ export default function InventoryReportPage() {
                     onClick={() => {
                       setOpenTagsDropdown((v) => !v);
                       setTagMenuOpen(null);
+                      // Only one filter dropdown open at a time
+                      setOpenFilter(false);
+                      setOpenQtyDropdown(false);
                     }}
                   >
                     {/* Tag icon */}
@@ -3713,7 +3692,7 @@ export default function InventoryReportPage() {
                                       setNotesSaved(false);
                                       setOpenNotesSidebar(true);
                                     }}
-                                    className={`p-0.5 rounded hover:bg-amber-50 ${notesMap[row.ndc] ? "text-amber-500" : "text-slate-400 hover:text-amber-500"}`}
+                                    className={`p-0.5 rounded hover:bg-cyan-50 ${notesMap[row.ndc] ? "text-cyan-500" : "text-slate-400 hover:text-cyan-500"}`}
                                   >
                                     <svg
                                       xmlns="http://www.w3.org/2000/svg"
@@ -3908,7 +3887,7 @@ export default function InventoryReportPage() {
                         <button
                           key={p}
                           onClick={() => setCurrentPage(p)}
-                          className={`h-7 w-7 text-xs font-semibold rounded-lg ${currentPage === p ? "bg-emerald-600 text-white" : "border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+                          className={`h-7 w-7 text-xs font-semibold rounded-lg ${currentPage === p ? "bg-gray-900 text-white" : "border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
                         >
                           {p}
                         </button>
@@ -4162,12 +4141,12 @@ export default function InventoryReportPage() {
                     {subscriptionLoaded &&
                       !subscription?.inventory_view_access && (
                         <div className="absolute inset-0 z-[500] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
-                          <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
-                            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
+                          <div className="relative overflow-hidden rounded-2xl border border-cyan-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
+                            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-cyan-200/30 blur-3xl" />
 
                             <div className="relative flex flex-col items-center text-center">
-                              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 border border-amber-200 shadow-sm mb-4">
-                                <Lock className="h-8 w-8 text-amber-600" />
+                              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-100 border border-cyan-200 shadow-sm mb-4">
+                                <Lock className="h-8 w-8 text-cyan-600" />
                               </div>
 
                               <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
@@ -4181,12 +4160,12 @@ export default function InventoryReportPage() {
 
                               <button
                                 onClick={() => router.push("/settings")}
-                                className="mt-5 inline-flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-amber-500/20"
+                                className="mt-5 inline-flex items-center justify-center rounded-xl bg-cyan-500 hover:bg-cyan-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-cyan-500/20"
                               >
                                 Subscribe to Unlock
                               </button>
 
-                              <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-amber-600">
+                              <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-cyan-600">
                                 Pro Feature
                               </p>
                             </div>
@@ -4502,7 +4481,7 @@ export default function InventoryReportPage() {
                                 ))}
                               </div>
 
-                              <p className="mt-3 truncate rounded-md bg-amber-50 px-3 py-2 text-center text-[11px] text-amber-700">
+                              <p className="mt-3 truncate rounded-md bg-cyan-50 px-3 py-2 text-center text-[11px] text-cyan-700">
                                 Open a report only after adding your own data.
                               </p>
                             </>
@@ -4966,12 +4945,12 @@ export default function InventoryReportPage() {
                     {subscriptionLoaded &&
                       !subscription?.drug_lookup_access && (
                         <div className="absolute inset-0 z-[500] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
-                          <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
-                            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
+                          <div className="relative overflow-hidden rounded-2xl border border-cyan-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
+                            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-cyan-200/30 blur-3xl" />
 
                             <div className="relative flex flex-col items-center text-center">
-                              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 border border-amber-200 shadow-sm mb-4">
-                                <Lock className="h-8 w-8 text-amber-600" />
+                              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-100 border border-cyan-200 shadow-sm mb-4">
+                                <Lock className="h-8 w-8 text-cyan-600" />
                               </div>
 
                               <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
@@ -4986,12 +4965,12 @@ export default function InventoryReportPage() {
 
                               <button
                                 onClick={() => router.push("/settings")}
-                                className="mt-5 inline-flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-amber-500/20"
+                                className="mt-5 inline-flex items-center justify-center rounded-xl bg-cyan-500 hover:bg-cyan-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-cyan-500/20"
                               >
                                 Subscribe to Unlock
                               </button>
 
-                              <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-amber-600">
+                              <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-cyan-600">
                                 Pro Feature
                               </p>
                             </div>
@@ -6891,7 +6870,7 @@ export default function InventoryReportPage() {
                         <X className="w-4 h-4" />
                       </button>
                       <div className="flex items-center gap-2">
-                        <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shrink-0" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 shrink-0" />
                         <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">
                           {shortageSource === "highest"
                             ? "Highest Shortage"
@@ -7318,7 +7297,7 @@ export default function InventoryReportPage() {
                     >
                       <X className="w-4 h-4" />
                     </button>
-                    <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shrink-0" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 shrink-0" />
                     <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">
                       Add Note
                     </span>
@@ -7374,15 +7353,15 @@ export default function InventoryReportPage() {
                         setNotesSaved(false);
                       }}
                       placeholder="Type your note here..."
-                      className="flex-1 w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-700 resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-slate-300"
+                      className="flex-1 w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-700 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent placeholder:text-slate-300"
                       style={{ minHeight: 200 }}
                     />
 
                     {/* Saved notes list */}
                     {notesMap[notesDrug.ndc] &&
                       noteText !== notesMap[notesDrug.ndc] && (
-                        <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-                          <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">
+                        <div className="rounded-xl bg-cyan-50 border border-cyan-200 px-4 py-3">
+                          <p className="text-[10px] font-bold text-cyan-700 uppercase tracking-widest mb-1">
                             Saved Note
                           </p>
                           <p className="text-sm text-slate-700 whitespace-pre-wrap">
@@ -7402,7 +7381,7 @@ export default function InventoryReportPage() {
                           setNotesSaved(true);
                         }}
                         disabled={!noteText.trim()}
-                        className="flex-1 h-9 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider transition-colors"
+                        className="flex-1 h-9 rounded-xl bg-cyan-500 hover:bg-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider transition-colors"
                       >
                         {notesSaved ? "✓ Saved" : "Save Note"}
                       </button>

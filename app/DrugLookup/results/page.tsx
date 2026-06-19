@@ -76,9 +76,9 @@ const brandPill = (brand: string | null | undefined) => {
     <span
       className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase"
       style={{
-        background: isBrand ? "#cffafe" : "#fef3c7",
-        color: isBrand ? "#155e75" : "#92400e",
-        border: `1px solid ${isBrand ? "#67e8f9" : "#fcd34d"}`,
+        background: isBrand ? "#cffafe" : "#cffafe",
+        color: isBrand ? "#155e75" : "#155e75",
+        border: `1px solid ${isBrand ? "#67e8f9" : "#67e8f9"}`,
       }}
       title={isBrand ? "Brand" : "Generic"}
     >
@@ -653,25 +653,25 @@ const removeOneFilter = (kind: "bin" | "pcn" | "grp") => {
                       icon={Hash}
                       label="Variants"
                       value={String(data.drugs.length)}
-                      color="slate"
+                      color="amber"
                     />
                     <KpiTile
                       icon={BarChart3}
                       label="Total Rx"
                       value={Number(agg.totalRxs).toLocaleString()}
-                      color="cyan"
+                      color="blue"
                     />
                     <KpiTile
                       icon={DollarSign}
                       label="Total Ins Paid"
                       value={`$${Number(agg.totalInsPaid).toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
-                      color="emerald"
+                      color="green"
                     />
                     <KpiTile
                       icon={TrendingUp}
                       label="Avg / Unit"
                       value={`$${Number(agg.weightedAvgPerUnit).toFixed(2)}`}
-                      color="indigo"
+                      color="violet"
                     />
                   </div>
 
@@ -1165,10 +1165,10 @@ const removeOneFilter = (kind: "bin" | "pcn" | "grp") => {
           </div>
         </div>
 
-        {/* ╔═══ Community modal (placeholder) ══════════════════════════ */}
+        {/* ╔═══ Community drawer (placeholder) ═════════════════════════ */}
         {communityNdc && (
           <div
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+            className="fixed inset-0 z-[200] flex justify-end"
             onClick={() => {
               setCommunityNdc(null);
               setCommunityDrugName(null);
@@ -1177,7 +1177,7 @@ const removeOneFilter = (kind: "bin" | "pcn" | "grp") => {
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
             <div
               onClick={(e) => e.stopPropagation()}
-              className="relative bg-white rounded-xs shadow-2xl max-w-[max-content] w-full overflow-hidden max-h-[90vh] p-12 overflow-y-auto"
+              className="relative bg-white shadow-2xl h-full w-full max-w-4xl overflow-y-auto overflow-x-auto p-8"
             >
               <button
                 onClick={() => {
@@ -1263,6 +1263,36 @@ const COLOR_MAP: Record<
     text: "#059669",
     iconBg: "#d1fae5",
     iconBorder: "#6ee7b7",
+  },
+  green: {
+    bg: "#f0fdf4",
+    text: "#16a34a",
+    iconBg: "#dcfce7",
+    iconBorder: "#86efac",
+  },
+  mint: {
+    bg: "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
+    text: "#047857",
+    iconBg: "#6ee7b7",
+    iconBorder: "#34d399",
+  },
+  amber: {
+    bg: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+    text: "#b45309",
+    iconBg: "#fcd34d",
+    iconBorder: "#f59e0b",
+  },
+  blue: {
+    bg: "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)",
+    text: "#1d4ed8",
+    iconBg: "#93c5fd",
+    iconBorder: "#3b82f6",
+  },
+  violet: {
+    bg: "linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)",
+    text: "#6d28d9",
+    iconBg: "#c4b5fd",
+    iconBorder: "#8b5cf6",
   },
   indigo: {
     bg: "#eef2ff",

@@ -5,8 +5,25 @@ import axios from "axios";
 
 const API_BASE = "https://api.auditprorx.com";
 
-export default function Feedback() {
-  const [showFeedback, setShowFeedback] = useState(false);
+export default function Feedback({
+  open,
+  onClose,
+}: {
+  /** When provided, the modal is controlled externally (e.g. from the sidebar
+   *  menu) and the floating button is hidden. */
+  open?: boolean;
+  onClose?: () => void;
+} = {}) {
+  const isControlled = open !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const showFeedback = isControlled ? open : internalOpen;
+  const setShowFeedback = (value: boolean) => {
+    if (isControlled) {
+      if (!value) onClose?.();
+    } else {
+      setInternalOpen(value);
+    }
+  };
   const [feedback, setFeedback] = useState({
     subject: "",
     message: "",
@@ -48,17 +65,19 @@ export default function Feedback() {
 
   return (
     <>
-      {/* Floating Feedback Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        {!showFeedback && (
-          <button
-            onClick={() => setShowFeedback(true)}
-            className="bg-gray-900 text-white px-4 py-2 rounded-full shadow-lg hover:bg-gray-700 transition text-sm font-medium"
-          >
-            Feedback
-          </button>
-        )}
-      </div>
+      {/* Floating Feedback Button — only in uncontrolled (standalone) mode */}
+      {!isControlled && (
+        <div className="fixed bottom-6 right-6 z-50">
+          {!showFeedback && (
+            <button
+              onClick={() => setShowFeedback(true)}
+              className="bg-gray-900 text-white px-4 py-2 rounded-full shadow-lg hover:bg-gray-700 transition text-sm font-medium"
+            >
+              Feedback
+            </button>
+          )}
+        </div>
+      )}
       {/* Floating Feedback Card */}
       {showFeedback && (
         <>
