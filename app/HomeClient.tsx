@@ -93,7 +93,7 @@ const plans = [
     trial: "14-day free trial with coupon code",
     badge: "Best Value",
     savings: "Pays for itself with a single recovered chargeback",
-    valueNote: "All premium modules included — Drug Lookup, Pharmacy Leads",
+    valueNote: "All premium modules included — Drug Lookup, Leads",
     description:
       "The complete AuditProRx suite — every compliance, lookup, and growth module.",
     features: [
@@ -3129,7 +3129,7 @@ export default function Index() {
                   className="mt-auto w-full block"
                 >
                   <button
-                    className={`w-full mt-7 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-300 animate-fadeInUp ${
+                    className={`${p.price === "$499" ? "mt-6" : "mt-4"} w-full rounded-lg px-4 py-3 text-sm font-medium transition-all duration-300 animate-fadeInUp ${
                       p.highlighted
                         ? "bg-gradient-to-b from-zinc-100 to-zinc-300 text-black shadow-md hover:from-white hover:to-zinc-200 hover:shadow-xl"
                         : "border border-zinc-700 bg-transparent text-foreground hover:border-zinc-500 hover:bg-zinc-900/50"

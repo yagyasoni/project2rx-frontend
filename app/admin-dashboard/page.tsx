@@ -1161,14 +1161,14 @@ const ACCESS_TIERS = [
     name: "Base",
     price: "$99",
     inherits: null,
-    extra: ["Inventory Reports"],
+    extra: ["Inventory Reports", "Bin Search"],
   },
   {
     id: "professional",
     name: "Professional",
     price: "$249",
     inherits: "Everything in Base",
-    extra: ["Inventory View"],
+    extra: ["Inventory View", "Group Reporting"],
   },
   {
     id: "full_access",
@@ -1715,11 +1715,11 @@ export default function AdminDashboard() {
                 label="This Month"
                 value={thisMonthCount}
               />
-              <StatCard
+              {/* <StatCard
                 icon={<Clock size={18} className="text-amber-500" />}
                 label="Pending Review"
                 value={0}
-              />
+              /> */}
             </div>
 
             {/* Filter Toolbar */}
