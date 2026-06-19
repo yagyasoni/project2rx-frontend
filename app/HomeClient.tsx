@@ -46,46 +46,62 @@ import axios from "axios";
 import Link from "next/link";
 import Image from "next/image";
 import "./landing.css";
+import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
 
 const plans = [
   {
     id: "base",
-    name: "Audit Reporting Suite",
+    name: "Base",
     price: "$99",
     period: "/month",
+    trial: "14-day free trial with coupon code",
     description:
-      "Essential audit and inventory reporting for independent pharmacies getting started.",
+      "Core audit reconciliation and reporting for independent pharmacies.",
     features: [
-      "Unlimited inventory audit reports",
-      "NDC & wholesaler reconciliation",
-      "One-click report exports (PDF / CSV)",
-      "Bin Lookup access",
-      "Standard email support",
+      "Automated audit reconciliation",
+      "Unlimited inventory audits",
+      "Audit-ready report exports",
+      "BIN / PCN / Group lookup",
+      "Step-by-step compliance guide",
     ],
     highlighted: false,
-    addOns: [
-      { name: "Inventory Visibility & Group Reporting", price: "$249" },
-      { name: "Drug Intelligence Hub", price: "$199" },
-      { name: "Live Pharmacy Leads", price: "$199" },
+  },
+  {
+    id: "professional",
+    name: "Professional",
+    price: "$249",
+    period: "/month",
+    trial: "14-day free trial with coupon code",
+    badge: "Most Popular",
+    description:
+      "Everything in Base, plus real-time visibility and group reporting.",
+    features: [
+      "Everything in Base",
+      "Live inventory visibility",
+      "Multi-pharmacy group reporting",
+      "Advanced dispensing insights",
+      "Continuous data sync",
     ],
+    highlighted: true,
   },
   {
     id: "full_access",
-    name: "Full Access Platform",
+    name: "Full Access",
     price: "$499",
     period: "/month",
-    description:
-      "The complete AuditProRx platform — every premium module, fully unlocked and integrated.",
+    trial: "14-day free trial with coupon code",
     badge: "Best Value",
-    savings: "Save $197/mo vs. buying modules individually",
+    savings: "Pays for itself with a single recovered chargeback",
+    valueNote: "All premium modules included — Drug Lookup, Leads",
+    description:
+      "The complete AuditProRx suite — every compliance, lookup, and growth module.",
     features: [
-      "Everything in Audit Reporting Suite",
-      "Inventory Exchange Network",
-      "Drug Intelligence Hub",
-      "Market Insights & Reports",
-      // "Admin Automation & workflows",
-      "Priority product support",
-      "Dedicated onboarding specialist",
+      "Everything in Professional",
+      "Full Drug Lookup system",
+      // "Complete NDC database",
+      "Pharmacy growth leads",
+      "Priority support",
     ],
     highlighted: true,
   },
@@ -796,7 +812,8 @@ export default function Index() {
       />
 
       {/* NAV */}
-      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur">
+      <Navbar />
+      {/* <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-9xl items-center justify-between px-4 sm:px-7">
           <Logo />
           <nav className="hidden items-center gap-2 text-sm font-medium text-foreground md:flex lg:gap-3">
@@ -814,6 +831,8 @@ export default function Index() {
           <div className="hidden items-center gap-4 md:flex lg:gap-8.5">
             <a
               href="/auth"
+              target="_blank"
+              rel="noopener noreferrer"
               className="cursor-pointer text-sm font-medium text-white/90 hover:text-white"
             >
               Log In
@@ -825,7 +844,6 @@ export default function Index() {
               <span className="cursor-pointer"> Schedule a Consultation</span>
             </button>
           </div>
-          {/* Mobile menu toggle */}
           <button
             onClick={() => setIsMobileMenuOpen((o) => !o)}
             aria-label="Toggle menu"
@@ -839,7 +857,6 @@ export default function Index() {
             )}
           </button>
         </div>
-        {/* Mobile menu panel */}
         {isMobileMenuOpen && (
           <div className="border-t border-border/60 bg-background/95 backdrop-blur md:hidden">
             <nav className="mx-auto flex max-w-9xl flex-col gap-1 px-4 py-4 text-sm font-medium text-white/90">
@@ -873,7 +890,7 @@ export default function Index() {
             </nav>
           </div>
         )}
-      </header>
+      </header> */}
 
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-border/60">
@@ -1719,11 +1736,11 @@ export default function Index() {
                 >
                   <div className="grid grid-cols-12 gap-6">
                     {/* Index number */}
-                    <div className="col-span-12 md:col-span-1">
+                    {/* <div className="col-span-12 md:col-span-1">
                       <span className="font-mono text-sm tracking-widest text-muted-foreground">
                         {String(idx + 1).padStart(2, "0")}
                       </span>
-                    </div>
+                    </div> */}
 
                     {/* Icon */}
                     <div className="col-span-12 md:col-span-2">
@@ -2882,32 +2899,48 @@ export default function Index() {
           <p className="mt-4 text-muted-foreground animate-fadeInUp stagger-2">
             Start with what you need. Scale as your pharmacy group grows.
           </p>
-          <div className="mt-14 grid items-stretch gap-6 md:grid-cols-2 max-w-3xl mx-auto">
+          {/* <div className="mt-14 grid items-stretch gap-6 md:grid-cols-3 max-w-8xl mx-auto">
             {plans.map((p, idx) => (
               <div
                 key={p.id}
-                className={`relative flex flex-col rounded-2xl border p-7 text-left animate-fadeInUp transition-all ${p.highlighted ? "h-[max-content] border-transparent bg-gradient-to-b from-surface-2 to-surface ring-2 ring-foreground/30 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.55)] md:scale-[1.04] md:-my-2 hover:shadow-[0_25px_70px_-20px_rgba(0,0,0,0.65)]" : "border-border bg-surface hover:border-border/80 hover:shadow-md"}`}
+                className={`relative flex flex-col rounded-2xl border p-7 text-left animate-fadeInUp transition-all duration-300 ease-out ${
+                  p.highlighted
+                    ? "h-[max-content] border-zinc-600 bg-gradient-to-b from-zinc-900 to-black ring-1 ring-zinc-500/50 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.75)] md:scale-[1.03] md:-my-2 hover:-translate-y-1 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.85)]"
+                    : "border-zinc-800 bg-surface hover:-translate-y-1 hover:border-zinc-600 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.55)]"
+                }`}
                 style={{ animationDelay: `${0.1 + idx * 0.15}s` }}
               >
+                <div
+                  className={`absolute inset-x-0 top-0 h-px ${
+                    p.highlighted
+                      ? "bg-gradient-to-r from-transparent via-zinc-300 to-transparent"
+                      : "bg-gradient-to-r from-transparent via-zinc-700 to-transparent"
+                  }`}
+                />
+
                 {p.highlighted && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-b from-zinc-100 to-zinc-300 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-background shadow-md">
+                  <span className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-zinc-300/20 bg-gradient-to-b from-zinc-100 to-zinc-300 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-black shadow-lg">
                     {(p as any).badge ?? "Most Popular"}
                   </span>
                 )}
+
                 <div
                   className="flex items-center gap-2 animate-fadeInUp"
                   style={{ animationDelay: `${0.15 + idx * 0.15}s` }}
                 >
-                  <span className="text-xs font-semibold uppercase tracking-[0.16em]">
+                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-400 transition-colors duration-300">
                     {p.name}
                   </span>
                 </div>
+
                 <div
                   className="mt-5 flex items-baseline gap-1 animate-fadeInUp"
                   style={{ animationDelay: `${0.2 + idx * 0.15}s` }}
                 >
                   <span
-                    className={`font-semibold ${p.highlighted ? "text-5xl" : "text-4xl"}`}
+                    className={`font-semibold tracking-tight ${
+                      p.highlighted ? "text-5xl" : "text-4xl"
+                    }`}
                   >
                     {p.price}
                   </span>
@@ -2915,19 +2948,22 @@ export default function Index() {
                     {p.period}
                   </span>
                 </div>
+
                 {(p as any).savings && (
-                  <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-[11px] font-semibold text-emerald-200 shadow-[0_0_0_1px_rgba(16,185,129,0.15)] backdrop-blur-0">
-                    <Zap className="h-3 w-3 text-emerald-300" />{" "}
+                  <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-300">
+                    <Zap className="h-3 w-3" />
                     {(p as any).savings}
                   </span>
                 )}
+
                 <p
                   className="mt-3 text-sm leading-relaxed text-muted-foreground animate-fadeInUp"
                   style={{ animationDelay: `${0.25 + idx * 0.15}s` }}
                 >
                   {p.description}
                 </p>
-                <ul className="mt-6 space-y-2.5 text-sm">
+
+                <ul className="mt-6 space-y-3 text-sm">
                   {p.features.map((f, fIdx) => (
                     <li
                       key={f}
@@ -2937,14 +2973,17 @@ export default function Index() {
                       }}
                     >
                       <span
-                        className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full ${p.highlighted ? "bg-success/20" : "bg-surface-2"}`}
+                        className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full transition-all duration-300 ${
+                          p.highlighted ? "bg-emerald-500/15" : "bg-zinc-800"
+                        }`}
                       >
-                        <Check className="h-3 w-3 text-success" />
+                        <Check className="h-3.5 w-3.5 text-success" />
                       </span>
+
                       <span
                         className={
-                          fIdx === 0 && p.highlighted
-                            ? "font-semibold text-foreground"
+                          fIdx === 0
+                            ? "font-semibold text-zinc-200 transition-colors duration-300"
                             : "text-foreground/90"
                         }
                       >
@@ -2954,58 +2993,146 @@ export default function Index() {
                   ))}
                 </ul>
 
-                {/* Add-ons for base plan ONLY */}
-                {p.id === "base" && p.addOns && (
-                  <div className="mt-6">
-                    <button
-                      onClick={() =>
-                        setExpandedAddOns({
-                          ...expandedAddOns,
-                          base: !expandedAddOns.base,
-                        })
-                      }
-                      className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition animate-fadeInUp"
-                      style={{ animationDelay: `${0.5 + idx * 0.15}s` }}
-                    >
-                      Available Add-ons
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
-                          expandedAddOns.base ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-                    <div
-                      className={`expandable-content ${
-                        expandedAddOns.base ? "expanded" : ""
-                      }`}
-                    >
-                      <div className="mt-3 space-y-2 border-t border-border pt-4">
-                        {p.addOns.map((addon, aIdx) => (
-                          <div
-                            key={addon.name}
-                            className="flex items-center justify-between rounded-lg bg-surface-2/50 p-3 text-xs animate-fadeInUp"
-                            style={{ animationDelay: `${0.55 + aIdx * 0.1}s` }}
-                          >
-                            <span>{addon.name}</span>
-                            <span className="font-semibold">{addon.price}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
                 <Link
                   href="/auth"
                   target="_blank"
                   className="mt-auto w-full block"
                 >
                   <button
-                    className={`w-full ${
-                      p.highlighted ? "mt-7" : "mt-7"
-                    } rounded-lg px-4 py-3 text-sm font-medium transition-all animate-fadeInUp ${
+                    className={`w-full mt-7 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-300 animate-fadeInUp ${
                       p.highlighted
-                        ? "bg-gradient-to-b from-zinc-100 to-zinc-300 text-background hover:from-white"
-                        : "border border-border text-foreground hover:bg-surface-2"
+                        ? "bg-gradient-to-b from-zinc-100 to-zinc-300 text-black shadow-md hover:from-white hover:to-zinc-200 hover:shadow-xl"
+                        : "border border-zinc-700 bg-transparent text-foreground hover:border-zinc-500 hover:bg-zinc-900/50"
+                    }`}
+                    style={{ animationDelay: `${0.6 + idx * 0.15}s` }}
+                  >
+                    {p.highlighted ? "Get Full Access" : "Get Started"}
+                  </button>
+                </Link>
+              </div>
+            ))}
+          </div> */}
+          <div className="mt-14 grid items-stretch gap-6 md:grid-cols-3 max-w-8xl mx-auto">
+            {plans.map((p, idx) => (
+              <div
+                key={p.id}
+                className={`relative flex flex-col rounded-2xl border p-7 text-left animate-fadeInUp transition-all duration-300 ease-out ${
+                  p.highlighted
+                    ? "h-[max-content] border-zinc-600 bg-gradient-to-b from-zinc-900 to-black ring-1 ring-zinc-500/50 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.75)] md:scale-[1.03] md:-my-2 hover:-translate-y-1 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.85)]"
+                    : "border-zinc-800 bg-surface hover:-translate-y-1 hover:border-zinc-600 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.55)]"
+                }`}
+                style={{ animationDelay: `${0.1 + idx * 0.15}s` }}
+              >
+                {/* Premium Top Accent */}
+                <div
+                  className={`absolute inset-x-0 top-0 h-px ${
+                    p.highlighted
+                      ? "bg-gradient-to-r from-transparent via-zinc-300 to-transparent"
+                      : "bg-gradient-to-r from-transparent via-zinc-700 to-transparent"
+                  }`}
+                />
+
+                {p.highlighted && (
+                  <span className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-zinc-300/20 bg-gradient-to-b from-zinc-100 to-zinc-300 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-black shadow-lg">
+                    {(p as any).badge ?? "Most Popular"}
+                  </span>
+                )}
+
+                <div
+                  className="flex items-center gap-2 animate-fadeInUp"
+                  style={{ animationDelay: `${0.15 + idx * 0.15}s` }}
+                >
+                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-400 transition-colors duration-300">
+                    {p.name}
+                  </span>
+                </div>
+
+                <div
+                  className="mt-5 flex items-baseline gap-1 animate-fadeInUp"
+                  style={{ animationDelay: `${0.2 + idx * 0.15}s` }}
+                >
+                  <span
+                    className={`font-semibold tracking-tight ${
+                      p.highlighted ? "text-5xl" : "text-4xl"
+                    }`}
+                  >
+                    {p.price}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {p.period}
+                  </span>
+                </div>
+
+                {/* NEW: 14-day free trial badge */}
+                {(p as any).trial && (
+                  <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-[11px] font-semibold text-sky-300">
+                    {/* <Sparkles className="h-3 w-3" /> */}
+                    {(p as any).trial}
+                  </span>
+                )}
+
+                {/* Existing savings/value badge (now used by Full Access) */}
+                {/* {(p as any).savings && (
+                  <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-300">
+                    <Zap className="h-3 w-3" />
+                    {(p as any).savings}
+                  </span>
+                )} */}
+
+                <p
+                  className="mt-3 text-sm leading-relaxed text-muted-foreground animate-fadeInUp"
+                  style={{ animationDelay: `${0.25 + idx * 0.15}s` }}
+                >
+                  {p.description}
+                </p>
+
+                {/* NEW: Value note for Full Access — quietly reinforces what's bundled */}
+                {(p as any).valueNote && (
+                  <p className="mt-2 text-xs leading-relaxed text-emerald-300/80 italic">
+                    {(p as any).valueNote}
+                  </p>
+                )}
+
+                <ul className="mt-6 space-y-3 text-sm">
+                  {p.features.map((f, fIdx) => (
+                    <li
+                      key={f}
+                      className="flex items-start gap-2.5 animate-fadeInUp"
+                      style={{
+                        animationDelay: `${0.3 + fIdx * 0.05 + idx * 0.15}s`,
+                      }}
+                    >
+                      <span
+                        className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full transition-all duration-300 ${
+                          p.highlighted ? "bg-emerald-500/15" : "bg-zinc-800"
+                        }`}
+                      >
+                        <Check className="h-3.5 w-3.5 text-success" />
+                      </span>
+
+                      <span
+                        className={
+                          fIdx === 0
+                            ? "font-semibold text-zinc-200 transition-colors duration-300"
+                            : "text-foreground/90"
+                        }
+                      >
+                        {f}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href="/auth"
+                  target="_blank"
+                  className="mt-auto w-full block"
+                >
+                  <button
+                    className={`${p.price === "$499" ? "mt-6" : "mt-4"} w-full rounded-lg px-4 py-3 text-sm font-medium transition-all duration-300 animate-fadeInUp ${
+                      p.highlighted
+                        ? "bg-gradient-to-b from-zinc-100 to-zinc-300 text-black shadow-md hover:from-white hover:to-zinc-200 hover:shadow-xl"
+                        : "border border-zinc-700 bg-transparent text-foreground hover:border-zinc-500 hover:bg-zinc-900/50"
                     }`}
                     style={{ animationDelay: `${0.6 + idx * 0.15}s` }}
                   >
@@ -3096,7 +3223,8 @@ export default function Index() {
       </section>
 
       {/* FOOTER */}
-      <footer className="py-14">
+      <Footer />
+      {/* <footer className="py-14">
         <div className="mx-auto grid max-w-[1280px] grid-cols-2 gap-8 px-4 sm:gap-10 sm:px-7 md:grid-cols-6">
           <div className="col-span-2">
             <Logo />
@@ -3204,7 +3332,7 @@ export default function Index() {
             <span>HIPAA Compliant Platform</span>
           </div>
         </div>
-      </footer>
+      </footer> */}
 
       {/* Floating circular FAQ button */}
       <button

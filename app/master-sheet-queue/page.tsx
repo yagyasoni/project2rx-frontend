@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Check, Loader2, RefreshCw } from "lucide-react";
 import AdminLayout from "@/components/adminLayout";
 import axios from "axios";
+import adminApi from "@/lib/adminApi";
 
 /* ── Static options ──────────────────────────────── */
 // const PBM_OPTIONS = [
@@ -76,9 +77,7 @@ const MasterSheetQueue = () => {
   const fetchRows = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/master-sheet-queue`,
-      );
+      const res = await adminApi.get(`/admin/master-sheet-queue`);
 
       const formatted = res.data.rows.map((r: any) => ({
         id: String(r.id),
@@ -99,9 +98,7 @@ const MasterSheetQueue = () => {
 
       setFetchedRows(Array.from(uniqueMap.values()));
       // 🔹 Fetch stats
-      const statsRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/master-sheet-queue/stats`,
-      );
+      const statsRes = await adminApi.get(`/admin/master-sheet-queue/stats`);
 
       setStats({
         total: Number(statsRes.data.total || 0),
@@ -118,10 +115,8 @@ const MasterSheetQueue = () => {
   const fetchOptions = async () => {
     try {
       const [pbmRes, payerTypeRes] = await Promise.all([
-        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/pbm-options`),
-        axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/payer-type-options`,
-        ),
+        adminApi.get(`/admin/pbm-options`),
+        adminApi.get(`/admin/payer-type-options`),
       ]);
 
       setPbmOptions(pbmRes.data);
@@ -162,31 +157,22 @@ const MasterSheetQueue = () => {
       const selection = selections[row.id];
 
       // 🔹 Step 1: Update PBM + payer_type
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/master-sheet-queue/${row.id}`,
-        {
-          pbm_name: selection.pbmName,
-          payer_type: selection.payerType,
-        },
-      );
+      await adminApi.put(`/admin/master-sheet-queue/${row.id}`, {
+        pbm_name: selection.pbmName,
+        payer_type: selection.payerType,
+      });
 
       // 🔹 Step 2: Add to master_sheet
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/master-sheet-queue/${row.id}/add`,
-      );
+      await adminApi.post(`/admin/master-sheet-queue/${row.id}/add`);
 
       setAddedIds((prev) => new Set(prev).add(row.id));
-      await axios
-        .get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/master-sheet-queue/stats`,
-        )
-        .then((statsRes) => {
-          setStats({
-            total: Number(statsRes.data.total || 0),
-            pending: Number(statsRes.data.pending || 0),
-            added: Number(statsRes.data.added || 0),
-          });
+      await adminApi.get(`/admin/master-sheet-queue/stats`).then((statsRes) => {
+        setStats({
+          total: Number(statsRes.data.total || 0),
+          pending: Number(statsRes.data.pending || 0),
+          added: Number(statsRes.data.added || 0),
         });
+      });
       toast(`Added to master sheet, BIN ${row.bin} mapped successfully.`);
     } catch {
       toast("Failed to add");
@@ -201,12 +187,9 @@ const MasterSheetQueue = () => {
     try {
       setAddingPbm(true);
 
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/pbm-options`,
-        {
-          name: newPbm,
-        },
-      );
+      await adminApi.post(`/admin/pbm-options`, {
+        name: newPbm,
+      });
 
       setNewPbm("");
 
@@ -226,12 +209,9 @@ const MasterSheetQueue = () => {
     try {
       setAddingPayerType(true);
 
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/payer-type-options`,
-        {
-          name: newPayerType,
-        },
-      );
+      await adminApi.post(`/admin/payer-type-options`, {
+        name: newPayerType,
+      });
 
       setNewPayerType("");
 

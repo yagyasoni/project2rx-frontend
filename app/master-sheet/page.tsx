@@ -35,6 +35,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import AdminLayout from "@/components/adminLayout";
+import adminApi from "@/lib/adminApi";
 
 // ─────────────────────────────────────────────────────────────
 // CONFIG
@@ -70,6 +71,14 @@ const COL_CONFIG: Record<
   updated_at: { label: "Last Edited", width: 180, readOnly: true },
 };
 
+const PLACEHOLDERS: Record<string, string> = {
+  bin: "Enter BIN",
+  pcn: "Enter PCN",
+  grp: "Enter GRP",
+  pbm_name: "Select PBM",
+  payer_type: "Select type",
+};
+
 // ─────────────────────────────────────────────────────────────
 // EXCEL EDITOR MODAL
 // ─────────────────────────────────────────────────────────────
@@ -99,10 +108,14 @@ export default function ExcelEditorModal({
     c: number;
     value: CellValue;
   } | null>(null);
+  // const [sortConfig, setSortConfig] = useState<{
+  //   key: string;
+  //   direction: "asc" | "desc";
+  // } | null>(null);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: "asc" | "desc";
-  } | null>(null);
+  }>({ key: "updated_at", direction: "desc" });
   const [pbmOptions, setPbmOptions] = useState<string[]>([]);
   const [payerTypeOptions, setPayerTypeOptions] = useState<string[]>([]);
   const [confirmDeleteRow, setConfirmDeleteRow] = useState<number | null>(null);
@@ -128,7 +141,7 @@ export default function ExcelEditorModal({
     setDeletedIds([]);
     setActiveCell(null);
     try {
-      const res = await axios.get<ExcelState>(`${API_BASE}/admin/excel`);
+      const res = await adminApi.get<ExcelState>(`/admin/excel`);
       setData(res.data);
     } catch (err: any) {
       setFetchError(
@@ -149,8 +162,8 @@ export default function ExcelEditorModal({
   const fetchDropdownOptions = async () => {
     try {
       const [pbmRes, payerRes] = await Promise.all([
-        axios.get(`${API_BASE}/admin/pbm-options`),
-        axios.get(`${API_BASE}/admin/payer-type-options`),
+        adminApi.get(`/admin/pbm-options`),
+        adminApi.get(`/admin/payer-type-options`),
       ]);
 
       setPbmOptions(pbmRes.data.map((item: any) => item.name));
@@ -182,8 +195,20 @@ export default function ExcelEditorModal({
       const colIdx = data.headers.indexOf(sortConfig.key);
 
       rows.sort((a, b) => {
+        const idColIdx = data.headers.indexOf(ID_COL);
+        const aNew = idColIdx !== -1 && !a[idColIdx];
+        const bNew = idColIdx !== -1 && !b[idColIdx];
+        if (aNew && !bNew) return -1;
+        if (!aNew && bNew) return 1;
+
         const valA = a[colIdx] ?? "";
         const valB = b[colIdx] ?? "";
+
+        if (sortConfig.key === "updated_at") {
+          const tA = valA ? new Date(valA).getTime() : 0;
+          const tB = valB ? new Date(valB).getTime() : 0;
+          return sortConfig.direction === "asc" ? tA - tB : tB - tA;
+        }
 
         const numA = Number(valA);
         const numB = Number(valB);
@@ -314,14 +339,23 @@ export default function ExcelEditorModal({
     }
 
     // Remove instantly from UI
-    const updatedRows = data.rows.filter(
-      (row) => Number(row[idColIdx]) !== rowId,
-    );
+    // const updatedRows = data.rows.filter(
+    //   (row) => Number(row[idColIdx]) !== rowId,
+    // );
 
-    setData({
-      ...data,
-      rows: updatedRows,
-    });
+    // setData({
+    //   ...data,
+    //   rows: updatedRows,
+    // });
+    const realIdx = data.rows.indexOf(targetRow);
+    const updatedRows = data.rows.filter((_, idx) => idx !== realIdx);
+
+    setData({ ...data, rows: updatedRows });
+
+    // keep newRowIndexes in sync so new rows don't break
+    setNewRowIndexes((prev) =>
+      prev.filter((i) => i !== realIdx).map((i) => (i > realIdx ? i - 1 : i)),
+    );
   };
 
   // const addRow = () => {
@@ -332,22 +366,44 @@ export default function ExcelEditorModal({
   //   setSearchQuery("");
   // };
 
+  // const addRow = () => {
+  //   if (!data) return;
+
+  //   const emptyRow: CellValue[] = data.headers.map(() => "");
+
+  //   const updatedRows = [...data.rows, emptyRow];
+
+  //   setData({
+  //     ...data,
+  //     rows: updatedRows,
+  //   });
+
+  //   // Track newly added row index
+  //   setNewRowIndexes((prev) => [...prev, updatedRows.length - 1]);
+
+  //   setPage(Math.max(0, Math.ceil(updatedRows.length / PAGE_SIZE) - 1));
+
+  //   setSearchQuery("");
+  // };
+
   const addRow = () => {
     if (!data) return;
 
     const emptyRow: CellValue[] = data.headers.map(() => "");
 
-    const updatedRows = [...data.rows, emptyRow];
+    // Insert new row at the top
+    const updatedRows = [emptyRow, ...data.rows];
 
     setData({
       ...data,
       rows: updatedRows,
     });
 
-    // Track newly added row index
-    setNewRowIndexes((prev) => [...prev, updatedRows.length - 1]);
+    // Track all newly added rows correctly when inserting at the top
+    setNewRowIndexes((prev) => [0, ...prev.map((i) => i + 1)]);
 
-    setPage(Math.max(0, Math.ceil(updatedRows.length / PAGE_SIZE) - 1));
+    // Show the first page since new rows are added at the beginning
+    setPage(0);
 
     setSearchQuery("");
   };
@@ -358,17 +414,15 @@ export default function ExcelEditorModal({
     try {
       if (deletedIds.length > 0) {
         await Promise.allSettled(
-          deletedIds.map((id) =>
-            axios.delete(`${API_BASE}/admin/excel/row/${id}`),
-          ),
+          deletedIds.map((id) => adminApi.delete(`/admin/excel/row/${id}`)),
         );
       }
       const rowsToSend = data.rows.filter((_, i) => dirtyRows.has(i));
-      const res = await axios.post<{
+      const res = await adminApi.post<{
         message: string;
         updated: number;
         inserted: number;
-      }>(`${API_BASE}/admin/excel`, {
+      }>(`/admin/excel`, {
         sheetName: data.sheetName,
         headers: data.headers,
         rows: rowsToSend,
@@ -577,11 +631,13 @@ export default function ExcelEditorModal({
             <table className="border-collapse text-xs w-full">
               <thead className="sticky top-0 z-20">
                 <tr>
-                  <th className="bg-muted px-3.5 py-2.5 border-b border-r border-border text-left text-[11px] font-bold uppercase tracking-wider text-foreground w-14 text-center">
+                  {/* <th className="bg-muted px-3.5 py-2.5 border-b border-r border-border text-left text-[11px] font-bold uppercase tracking-wider text-foreground w-14 text-center">
                     #
-                  </th>
+                  </th> */}
                   {data?.headers.map((h, ci) => {
                     const cfg = COL_CONFIG[h] ?? { label: h, width: 140 };
+                    if (h === "id") return;
+
                     return (
                       <th
                         key={ci}
@@ -663,14 +719,14 @@ export default function ExcelEditorModal({
                         key={visIdx}
                         className={`${visIdx % 2 === 0 ? "bg-card" : "bg-muted/30"} hover:bg-accent transition-colors`}
                       >
-                        <td
+                        {/* <td
                           className={`px-3.5 py-2 border-b border-r border-border text-center text-[10px] font-semibold text-muted-foreground ${isDirty ? "bg-yellow-50" : "bg-muted/50"}`}
                         >
                           {isDirty && (
                             <span className="text-destructive mr-0.5">●</span>
                           )}
                           {page * PAGE_SIZE + visIdx + 1}
-                        </td>
+                        </td> */}
                         {row.map((cell, ci) => {
                           const header = data!.headers[ci];
                           const cfg = COL_CONFIG[header] ?? {
@@ -689,6 +745,8 @@ export default function ExcelEditorModal({
                             isNewRow && ["bin", "pcn", "grp"].includes(header)
                               ? false
                               : !!cfg.readOnly;
+
+                          if (header === "id") return;
                           return (
                             <td
                               key={ci}
@@ -718,7 +776,7 @@ export default function ExcelEditorModal({
                               //   });
                               // }}
                               style={{ width: cfg.width, minWidth: cfg.width }}
-                              className={`px-3.5 py-2 border-b border-r border-border text-xs whitespace-nowrap transition-colors ${
+                              className={`relative px-3.5 py-2 border-b border-r border-border text-xs whitespace-nowrap transition-colors ${
                                 isActive
                                   ? "outline outline-2 outline-foreground -outline-offset-1 bg-accent"
                                   : ""
@@ -727,29 +785,62 @@ export default function ExcelEditorModal({
                               {isActive ? (
                                 header === "pbm_name" ||
                                 header === "payer_type" ? (
-                                  <select
-                                    ref={activeCellInputRef as any}
-                                    autoFocus
-                                    value={editValue}
-                                    onChange={(e) => {
-                                      setEditValue(e.target.value);
-                                      commitEdit(e.target.value, visIdx, ci);
-                                    }}
-                                    onBlur={() => setActiveCell(null)}
-                                    className="w-full bg-background border border-border rounded px-2 py-1 text-xs outline-none"
-                                  >
-                                    <option value="">Select</option>
+                                  <>
+                                    <span className="text-foreground text-xs">
+                                      {editValue || (
+                                        <span className="text-muted-foreground/50 italic">
+                                          {PLACEHOLDERS[header] ?? "Select"}
+                                        </span>
+                                      )}
+                                    </span>
+                                    <select
+                                      size={5}
+                                      ref={activeCellInputRef as any}
+                                      autoFocus
+                                      value={editValue}
+                                      onChange={(e) => {
+                                        setEditValue(e.target.value);
+                                        commitEdit(e.target.value, visIdx, ci);
+                                      }}
+                                      onBlur={() => setActiveCell(null)}
+                                      className="absolute left-0 top-full mt-1 z-50 w-full min-w-[180px] max-h-[200px] overflow-y-auto rounded-md border border-border bg-background shadow-lg p-1 text-xs outline-none"
+                                    >
+                                      <option value="">Select</option>
 
-                                    {(header === "pbm_name"
-                                      ? pbmOptions
-                                      : payerTypeOptions
-                                    ).map((option) => (
-                                      <option key={option} value={option}>
-                                        {option}
-                                      </option>
-                                    ))}
-                                  </select>
+                                      {(header === "pbm_name"
+                                        ? pbmOptions
+                                        : payerTypeOptions
+                                      ).map((option) => (
+                                        <option key={option} value={option}>
+                                          {option}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </>
                                 ) : (
+                                  // <select
+                                  //   size={5}
+                                  //   ref={activeCellInputRef as any}
+                                  //   autoFocus
+                                  //   value={editValue}
+                                  //   onChange={(e) => {
+                                  //     setEditValue(e.target.value);
+                                  //     commitEdit(e.target.value, visIdx, ci);
+                                  //   }}
+                                  //   onBlur={() => setActiveCell(null)}
+                                  //   className="absolute left-0 top-full mt-1 z-50 w-full min-w-[180px] max-h-[200px] overflow-y-auto rounded-md border border-border bg-background shadow-lg p-1 text-xs outline-none"
+                                  // >
+                                  //   <option value="">Select</option>
+
+                                  //   {(header === "pbm_name"
+                                  //     ? pbmOptions
+                                  //     : payerTypeOptions
+                                  //   ).map((option) => (
+                                  //     <option key={option} value={option}>
+                                  //       {option}
+                                  //     </option>
+                                  //   ))}
+                                  // </select>
                                   <input
                                     ref={activeCellInputRef}
                                     autoFocus
@@ -822,11 +913,13 @@ export default function ExcelEditorModal({
                                 <span
                                   className={
                                     cell === null || cell === ""
-                                      ? "text-muted-foreground"
+                                      ? "text-muted-foreground/50 italic"
                                       : "text-foreground"
                                   }
                                 >
-                                  {cell === null || cell === "" ? "null" : cell}
+                                  {cell === null || cell === ""
+                                    ? (PLACEHOLDERS[header] ?? "—")
+                                    : cell}
                                 </span>
                               )}
                             </td>

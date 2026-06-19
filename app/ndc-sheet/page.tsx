@@ -34,8 +34,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import adminApi from "@/lib/adminApi";
 
 const STATUS_OPTIONS = ["pending", "reviewed"];
+
+function StatCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="max-w-[200px] rounded-xl border border-border bg-card p-2 flex items-center gap-3 transition-colors hover:border-foreground/15">
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+          {label}
+        </div>
+        <div className="text-2xl font-bold text-foreground leading-tight">
+          {value}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function NdcSheetPage() {
   const [loading, setLoading] = useState(true);
@@ -68,9 +95,7 @@ export default function NdcSheetPage() {
     try {
       setLoading(true);
 
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/ndc-sheet`,
-      );
+      const res = await adminApi.get(`/admin/ndc-sheet`);
 
       setRows(res.data || []);
     } catch (error) {
@@ -92,10 +117,7 @@ export default function NdcSheetPage() {
 
   const updateNdc = async (id: number, updates: any) => {
     try {
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/ndc-sheet/${id}`,
-        updates,
-      );
+      await adminApi.put(`/admin/ndc-sheet/${id}`, updates);
 
       setRows((prev) =>
         prev.map((row) =>
@@ -123,9 +145,7 @@ export default function NdcSheetPage() {
 
   const deleteNdc = async (id: number) => {
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/ndc-sheet/${id}`,
-      );
+      await adminApi.delete(`/admin/ndc-sheet/${id}`);
 
       setRows((prev) => prev.filter((row) => row.id !== id));
 
@@ -315,8 +335,7 @@ export default function NdcSheetPage() {
             </div>
 
             {/* ANALYTICS */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2">
+            {/* <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2">
                 <Pill size={15} className="text-blue-500" />
 
                 <div>
@@ -325,8 +344,8 @@ export default function NdcSheetPage() {
                   </p>
 
                   <p className="text-sm font-semibold">{totalRows}</p>
-                </div>
-              </div>
+                </div> */}
+            {/* </div>
 
               <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2">
                 <Clock3 size={15} className="text-yellow-500" />
@@ -350,7 +369,23 @@ export default function NdcSheetPage() {
 
                   <p className="text-sm font-semibold">{reviewedCount}</p>
                 </div>
-              </div>
+              </div> */}
+            <div className="flex grid grid-cols-3 lg:grid-cols-3 gap-4 max-w-xl">
+              <StatCard
+                icon={<Pill size={20} className="text-blue-500" />}
+                label="Total NDC"
+                value={totalRows}
+              />
+              <StatCard
+                icon={<Clock3 size={20} className="text-yellow-500" />}
+                label="Pending"
+                value={pendingCount}
+              />
+              <StatCard
+                icon={<CheckCircle2 size={20} className="text-emerald-500" />}
+                label="Reviewed"
+                value={reviewedCount}
+              />
             </div>
 
             {/* FILTERS */}
@@ -482,7 +517,7 @@ export default function NdcSheetPage() {
                         >
                           {/* NDC */}
                           <td className="px-4 py-4">
-                            <div className="inline-flex max-w-full items-center rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-600 truncate">
+                            <div className="inline-flex max-w-full items-center rounded-full  px-3 py-1 text-xs font-semibold text-blue-600 truncate">
                               {row.ndc}
                             </div>
                           </td>

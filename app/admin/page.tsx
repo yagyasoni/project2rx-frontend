@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import api from "@/lib/api";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import adminApi from "@/lib/adminApi";
 
 const Welcome = () => {
   const router = useRouter();
@@ -14,7 +14,7 @@ const Welcome = () => {
   useEffect(() => {
     const content = async () => {
       try {
-        const res = await api.get("/auth/admin/dashboard", {
+        const res = await adminApi.get("/auth/admin/dashboard", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },

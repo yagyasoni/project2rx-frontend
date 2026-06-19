@@ -42,6 +42,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import AdminLayout from "@/components/adminLayout";
 import axios from "axios";
+import adminApi from "@/lib/adminApi";
 
 // ─────────────────────────────────────────────────────────────
 // TYPES
@@ -107,17 +108,17 @@ function StatCard({
   value: number;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
-      <div className="flex items-center justify-center h-8 w-8 rounded-md bg-muted">
+    <div className="max-w-[200px] rounded-xl border border-border bg-card p-2 flex items-center gap-3 transition-colors hover:border-foreground/15">
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0">
         {icon}
       </div>
-      <div>
-        <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
+      <div className="min-w-0">
+        <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
           {label}
-        </p>
-        <p className="text-lg font-bold text-foreground leading-tight">
+        </div>
+        <div className="text-2xl font-bold text-foreground leading-tight">
           {value}
-        </p>
+        </div>
       </div>
     </div>
   );
@@ -169,9 +170,7 @@ export default function Feedback() {
     try {
       if (!silent) setLoading(true);
 
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/feedbacks`,
-      );
+      const res = await adminApi.get(`/admin/feedbacks`);
 
       const rows = res?.data?.feedbacks ?? [];
 
@@ -266,9 +265,7 @@ export default function Feedback() {
     setDeleting(true);
 
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/feedbacks/${id}`,
-      );
+      await adminApi.delete(`/admin/feedbacks/${id}`);
       await fetchFeedbacks();
 
       setDeletedCount((c) => c + 1);
@@ -321,16 +318,14 @@ export default function Feedback() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="flex grid grid-cols-2 lg:grid-cols-3 gap-4 max-w-[max-content]">
               <StatCard
-                icon={
-                  <MessageSquare size={16} className="text-muted-foreground" />
-                }
+                icon={<MessageSquare size={20} className="text-teal-500" />}
                 label="Total Feedbacks"
                 value={feedbacks.length}
               />
               <StatCard
-                icon={<Clock size={16} className="text-muted-foreground" />}
+                icon={<Clock size={20} className="text-blue-500" />}
                 label="Recent (24h)"
                 value={recentCount}
               />
