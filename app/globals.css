@@ -245,6 +245,17 @@
 }
 
 @theme inline {
+  /* Disclaimer/notice palette — FILLED deep navy (#003049, CVD-safe).
+     Inverted scale: low tokens = dark navy backgrounds, high tokens = light
+     text/icons. Single source of truth: retune here. */
+  --color-disclaimer-50:  #003049; /* #003049 — banner bg (darkest) */
+  --color-disclaimer-100: #0a4d6b; /* navy — icon container / button bg */
+  --color-disclaimer-200: #12597a; /* navy — hover bg */
+  --color-disclaimer-300: #2f6f8c; /* mid navy — borders */
+  --color-disclaimer-500: #9fc3d4; /* light — secondary icon */
+  --color-disclaimer-600: #c2dae6; /* light — icon */
+  --color-disclaimer-700: #dbe9f0; /* light — body text */
+  --color-disclaimer-900: #f0f6f9; /* near-white — heading */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

@@ -20,6 +20,7 @@ import {
   GitBranch,
   Pill,
   MessageCircle,
+  MessageSquare,
   Boxes,
   LogOut,
   Bell,
@@ -29,6 +30,7 @@ import {
 
 import api from "@/lib/api";
 import l from "@/public/l.png";
+import Feedback from "@/components/Feedback";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -101,6 +103,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
 
   const [accountName, setAccountName] = useState("...");
   const [openPopup, setOpenPopup] = useState<Popup>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [subscription, setSubscription] = useState<any>(null);
   const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
@@ -623,6 +626,18 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
               Settings
             </button>
 
+            {/* Feedback */}
+            <button
+              onClick={() => {
+                setOpenPopup(null);
+                setShowFeedbackModal(true);
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[14px] text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <MessageSquare className="h-[17px] w-[17px] text-gray-400 shrink-0" />
+              Feedback
+            </button>
+
             {/* Hard Refresh */}
             <button
               onClick={() => window.location.reload()}
@@ -654,6 +669,12 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
           </div>
         )}
       </div>
+
+      {/* Feedback modal — opened from the account menu */}
+      <Feedback
+        open={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+      />
     </aside>
   );
 }

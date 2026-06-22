@@ -27,8 +27,6 @@ export default function PMSPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-5">PMS List</h1>
-
       {/* Search */}
       <div className="relative mb-4 w-72">
         <svg
@@ -49,13 +47,13 @@ export default function PMSPage() {
       </div>
 
       {/* Table */}
-      <div className="w-[520px] border border-border rounded-xl overflow-hidden">
+      <div className="w-full max-w-sm border border-border rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-background">
               <th className="text-left px-4 py-3 font-semibold text-foreground w-10">#</th>
               <th className="text-left px-4 py-3 font-semibold text-foreground">PMS</th>
-              <th className="text-left px-4 py-3 font-semibold text-foreground">SELECT</th>
+              <th className="text-right px-4 py-3 font-semibold text-foreground w-24 whitespace-nowrap">SELECT</th>
             </tr>
           </thead>
           <tbody>
@@ -63,7 +61,7 @@ export default function PMSPage() {
               <tr key={pms} className="border-b border-border last:border-0 hover:bg-muted/40">
                 <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
                 <td className="px-4 py-3 font-medium text-foreground">{pms}</td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 text-right">
                   <input
                     type="checkbox"
                     checked={selected.includes(pms)}

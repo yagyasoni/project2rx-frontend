@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Loader from "@/components/Loader";
 import Loading from "./loading";
 
 import {
@@ -93,6 +94,10 @@ const ROLE_OPTIONS: { value: RoleFilter; label: string }[] = [
   { value: "admin", label: "Admin" },
   { value: "member", label: "Member" },
 ];
+
+// Number of group rows shown per page — sized to fit a standard laptop
+// viewport without the table needing to scroll.
+const GROUPS_PER_PAGE = 10;
 
 export default function AuditGroupsPage() {
   //
@@ -183,6 +188,8 @@ export default function AuditGroupsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [roleFilterOpen, setRoleFilterOpen] = useState(false);
 
@@ -784,6 +791,32 @@ export default function AuditGroupsPage() {
     return 0;
   });
 
+  //
+  // PAGINATION (groups table)
+  //
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(sortedGroups.length / GROUPS_PER_PAGE),
+  );
+
+  // Reset to page 1 when the filtered set changes.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter]);
+
+  // Clamp the page if the list shrinks (e.g. after leaving/deleting a group).
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const pageStart = (currentPage - 1) * GROUPS_PER_PAGE;
+
+  const pagedGroups = sortedGroups.slice(
+    pageStart,
+    pageStart + GROUPS_PER_PAGE,
+  );
+
   const filteredReports = groupReports.filter((r) =>
     r.name.toLowerCase().includes(reportsSearch.toLowerCase()),
   );
@@ -848,12 +881,12 @@ export default function AuditGroupsPage() {
             <div className="bg-white border-b border-slate-200">
               {subscriptionLoaded && !subscription?.inventory_view_access && (
                 <div className="absolute inset-0 z-[129] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
-                  <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
-                    <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
+                  <div className="relative overflow-hidden rounded-2xl border border-cyan-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
+                    <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-cyan-200/30 blur-3xl" />
 
                     <div className="relative flex flex-col items-center text-center">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 border border-amber-200 shadow-sm mb-4">
-                        <Lock className="h-8 w-8 text-amber-600" />
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-100 border border-cyan-200 shadow-sm mb-4">
+                        <Lock className="h-8 w-8 text-cyan-600" />
                       </div>
 
                       <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
@@ -867,12 +900,12 @@ export default function AuditGroupsPage() {
 
                       <button
                         onClick={() => router.push("/settings")}
-                        className="mt-5 inline-flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-amber-500/20"
+                        className="mt-5 inline-flex items-center justify-center rounded-xl bg-cyan-500 hover:bg-cyan-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-cyan-500/20"
                       >
                         Subscribe to Unlock
                       </button>
 
-                      <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-amber-600">
+                      <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-cyan-600">
                         Pro Feature
                       </p>
                     </div>
@@ -881,37 +914,38 @@ export default function AuditGroupsPage() {
               )}
               <div className="px-8 pt-8 pb-6">
                 <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2.5">
-                      <h1 className="text-[22px] font-bold tracking-tight text-slate-900">
-                        GROUP INVENTORY REPORTS
-                      </h1>
-
-                      <button
-                        onClick={() => {
-                          loadGroups(userId);
-
-                          loadInvites(userId);
-                        }}
-                        title="Refresh"
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                      >
-                        <RotateCw className="w-4 h-4" />
-                      </button>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm shrink-0">
+                      <Users className="w-6 h-6 text-white" />
                     </div>
 
-                    <p className="text-sm text-slate-500 mt-1.5">
-                      <span className="font-semibold text-slate-700">
+                    <div>
+                      <div className="flex items-center gap-2.5">
+                        <h1 className="text-[22px] font-bold tracking-tight text-slate-900">
+                          GROUP INVENTORY REPORTS
+                        </h1>
+
+                        <button
+                          onClick={() => {
+                            loadGroups(userId);
+
+                            loadInvites(userId);
+                          }}
+                          title="Refresh"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                        >
+                          <RotateCw className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <p className="text-sm font-medium text-slate-600 mt-0.5">
                         {pharmacyName}
-                      </span>
+                      </p>
 
                       {pharmacyEmail ? (
-                        <span className="text-slate-400">
-                          {" "}
-                          · {pharmacyEmail}
-                        </span>
+                        <p className="text-xs text-slate-400">{pharmacyEmail}</p>
                       ) : null}
-                    </p>
+                    </div>
                   </div>
 
                   <button
@@ -1011,50 +1045,50 @@ export default function AuditGroupsPage() {
             </div>
 
             {activeView === "groups" && (
-              <div className="p-8">
-                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+              <div className="px-8 py-6">
+                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-slate-50/80 border-b border-slate-200">
-                        <th className="px-5 py-3.5 text-left">
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="px-4 py-3 text-left">
                           <button
                             onClick={() => toggleSort("name")}
-                            className="group inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
+                            className="group inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
                           >
                             Group Name
                             <SortIcon column="name" />
                           </button>
                         </th>
 
-                        <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                           Reports
                         </th>
 
-                        <th className="px-5 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                           Members
                         </th>
 
-                        <th className="px-5 py-3.5 text-left">
+                        <th className="px-4 py-3 text-left">
                           <button
                             onClick={() => toggleSort("role")}
-                            className="group inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
+                            className="group inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
                           >
                             Role
                             <SortIcon column="role" />
                           </button>
                         </th>
 
-                        <th className="px-5 py-3.5 text-left">
+                        <th className="px-4 py-3 text-left">
                           <button
                             onClick={() => toggleSort("created_at")}
-                            className="group inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
+                            className="group inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
                           >
                             Created
                             <SortIcon column="created_at" />
                           </button>
                         </th>
 
-                        <th className="px-5 py-3.5 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                           Action
                         </th>
                       </tr>
@@ -1064,9 +1098,7 @@ export default function AuditGroupsPage() {
                       {loadingGroups ? (
                         <tr>
                           <td colSpan={6} className="py-20 text-center">
-                            <div className="flex justify-center">
-                              <div className="w-10 h-10 rounded-full border-2 border-slate-300 border-t-slate-700 animate-spin" />
-                            </div>
+                            <Loader variant="inline" title="Loading groups..." />
                           </td>
                         </tr>
                       ) : sortedGroups.length === 0 ? (
@@ -1080,37 +1112,36 @@ export default function AuditGroupsPage() {
                           </td>
                         </tr>
                       ) : (
-                        sortedGroups.map((group) => (
+                        pagedGroups.map((group) => (
                           <tr
                             key={group.id}
                             className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors"
                           >
-                            <td className="px-5 py-4">
+                            <td className="px-4 py-3">
                               <p className="text-sm font-semibold text-slate-900">
                                 {group.name}
                               </p>
                             </td>
 
-                            <td className="px-5 py-4">
+                            <td className="px-4 py-3 text-left">
                               <button
                                 onClick={() => openReports(group)}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-sm font-semibold text-slate-700 transition-colors"
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
                               >
                                 <FileText className="w-4 h-4 text-slate-400" />
-
                                 <span>{group.reports_count}</span>
                               </button>
                             </td>
 
-                            <td className="px-5 py-4 text-sm font-medium text-slate-600">
+                            <td className="px-4 py-3 text-sm font-medium text-slate-600">
                               {group.members_count}
                             </td>
 
-                            <td className="px-5 py-4">
+                            <td className="px-4 py-3">
                               <span
                                 className={`capitalize text-[11px] font-bold px-3 py-1 rounded-full ${
                                   group.role === "admin"
-                                    ? "bg-amber-100 text-amber-700"
+                                    ? "bg-disclaimer-100 text-disclaimer-700"
                                     : "bg-slate-100 text-slate-600"
                                 }`}
                               >
@@ -1118,17 +1149,17 @@ export default function AuditGroupsPage() {
                               </span>
                             </td>
 
-                            <td className="px-5 py-4 text-sm text-slate-500">
+                            <td className="px-4 py-3 text-sm text-slate-500">
                               {formatDate(group.created_at)}
                             </td>
 
-                            <td className="px-5 py-4 text-right">
+                            <td className="px-4 py-3 text-right">
                               <div className="inline-flex items-center gap-2">
                                 {group.role === "admin" && (
                                   <button
                                     onClick={() => openInviteModal(group)}
                                     title="Add member"
-                                    className="inline-flex items-center justify-center w-9 h-9 border border-slate-200 rounded-xl hover:bg-slate-900 hover:text-white hover:border-slate-900 text-slate-600 transition-colors"
+                                    className="inline-flex items-center justify-center w-8 h-8 border border-slate-200 rounded-lg hover:bg-slate-900 hover:text-white hover:border-slate-900 text-slate-600 transition-colors"
                                   >
                                     <UserPlus className="w-4 h-4" />
                                   </button>
@@ -1136,7 +1167,7 @@ export default function AuditGroupsPage() {
 
                                 <button
                                   onClick={() => openMembers(group)}
-                                  className="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl hover:bg-slate-50 text-sm font-semibold text-slate-700 transition-colors"
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm font-semibold text-slate-700 transition-colors"
                                 >
                                   <Users className="w-4 h-4" />
                                   Members
@@ -1149,6 +1180,60 @@ export default function AuditGroupsPage() {
                       )}
                     </tbody>
                   </table>
+
+                  {!loadingGroups && sortedGroups.length > 0 && (
+                    <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-4">
+                      <span className="text-xs text-slate-500">
+                        Showing{" "}
+                        <b className="text-slate-700">{pageStart + 1}</b>–
+                        <b className="text-slate-700">
+                          {pageStart + pagedGroups.length}
+                        </b>{" "}
+                        of{" "}
+                        <b className="text-slate-700">{sortedGroups.length}</b>{" "}
+                        groups
+                      </span>
+
+                      {totalPages > 1 && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() =>
+                              setCurrentPage((p) => Math.max(1, p - 1))
+                            }
+                            disabled={currentPage === 1}
+                            className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Prev
+                          </button>
+                          {Array.from(
+                            { length: totalPages },
+                            (_, i) => i + 1,
+                          ).map((page) => (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`min-w-[28px] px-2 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                                page === currentPage
+                                  ? "bg-slate-900 text-white border-slate-900"
+                                  : "text-slate-600 border-slate-200 bg-white hover:bg-slate-50"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+                          <button
+                            onClick={() =>
+                              setCurrentPage((p) => Math.min(totalPages, p + 1))
+                            }
+                            disabled={currentPage === totalPages}
+                            className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1157,7 +1242,7 @@ export default function AuditGroupsPage() {
               <div className="p-8">
                 {loadingInvites ? (
                   <div className="flex items-center justify-center py-32">
-                    <div className="w-10 h-10 rounded-full border-2 border-slate-300 border-t-slate-700 animate-spin" />
+                    <Loader variant="inline" title="Loading invites..." />
                   </div>
                 ) : invites.length === 0 ? (
                   <div className="bg-white border border-slate-200 rounded-2xl p-14 text-center">
@@ -1277,7 +1362,7 @@ export default function AuditGroupsPage() {
                   <div className="p-6">
                     {loadingMembers ? (
                       <div className="flex items-center justify-center py-16">
-                        <div className="w-8 h-8 rounded-full border-2 border-slate-300 border-t-slate-700 animate-spin" />
+                        <Loader variant="inline" title="Loading members..." />
                       </div>
                     ) : groupMembers.length === 0 ? (
                       <div className="text-center py-12">
@@ -1297,7 +1382,7 @@ export default function AuditGroupsPage() {
                             <div className="flex items-center gap-3">
                               <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center">
                                 {member.role === "admin" ? (
-                                  <Crown className="w-5 h-5 text-amber-500" />
+                                  <Crown className="w-5 h-5 text-cyan-500" />
                                 ) : (
                                   <User className="w-5 h-5 text-slate-500" />
                                 )}
@@ -1318,7 +1403,7 @@ export default function AuditGroupsPage() {
                               <span
                                 className={`capitalize text-[11px] font-bold px-3 py-1 rounded-full ${
                                   member.role === "admin"
-                                    ? "bg-amber-100 text-amber-700"
+                                    ? "bg-disclaimer-100 text-disclaimer-700"
                                     : "bg-slate-100 text-slate-600"
                                 }`}
                               >

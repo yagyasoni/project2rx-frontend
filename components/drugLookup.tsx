@@ -90,7 +90,7 @@
 //                                       : subscription.status === "trialing"
 //                                         ? "bg-blue-100 text-blue-700"
 //                                         : subscription.status === "past_due"
-//                                           ? "bg-yellow-100 text-yellow-700"
+//                                           ? "bg-cyan-100 text-cyan-700"
 //                                           : "bg-red-100 text-red-700"
 //                                   }`}
 //                                 >

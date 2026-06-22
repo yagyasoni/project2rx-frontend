@@ -22,8 +22,6 @@ export default function SuppliersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-5">Suppliers</h1>
-
       {/* Search */}
       <div className="relative mb-4 w-72">
         <svg

@@ -297,12 +297,12 @@ export default function InventoryViewPage() {
           <div className="flex-1 min-w-0 overflow-y-auto">
             {subscriptionLoaded && !subscription?.inventory_view_access && (
               <div className="absolute inset-0 z-[129] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
-                <div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
-                  <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
+                <div className="relative overflow-hidden rounded-2xl border border-cyan-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
+                  <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-cyan-200/30 blur-3xl" />
 
                   <div className="relative flex flex-col items-center text-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 border border-amber-200 shadow-sm mb-4">
-                      <Lock className="h-8 w-8 text-amber-600" />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-100 border border-cyan-200 shadow-sm mb-4">
+                      <Lock className="h-8 w-8 text-cyan-600" />
                     </div>
 
                     <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
@@ -316,12 +316,12 @@ export default function InventoryViewPage() {
 
                     <button
                       onClick={() => router.push("/settings")}
-                      className="mt-5 inline-flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-amber-500/20"
+                      className="mt-5 inline-flex items-center justify-center rounded-xl bg-cyan-500 hover:bg-cyan-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-cyan-500/20"
                     >
                       Subscribe to Unlock
                     </button>
 
-                    <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-amber-600">
+                    <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-cyan-600">
                       Pro Feature
                     </p>
                   </div>
@@ -688,7 +688,7 @@ function InventoryViewContent({ router }: { router: any }) {
       )}
 
       {/* ============ Compliance Pill ============ */}
-      <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-200">
+      <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-4 py-2 text-xs font-medium text-cyan-800 ring-1 ring-inset ring-cyan-200">
         <AlertTriangle className="h-3.5 w-3.5" />
         All transfers must be patient-specific Rx transfers under DSCSA.
         Controlled substances cannot be listed.
@@ -802,7 +802,7 @@ function InventoryViewContent({ router }: { router: any }) {
           ) : filteredListings.length === 0 ? (
             <EmptyState />
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               {filteredListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
@@ -1031,57 +1031,54 @@ function ListingCard({
     daysToExpiry !== null && daysToExpiry <= EXPIRY_SOON_DAYS;
 
   return (
-    <div className="group rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 transition hover:shadow-md">
-      <div className="grid grid-cols-12 items-center gap-4">
-        {/* Drug Identity */}
-        <div className="col-span-12 lg:col-span-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-violet-50 text-lg font-extrabold text-violet-600">
-              {listing.drug_name[0]}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-base font-extrabold tracking-tight text-gray-900">
-                  {listing.drug_name}
-                  {listing.strength ? ` ${listing.strength}` : ""}
-                </h3>
-                {tag && (
-                  <span
-                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${tag.bg} ${tag.text} ${tag.ring}`}
-                  >
-                    {tag.label}
-                  </span>
-                )}
+    <div className="group flex h-full flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 transition hover:shadow-md">
+      {/* ── Header zone: avatar + identity ── */}
+      <div className="flex items-start gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-violet-50 text-lg font-extrabold text-violet-600">
+          {listing.drug_name[0]}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-extrabold tracking-tight text-gray-900">
+              {listing.drug_name}
+              {listing.strength ? ` ${listing.strength}` : ""}
+            </h3>
+            {tag && (
+              <span
+                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${tag.bg} ${tag.text} ${tag.ring}`}
+              >
+                {tag.label}
+              </span>
+            )}
 
-                {listing.visibility === "groups_only" && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-violet-700 ring-1 ring-inset ring-violet-200">
-                    <Lock className="h-2.5 w-2.5" />
-                    Group
-                  </span>
-                )}
-              </div>
-              <div className="mt-1 font-mono text-[11px] text-gray-400">
-                NDC {listing.ndc}
-              </div>
-            </div>
+            {listing.visibility === "groups_only" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-violet-700 ring-1 ring-inset ring-violet-200">
+                <Lock className="h-2.5 w-2.5" />
+                Group
+              </span>
+            )}
+          </div>
+          <div className="mt-1 font-mono text-[11px] text-gray-400">
+            NDC {listing.ndc}
           </div>
         </div>
+      </div>
 
-        {/* Available Qty */}
-        <div className="col-span-6 lg:col-span-2">
+      {/* ── Stats strip: Available / Expiry / Shelf Cost ── */}
+      <div className="mt-4 grid grid-cols-3 divide-x divide-gray-200 rounded-xl bg-gray-50 ring-1 ring-gray-100">
+        <div className="px-3 py-2.5">
           <DataLabel>Available</DataLabel>
           <div className="mt-0.5 text-xl font-extrabold tracking-tight text-gray-900">
             {listing.quantity}
           </div>
           {listing.package_size && (
-            <div className="text-[11px] text-gray-500">
+            <div className="truncate text-[11px] text-gray-500">
               {listing.package_size}
             </div>
           )}
         </div>
 
-        {/* Expiry */}
-        <div className="col-span-6 lg:col-span-2">
+        <div className="px-3 py-2.5">
           <DataLabel>Expiry</DataLabel>
           {listing.expiry ? (
             <>
@@ -1095,18 +1092,17 @@ function ListingCard({
                   year: "numeric",
                 })}
               </div>
-              <div className="text-[11px] text-gray-500">
+              <div className="truncate text-[11px] text-gray-500">
                 {daysToExpiry}d
                 {listing.lot_number ? ` · Lot ${listing.lot_number}` : ""}
               </div>
             </>
           ) : (
-            <div className="text-xs text-gray-400">—</div>
+            <div className="mt-0.5 text-sm text-gray-400">—</div>
           )}
         </div>
 
-        {/* Cost */}
-        <div className="col-span-6 lg:col-span-2">
+        <div className="px-3 py-2.5">
           <DataLabel>Shelf Cost</DataLabel>
           <div className="mt-0.5 text-sm font-extrabold text-gray-900">
             {listing.acquisition_cost
@@ -1115,22 +1111,18 @@ function ListingCard({
           </div>
           <div className="text-[11px] text-gray-500">benchmarking</div>
         </div>
+      </div>
 
-        {/* Pharmacy */}
-        <div className="col-span-6 lg:col-span-2">
-          <DataLabel>Holding Pharmacy</DataLabel>
-          <div className="mt-0.5 flex items-center gap-1.5 text-xs font-bold text-gray-900">
+      {/* ── Pharmacy zone ── */}
+      <div className="mt-3">
+        <DataLabel>Holding Pharmacy</DataLabel>
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900">
             <span className="truncate">{listing.pharmacy.pharmacy_name}</span>
-            <ShieldCheck className="h-3 w-3 text-emerald-600" />
+            <ShieldCheck className="h-3 w-3 shrink-0 text-emerald-600" />
           </div>
-          <div className="text-[11px] text-gray-500 truncate">
-            {listing.pharmacy.address?.split(",")[0]}
-            {listing.distance_miles !== null
-              ? ` · ${listing.distance_miles} mi`
-              : ""}
-          </div>
-          <div className="mt-0.5 flex items-center gap-1 text-[11px]">
-            <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+          <div className="flex items-center gap-1 text-[11px]">
+            <Star className="h-3 w-3 fill-cyan-500 text-cyan-500" />
             <span className="font-bold text-gray-900">
               {listing.pharmacy.rating.toFixed(1)}
             </span>
@@ -1139,20 +1131,26 @@ function ListingCard({
             </span>
           </div>
         </div>
+        <div className="truncate text-[11px] text-gray-500">
+          {listing.pharmacy.address?.split(",")[0]}
+          {listing.distance_miles !== null
+            ? ` · ${listing.distance_miles} mi`
+            : ""}
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3">
+      {/* ── Footer ── */}
+      <div className="mt-auto border-t border-gray-100 pt-3">
         <div className="text-[11px] text-gray-500">
           Listed {timeAgo(listing.listed_at)} · Auto-expires in 30 days
         </div>
-        <div className="flex items-center gap-2">
+        <div className="mt-3 flex w-full items-center gap-2">
           <button
             onClick={onBookmark}
             title={bookmarked ? "Remove bookmark" : "Save for later"}
             className={`rounded-lg p-2 transition ${
               bookmarked
-                ? "bg-amber-50 text-amber-700"
+                ? "bg-cyan-50 text-cyan-700"
                 : "bg-gray-50 text-gray-500 hover:bg-gray-100"
             }`}
           >
@@ -1168,7 +1166,7 @@ function ListingCard({
           </button>
           <button
             onClick={onConnect}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-gray-800"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-gray-800"
           >
             Send Connect Request
             <ArrowRight className="h-3 w-3" />
@@ -1210,15 +1208,15 @@ function DetailsPanel({
     <div className="fixed inset-0 z-[200] flex justify-end bg-gray-900/40 backdrop-blur-sm">
       <div className="h-full w-full max-w-2xl bg-white shadow-2xl flex flex-col">
         {/* Header — fixed */}
-        <div className="border-b border-gray-100 bg-white px-7 py-5 flex-shrink-0">
+        <div className="border-b border-gray-100 bg-white px-6 py-4 flex-shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-violet-50 text-lg font-extrabold text-violet-600">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-violet-50 text-lg font-extrabold text-violet-600">
                 {listing.drug_name[0]}
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-2xl font-extrabold tracking-tight text-gray-900">
+                  <h2 className="text-xl font-extrabold tracking-tight text-gray-900">
                     {listing.drug_name}
                     {listing.strength ? ` ${listing.strength}` : ""}
                   </h2>
@@ -1245,18 +1243,14 @@ function DetailsPanel({
         </div>
 
         {/* Body — scrollable */}
-        <div className="flex-1 overflow-y-auto space-y-5 px-7 py-6">
+        <div className="flex-1 overflow-y-auto space-y-3.5 px-6 py-4">
           <SectionHeading icon={<Pill className="h-3.5 w-3.5" />}>
             Drug & Inventory
           </SectionHeading>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-2.5">
             <InfoCard
-              label="Available Quantity"
+              label="Available"
               value={listing.quantity.toString()}
-            />
-            <InfoCard
-              label="Package Size"
-              value={listing.package_size || "—"}
             />
             <InfoCard
               label="Expiry"
@@ -1277,29 +1271,33 @@ function DetailsPanel({
               }
             />
             <InfoCard
-              label="Lot Number"
-              value={listing.lot_number || "—"}
-              mono
-            />
-            <InfoCard
               label="Shelf Cost"
               value={
                 listing.acquisition_cost
                   ? `$${listing.acquisition_cost.toFixed(2)}`
                   : "—"
               }
-              hint="per unit · benchmarking only"
+              hint="per unit · benchmarking"
+            />
+            <InfoCard
+              label="Package Size"
+              value={listing.package_size || "—"}
+            />
+            <InfoCard
+              label="Lot Number"
+              value={listing.lot_number || "—"}
+              mono
             />
           </div>
 
           <SectionHeading icon={<Building2 className="h-3.5 w-3.5" />}>
             Holding Pharmacy
           </SectionHeading>
-          <div className="rounded-2xl bg-gray-50 p-5 ring-1 ring-gray-100">
-            <div className="mb-3 flex items-start justify-between">
+          <div className="rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100">
+            <div className="mb-2.5 flex items-start justify-between gap-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <div className="text-base font-extrabold text-gray-900">
+                  <div className="text-sm font-extrabold text-gray-900">
                     {listing.pharmacy.pharmacy_name}
                   </div>
                   <ShieldCheck className="h-4 w-4 text-emerald-600" />
@@ -1310,8 +1308,8 @@ function DetailsPanel({
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-xs ring-1 ring-gray-200">
-                <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+              <div className="flex shrink-0 items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-xs ring-1 ring-gray-200">
+                <Star className="h-3 w-3 fill-cyan-500 text-cyan-500" />
                 <span className="font-bold text-gray-900">
                   {listing.pharmacy.rating.toFixed(1)}
                 </span>
@@ -1321,41 +1319,43 @@ function DetailsPanel({
               </div>
             </div>
 
-            <div className="space-y-2 text-sm">
+            <div className="space-y-1.5 text-sm">
               <PharmacyDetailRow
                 icon={<MapPin className="h-3.5 w-3.5" />}
                 label="Address"
                 value={listing.pharmacy.address || "—"}
               />
-              {listing.pharmacy.phone && (
-                <PharmacyDetailRow
-                  icon={<Phone className="h-3.5 w-3.5" />}
-                  label="Phone"
-                  value={
-                    <a
-                      href={`tel:${listing.pharmacy.phone}`}
-                      className="font-medium text-violet-700 hover:underline"
-                    >
-                      {listing.pharmacy.phone}
-                    </a>
-                  }
-                />
-              )}
-              {listing.pharmacy.email && (
-                <PharmacyDetailRow
-                  icon={<Mail className="h-3.5 w-3.5" />}
-                  label="Email"
-                  value={
-                    <a
-                      href={`mailto:${listing.pharmacy.email}`}
-                      className="font-medium text-violet-700 hover:underline"
-                    >
-                      {listing.pharmacy.email}
-                    </a>
-                  }
-                />
-              )}
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                {listing.pharmacy.phone && (
+                  <PharmacyDetailRow
+                    icon={<Phone className="h-3.5 w-3.5" />}
+                    label="Phone"
+                    value={
+                      <a
+                        href={`tel:${listing.pharmacy.phone}`}
+                        className="font-medium text-violet-700 hover:underline"
+                      >
+                        {listing.pharmacy.phone}
+                      </a>
+                    }
+                  />
+                )}
+                {listing.pharmacy.email && (
+                  <PharmacyDetailRow
+                    icon={<Mail className="h-3.5 w-3.5" />}
+                    label="Email"
+                    value={
+                      <a
+                        href={`mailto:${listing.pharmacy.email}`}
+                        className="break-all font-medium text-violet-700 hover:underline"
+                      >
+                        {listing.pharmacy.email}
+                      </a>
+                    }
+                  />
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-1">
                 <SmallStat
                   label="NPI"
                   value={listing.pharmacy.npi_number || "—"}
@@ -1368,16 +1368,16 @@ function DetailsPanel({
             </div>
           </div>
 
-          {listing.distance_miles !== null && (
-            <>
-              <SectionHeading icon={<MapPin className="h-3.5 w-3.5" />}>
-                Distance
-              </SectionHeading>
-              <div className="grid grid-cols-2 gap-3">
+          <SectionHeading icon={<Clock className="h-3.5 w-3.5" />}>
+            Logistics & Listing
+          </SectionHeading>
+          <div className="grid grid-cols-2 gap-2.5">
+            {listing.distance_miles !== null && (
+              <>
                 <InfoCard
-                  label="From your pharmacy"
+                  label="Distance"
                   value={`${listing.distance_miles} miles`}
-                  hint="approx. driving distance"
+                  hint="approx. driving"
                 />
                 <InfoCard
                   label="Suggested handoff"
@@ -1386,28 +1386,22 @@ function DetailsPanel({
                   }
                   hint="informational only"
                 />
-              </div>
-            </>
-          )}
-
-          <SectionHeading icon={<Clock className="h-3.5 w-3.5" />}>
-            Listing Metadata
-          </SectionHeading>
-          <div className="grid grid-cols-2 gap-3">
+              </>
+            )}
             <InfoCard label="Listed" value={timeAgo(listing.listed_at)} />
             <InfoCard label="Auto-expires" value="In 30 days" />
           </div>
         </div>
 
         {/* Sticky footer actions — fixed */}
-        <div className="border-t border-gray-100 bg-white px-7 py-4 flex-shrink-0">
+        <div className="border-t border-gray-100 bg-white px-6 py-3.5 flex-shrink-0">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <button
                 onClick={onBookmark}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition ${
                   bookmarked
-                    ? "bg-amber-50 text-amber-700"
+                    ? "bg-cyan-50 text-cyan-700"
                     : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                 }`}
               >
@@ -1598,7 +1592,7 @@ function ReportListingModal({
             />
           </div>
 
-          <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 ring-1 ring-inset ring-amber-200">
+          <div className="rounded-xl bg-cyan-50 p-3 text-xs text-cyan-900 ring-1 ring-inset ring-cyan-200">
             <span className="font-extrabold">Note:</span> Reports are anonymous
             to the listing pharmacy but logged with your account ID for audit
             purposes. False reports may result in account suspension.
@@ -2161,7 +2155,7 @@ ${myUser.email}`;
               />
             </div>
 
-            <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 ring-1 ring-inset ring-amber-200">
+            <div className="rounded-xl bg-cyan-50 p-3 text-xs text-cyan-900 ring-1 ring-inset ring-cyan-200">
               <div className="font-extrabold">By proceeding you confirm:</div>
               <ul className="mt-1 list-disc space-y-0.5 pl-5">
                 <li>
@@ -3013,7 +3007,7 @@ function AddListingModal({
                 units per listing, and shelf cost is capped at{" "}
                 <span className="font-semibold">$100,000</span> per unit.
               </div>
-              <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 ring-1 ring-inset ring-amber-200">
+              <div className="rounded-xl bg-cyan-50 p-3 text-xs text-cyan-900 ring-1 ring-inset ring-cyan-200">
                 <span className="font-extrabold">
                   Listing auto-expires in 30 days.
                 </span>{" "}
@@ -3238,12 +3232,12 @@ function InfoCard({
   mono?: boolean;
 }) {
   return (
-    <div className="rounded-xl bg-gray-50 p-3.5 ring-1 ring-gray-100">
+    <div className="rounded-xl bg-gray-50 px-3 py-2.5 ring-1 ring-gray-100">
       <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
         {label}
       </div>
       <div
-        className={`mt-1 text-sm font-extrabold text-gray-900 ${
+        className={`mt-0.5 text-sm font-extrabold text-gray-900 ${
           mono ? "font-mono" : ""
         }`}
       >
@@ -3365,8 +3359,8 @@ function ConfirmModal({
       button: "bg-rose-600 hover:bg-rose-700",
     },
     warning: {
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-600",
+      iconBg: "bg-cyan-100",
+      iconColor: "text-cyan-600",
       button: "bg-gray-900 hover:bg-gray-800",
     },
   };
@@ -3467,7 +3461,7 @@ function GroupsView({
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   {g.is_admin && (
-                    <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 ring-1 ring-inset ring-amber-200">
+                    <span className="inline-flex items-center rounded-full bg-cyan-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-700 ring-1 ring-inset ring-cyan-200">
                       Admin
                     </span>
                   )}
@@ -3646,7 +3640,7 @@ function DiscoverGroupsView({
                 </div>
               </div>
             ) : g.has_pending_request ? (
-              <div className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800 ring-1 ring-inset ring-amber-200">
+              <div className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-lg bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-800 ring-1 ring-inset ring-cyan-200">
                 <Clock className="h-3.5 w-3.5" />
                 Request Pending
               </div>
@@ -3803,7 +3797,7 @@ function CreateGroupModal({
             </div>
           </div>
 
-          <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 ring-1 ring-inset ring-amber-200">
+          <div className="rounded-xl bg-cyan-50 p-3 text-xs text-cyan-900 ring-1 ring-inset ring-cyan-200">
             <span className="font-extrabold">You'll be the group admin.</span>{" "}
             You can invite up to 25 pharmacies. You can be in at most 5 groups
             total.
@@ -4004,7 +3998,7 @@ function GroupDetailPanel({
                         {data.group.name}
                       </h2>
                       {data.group.is_admin && (
-                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 ring-1 ring-inset ring-amber-200">
+                        <span className="inline-flex items-center rounded-full bg-cyan-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-700 ring-1 ring-inset ring-cyan-200">
                           Admin
                         </span>
                       )}
@@ -4165,7 +4159,7 @@ function GroupDetailPanel({
                             {m.pharmacy_name || "(unnamed pharmacy)"}
                           </span>
                           {m.role === "admin" && (
-                            <span className="inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 ring-1 ring-inset ring-amber-200">
+                            <span className="inline-flex items-center rounded-full bg-cyan-50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-cyan-700 ring-1 ring-inset ring-cyan-200">
                               Admin
                             </span>
                           )}
@@ -4203,14 +4197,14 @@ function GroupDetailPanel({
                     {data.pending_invitations.map((inv) => (
                       <div
                         key={inv.id}
-                        className="rounded-xl bg-amber-50 p-3 text-xs ring-1 ring-inset ring-amber-200"
+                        className="rounded-xl bg-cyan-50 p-3 text-xs ring-1 ring-inset ring-cyan-200"
                       >
-                        <div className="font-bold text-amber-900">
+                        <div className="font-bold text-cyan-900">
                           {inv.invited_pharmacy_name ||
                             inv.invited_user_email ||
                             inv.invited_email}
                         </div>
-                        <div className="text-amber-700">
+                        <div className="text-cyan-700">
                           Sent {timeAgo(inv.created_at)}
                         </div>
                       </div>

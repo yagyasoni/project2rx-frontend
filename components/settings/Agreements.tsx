@@ -46,8 +46,6 @@ export default function Agreements() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-5">Agreements</h1>
-
       {/* Search */}
       <div className="relative mb-4 w-72">
         <svg

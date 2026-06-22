@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import AppSidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Loader from "@/components/Loader";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -232,7 +233,7 @@ function GroupReportContent({
   // Analytics color scale for shortage values: the one place color earns its
   // place. Negative = red, zero = amber, positive = green. Theme stays neutral.
   const shortageTone = (n: number) =>
-    n < 0 ? "text-red-600" : n > 0 ? "text-emerald-600" : "text-amber-500";
+    n < 0 ? "text-red-600" : n > 0 ? "text-emerald-600" : "text-cyan-500";
 
   return (
     <div className="px-6 py-6 md:px-10 md:py-8">
@@ -267,7 +268,7 @@ function GroupReportContent({
                 {totalRows} {totalRows === 1 ? "drug" : "drugs"}
               </span>
               {data?.report.created_at && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-xs font-semibold text-cyan-700">
                   <CalendarDays className="h-3.5 w-3.5" />
                   {new Date(data.report.created_at).toLocaleDateString()}
                 </span>
@@ -289,9 +290,8 @@ function GroupReportContent({
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center gap-3 py-24 text-center">
-          <div className="h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-slate-800" />
-          <p className="text-sm text-slate-500">Loading report…</p>
+        <div className="py-24">
+          <Loader variant="inline" title="Loading report…" />
         </div>
       ) : !data ? (
         <div className="flex flex-col items-center gap-3 py-24 text-center">

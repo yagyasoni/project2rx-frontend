@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import Loader from "@/components/Loader";
 import { Checkbox } from "@/components/ui/checkbox";
 // import { Label } from "@/components/ui/label";
 import { useEffect } from "react";
@@ -56,23 +57,23 @@ const DisclaimerBanner = () => {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-xl border border-amber-200/80 bg-gradient-to-r from-amber-50 to-orange-50 overflow-hidden mb-5 shadow-sm">
+    <div className="rounded-xl border-2 border-dashed border-disclaimer-50 bg-gradient-to-r from-sky-50 to-sky-100 overflow-hidden mb-5 shadow-sm">
       <div className="flex items-start gap-3 px-5 py-4">
-        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <AlertTriangle className="w-4 h-4 text-amber-600" />
+        <div className="w-8 h-8 rounded-lg bg-disclaimer-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <AlertTriangle className="w-4 h-4 text-disclaimer-100" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-amber-900">
+          <p className="text-sm font-semibold text-disclaimer-50">
             File requirements — read before uploading
           </p>
-          <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+          <p className="text-xs text-disclaimer-100 mt-0.5 leading-relaxed">
             Your CSV must include all required columns. Missing columns will
             block processing.
           </p>
         </div>
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-amber-700 hover:text-amber-900 transition-all bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg border border-amber-200"
+          className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-disclaimer-100 hover:text-disclaimer-50 transition-all bg-disclaimer-600 hover:bg-disclaimer-500 px-3 py-1.5 rounded-lg border border-disclaimer-500"
         >
           {expanded ? (
             <>
@@ -87,7 +88,7 @@ const DisclaimerBanner = () => {
       </div>
 
       {expanded && (
-        <div className="border-t border-amber-200/60 bg-white/80 px-5 py-5 space-y-5">
+        <div className="border-t border-disclaimer-500/60 bg-white/80 px-5 py-5 space-y-5">
           <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
             <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
             <div>
@@ -153,9 +154,9 @@ const DisclaimerBanner = () => {
             </div>
           </div>
 
-          <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-start gap-2.5">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <p className="text-[11px] text-amber-700 leading-relaxed">
+          <div className="rounded-xl bg-disclaimer-700 border border-disclaimer-500 px-4 py-3 flex items-start gap-2.5">
+            <AlertTriangle className="w-3.5 h-3.5 text-disclaimer-200 flex-shrink-0 mt-0.5" />
+            <p className="text-[11px] text-disclaimer-200 leading-relaxed">
               <span className="font-semibold">Important:</span> After uploading,
               verify every required column is correctly mapped. Auto-detection
               may not always be accurate — double-check before clicking{" "}
@@ -619,14 +620,14 @@ const UploadInventoryStep = ({
                     Column mapping progress
                   </span>
                   <span
-                    className={`text-[11px] font-semibold ${allMapped ? "text-emerald-600" : "text-amber-600"}`}
+                    className={`text-[11px] font-semibold ${allMapped ? "text-emerald-600" : "text-disclaimer-50"}`}
                   >
                     {mappedCount}/{totalRequired} mapped
                   </span>
                 </div>
                 <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${allMapped ? "bg-emerald-500" : "bg-amber-400"}`}
+                    className={`h-full rounded-full transition-all duration-500 ${allMapped ? "bg-emerald-500" : "bg-disclaimer-50"}`}
                     style={{ width: `${(mappedCount / totalRequired) * 100}%` }}
                   />
                 </div>
@@ -640,7 +641,7 @@ const UploadInventoryStep = ({
               {/* Table Header */}
               <div className="flex items-center justify-between bg-gray-50 border-b border-gray-200 px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <Sparkles className="w-3.5 h-3.5 text-disclaimer-50" />
                   <span className="text-xs font-semibold text-gray-700">
                     Column Mapping
                   </span>
@@ -793,42 +794,21 @@ const UploadInventoryStep = ({
 
       {/* ── Success Modal ── */}
       {/* ── Upload Progress Modal ── */}
-      {isUploading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-8 flex flex-col items-center text-center">
-            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-5 relative">
-              <Upload className="w-7 h-7 text-blue-600" />
-              <div className="absolute -inset-1 rounded-[18px] border-2 border-transparent border-t-blue-500 border-r-blue-300 animate-spin" />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">
-              Uploading File...
-            </h3>
-            <p className="text-sm text-gray-500 mb-5 truncate max-w-full px-2">
-              {inventoryFile?.name}
-            </p>
-            <div className="w-full space-y-2">
-              <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                <div
-                  className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-300 ease-out"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400">
-                  {uploadProgress < 90
-                    ? "Uploading file..."
-                    : uploadProgress < 100
-                      ? "Processing on server..."
-                      : "Finalizing..."}
-                </span>
-                <span className="text-xs font-bold text-blue-600 tabular-nums">
-                  {uploadProgress}%
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Loader
+        show={isUploading}
+        variant="card"
+        tone="dark"
+        progress={uploadProgress}
+        title="Uploading File..."
+        subtitle={inventoryFile?.name}
+        progressLabel={
+          uploadProgress < 90
+            ? "Uploading file..."
+            : uploadProgress < 100
+              ? "Processing on server..."
+              : "Finalizing..."
+        }
+      />
 
       {/* ── Success Modal ── */}
       {submitSuccess && (
