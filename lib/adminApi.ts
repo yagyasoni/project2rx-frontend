@@ -115,7 +115,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
 const forceAdminLogout = () => {
   localStorage.removeItem("adminAccessToken");
   localStorage.removeItem("adminRefreshToken");
-  window.location.href = "/auth";
+  // window.location.href = "/auth";
 };
 
 adminApi.interceptors.response.use(
