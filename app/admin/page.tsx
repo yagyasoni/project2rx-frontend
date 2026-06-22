@@ -14,11 +14,7 @@ const Welcome = () => {
   useEffect(() => {
     const content = async () => {
       try {
-        const res = await adminApi.get("/auth/admin/dashboard", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        });
+        const res = await adminApi.get("/auth/admin/dashboard");
 
         console.log(res?.data);
       } catch (error: any) {

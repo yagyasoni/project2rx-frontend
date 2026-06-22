@@ -3,16 +3,17 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
+import { useRouter, usePathname } from "next/navigation";
 import "../app/landing.css";
 
 const navLinks = [
-  { label: "Capabilities", href: "#features" },
-  { label: "Drug Intelligence", href: "#drug-lookup" },
-  { label: "Audit Reports", href: "#audit-reports" },
-  { label: "Inventory Exchange", href: "#inventory-view" },
-  { label: "Reimbursement Leads", href: "#leads" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Support", href: "#support" },
+  { label: "Capabilities", href: "/#features" },
+  { label: "Drug Intelligence", href: "/#drug-lookup" },
+  { label: "Audit Reports", href: "/#audit-reports" },
+  { label: "Inventory Exchange", href: "/#inventory-view" },
+  { label: "Reimbursement Leads", href: "/#leads" },
+  { label: "Pricing", href: "/#pricing" },
+  { label: "Support", href: "/#support" },
 ];
 
 const Logo = () => (
@@ -34,6 +35,25 @@ const Logo = () => (
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleSectionClick = (e: React.MouseEvent, href: string) => {
+    const match = href.match(/^\/?#(.+)$/);
+    if (!match) return;
+
+    const id = match[1];
+    e.preventDefault();
+
+    if (pathname === "/") {
+      document
+        .getElementById(id)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.replaceState(null, "", `#${id}`);
+    } else {
+      router.push(`/#${id}`);
+    }
+  };
 
   const scheduleConsultation = () => {
     window.open("https://calendar.app.google/ekTAPx65xrwq2Qiv6", "_blank");
@@ -43,30 +63,31 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-9xl items-center justify-between px-4 sm:pl-0 sm:px-7">
         <Logo />
-        <nav className="hidden items-center gap-2 text-sm font-medium text-foreground md:flex lg:gap-3">
+        <nav className="hidden items-center gap-0.5 text-[11px] font-medium text-foreground md:flex lg:gap-2 lg:text-xs xl:gap-3 xl:text-sm">
           {navLinks.map((l) => (
             <a
               key={l.label}
               href={l.href}
-              className="group relative cursor-pointer rounded-md px-3 py-1.5 text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
+              onClick={(e) => handleSectionClick(e, l.href)}
+              className="group relative cursor-pointer whitespace-nowrap rounded-md px-1.5 py-1.5 text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.08)] lg:px-2.5 xl:px-3"
             >
               {l.label}
               <span className="pointer-events-none absolute inset-x-3 -bottom-0.5 h-px origin-left scale-x-0 bg-gradient-to-r from-white/60 to-white/0 transition-transform duration-300 group-hover:scale-x-100" />
             </a>
           ))}
         </nav>
-        <div className="hidden items-center gap-4 md:flex lg:gap-8.5">
+        <div className="hidden items-center gap-2 md:flex lg:gap-4 xl:gap-8.5">
           <a
             href="/auth"
             target="_blank"
             rel="noopener noreferrer"
-            className="cursor-pointer text-sm font-medium text-white/90 hover:text-white"
+            className="cursor-pointer whitespace-nowrap text-[11px] font-medium text-white/90 hover:text-white lg:text-xs xl:text-sm"
           >
             Log In
           </a>
           <button
             onClick={scheduleConsultation}
-            className="cursor-pointer rounded-lg bg-gradient-to-b from-zinc-100 to-zinc-300 px-4 py-2 text-sm font-medium text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] hover:from-white animate-fadeInUp stagger-0"
+            className="cursor-pointer whitespace-nowrap rounded-lg bg-gradient-to-b from-zinc-100 to-zinc-300 px-3 py-2 text-[11px] font-medium text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] hover:from-white animate-fadeInUp stagger-0 lg:px-4 lg:text-xs xl:text-sm"
           >
             <span className="cursor-pointer"> Schedule a Consultation</span>
           </button>
@@ -93,7 +114,10 @@ export default function Navbar() {
               <a
                 key={l.label}
                 href={l.href}
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={(e) => {
+                  setIsMobileMenuOpen(false);
+                  handleSectionClick(e, l.href);
+                }}
                 className="cursor-pointer rounded-md px-2 py-2 text-white/90 transition hover:bg-surface hover:text-white"
               >
                 {l.label}

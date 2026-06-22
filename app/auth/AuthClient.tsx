@@ -194,8 +194,10 @@ const AuthPageInner = () => {
 
       if (isLogin) {
         // Admin — store tokens and go to admin dashboard
-        localStorage.setItem("accessToken", res?.data?.accessToken);
-        localStorage.setItem("refreshToken", res?.data?.refreshToken);
+        // localStorage.setItem("accessToken", res?.data?.accessToken);
+        // localStorage.setItem("refreshToken", res?.data?.refreshToken);
+        localStorage.setItem("adminAccessToken", res?.data?.accessToken);
+        localStorage.setItem("adminRefreshToken", res?.data?.refreshToken);
         localStorage.setItem("userId", res?.data?.user?.id);
         router.push("/admin");
       } else {
