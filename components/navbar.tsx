@@ -80,7 +80,7 @@ export default function Navbar() {
           <a
             href="/auth"
             target="_blank"
-            rel="noopener noreferrer"
+            // rel="noopener noreferrer"
             className="cursor-pointer whitespace-nowrap text-[11px] font-medium text-white/90 hover:text-white lg:text-xs xl:text-sm"
           >
             Log In
