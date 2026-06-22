@@ -1974,7 +1974,7 @@ export default function Index() {
             </div>
           </div> */}
           {/* LEFT — copy + feature list */}
-          <div className="animate-slideInLeft">
+          <div id="overview" className="animate-slideInLeft">
             <Pill>Demonstration Walkthrough</Pill>
             <h2 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl animate-fadeInUp stagger-1">
               See <span className="text-shimmer">AuditProRx</span> in motion

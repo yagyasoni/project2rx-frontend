@@ -17,6 +17,12 @@ import {
   CheckCircle2,
   Check,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 import UsersPage from "@/components/settings/UsersPage";
 import SuppliersPage from "@/components/settings/Supplierspage";
 import PMSPage from "@/components/settings/Pmspage";
@@ -102,10 +108,26 @@ const SettingsLayout = () => {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Top bar */}
           <div className="bg-white border-b border-slate-200 px-8 py-5 shrink-0">
-            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 tracking-tight">
-              {active}
-              {active === "User" && <Check className="h-5 w-5 text-teal-800" />}
-            </h2>
+            <TooltipProvider>
+              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 tracking-tight">
+                {active === "User" ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex cursor-pointer">
+                        {active}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Verified</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  active
+                )}
+
+                {active === "User" && (
+                  <Check className="font-bold h-8 w-8 text-teal-800" />
+                )}
+              </h2>{" "}
+            </TooltipProvider>
             <p className="text-xs text-slate-400 mt-0.5">
               {active === "Suppliers" && "Manage wholesalers & distributors"}
               {active === "PMS" && "Pharmacy management system settings"}
