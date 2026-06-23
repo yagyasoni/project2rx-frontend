@@ -9,14 +9,14 @@ import {
   Inbox,
   Loader2,
   Pill,
-  Package,
   Store,
   AlertTriangle,
-  Flag,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -44,16 +44,15 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import AdminLayout from "@/components/adminLayout";
-import axios from "axios";
+import adminApi from "@/lib/adminApi";
 
 // ─────────────────────────────────────────────────────────────
-// API  (plain axios — these are user endpoints, NOT admin)
+// API  (plain api — these are user endpoints, NOT admin)
 //   GET    /api/inventory-view/listings
-//   DELETE /api/inventory-view/listings/:id          → soft-delete own listing
-//   POST   /api/inventory-view/listings/:id/report   → { reason_code, details }
-// If your axios baseURL already includes "/api", drop the "/api" below.
+//   DELETE /api/inventory-view/listings/:id          → soft-delete listing
+// If your api baseURL already includes "/api", drop the "/api" below.
 // ─────────────────────────────────────────────────────────────
-const BASE = "https://api.auditprorx.com/api/inventory-view";
+const BASE = "/api/inventory-view";
 
 // ─────────────────────────────────────────────────────────────
 // TYPES
@@ -70,6 +69,7 @@ interface ListingRow {
   lot_number: string;
   expiry: string;
   acquisition_cost: string;
+  reason_code: string;
   visibility: string;
   listed_at: string;
   owner_user_id: string;
@@ -79,18 +79,11 @@ interface ListingRow {
   isMine: boolean;
 }
 
-// ─────────────────────────────────────────────────────────────
-// REPORT REASONS
-// ─────────────────────────────────────────────────────────────
-const REPORT_REASONS = [
-  { value: "counterfeit", label: "Counterfeit / Suspicious" },
-  { value: "expired", label: "Expired / Recalled" },
-  { value: "pricing", label: "Pricing Issue" },
-  { value: "misleading", label: "Misleading / Inaccurate" },
-  { value: "inappropriate", label: "Inappropriate" },
-  { value: "duplicate", label: "Duplicate Listing" },
-  { value: "other", label: "Other" },
-];
+type SortDir = "asc" | "desc";
+interface SortConfig {
+  key: keyof ListingRow | null;
+  dir: SortDir;
+}
 
 // ─────────────────────────────────────────────────────────────
 // HELPERS
@@ -128,14 +121,35 @@ const formatCost = (v: any) => {
   return "$" + n.toFixed(2);
 };
 
+const formatReason = (v: string) => {
+  if (!v || v === "—") return "—";
+  return v.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
+const isExpired = (iso: string) =>
+  !!iso && new Date(iso).getTime() < Date.now();
+
+const isExpiringSoon = (iso: string) => {
+  if (!iso) return false;
+  const t = new Date(iso).getTime();
+  const now = Date.now();
+  return t >= now && t - now <= 90 * 86_400_000; // within 90 days
+};
+
+const toNum = (v: any): number | null => {
+  if (v === "" || v === null || v === undefined || v === "—") return null;
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+};
+
 const visibilityLabel = (v: string) => {
   switch ((v || "").toLowerCase()) {
     case "public":
       return "Public";
     case "groups_only":
       return "Groups";
-    case "private":
-      return "Private";
+    // case "private":
+    //   return "Private";
     default:
       return v || "—";
   }
@@ -147,8 +161,8 @@ const visibilityStyle = (v: string) => {
       return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
     case "groups_only":
       return "bg-blue-500/10 text-blue-600 border-blue-500/20";
-    case "private":
-      return "bg-muted text-muted-foreground border-border";
+    // case "private":
+    //   return "bg-muted text-muted-foreground border-border";
     default:
       return "bg-muted text-muted-foreground border-border";
   }
@@ -184,22 +198,65 @@ function StatCard({
 }
 
 // ─────────────────────────────────────────────────────────────
+// SORTABLE HEADER CELL
+// ─────────────────────────────────────────────────────────────
+function SortableTh({
+  label,
+  columnKey,
+  sortConfig,
+  onSort,
+}: {
+  label: string;
+  columnKey: keyof ListingRow;
+  sortConfig: SortConfig;
+  onSort: (key: keyof ListingRow) => void;
+}) {
+  const active = sortConfig.key === columnKey;
+  return (
+    <th className="px-3 py-3 text-left">
+      <button
+        type="button"
+        onClick={() => onSort(columnKey)}
+        className={`group inline-flex items-center gap-1 cursor-pointer select-none text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+          active
+            ? "text-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        {label}
+        {active ? (
+          sortConfig.dir === "asc" ? (
+            <ChevronUp size={12} />
+          ) : (
+            <ChevronDown size={12} />
+          )
+        ) : (
+          <ChevronsUpDown
+            size={12}
+            className="opacity-40 group-hover:opacity-70"
+          />
+        )}
+      </button>
+    </th>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────
 export default function Reports() {
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [ownerFilter, setOwnerFilter] = useState("all"); // all | mine | available
+  const [visibilityFilter, setVisibilityFilter] = useState("all"); // all | public | groups_only | private
+  const [expiryFilter, setExpiryFilter] = useState("all"); // all | soon | expired
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "listed_at",
+    dir: "desc",
+  });
 
   // modals
   const [viewRow, setViewRow] = useState<ListingRow | null>(null);
-
-  // report
-  const [reportRow, setReportRow] = useState<ListingRow | null>(null);
-  const [reportReason, setReportReason] = useState("");
-  const [reportDetails, setReportDetails] = useState("");
-  const [reporting, setReporting] = useState(false);
 
   // delete
   const [deleteRow, setDeleteRow] = useState<ListingRow | null>(null);
@@ -228,12 +285,16 @@ export default function Reports() {
     lot_number: r.lot_number || "—",
     expiry: r.expiry || "",
     acquisition_cost: r.acquisition_cost ?? "",
+    reason_code: r.reason_code || "—",
     visibility: r.visibility || "—",
     listed_at: r.listed_at || r.created_at,
     owner_user_id: r.owner_user_id ? String(r.owner_user_id) : "",
-    pharmacy_name: r.pharmacy_name || "—",
-    pharmacy_email: r.pharmacy_email || "—",
-    phone: r.phone || "—",
+    // ✅ Pharmacy fields can arrive flat OR nested (mapListingRow shape).
+    // Cover both so the pharmacy name always resolves.
+    pharmacy_name:
+      r.pharmacy_name || r.pharmacy?.pharmacy_name || r.pharmacy?.name || "—",
+    pharmacy_email: r.pharmacy_email || r.pharmacy?.email || r.email || "—",
+    phone: r.phone || r.pharmacy?.phone || "—",
     isMine,
   });
 
@@ -241,7 +302,7 @@ export default function Reports() {
     try {
       if (!silent) setLoading(true);
 
-      const res = await axios.get(`${BASE}/listings`);
+      const res = await adminApi.get(`${BASE}/listings`);
 
       const others = res?.data?.listings ?? [];
       const mine = res?.data?.my_listings ?? [];
@@ -271,13 +332,32 @@ export default function Reports() {
     }
   };
 
+  // ── Sort toggle ──────────────────────────────────────────────
+  const handleSort = (key: keyof ListingRow) => {
+    setSortConfig((prev) =>
+      prev.key === key
+        ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: "asc" },
+    );
+  };
+
   // Filter + search
   const filtered = useMemo(() => {
     let rows = listings;
 
-    if (ownerFilter === "mine") rows = rows.filter((r) => r.isMine);
-    else if (ownerFilter === "available") rows = rows.filter((r) => !r.isMine);
+    // visibility
+    if (visibilityFilter !== "all")
+      rows = rows.filter(
+        (r) => (r.visibility || "").toLowerCase() === visibilityFilter,
+      );
 
+    // expiry
+    if (expiryFilter === "expired")
+      rows = rows.filter((r) => isExpired(r.expiry));
+    else if (expiryFilter === "soon")
+      rows = rows.filter((r) => isExpiringSoon(r.expiry));
+
+    // search
     if (search.trim()) {
       const q = search.toLowerCase();
       rows = rows.filter(
@@ -288,43 +368,49 @@ export default function Reports() {
       );
     }
     return rows;
-  }, [listings, search, ownerFilter]);
+  }, [listings, search, visibilityFilter, expiryFilter]);
 
-  const mineCount = listings.filter((l) => l.isMine).length;
-  const availableCount = listings.filter((l) => !l.isMine).length;
+  // Sort (missing values pushed to the bottom either direction)
+  const sorted = useMemo(() => {
+    const { key, dir } = sortConfig;
+    if (!key) return filtered;
 
-  // ── Report a listing ─────────────────────────────────────────
-  const openReport = (row: ListingRow) => {
-    setReportReason("");
-    setReportDetails("");
-    setReportRow(row);
-  };
+    const numericKeys: (keyof ListingRow)[] = ["quantity", "acquisition_cost"];
+    const dateKeys: (keyof ListingRow)[] = ["expiry", "listed_at"];
+    const factor = dir === "asc" ? 1 : -1;
 
-  const submitReport = async () => {
-    if (!reportRow) return;
-    if (!reportReason) {
-      toast.error("Please select a reason");
-      return;
-    }
-    setReporting(true);
-    try {
-      await axios.post(`${BASE}/listings/${reportRow.id}/report`, {
-        reason_code: reportReason,
-        details: reportDetails.trim() || null,
-      });
-      toast.success("Listing reported. Thank you.");
-      setReportRow(null);
-    } catch (err: any) {
-      console.error("Report error:", err);
-      const msg =
-        err?.response?.data?.error || err?.message || "Failed to submit report";
-      toast.error(msg);
-    } finally {
-      setReporting(false);
-    }
-  };
+    const arr = [...filtered];
+    arr.sort((a, b) => {
+      if (numericKeys.includes(key)) {
+        const an = toNum((a as any)[key]);
+        const bn = toNum((b as any)[key]);
+        if (an === null && bn === null) return 0;
+        if (an === null) return 1;
+        if (bn === null) return -1;
+        return (an - bn) * factor;
+      }
+      if (dateKeys.includes(key)) {
+        const at = (a as any)[key] ? new Date((a as any)[key]).getTime() : null;
+        const bt = (b as any)[key] ? new Date((b as any)[key]).getTime() : null;
+        if (at === null && bt === null) return 0;
+        if (at === null) return 1;
+        if (bt === null) return -1;
+        return (at - bt) * factor;
+      }
+      const av = ((a as any)[key] ?? "").toString().toLowerCase();
+      const bv = ((b as any)[key] ?? "").toString().toLowerCase();
+      return av.localeCompare(bv) * factor;
+    });
+    return arr;
+  }, [filtered, sortConfig]);
 
-  // ── Delete own listing ───────────────────────────────────────
+  // Stats (aligned with the active filters)
+  const publicCount = listings.filter(
+    (l) => (l.visibility || "").toLowerCase() === "public",
+  ).length;
+  const expiredCount = listings.filter((l) => isExpired(l.expiry)).length;
+
+  // ── Delete listing ───────────────────────────────────────────
   const confirmDelete = async () => {
     if (!deleteRow) return;
     const id = deleteRow.id;
@@ -335,7 +421,7 @@ export default function Reports() {
     setDeleting(true);
 
     try {
-      await axios.delete(`${BASE}/listings/${id}`);
+      await adminApi.delete(`${BASE}/listings/${id}`);
       toast.success("Listing deleted successfully");
     } catch (err: any) {
       console.error("Delete error:", err);
@@ -363,7 +449,7 @@ export default function Reports() {
                   INVENTORY LISTINGS
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Browse listings, report problems, or remove your own
+                  Browse listings, view details, or remove a listing
                 </p>
               </div>
               <Button
@@ -388,14 +474,14 @@ export default function Reports() {
                 value={listings.length}
               />
               <StatCard
-                icon={<Package size={20} className="text-blue-500" />}
-                label="Available"
-                value={availableCount}
+                icon={<Store size={20} className="text-emerald-500" />}
+                label="Public"
+                value={publicCount}
               />
               <StatCard
-                icon={<Store size={20} className="text-emerald-500" />}
-                label="My Listings"
-                value={mineCount}
+                icon={<AlertTriangle size={20} className="text-red-500" />}
+                label="Expired"
+                value={expiredCount}
               />
             </div>
 
@@ -414,16 +500,35 @@ export default function Reports() {
                   className="pl-9 h-9 text-xs"
                 />
               </div>
-              <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+
+              {/* Visibility */}
+              <Select
+                value={visibilityFilter}
+                onValueChange={setVisibilityFilter}
+              >
                 <SelectTrigger className="w-[150px] h-9 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Listings</SelectItem>
-                  <SelectItem value="available">Available</SelectItem>
-                  <SelectItem value="mine">My Listings</SelectItem>
+                  <SelectItem value="all">All Visibility</SelectItem>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="groups_only">Groups</SelectItem>
+                  {/* <SelectItem value="private">Private</SelectItem> */}
                 </SelectContent>
               </Select>
+
+              {/* Expiry */}
+              <Select value={expiryFilter} onValueChange={setExpiryFilter}>
+                <SelectTrigger className="w-[150px] h-9 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Expiry</SelectItem>
+                  <SelectItem value="soon">Expiring Soon</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
+                </SelectContent>
+              </Select>
+
               <span className="text-[11px] text-muted-foreground ml-auto">
                 {filtered.length} / {listings.length} shown
               </span>
@@ -436,35 +541,66 @@ export default function Reports() {
                 style={{ maxHeight: "calc(100vh - 380px)" }}
               >
                 <table className="min-w-full divide-y divide-border">
-                  <thead className="bg-muted/50 sticky top-0 z-10">
+                  {/* Opaque sticky header → rows no longer show through while scrolling */}
+                  <thead className="sticky top-0 z-20 bg-muted [&_th]:bg-muted">
                     <tr>
                       <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-10">
                         #
                       </th>
-                      <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Drug
-                      </th>
-                      <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        NDC
-                      </th>
-                      <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Pharmacy
-                      </th>
-                      <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Qty
-                      </th>
-                      <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Expiry
-                      </th>
-                      <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Cost
-                      </th>
-                      <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Visibility
-                      </th>
-                      <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Listed At
-                      </th>
+                      <SortableTh
+                        label="Drug"
+                        columnKey="drug_name"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableTh
+                        label="NDC"
+                        columnKey="ndc"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableTh
+                        label="Pharmacy"
+                        columnKey="pharmacy_name"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableTh
+                        label="Qty"
+                        columnKey="quantity"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableTh
+                        label="Expiry"
+                        columnKey="expiry"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableTh
+                        label="Cost"
+                        columnKey="acquisition_cost"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableTh
+                        label="Reason"
+                        columnKey="reason_code"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableTh
+                        label="Visibility"
+                        columnKey="visibility"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableTh
+                        label="Listed At"
+                        columnKey="listed_at"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
                       <th className="px-3 py-3 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-24">
                         Actions
                       </th>
@@ -474,16 +610,16 @@ export default function Reports() {
                     {loading ? (
                       Array.from({ length: 5 }).map((_, i) => (
                         <tr key={i}>
-                          {Array.from({ length: 10 }).map((_, j) => (
+                          {Array.from({ length: 11 }).map((_, j) => (
                             <td key={j} className="px-3 py-3">
                               <Skeleton className="h-4 w-full" />
                             </td>
                           ))}
                         </tr>
                       ))
-                    ) : filtered.length === 0 ? (
+                    ) : sorted.length === 0 ? (
                       <tr>
-                        <td colSpan={10} className="py-20">
+                        <td colSpan={11} className="py-20">
                           <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                             <Inbox size={36} strokeWidth={1.5} />
                             <p className="text-sm font-medium">
@@ -494,7 +630,7 @@ export default function Reports() {
                         </td>
                       </tr>
                     ) : (
-                      filtered.map((row, idx) => (
+                      sorted.map((row, idx) => (
                         <tr
                           key={row.id}
                           className="transition-colors hover:bg-muted/40"
@@ -528,11 +664,20 @@ export default function Reports() {
                           <td className="px-3 py-2.5 text-xs text-foreground whitespace-nowrap">
                             {row.quantity}
                           </td>
-                          <td className="px-3 py-2.5 text-[11px] text-muted-foreground whitespace-nowrap">
+                          <td
+                            className={`px-3 py-2.5 text-[11px] whitespace-nowrap ${
+                              isExpired(row.expiry)
+                                ? "text-destructive font-medium"
+                                : "text-muted-foreground"
+                            }`}
+                          >
                             {formatDate(row.expiry)}
                           </td>
                           <td className="px-3 py-2.5 text-xs font-mono text-foreground whitespace-nowrap">
                             {formatCost(row.acquisition_cost)}
+                          </td>
+                          <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap max-w-[140px] truncate">
+                            {formatReason(row.reason_code)}
                           </td>
                           <td className="px-3 py-2.5">
                             <span
@@ -557,27 +702,15 @@ export default function Reports() {
                               >
                                 <Eye size={14} />
                               </Button>
-                              {row.isMine ? (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  title="Delete listing"
-                                  className="cursor-pointer h-7 w-7 text-destructive hover:text-destructive"
-                                  onClick={() => setDeleteRow(row)}
-                                >
-                                  <Trash2 size={14} />
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  title="Report listing"
-                                  className="cursor-pointer h-7 w-7 text-amber-600 hover:text-amber-600"
-                                  onClick={() => openReport(row)}
-                                >
-                                  <Flag size={14} />
-                                </Button>
-                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Delete listing"
+                                className="cursor-pointer h-7 w-7 text-destructive hover:text-destructive"
+                                onClick={() => setDeleteRow(row)}
+                              >
+                                <Trash2 size={14} />
+                              </Button>
                             </div>
                           </td>
                         </tr>
@@ -670,6 +803,26 @@ export default function Reports() {
                       {formatCost(viewRow.acquisition_cost)}
                     </p>
                   </div>
+                  <div>
+                    <p className="text-muted-foreground text-[11px] uppercase tracking-wider mb-1">
+                      Reason
+                    </p>
+                    <p className="font-medium text-foreground">
+                      {formatReason(viewRow.reason_code)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-[11px] uppercase tracking-wider mb-1">
+                      Visibility
+                    </p>
+                    <span
+                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${visibilityStyle(
+                        viewRow.visibility,
+                      )}`}
+                    >
+                      {visibilityLabel(viewRow.visibility)}
+                    </span>
+                  </div>
                   <div className="col-span-2">
                     <p className="text-muted-foreground text-[11px] uppercase tracking-wider mb-1">
                       Pharmacy
@@ -687,86 +840,6 @@ export default function Reports() {
                 </p>
               </div>
             )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Report Modal */}
-        <Dialog
-          open={!!reportRow}
-          onOpenChange={() => !reporting && setReportRow(null)}
-        >
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-base flex items-center gap-2">
-                <Flag size={16} className="text-amber-600" />
-                Report Listing
-              </DialogTitle>
-              <DialogDescription className="text-xs">
-                {reportRow
-                  ? `Reporting "${reportRow.drug_name}" from ${reportRow.pharmacy_name}.`
-                  : ""}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 pt-1">
-              <div>
-                <p className="text-muted-foreground text-[11px] uppercase tracking-wider mb-1.5">
-                  Reason
-                </p>
-                <Select value={reportReason} onValueChange={setReportReason}>
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Select a reason" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {REPORT_REASONS.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>
-                        {r.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[11px] uppercase tracking-wider mb-1.5">
-                  Details{" "}
-                  <span className="normal-case text-muted-foreground/70">
-                    (optional)
-                  </span>
-                </p>
-                <Textarea
-                  value={reportDetails}
-                  onChange={(e) => setReportDetails(e.target.value)}
-                  placeholder="Add any extra context…"
-                  rows={4}
-                  className="text-xs resize-none"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={reporting}
-                  onClick={() => setReportRow(null)}
-                  className="cursor-pointer text-xs h-9"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  disabled={reporting || !reportReason}
-                  onClick={submitReport}
-                  className="cursor-pointer text-xs h-9 bg-amber-600 text-white hover:bg-amber-600/90"
-                >
-                  {reporting ? (
-                    <>
-                      <Loader2 size={13} className="animate-spin" />
-                      Submitting…
-                    </>
-                  ) : (
-                    "Submit Report"
-                  )}
-                </Button>
-              </div>
-            </div>
           </DialogContent>
         </Dialog>
 
@@ -797,7 +870,7 @@ export default function Reports() {
               <AlertDialogAction
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="cursor-pointer text-xs h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="bg-red-600 text-white hover:bg-red-700 transition-colors focus-visible:ring-2 focus-visible:ring-red-400 cursor-pointer"
               >
                 {deleting ? (
                   <>

@@ -280,16 +280,16 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
       </div>
 
       {/* OVERLAY */}
-      <div className="absolute inset-0 z-[9999] flex items-center justify-between px-3.5 rounded-xl bg-white/92 backdrop-blur-sm border border-dashed border-amber-300 shadow-md">
+      <div className="absolute inset-0 z-[9999] flex items-center justify-between px-3.5 rounded-xl bg-white/92 backdrop-blur-sm border border-dashed border-rose-300 shadow-md">
         <div className="flex items-center gap-2 min-w-0">
-          <Lock className="h-[13px] w-[13px] text-amber-500 shrink-0" />
+          <Lock className="h-[13px] w-[13px] text-rose-500 shrink-0" />
 
-          <span className="text-[12.5px] font-semibold text-amber-600 leading-none">
+          <span className="text-[12.5px] font-semibold text-rose-600 leading-none">
             {label}
           </span>
         </div>
 
-        <span className="ml-2 shrink-0 text-[10px] font-bold text-amber-500 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 uppercase tracking-wide">
+        <span className="ml-2 shrink-0 text-[10px] font-bold text-rose-500 bg-rose-50 border border-rose-200 rounded-full px-2 py-0.5 uppercase tracking-wide">
           Pro
         </span>
       </div>
@@ -311,7 +311,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         <Icon className="h-[18px] w-[18px] text-gray-500" />
       </div>
 
-      <span className=" absolute bottom-0.5 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-400 ring-1 ring-white">
+      <span className=" absolute bottom-0.5 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-400 ring-1 ring-white">
         <Lock className="h-[8px] w-[8px] text-white" />
       </span>
 
