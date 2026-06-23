@@ -1497,7 +1497,9 @@ export default function AdminDashboard() {
     try {
       // axios sends a DELETE body via the `data` key
       const res = await adminApi.delete(`/admin/users/${userId}`, {
-        data: { password: deletePassword },
+        data: {
+          password: deletePassword,
+        },
       });
 
       setUsers((prev) => prev.filter((u) => u.id !== userId));
@@ -2265,8 +2267,9 @@ export default function AdminDashboard() {
                 {/* DELETE BUTTON */}
                 <Button
                   onClick={() => setDeleteUserDialog(selected)}
-                  variant="destructive"
-                  className="cursor-pointer h-10 text-xs font-semibold gap-2"
+                  // variant="destructive"
+                  // className="cursor-pointer h-10 text-xs font-semibold gap-2 bg-red-800"
+                  className="cursor-pointer h-10 text-xs font-semibold gap-2 bg-red-600 text-white hover:bg-red-700 transition-colors focus-visible:ring-2 focus-visible:ring-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Trash2 size={14} />
                   Delete
@@ -2356,7 +2359,7 @@ export default function AdminDashboard() {
             <AlertDialogAction
               onClick={handleConfirmDeleteUser}
               disabled={deletingUser || !deletePassword.trim()}
-              className="cursor-pointer text-xs h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="cursor-pointer text-xs h-9 bg-red-600 text-white hover:bg-red-700 transition-colors focus-visible:ring-2 focus-visible:ring-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {deletingUser ? (
                 <>

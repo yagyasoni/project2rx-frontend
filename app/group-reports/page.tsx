@@ -881,12 +881,12 @@ export default function AuditGroupsPage() {
             <div className="bg-white border-b border-slate-200">
               {subscriptionLoaded && !subscription?.inventory_view_access && (
                 <div className="absolute inset-0 z-[129] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
-                  <div className="relative overflow-hidden rounded-2xl border border-cyan-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
-                    <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-cyan-200/30 blur-3xl" />
+                  <div className="relative overflow-hidden rounded-2xl border border-rose-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
+                    <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-rose-200/30 blur-3xl" />
 
                     <div className="relative flex flex-col items-center text-center">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-100 border border-cyan-200 shadow-sm mb-4">
-                        <Lock className="h-8 w-8 text-cyan-600" />
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-100 border border-rose-200 shadow-sm mb-4">
+                        <Lock className="h-8 w-8 text-rose-600" />
                       </div>
 
                       <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
@@ -900,12 +900,12 @@ export default function AuditGroupsPage() {
 
                       <button
                         onClick={() => router.push("/settings")}
-                        className="mt-5 inline-flex items-center justify-center rounded-xl bg-cyan-500 hover:bg-cyan-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-cyan-500/20"
+                        className="mt-5 inline-flex items-center justify-center rounded-xl bg-rose-500 hover:bg-rose-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-rose-500/20"
                       >
                         Subscribe to Unlock
                       </button>
 
-                      <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-cyan-600">
+                      <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-rose-600">
                         Pro Feature
                       </p>
                     </div>
@@ -943,7 +943,9 @@ export default function AuditGroupsPage() {
                       </p>
 
                       {pharmacyEmail ? (
-                        <p className="text-xs text-slate-400">{pharmacyEmail}</p>
+                        <p className="text-xs text-slate-400">
+                          {pharmacyEmail}
+                        </p>
                       ) : null}
                     </div>
                   </div>
@@ -1098,7 +1100,10 @@ export default function AuditGroupsPage() {
                       {loadingGroups ? (
                         <tr>
                           <td colSpan={6} className="py-20 text-center">
-                            <Loader variant="inline" title="Loading groups..." />
+                            <Loader
+                              variant="inline"
+                              title="Loading groups..."
+                            />
                           </td>
                         </tr>
                       ) : sortedGroups.length === 0 ? (
@@ -1382,7 +1387,7 @@ export default function AuditGroupsPage() {
                             <div className="flex items-center gap-3">
                               <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center">
                                 {member.role === "admin" ? (
-                                  <Crown className="w-5 h-5 text-cyan-500" />
+                                  <Crown className="w-5 h-5 text-rose-500" />
                                 ) : (
                                   <User className="w-5 h-5 text-slate-500" />
                                 )}

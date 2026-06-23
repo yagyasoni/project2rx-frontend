@@ -24,10 +24,12 @@ import {
   Search,
   TextInitial,
   Sheet,
+  FlagTriangleLeft,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
 import ProtectedRoute from "./ProtectedRoute";
+import adminApi from "@/lib/adminApi";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/admin-dashboard" },
@@ -40,7 +42,7 @@ const navItems = [
   },
   { title: "NDC Sheet", icon: Sheet, path: "/ndc-sheet" },
   { title: "Lead Publishing", icon: TextInitial, path: "/publishing" },
-  // { title: "Reports", icon: MessageSquareReply, path: "/report-listings" },
+  { title: "Reports", icon: FlagTriangleLeft, path: "/report-listings" },
   { title: "Feedbacks", icon: MessageSquareReply, path: "/feedbacks" },
 ];
 
@@ -84,9 +86,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/feedbacks`,
-        );
+        const res = await adminApi.get(`/admin/feedbacks`);
 
         const rows = res?.data?.feedbacks ?? [];
 
@@ -114,9 +114,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/master-sheet-queue/stats`,
-        );
+        const res = await adminApi.get(`/admin/master-sheet-queue/stats`);
         setQueuePending(Number(res.data.pending || 0));
       } catch {}
     };
@@ -413,7 +411,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             <GitBranch size={14} className="cursor-pointer shrink-0" />
             {!collapsed && (
               <span className="ml-3 text-[11px] font-medium cursor-pointer">
-                Version 1.4.0
+                Version 1.5.0
               </span>
             )}
           </div>

@@ -22,6 +22,13 @@
 // import { toast } from "sonner";
 // import adminApi from "@/lib/adminApi";
 
+// // =========================================
+// // PLANS — 3 fixed tiers (single-select)
+// // base         → $99  → inventory_reports_access
+// // professional → $249 → inventory_reports_access + inventory_view_access
+// // full_access  → $499 → all access (drug lookup + leads + everything)
+// // =========================================
+
 // const plans = [
 //   {
 //     id: "base",
@@ -48,11 +55,10 @@
 //     trial: "14-day free trial with coupon code",
 //     badge: "Most Popular",
 //     description:
-//       "Everything in Base, plus real-time visibility and group reporting.",
+//       "Everything in Base, plus real-time inventory visibility and insights.",
 //     features: [
 //       "Everything in Base",
 //       "Live inventory visibility",
-//       "Multi-pharmacy group reporting",
 //       "Advanced dispensing insights",
 //       "Continuous data sync",
 //     ],
@@ -72,62 +78,12 @@
 //     features: [
 //       "Everything in Professional",
 //       "Full Drug Lookup system",
-//       // "Complete NDC database",
 //       "Pharmacy growth leads",
 //       "Priority support",
 //     ],
 //     highlighted: true,
 //   },
 // ];
-
-// // const plans = [
-// //   {
-// //     id: "base",
-// //     name: "Base",
-// //     price: "$99",
-// //     period: "/month",
-// //     description:
-// //       "Core inventory audit and reporting access for pharmacy operations.",
-// //     features: [
-// //       "Inventory report access",
-// //       "Unlimited inventory audits",
-// //       "Export reports",
-// //       "Secure dashboard access",
-// //     ],
-// //     highlighted: false,
-// //   },
-// //   {
-// //     id: "professional",
-// //     name: "Professional",
-// //     price: "$249",
-// //     period: "/month",
-// //     description:
-// //       "Everything in Base plus live inventory visibility and insights.",
-// //     features: [
-// //       "Everything in Base",
-// //       "Live inventory visibility",
-// //       "Inventory trend analysis",
-// //       "Advanced inventory insights",
-// //       "Real-time updates",
-// //     ],
-// //     highlighted: true, // "Most Popular" — move to another tier if you prefer
-// //   },
-// //   {
-// //     id: "full_access",
-// //     name: "Full Access",
-// //     price: "$499",
-// //     period: "/month",
-// //     description: "Complete platform access including all premium modules.",
-// //     features: [
-// //       "Everything in Professional",
-// //       "Drug lookup system",
-// //       "NDC search access",
-// //       "Leads system",
-// //       "Priority support",
-// //     ],
-// //     highlighted: false,
-// //   },
-// // ];
 
 // export default function InactiveAccount() {
 //   const pathname = usePathname();
@@ -174,7 +130,11 @@
 
 //         const subscription = subRes.data.subscription;
 
+//         // Admin-granted (comped) clients bypass the paywall entirely.
+//         // admin_override is an explicit bypass; the individual access flags
+//         // cover both Stripe subscribers and partial admin grants.
 //         const hasAccess =
+//           subscription?.admin_override ||
 //           subscription?.inventory_reports_access ||
 //           subscription?.inventory_view_access ||
 //           subscription?.drug_lookup_access ||
@@ -335,13 +295,9 @@
 //     return null;
 //   }
 
-//   // =========================================
-//   // ACCESS ALLOWED
-//   // =========================================
-
 //   const hasPlatformAccess = paymentStatus === "active";
 
-//   if (hasPlatformAccess && (status === "active" || !status)) {
+//   if (hasPlatformAccess) {
 //     return null;
 //   }
 
@@ -445,10 +401,8 @@
 
 //   const accentColor = "hsl(210 15% 60%)";
 //   const accentLight = "hsl(210 15% 80%)";
-//   const accentDark = "hsl(210 15% 40%)";
 //   const textLight = "hsl(0 0% 95%)";
 //   const textDark = "hsl(0 0% 5%)";
-//   const color404040 = "hsl(0 0% 25%)";
 //   const color262626 = "hsl(0 0% 15%)";
 //   const color0D0D0D = "hsl(0 0% 5%)";
 
@@ -608,106 +562,6 @@
 //               );
 //             })}
 //           </div>
-//           {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
-//             {plans.map((plan) => {
-//               const active = selectedPlan === plan.id;
-
-//               return (
-//                 <div
-//                   key={plan.id}
-//                   onClick={() => selectPlan(plan.id)}
-//                   className={`relative cursor-pointer border transition-all duration-200 p-5 rounded-xl flex flex-col min-h-[340px]
-//                   ${active ? "scale-[1.015]" : "hover:-translate-y-[2px]"}`}
-//                   style={{
-//                     background: active
-//                       ? `linear-gradient(180deg, ${color404040}, ${color0D0D0D})`
-//                       : `linear-gradient(180deg, ${color262626}, ${color0D0D0D})`,
-//                     borderColor: active ? accentDark : "hsl(0 0% 18%)",
-//                     boxShadow: active ? "0 0 0 1px hsl(210 15% 35%)" : "none",
-//                   }}
-//                 >
-//                   {plan.highlighted && (
-//                     <div
-//                       className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-semibold"
-//                       style={{ background: accentColor, color: textDark }}
-//                     >
-//                       Most Popular
-//                     </div>
-//                   )}
-
-//                   <div className="mb-5">
-//                     <h3
-//                       className="text-[17px] font-semibold"
-//                       style={{ color: textLight }}
-//                     >
-//                       {plan.name}
-//                     </h3>
-//                     <p
-//                       className="mt-1.5 text-xs leading-relaxed"
-//                       style={{ color: "hsl(0 0% 72%)" }}
-//                     >
-//                       {plan.description}
-//                     </p>
-//                   </div>
-
-//                   <div className="mb-5">
-//                     <div className="flex items-end gap-1">
-//                       <span
-//                         className="text-4xl font-bold leading-none"
-//                         style={{ color: textLight }}
-//                       >
-//                         {plan.price}
-//                       </span>
-//                       <span
-//                         className="text-sm mb-1"
-//                         style={{ color: "hsl(0 0% 58%)" }}
-//                       >
-//                         {plan.period}
-//                       </span>
-//                     </div>
-//                     <div className="mt-4 h-px bg-white/10" />
-//                   </div>
-
-//                   <ul className="space-y-2.5 flex-1">
-//                     {plan.features.map((feature) => (
-//                       <li
-//                         key={feature}
-//                         className="flex items-start gap-2 text-sm"
-//                         style={{ color: textLight }}
-//                       >
-//                         <CheckCircle2
-//                           className="w-4 h-4 mt-0.5 shrink-0"
-//                           style={{ color: accentColor }}
-//                         />
-//                         <span className="opacity-90 leading-relaxed">
-//                           {feature}
-//                         </span>
-//                       </li>
-//                     ))}
-//                   </ul>
-
-//                   <Button
-//                     type="button"
-//                     className="mt-5 h-10 rounded-lg text-sm font-semibold transition-all"
-//                     style={
-//                       active
-//                         ? {
-//                             background: `linear-gradient(135deg, ${textLight}, ${accentLight})`,
-//                             color: textDark,
-//                           }
-//                         : {
-//                             background: "hsl(0 0% 14%)",
-//                             border: "1px solid hsl(0 0% 24%)",
-//                             color: textLight,
-//                           }
-//                     }
-//                   >
-//                     {active ? "Selected Plan" : "Choose Plan"}
-//                   </Button>
-//                 </div>
-//               );
-//             })}
-//           </div> */}
 
 //           {/* ACTION CARD */}
 //           <div className="max-w-md mx-auto mt-10">
@@ -926,6 +780,7 @@ const plans = [
     features: [
       "Everything in Base",
       "Live inventory visibility",
+      "Multi-group pharmacy reporting",
       "Advanced dispensing insights",
       "Continuous data sync",
     ],
@@ -997,11 +852,16 @@ export default function InactiveAccount() {
 
         const subscription = subRes.data.subscription;
 
-        // Admin-granted (comped) clients bypass the paywall entirely.
-        // admin_override is an explicit bypass; the individual access flags
-        // cover both Stripe subscribers and partial admin grants.
+        // Access is driven by the ACTUAL access flags only.
+        // IMPORTANT: admin_override is intentionally NOT treated as access on
+        // its own. The backend's grant-access always sets admin_override=true
+        // (and status='active') on conflict — even when every access flag is
+        // being set to false during a revoke. If we keyed off admin_override
+        // here, a revoked grant would leave admin_override=true with all flags
+        // false, and the paywall would stay hidden ("admin access granted" but
+        // no popup). Keying off the flags means a revoked grant (all flags
+        // false) correctly shows the paywall again.
         const hasAccess =
-          subscription?.admin_override ||
           subscription?.inventory_reports_access ||
           subscription?.inventory_view_access ||
           subscription?.drug_lookup_access ||
@@ -1162,9 +1022,13 @@ export default function InactiveAccount() {
     return null;
   }
 
+  // Profile verification is the FIRST priority. An unverified / inactive
+  // profile is never allowed through, even when access was admin-granted —
+  // the access check only matters once the profile itself is verified.
+  const profileVerified = status === "active";
   const hasPlatformAccess = paymentStatus === "active";
 
-  if (hasPlatformAccess) {
+  if (profileVerified && hasPlatformAccess) {
     return null;
   }
 
@@ -1318,7 +1182,7 @@ export default function InactiveAccount() {
                   className={`relative flex cursor-pointer flex-col rounded-2xl border p-7 text-left animate-fadeInUp transition-all duration-300 ease-out ${
                     active
                       ? "border-zinc-600 bg-gradient-to-b from-zinc-900 to-black ring-1 ring-zinc-500/50 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.75)] hover:-translate-y-1 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.85)]"
-                      : "border-zinc-800 bg-surface hover:-translate-y-1 hover:border-zinc-600 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.55)]"
+                      : "border-zinc-800 bg-zinc-900 hover:-translate-y-1 hover:border-zinc-600 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.55)]"
                   }`}
                   style={{ animationDelay: `${0.1 + idx * 0.15}s` }}
                 >
@@ -1348,17 +1212,15 @@ export default function InactiveAccount() {
                     </span>
                   </div>
 
-                  {/* Price — uniform text-4xl on every card so the row lines up */}
+                  {/* Price — explicit white so it stays readable on the dark card */}
                   <div
                     className="mt-5 flex items-baseline gap-1 animate-fadeInUp"
                     style={{ animationDelay: `${0.2 + idx * 0.15}s` }}
                   >
-                    <span className="text-4xl font-semibold tracking-tight">
+                    <span className="text-4xl font-semibold tracking-tight text-white">
                       {plan.price}
                     </span>
-                    <span className="text-sm text-muted-foreground">
-                      {plan.period}
-                    </span>
+                    <span className="text-sm text-zinc-400">{plan.period}</span>
                   </div>
 
                   {/* Optional trial badge — only renders if the plan defines it */}
@@ -1370,7 +1232,7 @@ export default function InactiveAccount() {
 
                   {/* Description — min-height reserves space so feature lists start at the same line */}
                   <p
-                    className="mt-3 min-h-[40px] text-sm leading-relaxed text-muted-foreground animate-fadeInUp"
+                    className="mt-3 min-h-[40px] text-sm leading-relaxed text-zinc-400 animate-fadeInUp"
                     style={{ animationDelay: `${0.25 + idx * 0.15}s` }}
                   >
                     {plan.description}
@@ -1398,13 +1260,13 @@ export default function InactiveAccount() {
                             active ? "bg-emerald-500/15" : "bg-zinc-800"
                           }`}
                         >
-                          <Check className="h-3.5 w-3.5 text-success" />
+                          <Check className="h-3.5 w-3.5 text-emerald-400" />
                         </span>
                         <span
                           className={
                             fIdx === 0
                               ? "font-semibold text-zinc-200 transition-colors duration-300"
-                              : "text-foreground/90"
+                              : "text-zinc-300"
                           }
                         >
                           {feature}
@@ -1419,7 +1281,7 @@ export default function InactiveAccount() {
                     className={`${plan.price === "$499" ? "mt-6" : "mt-4"} w-full rounded-lg px-4 py-6 text-sm font-medium transition-all duration-300 animate-fadeInUp ${
                       active
                         ? "bg-gradient-to-b from-zinc-100 to-zinc-300 text-black shadow-md hover:from-white hover:to-zinc-200 hover:shadow-xl"
-                        : "border border-zinc-700 bg-transparent text-foreground hover:border-zinc-500 hover:bg-zinc-900/50"
+                        : "border border-zinc-700 bg-transparent text-zinc-100 hover:border-zinc-500 hover:bg-zinc-900/50"
                     }`}
                     style={{ animationDelay: `${0.6 + idx * 0.15}s` }}
                   >

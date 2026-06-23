@@ -4945,12 +4945,12 @@ export default function InventoryReportPage() {
                     {subscriptionLoaded &&
                       !subscription?.drug_lookup_access && (
                         <div className="absolute inset-0 z-[500] backdrop-blur-[5px] bg-white/55 flex items-center justify-center">
-                          <div className="relative overflow-hidden rounded-2xl border border-cyan-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
-                            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-cyan-200/30 blur-3xl" />
+                          <div className="relative overflow-hidden rounded-2xl border border-rose-200 bg-white/95 shadow-2xl px-8 py-7 min-w-[340px]">
+                            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-rose-200/30 blur-3xl" />
 
                             <div className="relative flex flex-col items-center text-center">
-                              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-100 border border-cyan-200 shadow-sm mb-4">
-                                <Lock className="h-8 w-8 text-cyan-600" />
+                              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-100 border border-rose-200 shadow-sm mb-4">
+                                <Lock className="h-8 w-8 text-rose-600" />
                               </div>
 
                               <h3 className="text-[22px] font-extrabold text-slate-900 tracking-tight">
@@ -4965,12 +4965,12 @@ export default function InventoryReportPage() {
 
                               <button
                                 onClick={() => router.push("/settings")}
-                                className="mt-5 inline-flex items-center justify-center rounded-xl bg-cyan-500 hover:bg-cyan-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-cyan-500/20"
+                                className="mt-5 inline-flex items-center justify-center rounded-xl bg-rose-500 hover:bg-rose-600 transition-colors px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-rose-500/20"
                               >
                                 Subscribe to Unlock
                               </button>
 
-                              <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-cyan-600">
+                              <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-rose-600">
                                 Pro Feature
                               </p>
                             </div>

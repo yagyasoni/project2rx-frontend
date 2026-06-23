@@ -641,7 +641,7 @@ const SupplierMappingPage = () => {
                                       // onClick={() =>
                                       //   handleDeleteSupplier(supplier.id)
                                       // }
-                                      className="w-full px-3 py-2 text-left text-xs text-destructive hover:bg-destructive/10 transition-colors border-t border-border flex items-center gap-2"
+                                      className="w-full px-3 py-2 text-left text-xs bg-red-600 text-white hover:bg-red-700 transition-colors focus-visible:ring-2 focus-visible:ring-red-400 disabled:opacity-50 disabled:cursor-not-allowed border-t border-border flex items-center gap-2"
                                     >
                                       <Trash2 size={12} />
                                       Delete
@@ -669,7 +669,7 @@ const SupplierMappingPage = () => {
                                         onClick={() =>
                                           handleDeleteSupplier(supplier.id)
                                         }
-                                        className="bg-destructive text-white hover:bg-destructive/90"
+                                        className="bg-red-600 text-white hover:bg-red-700 transition-colors focus-visible:ring-2 focus-visible:ring-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
                                         Delete
                                       </AlertDialogAction>
