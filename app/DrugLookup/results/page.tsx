@@ -14,7 +14,7 @@ import {
   Pill,
   BarChart3,
   DollarSign,
-  Hash,      
+  Hash,
   Flame,
   ArrowDownCircle,
   ArrowUpCircle,
@@ -93,12 +93,12 @@ function DrugLookupResultsInner() {
   const params = useSearchParams();
 
   // ── URL params are the source of truth ──
-const urlQ = params.get("q") ?? "";
-const urlBin = params.get("bin") ?? "";
-const urlPcn = params.get("pcn") ?? "";
-const urlGrp = params.get("grp") ?? "";
-const urlType = params.get("type") ?? "name";
-const isNdcMode = urlType === "ndc" || isNdcLike(urlQ);
+  const urlQ = params.get("q") ?? "";
+  const urlBin = params.get("bin") ?? "";
+  const urlPcn = params.get("pcn") ?? "";
+  const urlGrp = params.get("grp") ?? "";
+  const urlType = params.get("type") ?? "name";
+  const isNdcMode = urlType === "ndc" || isNdcLike(urlQ);
 
   // ── Local form state (mirrors URL on load/change) ──
   const [drugName, setDrugName] = useState(urlQ);
@@ -139,90 +139,92 @@ const isNdcMode = urlType === "ndc" || isNdcLike(urlQ);
   }, [urlQ, urlBin, urlPcn, urlGrp]);
 
   // ── Fetch drug lookup whenever URL params change ──
- // ── Fetch drug lookup whenever URL params change ──
-useEffect(() => {
-  if (!urlQ.trim()) {
-    setData(null);
-    setLoading(false);
-    return;
-  }
-  setLoading(true);
-  setError(null);
-  setExpandedDrug(null);
-
-  (async () => {
-    try {
-      const p = new URLSearchParams();
-
-      if (isNdcMode) {
-        p.set("type", "ndc");
-        p.set("ndc", normalizeNdc(urlQ));
-      } else {
-        const ingredient = extractIngredient(urlQ);
-        if (!ingredient) {
-          setData(null);
-          setLoading(false);
-          return;
-        }
-        p.set("ingredient", ingredient);
-      }
-
-      if (urlBin) p.set("bin", urlBin);
-      if (urlPcn) p.set("pcn", urlPcn);
-      if (urlGrp) p.set("grp", urlGrp);
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-lookup-global?${p.toString()}`,
-      );
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-      const json = await res.json();
-      setData(json);
-    } catch (e: any) {
-      console.error(e);
-      setError(e?.message ?? "Failed to load");
+  // ── Fetch drug lookup whenever URL params change ──
+  useEffect(() => {
+    if (!urlQ.trim()) {
       setData(null);
-    } finally {
       setLoading(false);
+      return;
     }
-  })();
-}, [urlQ, urlBin, urlPcn, urlGrp, urlType, isNdcMode]);
+    setLoading(true);
+    setError(null);
+    setExpandedDrug(null);
+
+    (async () => {
+      try {
+        const p = new URLSearchParams();
+
+        if (isNdcMode) {
+          p.set("type", "ndc");
+          p.set("ndc", normalizeNdc(urlQ));
+        } else {
+          const ingredient = extractIngredient(urlQ);
+          if (!ingredient) {
+            setData(null);
+            setLoading(false);
+            return;
+          }
+          p.set("ingredient", ingredient);
+        }
+
+        if (urlBin) p.set("bin", urlBin);
+        if (urlPcn) p.set("pcn", urlPcn);
+        if (urlGrp) p.set("grp", urlGrp);
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-lookup-global?${p.toString()}`,
+        );
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        const json = await res.json();
+        setData(json);
+      } catch (e: any) {
+        console.error(e);
+        setError(e?.message ?? "Failed to load");
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [urlQ, urlBin, urlPcn, urlGrp, urlType, isNdcMode]);
 
   // ── Autocomplete fetch for Drug Name filter input ──
- // ── Autocomplete fetch for Drug Name filter input (handles NDC too) ──
-useEffect(() => {
-  const q = drugName.trim();
-  if (q.length < 2) {
-    setDrugSuggestions([]);
-    return;
-  }
-  const ndcMode = isNdcLike(q);
-  const searchTerm = ndcMode ? normalizeNdc(q) : q;
-
-  const timer = setTimeout(async () => {
-    try {
-      const url =
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-search` +
-        `?q=${encodeURIComponent(searchTerm)}` +
-        (ndcMode ? "&type=ndc" : "&type=name");
-
-      const res = await fetch(url);
-      if (!res.ok) return;
-      const out: { name: string; ndc?: string; rx_count: number }[] =
-        await res.json();
-
-      const formatted = out
-        .map((d) =>
-          ndcMode && d.ndc ? `${formatNdcDisplay(d.ndc)} — ${d.name}` : d.name,
-        )
-        .slice(0, 6);
-
-      setDrugSuggestions(formatted);
-    } catch {
+  // ── Autocomplete fetch for Drug Name filter input (handles NDC too) ──
+  useEffect(() => {
+    const q = drugName.trim();
+    if (q.length < 2) {
       setDrugSuggestions([]);
+      return;
     }
-  }, 250);
-  return () => clearTimeout(timer);
-}, [drugName]);
+    const ndcMode = isNdcLike(q);
+    const searchTerm = ndcMode ? normalizeNdc(q) : q;
+
+    const timer = setTimeout(async () => {
+      try {
+        const url =
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-search` +
+          `?q=${encodeURIComponent(searchTerm)}` +
+          (ndcMode ? "&type=ndc" : "&type=name");
+
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const out: { name: string; ndc?: string; rx_count: number }[] =
+          await res.json();
+
+        const formatted = out
+          .map((d) =>
+            ndcMode && d.ndc
+              ? `${formatNdcDisplay(d.ndc)} — ${d.name}`
+              : d.name,
+          )
+          .slice(0, 6);
+
+        setDrugSuggestions(formatted);
+      } catch {
+        setDrugSuggestions([]);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [drugName]);
 
   // ── Click-outside for autocomplete ──
   useEffect(() => {
@@ -248,49 +250,49 @@ useEffect(() => {
   }, []);
 
   // ── Apply / clear filters ──
-const applyFilters = () => {
-  let name = drugName.trim();
-  if (!name) return;
+  const applyFilters = () => {
+    let name = drugName.trim();
+    if (!name) return;
 
-  // If user picked a suggestion like "73352-0086-60 — DICLOFENAC..."
-  const ndcMatch = name.match(/^([\d-]{6,})\s*—/);
-  if (ndcMatch) name = ndcMatch[1].trim();
+    // If user picked a suggestion like "73352-0086-60 — DICLOFENAC..."
+    const ndcMatch = name.match(/^([\d-]{6,})\s*—/);
+    if (ndcMatch) name = ndcMatch[1].trim();
 
-  const p = new URLSearchParams();
+    const p = new URLSearchParams();
 
-  if (isNdcLike(name)) {
-    p.set("q", normalizeNdc(name));
-    p.set("type", "ndc");
-  } else {
-    p.set("q", name);
-  }
+    if (isNdcLike(name)) {
+      p.set("q", normalizeNdc(name));
+      p.set("type", "ndc");
+    } else {
+      p.set("q", name);
+    }
 
-  if (bin.trim()) p.set("bin", bin.trim());
-  if (pcn.trim()) p.set("pcn", pcn.trim());
-  if (grp.trim()) p.set("grp", grp.trim());
+    if (bin.trim()) p.set("bin", bin.trim());
+    if (pcn.trim()) p.set("pcn", pcn.trim());
+    if (grp.trim()) p.set("grp", grp.trim());
 
-  router.push(`/DrugLookup/results?${p.toString()}`);
-};
+    router.push(`/DrugLookup/results?${p.toString()}`);
+  };
 
- const clearAllFilters = () => {
-  setBin("");
-  setPcn("");
-  setGrp("");
-  const p = new URLSearchParams();
-  p.set("q", drugName.trim() || urlQ);
-  if (urlType === "ndc") p.set("type", "ndc");
-  router.push(`/DrugLookup/results?${p.toString()}`);
-};
+  const clearAllFilters = () => {
+    setBin("");
+    setPcn("");
+    setGrp("");
+    const p = new URLSearchParams();
+    p.set("q", drugName.trim() || urlQ);
+    if (urlType === "ndc") p.set("type", "ndc");
+    router.push(`/DrugLookup/results?${p.toString()}`);
+  };
 
-const removeOneFilter = (kind: "bin" | "pcn" | "grp") => {
-  const p = new URLSearchParams();
-  p.set("q", urlQ);
-  if (urlType === "ndc") p.set("type", "ndc");
-  if (kind !== "bin" && urlBin) p.set("bin", urlBin);
-  if (kind !== "pcn" && urlPcn) p.set("pcn", urlPcn);
-  if (kind !== "grp" && urlGrp) p.set("grp", urlGrp);
-  router.push(`/DrugLookup/results?${p.toString()}`);
-};
+  const removeOneFilter = (kind: "bin" | "pcn" | "grp") => {
+    const p = new URLSearchParams();
+    p.set("q", urlQ);
+    if (urlType === "ndc") p.set("type", "ndc");
+    if (kind !== "bin" && urlBin) p.set("bin", urlBin);
+    if (kind !== "pcn" && urlPcn) p.set("pcn", urlPcn);
+    if (kind !== "grp" && urlGrp) p.set("grp", urlGrp);
+    router.push(`/DrugLookup/results?${p.toString()}`);
+  };
 
   const hasActiveFilters = Boolean(urlBin || urlPcn || urlGrp);
 
@@ -329,8 +331,8 @@ const removeOneFilter = (kind: "bin" | "pcn" | "grp") => {
   }, [data]);
 
   const displayIngredient =
-  data?.ingredient ??
-  (isNdcMode ? formatNdcDisplay(urlQ) : extractIngredient(urlQ));
+    data?.ingredient ??
+    (isNdcMode ? formatNdcDisplay(urlQ) : extractIngredient(urlQ));
 
   const sortedDrugs = useMemo(() => {
     if (!data?.drugs) return [];
@@ -393,7 +395,7 @@ const removeOneFilter = (kind: "bin" | "pcn" | "grp") => {
   };
 
   return (
-    <ProtectedRoute role = "user">
+    <ProtectedRoute role="user">
       <div className="relative w-full bg-slate-50 h-[calc(100vh-37px)] overflow-hidden">
         <div className="relative h-full w-full flex">
           <div
@@ -1168,7 +1170,7 @@ const removeOneFilter = (kind: "bin" | "pcn" | "grp") => {
         {/* ╔═══ Community drawer (placeholder) ═════════════════════════ */}
         {communityNdc && (
           <div
-            className="fixed inset-0 z-[200] flex justify-end"
+            className="fixed inset-0 z-[10000] flex justify-end"
             onClick={() => {
               setCommunityNdc(null);
               setCommunityDrugName(null);

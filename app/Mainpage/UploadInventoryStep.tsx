@@ -812,7 +812,7 @@ const UploadInventoryStep = ({
 
       {/* ── Success Modal ── */}
       {submitSuccess && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 backdrop-blur-sm">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[10000] backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-8 flex flex-col items-center text-center">
             <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mb-5">
               <CheckCircle2 className="w-8 h-8 text-emerald-600" />
@@ -841,7 +841,7 @@ const UploadInventoryStep = ({
 
       {/* ── Warning Modal ── */}
       {showWarning && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 backdrop-blur-sm">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-[10000] backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">

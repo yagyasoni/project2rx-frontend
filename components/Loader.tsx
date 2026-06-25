@@ -35,9 +35,7 @@ function LogoSpinner({ size = "lg" }: { size?: "lg" | "sm" }) {
   const tile = size === "lg" ? "h-11 w-11" : "h-8 w-8";
   return (
     <div className="relative">
-      <div
-        className={`${tile} relative overflow-hidden rounded-xl bg-black`}
-      >
+      <div className={`${tile} relative overflow-hidden rounded-xl bg-black`}>
         <Image
           src={l}
           alt="AuditProRx"
@@ -115,14 +113,13 @@ export default function Loader({
   );
 
   const position = fixed ? "fixed" : "absolute";
-  const backdrop =
-    tone === "dark" ? "bg-black/50" : "bg-white/90";
+  const backdrop = tone === "dark" ? "bg-black/50" : "bg-white/90";
 
   // ── Card: modal card on a dark backdrop ──
   if (variant === "card") {
     return (
       <div
-        className={`${position} inset-0 z-50 flex items-center justify-center ${backdrop} backdrop-blur-sm`}
+        className={`${position} inset-0 z-[10000] flex items-center justify-center ${backdrop} backdrop-blur-sm`}
       >
         <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full mx-4 p-6 flex flex-col items-center text-center gap-4">
           {content}
@@ -134,7 +131,7 @@ export default function Loader({
   // ── Overlay: bare centered column ──
   return (
     <div
-      className={`${position} inset-0 z-50 flex items-center justify-center ${backdrop} backdrop-blur-sm transition-opacity duration-400 ${
+      className={`${position} inset-0 z-[10000] flex items-center justify-center ${backdrop} backdrop-blur-sm transition-opacity duration-400 ${
         done ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >

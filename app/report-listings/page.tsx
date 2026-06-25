@@ -147,7 +147,7 @@ const visibilityLabel = (v: string) => {
     case "public":
       return "Public";
     case "groups_only":
-      return "Groups";
+      return "Group";
     // case "private":
     //   return "Private";
     default:
@@ -305,6 +305,7 @@ export default function Reports() {
       const res = await adminApi.get(`${BASE}/listings`);
 
       const others = res?.data?.listings ?? [];
+      console.log("listings", others);
       const mine = res?.data?.my_listings ?? [];
 
       // ✅ Defensive mapping + ownership flag
@@ -510,9 +511,9 @@ export default function Reports() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Visibility</SelectItem>
+                  <SelectItem value="all">Visibility (All)</SelectItem>
                   <SelectItem value="public">Public</SelectItem>
-                  <SelectItem value="groups_only">Groups</SelectItem>
+                  <SelectItem value="groups_only">Group</SelectItem>
                   {/* <SelectItem value="private">Private</SelectItem> */}
                 </SelectContent>
               </Select>
@@ -523,7 +524,7 @@ export default function Reports() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Expiry</SelectItem>
+                  <SelectItem value="all">Expiry Date (All)</SelectItem>
                   <SelectItem value="soon">Expiring Soon</SelectItem>
                   <SelectItem value="expired">Expired</SelectItem>
                 </SelectContent>

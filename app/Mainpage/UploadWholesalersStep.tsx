@@ -420,16 +420,16 @@ const UploadWholesalersStep = ({
             console.log(`✅ Converted to frontend format:`, converted);
 
             if (Object.keys(converted).length > 0) {
-  // Merge: auto-detect fills gaps, admin mapping takes precedence
-  const auto = buildWholesalerAutoMapping(parsedHeaders);
-  const merged = { ...auto, ...converted };
-  setWholesalerFieldMappings((prev) => ({
-    ...prev,
-    [id]: merged,
-  }));
-  setShowMappingFor(id);
-  return;
-}
+              // Merge: auto-detect fills gaps, admin mapping takes precedence
+              const auto = buildWholesalerAutoMapping(parsedHeaders);
+              const merged = { ...auto, ...converted };
+              setWholesalerFieldMappings((prev) => ({
+                ...prev,
+                [id]: merged,
+              }));
+              setShowMappingFor(id);
+              return;
+            }
           }
         } catch (err) {
           console.log(
@@ -849,10 +849,10 @@ const UploadWholesalersStep = ({
       {isDrawerOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/30 z-40 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/30 z-[9999] backdrop-blur-sm"
             onClick={() => setIsDrawerOpen(false)}
           />
-          <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-50 flex flex-col">
+          <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-[10000] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 bg-gray-50">
               <div>
                 <h3 className="text-sm font-bold text-gray-900">
@@ -943,7 +943,7 @@ const UploadWholesalersStep = ({
       )}
 
       {showMappingWarning && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 backdrop-blur-sm">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-[10000] backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -992,7 +992,7 @@ const UploadWholesalersStep = ({
       )}
 
       {uploadSuccess && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 backdrop-blur-sm">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[10000] backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-8 flex flex-col items-center text-center">
             <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5">
               <CheckCircle2 className="w-8 h-8 text-emerald-500" />
