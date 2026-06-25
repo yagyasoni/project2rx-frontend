@@ -15,6 +15,9 @@ import {
   Copy,
   PencilLine,
   Search,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,6 +113,49 @@ interface SupplierMapping {
   created_at: string;
 }
 
+type SortKey =
+  | "name"
+  | "email"
+  | "phone_number"
+  | "status"
+  | "mapped"
+  | "created_at";
+
+function SortHeader({
+  label,
+  columnKey,
+  activeKey,
+  dir,
+  onSort,
+}: {
+  label: string;
+  columnKey: SortKey;
+  activeKey: SortKey;
+  dir: "asc" | "desc";
+  onSort: (k: SortKey) => void;
+}) {
+  const active = activeKey === columnKey;
+  return (
+    <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+      <button
+        onClick={() => onSort(columnKey)}
+        className="cursor-pointer inline-flex items-center gap-1 uppercase tracking-wider hover:text-foreground transition-colors"
+      >
+        {label}
+        {active ? (
+          dir === "asc" ? (
+            <ChevronUp size={12} />
+          ) : (
+            <ChevronDown size={12} />
+          )
+        ) : (
+          <ChevronsUpDown size={12} className="opacity-40" />
+        )}
+      </button>
+    </th>
+  );
+}
+
 // ── Helper ─────────────────────────────────────────────────
 const formatDate = (d: string) => {
   const dt = new Date(d);
@@ -160,6 +206,17 @@ const SupplierMappingPage = () => {
   const [emailInput, setEmailInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [phoneInput, setPhoneInput] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("created_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -397,6 +454,43 @@ const SupplierMappingPage = () => {
       .sort((a, b) => b.__score - a.__score);
   }, [suppliers, searchQuery]);
 
+  const sortedSuppliers = React.useMemo(() => {
+    const dir = sortDir === "asc" ? 1 : -1;
+
+    const mappedCount = (id: string) =>
+      savedMappings[id] ? Object.keys(savedMappings[id].mappings).length : 0;
+
+    return [...filteredSuppliers].sort((a, b) => {
+      switch (sortKey) {
+        case "created_at": {
+          const at = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const bt = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return (at - bt) * dir;
+        }
+        case "status": {
+          // Mapped (1) vs Unmapped (0)
+          const av = savedMappings[a.id] ? 1 : 0;
+          const bv = savedMappings[b.id] ? 1 : 0;
+          return (av - bv) * dir;
+        }
+        case "mapped":
+          return (mappedCount(a.id) - mappedCount(b.id)) * dir;
+        default: {
+          // phone → strip everything but digits, compare as numbers
+          if (sortKey === "phone_number") {
+            const an = Number((a.phone_number || "").replace(/\D/g, "")) || 0;
+            const bn = Number((b.phone_number || "").replace(/\D/g, "")) || 0;
+            return (an - bn) * dir;
+          }
+          // name / email — string compare
+          const av = (a[sortKey] || "").toString().toLowerCase();
+          const bv = (b[sortKey] || "").toString().toLowerCase();
+          return av.localeCompare(bv) * dir;
+        }
+      }
+    });
+  }, [filteredSuppliers, sortKey, sortDir, savedMappings]);
+
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-[2px]">
@@ -470,7 +564,7 @@ const SupplierMappingPage = () => {
         <div className="rounded-lg border border-border">
           <div className="overflow-visible">
             <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted/50">
+              {/* <thead className="bg-muted/50">
                 <tr>
                   <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-12">
                     #
@@ -497,11 +591,63 @@ const SupplierMappingPage = () => {
                     Actions
                   </th>
                 </tr>
+              </thead> */}
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-12">
+                    #
+                  </th>
+                  <SortHeader
+                    label="Supplier Name"
+                    columnKey="name"
+                    activeKey={sortKey}
+                    dir={sortDir}
+                    onSort={handleSort}
+                  />
+                  <SortHeader
+                    label="Email"
+                    columnKey="email"
+                    activeKey={sortKey}
+                    dir={sortDir}
+                    onSort={handleSort}
+                  />
+                  <SortHeader
+                    label="Phone No."
+                    columnKey="phone_number"
+                    activeKey={sortKey}
+                    dir={sortDir}
+                    onSort={handleSort}
+                  />
+                  <SortHeader
+                    label="Mapping Status"
+                    columnKey="status"
+                    activeKey={sortKey}
+                    dir={sortDir}
+                    onSort={handleSort}
+                  />
+                  <SortHeader
+                    label="Mapped Fields"
+                    columnKey="mapped"
+                    activeKey={sortKey}
+                    dir={sortDir}
+                    onSort={handleSort}
+                  />
+                  <SortHeader
+                    label="Created Date"
+                    columnKey="created_at"
+                    activeKey={sortKey}
+                    dir={sortDir}
+                    onSort={handleSort}
+                  />
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
-                {filteredSuppliers.length === 0 ? (
+                {sortedSuppliers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-16">
+                    <td colSpan={8} className="text-center py-16">
                       <div className="flex flex-col items-center gap-3">
                         <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                           <Package
@@ -521,7 +667,7 @@ const SupplierMappingPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredSuppliers.map((supplier, index) => {
+                  sortedSuppliers.map((supplier, index) => {
                     const status = getSupplierMappingStatus(supplier.id);
                     const mapping = savedMappings[supplier.id];
                     const mappedCount = mapping
