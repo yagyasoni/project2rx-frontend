@@ -32,6 +32,9 @@ import {
   Clock3,
   UserStar,
   User,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
 } from "lucide-react";
 
 import AdminLayout from "@/components/adminLayout";
@@ -92,6 +95,7 @@ interface Post {
   unreadMessages: number;
 
   createdAt: string;
+  createdAtRaw: string; // 👈 raw ISO for sorting
   content: string;
 
   reactionsData: Reaction[];
@@ -137,6 +141,47 @@ function StatCard({
   );
 }
 
+type SortKey = "title" | "status" | "engagement" | "views" | "createdAt";
+
+function SortHeader({
+  label,
+  columnKey,
+  activeKey,
+  dir,
+  onSort,
+  className = "",
+}: {
+  label: string;
+  columnKey: SortKey;
+  activeKey: SortKey;
+  dir: "asc" | "desc";
+  onSort: (k: SortKey) => void;
+  className?: string;
+}) {
+  const active = activeKey === columnKey;
+  return (
+    <th
+      className={`px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ${className}`}
+    >
+      <button
+        onClick={() => onSort(columnKey)}
+        className="cursor-pointer inline-flex items-center gap-1 uppercase tracking-wider hover:text-foreground transition-colors"
+      >
+        {label}
+        {active ? (
+          dir === "asc" ? (
+            <ChevronUp size={12} />
+          ) : (
+            <ChevronDown size={12} />
+          )
+        ) : (
+          <ChevronsUpDown size={12} className="opacity-40" />
+        )}
+      </button>
+    </th>
+  );
+}
+
 export default function PublishingPage() {
   // const editorRef = useRef<HTMLDivElement>(null);
 
@@ -163,6 +208,17 @@ export default function PublishingPage() {
   const [adminMessage, setAdminMessage] = useState("");
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
 
   const editor = useEditor({
     extensions: [
@@ -211,6 +267,40 @@ export default function PublishingPage() {
     return rows;
   }, [posts, search, status, locationFilter]);
 
+  const sortedPosts = useMemo(() => {
+    const dir = sortDir === "asc" ? 1 : -1;
+
+    return [...filteredPosts].sort((a, b) => {
+      switch (sortKey) {
+        case "createdAt": {
+          const at = a.createdAtRaw ? new Date(a.createdAtRaw).getTime() : 0;
+          const bt = b.createdAtRaw ? new Date(b.createdAtRaw).getTime() : 0;
+          return (at - bt) * dir;
+        }
+        case "views":
+          return (a.views - b.views) * dir;
+        case "engagement":
+          // reactions + responses combined
+          return (
+            (a.reactions + a.responses - (b.reactions + b.responses)) * dir
+          );
+        case "status":
+          // Published (1) vs Draft (0)
+          return (
+            ((a.status === "Published" ? 1 : 0) -
+              (b.status === "Published" ? 1 : 0)) *
+            dir
+          );
+        default: {
+          // title — string compare
+          const av = (a.title || "").toLowerCase();
+          const bv = (b.title || "").toLowerCase();
+          return av.localeCompare(bv) * dir;
+        }
+      }
+    });
+  }, [filteredPosts, sortKey, sortDir]);
+
   const fetchPosts = async () => {
     try {
       const res = await axios.get(
@@ -241,6 +331,8 @@ export default function PublishingPage() {
         chatEnabled: post.chat_enabled || false,
 
         createdAt: new Date(post.created_at).toLocaleDateString(),
+
+        createdAtRaw: post.created_at,
 
         content: post.content,
 
@@ -1116,7 +1208,7 @@ export default function PublishingPage() {
                     }}
                   >
                     <table className="min-w-full divide-y divide-border">
-                      <thead className="bg-muted/50 sticky top-0 z-10">
+                      {/* <thead className="bg-muted/50 sticky top-0 z-10">
                         <tr>
                           <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                             Article
@@ -1150,10 +1242,65 @@ export default function PublishingPage() {
                             Actions
                           </th>
                         </tr>
+                      </thead> */}
+                      <thead className="bg-muted/50 sticky top-0 z-10">
+                        <tr>
+                          <SortHeader
+                            label="Article"
+                            columnKey="title"
+                            activeKey={sortKey}
+                            dir={sortDir}
+                            onSort={handleSort}
+                          />
+
+                          <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Chat
+                          </th>
+
+                          <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Chat Toggle
+                          </th>
+
+                          <SortHeader
+                            label="Status"
+                            columnKey="status"
+                            activeKey={sortKey}
+                            dir={sortDir}
+                            onSort={handleSort}
+                          />
+
+                          <SortHeader
+                            label="Engagement"
+                            columnKey="engagement"
+                            activeKey={sortKey}
+                            dir={sortDir}
+                            onSort={handleSort}
+                          />
+
+                          <SortHeader
+                            label="Views"
+                            columnKey="views"
+                            activeKey={sortKey}
+                            dir={sortDir}
+                            onSort={handleSort}
+                          />
+
+                          <SortHeader
+                            label="Created At"
+                            columnKey="createdAt"
+                            activeKey={sortKey}
+                            dir={sortDir}
+                            onSort={handleSort}
+                          />
+
+                          <th className="px-3 py-3 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-24">
+                            Actions
+                          </th>
+                        </tr>
                       </thead>
 
                       <tbody className="bg-card divide-y divide-border">
-                        {filteredPosts.map((post) => (
+                        {sortedPosts.map((post) => (
                           <tr
                             key={post.id}
                             className="transition-colors hover:bg-muted/40"

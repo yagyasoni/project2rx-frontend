@@ -11,6 +11,9 @@ import {
   MessageSquare,
   Clock,
   AlertTriangle,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,6 +127,53 @@ function StatCard({
   );
 }
 
+type SortKey =
+  | "pharmacy_name"
+  | "user_name"
+  | "email"
+  | "phone"
+  | "subject"
+  | "created_at";
+
+function SortHeader({
+  label,
+  columnKey,
+  activeKey,
+  dir,
+  onSort,
+  className = "",
+}: {
+  label: string;
+  columnKey: SortKey;
+  activeKey: SortKey;
+  dir: "asc" | "desc";
+  onSort: (k: SortKey) => void;
+  className?: string;
+}) {
+  const active = activeKey === columnKey;
+  return (
+    <th
+      className={`px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ${className}`}
+    >
+      <button
+        onClick={() => onSort(columnKey)}
+        className="cursor-pointer inline-flex items-center gap-1 uppercase tracking-wider hover:text-foreground transition-colors"
+      >
+        {label}
+        {active ? (
+          dir === "asc" ? (
+            <ChevronUp size={12} />
+          ) : (
+            <ChevronDown size={12} />
+          )
+        ) : (
+          <ChevronsUpDown size={12} className="opacity-40" />
+        )}
+      </button>
+    </th>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────
@@ -139,6 +189,17 @@ export default function Feedback() {
   const [deleteRow, setDeleteRow] = useState<FeedbackRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [sortKey, setSortKey] = useState<SortKey>("created_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
 
   // useEffect(() => {
   //   const interval = setInterval(() => {
@@ -248,6 +309,30 @@ export default function Feedback() {
     }
     return rows;
   }, [feedbacks, search, dateFilter]);
+
+  const sorted = useMemo(() => {
+    const dir = sortDir === "asc" ? 1 : -1;
+
+    return [...filtered].sort((a, b) => {
+      if (sortKey === "created_at") {
+        const at = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bt = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return (at - bt) * dir;
+      }
+
+      // phone → strip everything but digits, compare as numbers
+      if (sortKey === "phone") {
+        const an = Number((a.phone || "").replace(/\D/g, "")) || 0;
+        const bn = Number((b.phone || "").replace(/\D/g, "")) || 0;
+        return (an - bn) * dir;
+      }
+
+      // pharmacy_name / user_name / email / subject — string compare
+      const av = (a[sortKey] || "").toString().toLowerCase();
+      const bv = (b[sortKey] || "").toString().toLowerCase();
+      return av.localeCompare(bv) * dir;
+    });
+  }, [filtered, sortKey, sortDir]);
 
   const recentCount = feedbacks.filter((f) =>
     isWithinLast24h(f.created_at),
@@ -373,7 +458,7 @@ export default function Feedback() {
                 style={{ maxHeight: "calc(100vh - 380px)" }}
               >
                 <table className="min-w-full divide-y divide-border">
-                  <thead className="bg-muted/50 sticky top-0 z-10">
+                  {/* <thead className="bg-muted/50 sticky top-0 z-10">
                     <tr>
                       <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-10">
                         #
@@ -399,6 +484,61 @@ export default function Feedback() {
                       <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                         Created At
                       </th>
+                      <th className="px-3 py-3 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-24">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead> */}
+                  <thead className="bg-muted/50 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-10">
+                        #
+                      </th>
+                      <SortHeader
+                        label="Pharmacy"
+                        columnKey="pharmacy_name"
+                        activeKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
+                      <SortHeader
+                        label="User"
+                        columnKey="user_name"
+                        activeKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
+                      <SortHeader
+                        label="Email"
+                        columnKey="email"
+                        activeKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
+                      <SortHeader
+                        label="Phone"
+                        columnKey="phone"
+                        activeKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
+                      <SortHeader
+                        label="Subject"
+                        columnKey="subject"
+                        activeKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
+                      <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px]">
+                        Message
+                      </th>
+                      <SortHeader
+                        label="Created At"
+                        columnKey="created_at"
+                        activeKey={sortKey}
+                        dir={sortDir}
+                        onSort={handleSort}
+                      />
                       <th className="px-3 py-3 text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-24">
                         Actions
                       </th>
@@ -430,7 +570,7 @@ export default function Feedback() {
                         </td>
                       </tr>
                     ) : (
-                      filtered.map((row, idx) => (
+                      sorted.map((row, idx) => (
                         <tr
                           key={row.id}
                           className="transition-colors hover:bg-muted/40"

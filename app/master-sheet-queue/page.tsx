@@ -10,7 +10,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Check, Loader2, RefreshCw } from "lucide-react";
+import {
+  Check,
+  Loader2,
+  RefreshCw,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+} from "lucide-react";
 import AdminLayout from "@/components/adminLayout";
 import axios from "axios";
 import adminApi from "@/lib/adminApi";
@@ -51,6 +58,43 @@ interface RowSelection {
   payerType: string;
 }
 
+type SortKey = "bin" | "pcn" | "group";
+
+function SortHeader({
+  label,
+  columnKey,
+  activeKey,
+  dir,
+  onSort,
+}: {
+  label: string;
+  columnKey: SortKey;
+  activeKey: SortKey;
+  dir: "asc" | "desc";
+  onSort: (k: SortKey) => void;
+}) {
+  const active = activeKey === columnKey;
+  return (
+    <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+      <button
+        onClick={() => onSort(columnKey)}
+        className="cursor-pointer inline-flex items-center gap-1 uppercase tracking-wider hover:text-foreground transition-colors"
+      >
+        {label}
+        {active ? (
+          dir === "asc" ? (
+            <ChevronUp size={12} />
+          ) : (
+            <ChevronDown size={12} />
+          )
+        ) : (
+          <ChevronsUpDown size={12} className="opacity-40" />
+        )}
+      </button>
+    </th>
+  );
+}
+
 /* ── Component ───────────────────────────────────── */
 const MasterSheetQueue = () => {
   const [fetchedRows, setFetchedRows] = useState<FetchedRow[]>([]);
@@ -73,6 +117,17 @@ const MasterSheetQueue = () => {
 
   const [addingPbm, setAddingPbm] = useState(false);
   const [addingPayerType, setAddingPayerType] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("bin");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
 
   const fetchRows = async () => {
     setLoading(true);
@@ -225,7 +280,16 @@ const MasterSheetQueue = () => {
     }
   };
 
-  const pendingRows = fetchedRows.filter((r) => !addedIds.has(r.id));
+  // const pendingRows = fetchedRows.filter((r) => !addedIds.has(r.id));
+  const pendingRows = fetchedRows
+    .filter((r) => !addedIds.has(r.id))
+    .sort((a, b) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+      const av = (a[sortKey] || "").toString().toLowerCase();
+      const bv = (b[sortKey] || "").toString().toLowerCase();
+      // numeric:true so "9" sorts after "10" correctly for BIN-style values
+      return av.localeCompare(bv, undefined, { numeric: true }) * dir;
+    });
   const addedCount = addedIds.size;
 
   return (
@@ -323,7 +387,7 @@ const MasterSheetQueue = () => {
           <div className="rounded-lg border border-border">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-border">
-                <thead className="bg-muted/50">
+                {/* <thead className="bg-muted/50">
                   <tr>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-12">
                       #
@@ -337,6 +401,43 @@ const MasterSheetQueue = () => {
                     <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Group
                     </th>
+                    <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      PBM Name <span className="text-destructive">*</span>
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Payer Type <span className="text-destructive">*</span>
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-44">
+                      Action
+                    </th>
+                  </tr>
+                </thead> */}
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-12">
+                      #
+                    </th>
+                    <SortHeader
+                      label="Bin"
+                      columnKey="bin"
+                      activeKey={sortKey}
+                      dir={sortDir}
+                      onSort={handleSort}
+                    />
+                    <SortHeader
+                      label="PCN"
+                      columnKey="pcn"
+                      activeKey={sortKey}
+                      dir={sortDir}
+                      onSort={handleSort}
+                    />
+                    <SortHeader
+                      label="Group"
+                      columnKey="group"
+                      activeKey={sortKey}
+                      dir={sortDir}
+                      onSort={handleSort}
+                    />
                     <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                       PBM Name <span className="text-destructive">*</span>
                     </th>
