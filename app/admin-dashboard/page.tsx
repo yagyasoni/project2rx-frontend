@@ -778,7 +778,10 @@ export default function AdminDashboard() {
                 {/* Right side: count + clear */}
                 <div className="flex items-center gap-3 lg:ml-auto">
                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                    {filtered.length - 1} / {users.length - 1} shown
+                    {filtered.length - 1 === users.length - 1
+                      ? filtered.length - 1
+                      : filtered.length}{" "}
+                    / {users.length - 1} shown
                   </span>
                   {hasActiveFilters && (
                     <Button
