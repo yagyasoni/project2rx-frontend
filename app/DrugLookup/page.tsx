@@ -419,19 +419,21 @@ export default function DrugLookupLandingPage() {
                                 <Sparkles className="w-3 h-3" />
                                 Suggestions
                               </p>
-                              {suggestions.map((s) => (
-                                <button
-                                  key={s}
-                                  onClick={() => fillSearch(s)}
-                                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-teal-50/70 text-left group transition-colors"
-                                >
-                                  <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-teal-600" />
-                                  <span className="text-sm text-slate-700 group-hover:text-teal-800 font-medium">
-                                    {s}
-                                  </span>
-                                  <ArrowRight className="w-3.5 h-3.5 text-slate-300 ml-auto group-hover:text-teal-500 group-hover:translate-x-0.5 transition-transform" />
-                                </button>
-                              ))}
+                              <div className="max-h-[min(15rem,calc(100vh-17rem))] overflow-y-auto">
+                                {suggestions.map((s) => (
+                                  <button
+                                    key={s}
+                                    onClick={() => fillSearch(s)}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-teal-50/70 text-left group transition-colors"
+                                  >
+                                    <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-teal-600" />
+                                    <span className="text-sm text-slate-700 group-hover:text-teal-800 font-medium">
+                                      {s}
+                                    </span>
+                                    <ArrowRight className="w-3.5 h-3.5 text-slate-300 ml-auto group-hover:text-teal-500 group-hover:translate-x-0.5 transition-transform" />
+                                  </button>
+                                ))}
+                              </div>
                             </div>
                           )}
 
@@ -450,18 +452,20 @@ export default function DrugLookupLandingPage() {
                                     Clear
                                   </button>
                                 </div>
-                                {recentSearches.map((s) => (
-                                  <button
-                                    key={s}
-                                    onClick={() => fillSearch(s)}
-                                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-left group transition-colors"
-                                  >
-                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                    <span className="text-sm text-slate-700 font-medium">
-                                      {s}
-                                    </span>
-                                  </button>
-                                ))}
+                                <div className="max-h-[min(15rem,calc(100vh-17rem))] overflow-y-auto">
+                                  {recentSearches.map((s) => (
+                                    <button
+                                      key={s}
+                                      onClick={() => fillSearch(s)}
+                                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-left group transition-colors"
+                                    >
+                                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                      <span className="text-sm text-slate-700 font-medium">
+                                        {s}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
                             )}
                         </div>
