@@ -174,13 +174,16 @@ function DrugLookupResultsInner() {
           p.set("type", "ndc");
           p.set("ndc", normalizeNdc(embeddedNdc));
         } else {
-          const ingredient = extractIngredient(urlQ);
-          if (!ingredient) {
+          // Send the FULL query (not just the first word) so the backend's
+          // token matching narrows multi-word searches to the specific drug:
+          // "MOUNJARO" → all variants, "MOUNJARO 10MG INJ" → just that one.
+          const term = urlQ.trim();
+          if (!term) {
             setData(null);
             setLoading(false);
             return;
           }
-          p.set("ingredient", ingredient);
+          p.set("ingredient", term);
         }
       }
 
