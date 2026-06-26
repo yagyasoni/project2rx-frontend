@@ -840,7 +840,7 @@ export default function InactiveAccount() {
     const fetchAll = async () => {
       try {
         const [userRes, subRes] = await Promise.all([
-          adminApi.get(`/auth/users`),
+          axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/users`),
           axios.get(
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
           ),
