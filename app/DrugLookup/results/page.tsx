@@ -55,6 +55,14 @@ interface DrugLookupResponse {
 const extractIngredient = (term: string) =>
   term.trim().split(/\s+/)[0].toUpperCase();
 
+// Pulls a trailing NDC out of a display name like
+// "GABAPENTIN 300MG CAP (67877-0223-05)" → "67877-0223-05".
+// Used to look up that exact drug instead of the whole ingredient family.
+const extractEmbeddedNdc = (term: string): string | null => {
+  const m = String(term).match(/\((\d{4,5}-\d{3,4}-\d{1,2})\)\s*$/);
+  return m ? m[1] : null;
+};
+
 // ── NDC helpers ──
 const isNdcLike = (s: string) => {
   const stripped = String(s).replace(/-/g, "");
@@ -154,18 +162,30 @@ function DrugLookupResultsInner() {
       try {
         const p = new URLSearchParams();
 
-        if (isNdcMode) {
+      if (isNdcMode) {
+        p.set("type", "ndc");
+        p.set("ndc", normalizeNdc(urlQ));
+      } else {
+        // A specific drug picked from suggestions carries its NDC in parens,
+        // e.g. "GABAPENTIN 300MG CAP (67877-0223-05)" — look up that exact NDC
+        // so we show just that drug, not every variant of the ingredient.
+        const embeddedNdc = extractEmbeddedNdc(urlQ);
+        if (embeddedNdc) {
           p.set("type", "ndc");
-          p.set("ndc", normalizeNdc(urlQ));
+          p.set("ndc", normalizeNdc(embeddedNdc));
         } else {
-          const ingredient = extractIngredient(urlQ);
-          if (!ingredient) {
+          // Send the FULL query (not just the first word) so the backend's
+          // token matching narrows multi-word searches to the specific drug:
+          // "MOUNJARO" → all variants, "MOUNJARO 10MG INJ" → just that one.
+          const term = urlQ.trim();
+          if (!term) {
             setData(null);
             setLoading(false);
             return;
           }
-          p.set("ingredient", ingredient);
+          p.set("ingredient", term);
         }
+      }
 
         if (urlBin) p.set("bin", urlBin);
         if (urlPcn) p.set("pcn", urlPcn);
@@ -210,13 +230,12 @@ function DrugLookupResultsInner() {
         const out: { name: string; ndc?: string; rx_count: number }[] =
           await res.json();
 
-        const formatted = out
-          .map((d) =>
-            ndcMode && d.ndc
-              ? `${formatNdcDisplay(d.ndc)} — ${d.name}`
-              : d.name,
-          )
-          .slice(0, 6);
+      const formatted = out
+        .map((d) =>
+          ndcMode && d.ndc ? `${formatNdcDisplay(d.ndc)} — ${d.name}` : d.name,
+        )
+        .filter((name) => name && name.length < 140 && !name.includes("|"))
+        .slice(0, 6);
 
         setDrugSuggestions(formatted);
       } catch {
@@ -643,14 +662,7 @@ function DrugLookupResultsInner() {
               {/* ╔═══ KPIs ═════════════════════════════════════════════ */}
               {!loading && !error && data && data.drugs.length > 0 && agg && (
                 <>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    <KpiTile
-                      icon={Pill}
-                      label="Ingredient"
-                      value={displayIngredient}
-                      color="teal"
-                      isText
-                    />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <KpiTile
                       icon={Hash}
                       label="Variants"

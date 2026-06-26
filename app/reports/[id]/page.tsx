@@ -5013,39 +5013,63 @@ export default function InventoryReportPage() {
 
                     {/* KPI Cards */}
                     <div className="px-5 py-4 bg-white border-b border-slate-200 flex-shrink-0">
-                      <div className="grid grid-cols-5 gap-2.5">
-                        <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/60 border border-indigo-200/60 rounded-xl p-3">
-                          <p className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest mb-1">
-                            Ingredient
-                          </p>
-                          <p className="text-[14px] font-extrabold text-slate-900 truncate">
-                            {drugLookup?.ingredient ??
-                              extractIngredient(activeDrug.drugName)}
-                          </p>
-                        </div>
-                        <div className="bg-white border border-slate-200 rounded-xl p-3">
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                      <div className="grid grid-cols-4 gap-2.5">
+                        <div
+                          className="rounded-xl p-3 border border-slate-200"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+                          }}
+                        >
+                          <p
+                            className="text-[9px] font-bold uppercase tracking-widest mb-1"
+                            style={{ color: "#b45309" }}
+                          >
                             Variants
                           </p>
-                          <p className="text-[15px] font-extrabold text-slate-900 tabular-nums">
+                          <p
+                            className="text-[15px] font-extrabold tabular-nums"
+                            style={{ color: "#b45309" }}
+                          >
                             {drugLookup?.drugs?.length ?? 0}
                           </p>
                         </div>
-                        <div className="bg-white border border-slate-200 rounded-xl p-3">
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                        <div
+                          className="rounded-xl p-3 border border-slate-200"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)",
+                          }}
+                        >
+                          <p
+                            className="text-[9px] font-bold uppercase tracking-widest mb-1"
+                            style={{ color: "#1d4ed8" }}
+                          >
                             Total Rx
                           </p>
-                          <p className="text-[15px] font-extrabold text-cyan-700 tabular-nums">
+                          <p
+                            className="text-[15px] font-extrabold tabular-nums"
+                            style={{ color: "#1d4ed8" }}
+                          >
                             {drugLookupAgg
                               ? Number(drugLookupAgg.totalRxs).toLocaleString()
                               : "—"}
                           </p>
                         </div>
-                        <div className="bg-white border border-slate-200 rounded-xl p-3">
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                        <div
+                          className="rounded-xl p-3 border border-slate-200"
+                          style={{ background: "#f0fdf4" }}
+                        >
+                          <p
+                            className="text-[9px] font-bold uppercase tracking-widest mb-1"
+                            style={{ color: "#16a34a" }}
+                          >
                             Total Ins Paid
                           </p>
-                          <p className="text-[15px] font-extrabold text-emerald-700 tabular-nums">
+                          <p
+                            className="text-[15px] font-extrabold tabular-nums"
+                            style={{ color: "#16a34a" }}
+                          >
                             {drugLookupAgg
                               ? `$${Number(
                                   drugLookupAgg.totalInsPaid,
@@ -5056,11 +5080,23 @@ export default function InventoryReportPage() {
                               : "—"}
                           </p>
                         </div>
-                        <div className="bg-white border border-slate-200 rounded-xl p-3">
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                        <div
+                          className="rounded-xl p-3 border border-slate-200"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)",
+                          }}
+                        >
+                          <p
+                            className="text-[9px] font-bold uppercase tracking-widest mb-1"
+                            style={{ color: "#6d28d9" }}
+                          >
                             Avg / Unit
                           </p>
-                          <p className="text-[15px] font-extrabold text-slate-900 tabular-nums">
+                          <p
+                            className="text-[15px] font-extrabold tabular-nums"
+                            style={{ color: "#6d28d9" }}
+                          >
                             {drugLookupAgg
                               ? `$${Number(drugLookupAgg.weightedAvgPerUnit).toFixed(2)}`
                               : "—"}
