@@ -492,9 +492,21 @@ export default function ReportsPage() {
                       />
                       <div className="absolute right-0 top-full mt-2 z-50 w-44 bg-white border border-slate-200 rounded-xl shadow-xl p-1.5">
                         {[
-                          { key: "all" as const, label: "All Statuses", dot: "bg-slate-400" },
-                          { key: "Ready" as const, label: "Ready", dot: "bg-emerald-400" },
-                          { key: "Started" as const, label: "Started", dot: "bg-disclaimer-500" },
+                          {
+                            key: "all" as const,
+                            label: "All Statuses",
+                            dot: "bg-slate-400",
+                          },
+                          {
+                            key: "Ready" as const,
+                            label: "Ready",
+                            dot: "bg-emerald-400",
+                          },
+                          {
+                            key: "Started" as const,
+                            label: "Started",
+                            dot: "bg-disclaimer-500",
+                          },
                         ].map((opt) => (
                           <button
                             key={opt.key}
@@ -508,7 +520,9 @@ export default function ReportsPage() {
                                 : "text-slate-600 hover:bg-slate-100"
                             }`}
                           >
-                            <span className={`w-2 h-2 rounded-full ${opt.dot}`} />
+                            <span
+                              className={`w-2 h-2 rounded-full ${opt.dot}`}
+                            />
                             {opt.label}
                           </button>
                         ))}
@@ -776,8 +790,7 @@ export default function ReportsPage() {
                 {filteredReports.length > 0 && (
                   <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-4">
                     <span className="text-xs text-slate-500">
-                      Showing{" "}
-                      <b className="text-slate-700">{pageStart + 1}</b>–
+                      Showing <b className="text-slate-700">{pageStart + 1}</b>–
                       <b className="text-slate-700">
                         {pageStart + pageReports.length}
                       </b>{" "}
@@ -797,21 +810,22 @@ export default function ReportsPage() {
                         >
                           Prev
                         </button>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                          (page) => (
-                            <button
-                              key={page}
-                              onClick={() => setCurrentPage(page)}
-                              className={`min-w-[28px] px-2 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
-                                page === currentPage
-                                  ? "bg-slate-900 text-white border-slate-900"
-                                  : "text-slate-600 border-slate-200 bg-white hover:bg-slate-50"
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          ),
-                        )}
+                        {Array.from(
+                          { length: totalPages },
+                          (_, i) => i + 1,
+                        ).map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`min-w-[28px] px-2 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                              page === currentPage
+                                ? "bg-slate-900 text-white border-slate-900"
+                                : "text-slate-600 border-slate-200 bg-white hover:bg-slate-50"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
                         <button
                           onClick={() =>
                             setCurrentPage((p) => Math.min(totalPages, p + 1))
@@ -1021,7 +1035,7 @@ export default function ReportsPage() {
 
         {/* Delete Modal */}
         {deleteModal && (
-          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center backdrop-blur-sm">
+          <div className="fixed inset-0 bg-black/40 z-[10000] flex items-center justify-center backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 flex flex-col items-center text-center">
               <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
                 <svg
