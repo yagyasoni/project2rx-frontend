@@ -67,7 +67,7 @@ export default function Feedback({
     <>
       {/* Floating Feedback Button — only in uncontrolled (standalone) mode */}
       {!isControlled && (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-6 right-6 z-[10000]">
           {!showFeedback && (
             <button
               onClick={() => setShowFeedback(true)}
@@ -84,11 +84,11 @@ export default function Feedback({
           {/* BACKDROP */}
           <div
             onClick={() => setShowFeedback(false)}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-all"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10000] transition-all"
           />
 
           {/* FEEDBACK CARD */}
-          <div className="fixed bottom-6 right-6 w-80 bg-white border border-gray-200 rounded-xl shadow-xl z-50">
+          <div className="fixed bottom-6 right-6 w-80 bg-white border border-gray-200 rounded-xl shadow-xl z-[10000]">
             {/* Header */}
             <div className="flex justify-between items-center border-b px-4 py-3">
               <h3 className="text-sm font-semibold text-gray-800">

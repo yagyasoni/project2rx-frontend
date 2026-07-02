@@ -484,7 +484,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 <LockedRow icon={Bell} label="Leads" />
               </Link>
             ) : (
-              <div className="flex items-center gap-3 py-[11px] px-3.5 text-[15px] font-medium text-gray-200 rounded-xl">
+              <div className="flex items-center gap-3 py-[11px] px-3.5 text-[15px] font-medium text-gray-600 rounded-xl">
                 <Bell className="h-[18px] w-[18px] shrink-0" />
 
                 <span className="truncate">Leads</span>

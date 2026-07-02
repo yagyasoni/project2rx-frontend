@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import LayoutClient from "./LayoutClient";
+import { GoogleTagManager } from "@next/third-parties/google";
 
 const SITE_URL = "https://www.auditprorx.com";
 const SITE_NAME = "AuditProRx";
@@ -163,6 +164,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <GoogleTagManager gtmId="GTM-NZ8KRHJ4" />
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://js.stripe.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />

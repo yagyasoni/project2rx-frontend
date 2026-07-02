@@ -304,7 +304,9 @@ export default function AdminDashboard() {
     setLoading(true);
     setFetchError("");
     try {
-      const res = await adminApi.get(`/auth/users`);
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/users`,
+      );
       const data = res.data?.users || res.data || [];
       setUsers(Array.isArray(data) ? data : []);
     } catch {
