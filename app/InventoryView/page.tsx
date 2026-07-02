@@ -1146,19 +1146,6 @@ function ListingCard({
         </div>
         <div className="mt-3 flex w-full items-center gap-2">
           <button
-            onClick={onBookmark}
-            title={bookmarked ? "Remove bookmark" : "Save for later"}
-            className={`rounded-lg p-2 transition ${
-              bookmarked
-                ? "bg-cyan-50 text-cyan-700"
-                : "bg-gray-50 text-gray-500 hover:bg-gray-100"
-            }`}
-          >
-            <Bookmark
-              className={`h-3.5 w-3.5 ${bookmarked ? "fill-current" : ""}`}
-            />
-          </button>
-          <button
             onClick={onView}
             className="rounded-lg bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-100"
           >
@@ -1394,19 +1381,6 @@ function DetailsPanel({
         <div className="border-t border-gray-100 bg-white px-6 py-3.5 flex-shrink-0">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <button
-                onClick={onBookmark}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition ${
-                  bookmarked
-                    ? "bg-cyan-50 text-cyan-700"
-                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                <Bookmark
-                  className={`h-3.5 w-3.5 ${bookmarked ? "fill-current" : ""}`}
-                />
-                {bookmarked ? "Saved" : "Save for Later"}
-              </button>
               <button
                 onClick={() => setShowReportModal(true)}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100"
