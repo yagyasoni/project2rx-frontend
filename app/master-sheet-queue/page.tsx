@@ -519,7 +519,7 @@ const MasterSheetQueue = () => {
                                 <SelectValue placeholder="Select PBM" />
                               </SelectTrigger>
                               <SelectContent>
-                                <div className="max-h-28 overflow-y-auto">
+                                <div className="max-h-28 w-38 overflow-y-auto">
                                   {pbmOptions.map((p) => (
                                     <SelectItem
                                       key={p.id}
