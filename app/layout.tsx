@@ -127,7 +127,7 @@ const organizationJsonLd = {
   logo: `${SITE_URL}/icon.png`,
   description: DEFAULT_DESCRIPTION,
   email: "drugdroprx@gmail.com",
-  foundingDate: "2024",
+  foundingDate: "2026",
   areaServed: "US",
   sameAs: [
     "https://www.linkedin.com/company/auditprorx/",

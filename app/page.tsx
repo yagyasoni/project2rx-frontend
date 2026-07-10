@@ -5269,7 +5269,7 @@ const faqJsonLd = {
       name: "Do I need a long-term contract to use AuditProRx?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "No. AuditProRx is a month-to-month subscription with no long-term contract. The Professional plan is $99 per month and includes a 7-day full-access free trial.",
+        text: "No. AuditProRx is a month-to-month subscription with no long-term contract. The Professional plan is $99 per month and includes a 14-day full-access free trial.",
       },
     },
     {

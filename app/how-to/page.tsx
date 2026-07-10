@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
@@ -9,6 +9,8 @@ import {
   Pill,
   ChevronRight,
   ArrowLeft,
+  ZoomIn,
+  X,
 } from "lucide-react";
 
 type Guide = {
@@ -69,6 +71,25 @@ const GUIDES: Guide[] = [
 
 function GuideDetail({ guide, onBack }: { guide: Guide; onBack: () => void }) {
   const steps = Array.from({ length: guide.stepCount }, (_, i) => i + 1);
+  // Fullscreen image lightbox — holds { src, step } of the image being viewed.
+  const [lightbox, setLightbox] = useState<{ src: string; step: number } | null>(
+    null,
+  );
+
+  // Close the lightbox on Escape and lock body scroll while it's open.
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightbox(null);
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [lightbox]);
 
   return (
     <main className="flex-1 overflow-auto bg-slate-50">
@@ -118,8 +139,32 @@ function GuideDetail({ guide, onBack }: { guide: Guide; onBack: () => void }) {
               <div className="flex-1 h-px bg-slate-200" />
             </div>
 
-            {/* Image */}
-            <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+            {/* Image — click to open fullscreen */}
+            <div
+              className="group relative rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm cursor-zoom-in"
+              onClick={() =>
+                setLightbox({
+                  src: `/how-to/${guide.folder}/${step}.png`,
+                  step,
+                })
+              }
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setLightbox({
+                    src: `/how-to/${guide.folder}/${step}.png`,
+                    step,
+                  });
+                }
+              }}
+            >
+              {/* Hover hint badge */}
+              <div className="pointer-events-none absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-slate-900/70 px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                <ZoomIn className="w-3.5 h-3.5" />
+                Click to expand
+              </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`/how-to/${guide.folder}/${step}.png`}
@@ -153,6 +198,34 @@ function GuideDetail({ guide, onBack }: { guide: Guide; onBack: () => void }) {
           </button>
         </div>
       </div>
+
+      {/* Fullscreen image lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-8"
+          onClick={() => setLightbox(null)}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setLightbox(null)}
+            aria-label="Close"
+            className="absolute top-4 right-4 flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          {/* Step caption */}
+          <span className="absolute top-6 left-6 text-sm font-semibold text-white/90">
+            {guide.name} — Step {lightbox.step}
+          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightbox.src}
+            alt={`${guide.name} Step ${lightbox.step}`}
+            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </main>
   );
 }

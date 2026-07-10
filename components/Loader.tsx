@@ -80,14 +80,14 @@ export default function Loader({
     <>
       <LogoSpinner size="lg" />
       {(title || subtitle) && (
-        <div className="text-center space-y-1">
+        <div className="w-full min-w-0 text-center space-y-1">
           {title && (
             <p className="text-sm font-semibold text-slate-700 tracking-wide">
               {title}
             </p>
           )}
           {subtitle && (
-            <p className="max-w-full truncate px-2 text-xs text-slate-400">
+            <p className="w-full min-w-0 px-2 text-xs text-slate-400 wrap-anywhere">
               {subtitle}
             </p>
           )}

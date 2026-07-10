@@ -657,24 +657,36 @@ export default function Index() {
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0);
   const faqs = [
     {
-      q: "How quickly can we get started?",
-      a: "Setup takes minutes. Register your pharmacy, complete payment, and your admin team activates access — most pharmacies are running their first audit report the same day.",
+      q: "What is AuditProRx?",
+      a: "AuditProRx is a pharmacy audit compliance platform for independent pharmacies. It reconciles your inventory against wholesaler purchase invoices by NDC, identifies the PBM behind each claim, and generates audit-ready reports that show exactly where revenue is at risk.",
     },
     {
-      q: "Is my pharmacy data secure and compliant?",
-      a: "Yes. AuditProRx is built on HIPAA-compliant infrastructure with AES-256 encryption. All Inventory Exchange transfers are patient-specific Rx transfers under DSCSA — controlled substances are never listed.",
+      q: "How fast can my pharmacy get started?",
+      a: "Most pharmacies are onboarded in minutes. Upload your inventory CSV, set the audit date range, add your wholesaler files, and AuditProRx generates a compliance-ready audit report.",
     },
     {
-      q: "What does the Drug Intelligence Hub show me?",
-      a: "Search any drug by name, NDC, BIN, PCN, or GROUP and instantly see community-sourced benchmarks — variants, total Rx volume, total insurance paid, and average reimbursement per unit across the AuditProRx network.",
+      q: "Which pharmacy systems and wholesalers are supported?",
+      a: "AuditProRx works with PrimeRx pharmacy management system exports and ingests standard invoice CSVs from McKesson, AXIA, Kinray, and Anda. Header formats differ between wholesalers, so AuditProRx normalizes them automatically — upload the file exactly as you downloaded it.",
     },
     {
-      q: "How does the Inventory Exchange Network work?",
-      a: "List verified surplus stock and discover available inventory at other pharmacies for patient-specific transfers. Every listing shows availability, expiry, shelf cost, and the holding pharmacy — fully compliant with DSCSA and state Board of Pharmacy rules.",
+      q: "Is AuditProRx HIPAA compliant?",
+      a: "Yes. AuditProRx is built with enterprise-grade security and HIPAA-aligned practices. Patient data is encrypted in transit and at rest, and access is controlled with role-based permissions across your team.",
     },
     {
-      q: "What kind of support is included?",
-      a: "Every plan includes admin access and dedicated product support. Full Access adds priority support and a dedicated onboarding specialist. There are no long-term contracts — scale or cancel anytime.",
+      q: "How does pricing work?",
+      a: "AuditProRx is a month-to-month subscription with no long-term contract. Base is $99 per month, Professional is $249 per month, and Full Access is $499 per month. You can cancel at any time.",
+    },
+    {
+      q: "Is there a free trial?",
+      a: "Yes. Every plan includes a 14-day free trial, activated with a coupon code. Contact our team at support@auditprorx.com and we will set you up.",
+    },
+    {
+      q: "How does the PBM lookup work?",
+      a: "Each claim carries a BIN, PCN, and Group code. AuditProRx resolves those codes against a maintained master reference sheet to name the PBM behind the claim, which lets your report group financial impact by payer instead of by raw code. Where a match resolves on BIN alone, confirm the PCN and Group before acting on it.",
+    },
+    {
+      q: "How do I reach support?",
+      a: "Email support@auditprorx.com, message us on WhatsApp at +1 (551) 229-6466, or book a consultation. We typically respond within a few business hours.",
     },
   ];
   const contactEmail = "support@auditprorx.com";
