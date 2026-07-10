@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -10,7 +8,8 @@ import {
   Loader2,
   CalendarDays,
   CreditCard,
-  ShieldCheck,BadgeCheck,
+  ShieldCheck,
+  BadgeCheck,
 } from "lucide-react";
 
 import axios from "axios";
@@ -176,9 +175,7 @@ const UsersPage = () => {
 
       setSubLoading(true);
 
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/stripe-subscription/${userId}`,
-      );
+      const res = await api.get(`/pay/stripe-subscription/${userId}`);
 
       const sub = res?.data?.subscription;
       console.log("SUB DATA:", sub);
@@ -281,13 +278,10 @@ const UsersPage = () => {
 
       setUpdatingSubscription(true);
 
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/update-subscription-plans`,
-        {
-          userId,
-          plan: selectedPlan, // single string — matches new backend
-        },
-      );
+      const res = await api.post(`/pay/update-subscription-plans`, {
+        userId,
+        plan: selectedPlan, // single string — matches new backend
+      });
 
       // Backend returns a message describing upgrade (immediate) vs
       // downgrade (scheduled at period end).
@@ -317,10 +311,7 @@ const UsersPage = () => {
     try {
       const userId = localStorage.getItem("userId");
 
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/cancel-subscription`,
-        { userId },
-      );
+      await api.post(`/pay/cancel-subscription`, { userId });
 
       toast.success(
         "Subscription will remain active until the current billing period ends",
