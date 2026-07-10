@@ -304,9 +304,7 @@ export default function AdminDashboard() {
     setLoading(true);
     setFetchError("");
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/users`,
-      );
+      const res = await adminApi.get(`/auth/users`);
       const data = res.data?.users || res.data || [];
       setUsers(Array.isArray(data) ? data : []);
     } catch {
@@ -537,7 +535,7 @@ export default function AdminDashboard() {
     setSubLoading(true);
 
     try {
-      const res = await axios.get(`${API_BASE}/pay/subscription/${user.id}`);
+      const res = await adminApi.get(`/pay/subscription/${user.id}`);
       const sub = res?.data?.subscription ?? null;
 
       setSubscription(sub);
@@ -628,7 +626,7 @@ export default function AdminDashboard() {
     if (!selected?.id) return;
     setSavingAccess(true);
     try {
-      await axios.post(`${API_BASE}/pay/admin/grant-access`, {
+      await adminApi.post(`/pay/admin/grant-access`, {
         userId: selected?.id,
         ...accessControls,
       });
@@ -1265,7 +1263,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="mt-3 pt-3 border-t border-border flex items-center gap-1.5 text-[10px] text-muted-foreground">
                     <ShieldCheck size={11} />
-                    Token valid for 15 min · Stored in localStorage · Audited
+                    Token valid for 3 hrs · Stored in localStorage · Audited
                   </div>
                 </div>
               </div>

@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { toast } from "sonner";
+import api from "@/lib/api";
 
 // =========================================
 // PLANS — 3 fixed tiers (single-select)
@@ -118,10 +119,8 @@ export default function InactiveAccount() {
     const fetchAll = async () => {
       try {
         const [userRes, subRes] = await Promise.all([
-          axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/users`),
-          axios.get(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
-          ),
+          api.get(`/auth/users`),
+          api.get(`/pay/subscription/${userId}`),
         ]);
 
         const users = userRes.data?.users || userRes.data;
@@ -200,10 +199,10 @@ export default function InactiveAccount() {
       setCheckingCode(true);
       const userId = localStorage.getItem("userId");
 
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/validate-trial-code`,
-        { userId, code: couponCode },
-      );
+      const res = await api.post(`/pay/validate-trial-code`, {
+        userId,
+        code: couponCode,
+      });
 
       if (res.data.valid) {
         setCodeStatus({ valid: true, message: res.data.message });
@@ -235,15 +234,12 @@ export default function InactiveAccount() {
       const userId = localStorage.getItem("userId");
       const email = localStorage.getItem("userEmail");
 
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/create-checkout-session`,
-        {
-          userId,
-          email,
-          plan: selectedPlan, // single string — matches new backend
-          trialCode: couponCode || null, // grants the trial if valid
-        },
-      );
+      const res = await api.post(`/pay/create-checkout-session`, {
+        userId,
+        email,
+        plan: selectedPlan, // single string — matches new backend
+        trialCode: couponCode || null, // grants the trial if valid
+      });
 
       toast.success("Redirecting to Stripe...");
       window.location.href = res.data.url;
@@ -262,10 +258,7 @@ export default function InactiveAccount() {
   const renewSubscription = async () => {
     try {
       const userId = localStorage.getItem("userId");
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/renew-subscription`,
-        { userId },
-      );
+      await api.post(`/pay/renew-subscription`, { userId });
       toast.success("Subscription renewed");
       window.location.reload();
     } catch (err) {
