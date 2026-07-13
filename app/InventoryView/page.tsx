@@ -244,9 +244,7 @@ export default function InventoryViewPage() {
           return;
         }
 
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
-        );
+        const res = await api.get(`/pay/subscription/${userId}`);
 
         setSubscription(res.data.subscription);
       } catch (err) {
@@ -264,9 +262,7 @@ export default function InventoryViewPage() {
 
         if (!userId) return;
 
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
-        );
+        const res = await api.get(`/pay/subscription/${userId}`);
 
         setSubscription(res.data.subscription);
       } catch {}
