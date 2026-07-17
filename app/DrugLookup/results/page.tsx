@@ -162,30 +162,30 @@ function DrugLookupResultsInner() {
       try {
         const p = new URLSearchParams();
 
-      if (isNdcMode) {
-        p.set("type", "ndc");
-        p.set("ndc", normalizeNdc(urlQ));
-      } else {
-        // A specific drug picked from suggestions carries its NDC in parens,
-        // e.g. "GABAPENTIN 300MG CAP (67877-0223-05)" — look up that exact NDC
-        // so we show just that drug, not every variant of the ingredient.
-        const embeddedNdc = extractEmbeddedNdc(urlQ);
-        if (embeddedNdc) {
+        if (isNdcMode) {
           p.set("type", "ndc");
-          p.set("ndc", normalizeNdc(embeddedNdc));
+          p.set("ndc", normalizeNdc(urlQ));
         } else {
-          // Send the FULL query (not just the first word) so the backend's
-          // token matching narrows multi-word searches to the specific drug:
-          // "MOUNJARO" → all variants, "MOUNJARO 10MG INJ" → just that one.
-          const term = urlQ.trim();
-          if (!term) {
-            setData(null);
-            setLoading(false);
-            return;
+          // A specific drug picked from suggestions carries its NDC in parens,
+          // e.g. "GABAPENTIN 300MG CAP (67877-0223-05)" — look up that exact NDC
+          // so we show just that drug, not every variant of the ingredient.
+          const embeddedNdc = extractEmbeddedNdc(urlQ);
+          if (embeddedNdc) {
+            p.set("type", "ndc");
+            p.set("ndc", normalizeNdc(embeddedNdc));
+          } else {
+            // Send the FULL query (not just the first word) so the backend's
+            // token matching narrows multi-word searches to the specific drug:
+            // "MOUNJARO" → all variants, "MOUNJARO 10MG INJ" → just that one.
+            const term = urlQ.trim();
+            if (!term) {
+              setData(null);
+              setLoading(false);
+              return;
+            }
+            p.set("ingredient", term);
           }
-          p.set("ingredient", term);
         }
-      }
 
         if (urlBin) p.set("bin", urlBin);
         if (urlPcn) p.set("pcn", urlPcn);
@@ -230,12 +230,14 @@ function DrugLookupResultsInner() {
         const out: { name: string; ndc?: string; rx_count: number }[] =
           await res.json();
 
-      const formatted = out
-        .map((d) =>
-          ndcMode && d.ndc ? `${formatNdcDisplay(d.ndc)} — ${d.name}` : d.name,
-        )
-        .filter((name) => name && name.length < 140 && !name.includes("|"))
-        .slice(0, 6);
+        const formatted = out
+          .map((d) =>
+            ndcMode && d.ndc
+              ? `${formatNdcDisplay(d.ndc)} — ${d.name}`
+              : d.name,
+          )
+          .filter((name) => name && name.length < 140 && !name.includes("|"))
+          .slice(0, 6);
 
         setDrugSuggestions(formatted);
       } catch {
@@ -415,7 +417,7 @@ function DrugLookupResultsInner() {
 
   return (
     <ProtectedRoute role="user">
-      <div className="relative w-full bg-slate-50 h-[calc(100vh-37px)] overflow-hidden">
+      <div className="relative w-full bg-slate-50 h-[calc(100vh-37px)] min-h-screen overflow-hidden">
         <div className="relative h-full w-full flex">
           <div
             className={`flex-shrink-0 transition-all duration-300 z-[130] ${
