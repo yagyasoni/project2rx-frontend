@@ -3,6 +3,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { SupplierProvider } from "@/context/SupplierContext";
 import InactiveAccount from "@/components/inactiveAccount";
+import SupportBubble from "@/components/SupportBubble";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
@@ -15,14 +16,29 @@ export default function LayoutClient({
   const [role, setRole] = useState<string | null>(null);
   const pathname = usePathname();
 
-  const hideBannerRoutes = [
-    "/",
-    "/admin",
-    "/terms-of-service",
-    "/privacy-policy",
-    "/cancellation-policy",
+  // Allowlist, not a denylist: the banner must never reach a public page, since
+  // crawlers read DOM order and were picking "Beta" as the page title.
+  const appRoutes = [
+    "/Mainpage",
+    "/ReportsPage",
+    "/reports",
+    "/report-listings",
+    "/group-reports",
+    "/InventoryView",
+    "/DrugLookup",
+    "/ndc-sheet",
+    "/master-sheet",
+    "/master-sheet-queue",
+    "/supplier-mappings",
+    "/settings",
+    "/Notification",
+    "/agreements",
+    "/publishing",
+    "/feedbacks",
+    "/admin-dashboard",
+    "/dashboard",
   ];
-  const shouldShowBanner = !hideBannerRoutes.includes(pathname);
+  const shouldShowBanner = appRoutes.some((route) => pathname.startsWith(route));
 
   useEffect(() => {
     const storedRole = localStorage.getItem("role");
@@ -60,8 +76,8 @@ export default function LayoutClient({
       >
         {/* Content */}
         <div className="text-center">
-          <span className="font-semibold">Beta</span> — This application is
-          currently in testing. Some features may not work as expected.{" "}
+          Beta — This application is currently in testing. Some features may not
+          work as expected.{" "}
           <a
             href={`https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com&su=${subject}&body=${body}`}
             target="_blank"
@@ -87,11 +103,15 @@ export default function LayoutClient({
 
   return (
     <>
-      {shouldShowBanner && <BetaBanner />}
       {/* {role !== null && role !== "admin" ? <InactiveAccount /> : null} */}
       <InactiveAccount />
       <Toaster />
       <SupplierProvider>{children}</SupplierProvider>
+      {/* Floating live-support bubble, shown only on the home page. */}
+      {pathname === "/" && <SupportBubble />}
+      {/* Rendered last so it trails the page content in the DOM; it is
+          position: fixed, so this is visually identical. */}
+      {shouldShowBanner && <BetaBanner />}
     </>
   );
 }

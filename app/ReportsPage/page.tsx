@@ -349,8 +349,8 @@ export default function ReportsPage() {
           <main className="flex-1 overflow-auto">
             {/* ── Header ── */}
             <div className="bg-white border-b border-slate-200">
-              <div className="px-8 py-6">
-                <div className="flex items-center justify-between">
+              <div className="px-4 py-4 md:px-8 md:py-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   {/* Left: Logo + Title */}
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm">
@@ -407,7 +407,7 @@ export default function ReportsPage() {
               </div>
 
               {/* ── Search + Filter Bar ── */}
-              <div className="px-8 pb-4 flex items-center gap-3">
+              <div className="px-4 md:px-8 pb-4 flex flex-wrap items-center gap-3">
                 <div className="relative flex-1 max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
@@ -638,8 +638,8 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            {/* ── Table ── */}
-            <div className="px-8 py-6">
+            {/* ── Table (desktop / tablet ≥ md — original, unchanged) ── */}
+            <div className="hidden md:block px-8 py-6">
               <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                 <table className="w-full">
                   <thead>
@@ -844,6 +844,180 @@ export default function ReportsPage() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* ── Mobile card list (< md — portrait & landscape phones) ── */}
+            <div className="md:hidden px-4 py-4">
+              {/* Mobile stats */}
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 bg-emerald-700 border border-emerald-700 rounded-lg px-3 py-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-300" />
+                  <span className="text-xs font-semibold text-white">
+                    {readyCount} Ready
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-disclaimer-100 border border-disclaimer-300 rounded-lg px-3 py-1.5">
+                  <span className="w-2 h-2 rounded-full bg-disclaimer-600" />
+                  <span className="text-xs font-semibold text-disclaimer-700">
+                    {startedCount} In Progress
+                  </span>
+                </div>
+              </div>
+
+              {loadingReports ? (
+                <div className="py-16">
+                  <Loader variant="inline" title="Loading reports..." />
+                </div>
+              ) : filteredReports.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white py-16">
+                  <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mb-1">
+                    <FileText className="w-5 h-5 text-slate-300" />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-500">
+                    No reports found
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {searchQuery || dateFilterValue || statusFilter !== "all"
+                      ? "Try a different search term or filter"
+                      : "Create a new audit to get started"}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {pageReports.map((report, index) => (
+                    <div
+                      key={report.id}
+                      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                    >
+                      {/* Top row: index + type + actions */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-medium text-slate-400 tabular-nums">
+                              #{pageStart + index + 1}
+                            </span>
+                            <span className="text-[10px] font-bold text-white bg-slate-900 border border-slate-900 px-2 py-0.5 rounded">
+                              {report.type}
+                            </span>
+                          </div>
+                          <Link
+                            href={`/reports/${report.id}`}
+                            className="mt-1 block truncate text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors"
+                          >
+                            {report.auditName}
+                          </Link>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            if (activeMenu === report.id) {
+                              setActiveMenu(null);
+                              setMenuPosition(null);
+                            } else {
+                              const rect = (
+                                e.currentTarget as HTMLElement
+                              ).getBoundingClientRect();
+                              setMenuPosition({
+                                top: rect.bottom + 4,
+                                left: rect.right - 176,
+                              });
+                              setActiveMenu(report.id);
+                            }
+                          }}
+                          className="shrink-0 p-1.5 hover:bg-slate-200 rounded-lg transition-colors"
+                        >
+                          <MoreVertical className="w-4 h-4 text-slate-500" />
+                        </button>
+                      </div>
+
+                      {/* Status */}
+                      <div className="mt-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                            report.status === "Ready"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-disclaimer-100 text-disclaimer-700 border border-disclaimer-300"
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              report.status === "Ready"
+                                ? "bg-emerald-500"
+                                : "bg-disclaimer-600"
+                            }`}
+                          />
+                          {report.status}
+                        </span>
+                      </div>
+
+                      {/* Detail rows */}
+                      <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Inventory Dates
+                          </span>
+                          <span className="text-right text-xs font-medium text-slate-600">
+                            {report.inventoryDates}
+                          </span>
+                        </div>
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Wholesaler Dates
+                          </span>
+                          <span className="text-right text-xs font-medium text-slate-600">
+                            {report.wholesalerDates}
+                          </span>
+                        </div>
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Created
+                          </span>
+                          <span className="text-right text-xs text-slate-500">
+                            {report.createdDate}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Mobile pagination */}
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <span className="text-xs text-slate-500">
+                      Showing{" "}
+                      <b className="text-slate-700">{pageStart + 1}</b>–
+                      <b className="text-slate-700">
+                        {pageStart + pageReports.length}
+                      </b>{" "}
+                      of{" "}
+                      <b className="text-slate-700">{filteredReports.length}</b>
+                    </span>
+                    {totalPages > 1 && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() =>
+                            setCurrentPage((p) => Math.max(1, p - 1))
+                          }
+                          disabled={currentPage === 1}
+                          className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Prev
+                        </button>
+                        <span className="px-1 text-xs font-semibold text-slate-600 tabular-nums">
+                          {currentPage}/{totalPages}
+                        </span>
+                        <button
+                          onClick={() =>
+                            setCurrentPage((p) => Math.min(totalPages, p + 1))
+                          }
+                          disabled={currentPage === totalPages}
+                          className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Context Menu */}

@@ -5113,7 +5113,7 @@ import HomeClient from "./HomeClient";
 const SITE_URL = "https://www.auditprorx.com";
 const TITLE = "Pharmacy Audit Software for Independent Pharmacies | AuditProRx";
 const DESCRIPTION =
-  "Cut PBM recoupments with pharmacy audit software built for independent pharmacies. Reconcile McKesson, AXIA, Kinray & Anda invoices. Free 7-day trial.";
+  "Cut PBM recoupments with pharmacy audit software built for independent pharmacies. Reconcile McKesson, AXIA, Kinray & Anda invoices. Free 14-day trial.";
 
 export const metadata: Metadata = {
   title: TITLE,
