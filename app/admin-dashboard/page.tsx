@@ -182,10 +182,12 @@ function SortHeader({
   className = "",
 }: {
   label: string;
-  columnKey: "name" | "phone" | "status" | "createdAt";
+  columnKey: "pharmacyName" | "name" | "phone" | "status" | "createdAt";
   activeKey: string;
   dir: "asc" | "desc";
-  onSort: (k: "name" | "phone" | "status" | "createdAt") => void;
+  onSort: (
+    k: "pharmacyName" | "name" | "phone" | "status" | "createdAt",
+  ) => void;
   className?: string;
 }) {
   const active = activeKey === columnKey;
@@ -251,7 +253,7 @@ export default function AdminDashboard() {
   });
   const [deletePassword, setDeletePassword] = useState("");
   const [sortKey, setSortKey] = useState<
-    "name" | "phone" | "status" | "createdAt"
+    "pharmacyName" | "name" | "phone" | "status" | "createdAt"
   >("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
@@ -376,6 +378,7 @@ export default function AdminDashboard() {
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
     const matchesSearch =
+      u.pharmacyName?.toLowerCase().includes(q) ||
       u.name?.toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q) ||
       u.phone?.includes(q);
@@ -432,12 +435,26 @@ export default function AdminDashboard() {
     }
 
     // name / phone — strip non-digits for phone so brackets don't break ordering
+    // let av = (a[sortKey] || "").toString().toLowerCase();
+    // let bv = (b[sortKey] || "").toString().toLowerCase();
+    // if (sortKey === "phone") {
+    //   av = av.replace(/\D/g, "");
+    //   bv = bv.replace(/\D/g, "");
+    // }
+    // return av.localeCompare(bv, undefined, { numeric: true }) * dir;
+
     let av = (a[sortKey] || "").toString().toLowerCase();
     let bv = (b[sortKey] || "").toString().toLowerCase();
+
     if (sortKey === "phone") {
       av = av.replace(/\D/g, "");
       bv = bv.replace(/\D/g, "");
     }
+
+    if (!av && !bv) return 0;
+    if (!av) return 1;
+    if (!bv) return -1;
+
     return av.localeCompare(bv, undefined, { numeric: true }) * dir;
   });
 
@@ -726,7 +743,7 @@ export default function AdminDashboard() {
                   />
                   <Input
                     type="text"
-                    placeholder="Search name, email, phone…"
+                    placeholder="Search pharmacy, name, email, phone…"
                     value={search}
                     onChange={(e) => {
                       setSearch(e.target.value);
@@ -828,7 +845,7 @@ export default function AdminDashboard() {
                       </th>
                       <SortHeader
                         label="Pharmacy"
-                        columnKey="name"
+                        columnKey="pharmacyName"
                         activeKey={sortKey}
                         dir={sortDir}
                         onSort={handleSort}
@@ -920,18 +937,18 @@ export default function AdminDashboard() {
                                       : "bg-muted text-muted-foreground"
                                   }`}
                                 >
-                                  {avatarChar(user.name)}
+                                  {avatarChar(
+                                    user?.pharmacyName || "Pharmacy Name",
+                                  )}
                                 </div>
                                 <div>
                                   <span className="text-xs font-semibold text-foreground">
-                                    {user.name}
+                                    {user.pharmacyName}
                                   </span>
-                                  {/* ✅ NEW */}
-                                  {user.pharmacyName && (
-                                    <div className="text-[10px] text-muted-foreground truncate max-w-[160px]">
-                                      {user.pharmacyName}
-                                    </div>
-                                  )}
+
+                                  <div className="text-[10px] text-muted-foreground truncate max-w-[160px]">
+                                    {user.name}
+                                  </div>
 
                                   <div className="flex items-center gap-1 mt-0.5">
                                     <Mail
@@ -1062,7 +1079,7 @@ export default function AdminDashboard() {
             <div className="px-6 py-5 border-b border-border bg-muted/30">
               <div className="flex items-start gap-3">
                 <div className="w-12 h-12 rounded-xs bg-foreground flex items-center justify-center font-medium text-[40px] text-background shrink-0">
-                  {avatarChar(selected.name)}
+                  {avatarChar(selected?.pharmacyName || "Pharmacy Name")}
                 </div>
                 <div className="flex-1 min-w-0 w-full">
                   <div className="font-bold text-lg text-foreground tracking-tight truncate">
