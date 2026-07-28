@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import AuthClient from "./AuthClient";
 
 const SITE_URL = "https://www.auditprorx.com";
-const TITLE = "Sign In or Create an Account";
+const TITLE = "Log In or Create an Account";
 const DESCRIPTION =
   "Sign in or start a 14-day free trial of AuditProRx — pharmacy audit software trusted by independent pharmacies to automate PBM audits & reconciliation.";
 
