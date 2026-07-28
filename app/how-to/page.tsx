@@ -56,6 +56,16 @@ const GUIDES: Guide[] = [
     border: "border-violet-100",
   },
   {
+    id: "ezrirx",
+    name: "EzriRx",
+    category: "wholesaler",
+    folder: "ezrirx1",
+    stepCount: 3,
+    color: "bg-cyan-50",
+    accent: "text-cyan-600",
+    border: "border-cyan-100",
+  },
+  {
     id: "primerx",
     name: "PrimeRx",
     category: "pharmacy",
