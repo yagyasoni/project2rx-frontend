@@ -926,6 +926,13 @@ export default function AdminDashboard() {
                                   <span className="text-xs font-semibold text-foreground">
                                     {user.name}
                                   </span>
+                                  {/* ✅ NEW */}
+                                  {user.pharmacyName && (
+                                    <div className="text-[10px] text-muted-foreground truncate max-w-[160px]">
+                                      {user.pharmacyName}
+                                    </div>
+                                  )}
+
                                   <div className="flex items-center gap-1 mt-0.5">
                                     <Mail
                                       size={10}
@@ -1059,8 +1066,9 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex-1 min-w-0 w-full">
                   <div className="font-bold text-lg text-foreground tracking-tight truncate">
-                    {selected.name}
+                    {selected.pharmacyName}
                   </div>
+
                   <div className="text-[12px] text-muted-foreground mt-0.5 flex items-center gap-1">
                     <Mail size={10} /> {selected.email}
                   </div>
