@@ -95,6 +95,10 @@ interface PharmacyUser {
   status?: "active" | "inactive";
   createdAt?: string;
   pharmacyName?: string; // ✅ NEW — fetched from registration
+  pharmacyLicenseNumber?: string; // ✅ NEW
+  licenseExpiryDate?: string; // ✅ NEW
+  deaNumber?: string; // ✅ NEW
+  deaExpiryDate?: string;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1150,6 +1154,70 @@ export default function AdminDashboard() {
                     {
                       label: "Registered On",
                       value: formatDate(selected.createdAt),
+                      icon: (
+                        <Calendar size={12} className="text-muted-foreground" />
+                      ),
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-lg border border-border p-3 hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        {item.icon}
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                          {item.label}
+                        </span>
+                      </div>
+                      <div className="text-xs text-foreground font-semibold truncate">
+                        {item.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* License & DEA */}
+              <div>
+                <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  License & DEA
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    {
+                      label: "Pharmacy License No.",
+                      value: selected.pharmacyLicenseNumber || "N/A",
+                      icon: (
+                        <ShieldCheck
+                          size={12}
+                          className="text-muted-foreground"
+                        />
+                      ),
+                    },
+                    {
+                      label: "License Expiry",
+                      value: selected.licenseExpiryDate
+                        ? formatDate(selected.licenseExpiryDate)
+                        : "N/A",
+                      icon: (
+                        <Calendar size={12} className="text-muted-foreground" />
+                      ),
+                    },
+                    {
+                      label: "DEA Number",
+                      value: selected.deaNumber || "N/A",
+                      icon: (
+                        <ShieldCheck
+                          size={12}
+                          className="text-muted-foreground"
+                        />
+                      ),
+                    },
+                    {
+                      label: "DEA Expiry",
+                      value: selected.deaExpiryDate
+                        ? formatDate(selected.deaExpiryDate)
+                        : "N/A",
                       icon: (
                         <Calendar size={12} className="text-muted-foreground" />
                       ),
