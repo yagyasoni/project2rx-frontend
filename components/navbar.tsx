@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
+import { BOOKING_URL } from "@/components/marketing/marketing-ui";
 import "../app/landing.css";
 
 const navLinks = [
@@ -56,7 +57,7 @@ export default function Navbar() {
   };
 
   const scheduleConsultation = () => {
-    window.open("https://calendar.app.google/BD5NtSvdCYkfP5FJ7", "_blank");
+    window.open(BOOKING_URL, "_blank");
   };
 
   return (

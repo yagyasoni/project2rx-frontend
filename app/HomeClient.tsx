@@ -48,6 +48,7 @@ import Image from "next/image";
 import "./landing.css";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
+import { BOOKING_URL } from "@/components/marketing/marketing-ui";
 
 const plans = [
   {
@@ -797,7 +798,7 @@ export default function Index() {
   }, []);
 
   const scheduleConsultation = () => {
-    window.open("https://calendar.app.google/BD5NtSvdCYkfP5FJ7", "_blank");
+    window.open(BOOKING_URL, "_blank");
   };
 
   const handleRequestInfo = () => {
@@ -959,13 +960,10 @@ export default function Index() {
           </p>
           <div className="relative z-20 mt-7 flex w-full flex-col items-stretch justify-center gap-3 sm:mt-9 sm:w-auto sm:flex-row sm:items-center animate-fadeInUp stagger-4">
             <a
-              href="https://calendar.app.google/BD5NtSvdCYkfP5FJ7"
+              href={BOOKING_URL}
               onClick={(e) => {
                 e.preventDefault();
-                const w = window.open(
-                  "https://calendar.app.google/BD5NtSvdCYkfP5FJ7",
-                  "_blank",
-                );
+                const w = window.open(BOOKING_URL, "_blank");
                 if (w) w.opener = null;
               }}
               className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-zinc-100 to-zinc-300 px-5 py-3 text-sm font-medium text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] transition hover:from-white sm:w-auto"
