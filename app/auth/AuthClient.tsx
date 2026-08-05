@@ -129,11 +129,13 @@ const AuthPageInner = () => {
         localStorage.setItem("status", res?.data?.user?.status);
         window.dispatchEvent(new Event("storage"));
 
-        router.push("/Mainpage");
-        // small delay to ensure navigation completes
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        window.location.href = "/Mainpage";
+
+        // router.push("/Mainpage");
+        // // small delay to ensure navigation completes
+        // setTimeout(() => {
+        //   window.location.reload();
+        // }, 500);
       } catch (err) {
         console.error("Login failed:", err);
 

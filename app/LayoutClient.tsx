@@ -16,6 +16,32 @@ export default function LayoutClient({
   const [role, setRole] = useState<string | null>(null);
   const pathname = usePathname();
 
+  // Public routes carry no logged-in session work. Not mounting InactiveAccount
+  // here keeps its polling effect from firing authed calls that 401 and bounce
+  // the user to /auth. UI behavior is unchanged — it already rendered null here.
+  const isPublicRoute =
+    pathname === "/" ||
+    [
+      "/privacy-policy",
+      "/terms-of-service",
+      "/cancellation-policy",
+      "/auth",
+      "/reset-password",
+      "/admin",
+      "/admin-dashboard",
+      "/info-page",
+      "/agreements",
+      "/feedbacks",
+      "/publishing",
+      "/supplier-mappings",
+      "/master-sheet",
+      "/master-sheet-queue",
+      "/ndc-sheet",
+      "/report-listings",
+      "/support",
+      "/company",
+    ].some((p) => pathname.startsWith(p));
+
   // Allowlist, not a denylist: the banner must never reach a public page, since
   // crawlers read DOM order and were picking "Beta" as the page title.
   const appRoutes = [
@@ -38,7 +64,9 @@ export default function LayoutClient({
     "/admin-dashboard",
     "/dashboard",
   ];
-  const shouldShowBanner = appRoutes.some((route) => pathname.startsWith(route));
+  const shouldShowBanner = appRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
 
   useEffect(() => {
     const storedRole = localStorage.getItem("role");
@@ -103,8 +131,8 @@ export default function LayoutClient({
 
   return (
     <>
-      {/* {role !== null && role !== "admin" ? <InactiveAccount /> : null} */}
-      <InactiveAccount />
+      {!isPublicRoute && <InactiveAccount />}
+      {/* <InactiveAccount /> */}
       <Toaster />
       <SupplierProvider>{children}</SupplierProvider>
       {/* Floating live-support bubble, shown only on the home page. */}
