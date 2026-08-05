@@ -56,7 +56,7 @@ export default function Navbar() {
   };
 
   const scheduleConsultation = () => {
-    window.open("https://calendar.app.google/ekTAPx65xrwq2Qiv6", "_blank");
+    window.open("https://calendar.app.google/BD5NtSvdCYkfP5FJ7", "_blank");
   };
 
   return (

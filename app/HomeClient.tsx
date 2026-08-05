@@ -797,7 +797,7 @@ export default function Index() {
   }, []);
 
   const scheduleConsultation = () => {
-    window.open("https://calendar.app.google/ekTAPx65xrwq2Qiv6", "_blank");
+    window.open("https://calendar.app.google/BD5NtSvdCYkfP5FJ7", "_blank");
   };
 
   const handleRequestInfo = () => {
@@ -959,11 +959,11 @@ export default function Index() {
           </p>
           <div className="relative z-20 mt-7 flex w-full flex-col items-stretch justify-center gap-3 sm:mt-9 sm:w-auto sm:flex-row sm:items-center animate-fadeInUp stagger-4">
             <a
-              href="https://calendar.app.google/ekTAPx65xrwq2Qiv6"
+              href="https://calendar.app.google/BD5NtSvdCYkfP5FJ7"
               onClick={(e) => {
                 e.preventDefault();
                 const w = window.open(
-                  "https://calendar.app.google/ekTAPx65xrwq2Qiv6",
+                  "https://calendar.app.google/BD5NtSvdCYkfP5FJ7",
                   "_blank",
                 );
                 if (w) w.opener = null;
