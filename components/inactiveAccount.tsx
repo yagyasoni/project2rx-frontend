@@ -26,7 +26,7 @@ import api from "@/lib/api";
 // PLANS — 3 fixed tiers (single-select)
 // base         → $99  → inventory_reports_access
 // professional → $249 → inventory_reports_access + inventory_view_access
-// full_access  → $499 → all access (drug lookup + leads + everything)
+// full_access  → $399 → all access (drug lookup + leads + everything)
 // =========================================
 
 const plans = [
@@ -68,7 +68,7 @@ const plans = [
   {
     id: "full_access",
     name: "Full Access",
-    price: "$499",
+    price: "$399",
     period: "/month",
     trial: "14-day free trial with coupon code",
     badge: "Best Value",
@@ -550,7 +550,7 @@ export default function InactiveAccount() {
                   {/* Button — mt-auto pins it to the bottom of every card, so all three align */}
                   <Button
                     type="button"
-                    className={`${plan.price === "$499" ? "mt-6" : "mt-4"} w-full rounded-lg px-4 py-6 text-sm font-medium transition-all duration-300 animate-fadeInUp ${
+                    className={`${plan.price === "$399" ? "mt-6" : "mt-4"} w-full rounded-lg px-4 py-6 text-sm font-medium transition-all duration-300 animate-fadeInUp ${
                       active
                         ? "bg-gradient-to-b from-zinc-100 to-zinc-300 text-black shadow-md hover:from-white hover:to-zinc-200 hover:shadow-xl"
                         : "border border-zinc-700 bg-transparent text-zinc-100 hover:border-zinc-500 hover:bg-zinc-900/50"

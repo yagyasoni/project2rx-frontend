@@ -80,7 +80,7 @@ const faqs = [
   },
   {
     q: "How does pricing work?",
-    a: "AuditProRx is a month-to-month subscription with no long-term contract. Base is $99 per month, Professional is $249 per month, and Full Access is $499 per month. You can cancel at any time.",
+    a: "AuditProRx is a month-to-month subscription with no long-term contract. Base is $99 per month, Professional is $249 per month, and Full Access is $399 per month. You can cancel at any time.",
   },
   {
     q: "Is there a free trial?",

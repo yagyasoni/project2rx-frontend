@@ -70,7 +70,7 @@
 //   {
 //     id: "full_access",
 //     name: "Full Access",
-//     price: "$499",
+//     price: "$399",
 //     period: "/month",
 //     description: "Complete platform access including all premium modules.",
 //     features: [
@@ -2592,7 +2592,7 @@
 //   {
 //     id: "full_access",
 //     name: "Full Access Platform",
-//     price: "$499",
+//     price: "$399",
 //     period: "/month",
 //     description:
 //       "The complete AuditProRx platform — every premium module, fully unlocked and integrated.",

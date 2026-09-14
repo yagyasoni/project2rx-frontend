@@ -88,7 +88,7 @@ const plans = [
   {
     id: "full_access",
     name: "Full Access",
-    price: "$499",
+    price: "$399",
     period: "/month",
     trial: "14-day free trial with coupon code",
     badge: "Best Value",
@@ -674,7 +674,7 @@ export default function Index() {
     },
     {
       q: "How does pricing work?",
-      a: "AuditProRx is a month-to-month subscription with no long-term contract. Base is $99 per month, Professional is $249 per month, and Full Access is $499 per month. You can cancel at any time.",
+      a: "AuditProRx is a month-to-month subscription with no long-term contract. Base is $99 per month, Professional is $249 per month, and Full Access is $399 per month. You can cancel at any time.",
     },
     {
       q: "Is there a free trial?",
@@ -3141,7 +3141,7 @@ export default function Index() {
                   className="mt-auto w-full block"
                 >
                   <button
-                    className={`${p.price === "$499" ? "mt-6" : "mt-4"} w-full rounded-lg px-4 py-3 text-sm font-medium transition-all duration-300 animate-fadeInUp ${
+                    className={`${p.price === "$399" ? "mt-6" : "mt-4"} w-full rounded-lg px-4 py-3 text-sm font-medium transition-all duration-300 animate-fadeInUp ${
                       p.highlighted
                         ? "bg-gradient-to-b from-zinc-100 to-zinc-300 text-black shadow-md hover:from-white hover:to-zinc-200 hover:shadow-xl"
                         : "border border-zinc-700 bg-transparent text-foreground hover:border-zinc-500 hover:bg-zinc-900/50"

@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 // THREE FIXED TIERS — must match backend
 //   base         → $99  → Inventory Reports
 //   professional → $249 → Reports + Inventory View
-//   full_access  → $499 → Everything
+//   full_access  → $399 → Everything
 // =========================================
 
 const PLAN_LABELS: Record<string, string> = {
@@ -52,7 +52,7 @@ const AVAILABLE_PLANS = [
     key: "full_access",
     label: "Full Access",
     description: "Everything included — all premium modules",
-    price: "$499/mo",
+    price: "$399/mo",
   },
 ];
 

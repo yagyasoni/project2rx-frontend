@@ -77,7 +77,7 @@ const ACCESS_TIERS = [
   {
     id: "full_access",
     name: "Full Access",
-    price: "$499",
+    price: "$399",
     inherits: "Everything in Professional",
     extra: ["Drug Lookup", "Leads"],
   },
