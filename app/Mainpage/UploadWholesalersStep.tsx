@@ -23,6 +23,14 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useSuppliers } from "@/context/SupplierContext";
 // import api from "@/lib/api";
+import StoredCsvActions from "@/components/StoredCsvActions";
+import {
+  prettyUploadName,
+  fileKey,
+  readUploadedMarker,
+  writeUploadedMarker,
+  clearUploadedMarker,
+} from "@/lib/storedCsv";
 
 interface Wholesaler {
   id: string;
@@ -265,6 +273,12 @@ const UploadWholesalersStep = ({
   const [existingWholesalerFiles, setExistingWholesalerFiles] = useState<
     { wholesaler_name: string; file_name: string }[]
   >([]);
+  // Needed to build the Preview/Download URLs; null until the mount effect runs.
+  const [auditId, setAuditId] = useState<string | null>(null);
+  // wholesaler_name -> fileKey of the local File known to be on the server.
+  // Unlike `uploadedIds`, this survives leaving and re-entering the step
+  // (see lib/storedCsv.ts).
+  const [uploadedKeys, setUploadedKeys] = useState<Record<string, string>>({});
 
   // Delete-confirmation modal: holds the supplier row pending deletion.
   const [deleteTarget, setDeleteTarget] = useState<{
@@ -274,14 +288,32 @@ const UploadWholesalersStep = ({
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const auditId = localStorage.getItem("auditId");
-    if (!auditId) return;
+    const storedAuditId = localStorage.getItem("auditId");
+    if (!storedAuditId) return;
+    setAuditId(storedAuditId);
     axios
       .get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/wholesaler-files`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${storedAuditId}/wholesaler-files`,
       )
       .then((res) => {
-        if (res.data?.length > 0) setExistingWholesalerFiles(res.data);
+        if (res.data?.length > 0) {
+          const files = res.data as {
+            wholesaler_name: string;
+            file_name: string;
+          }[];
+          setExistingWholesalerFiles(files);
+          // Rehydrate which local Files are already on the server so the
+          // Preview/Download buttons survive a remount of this step.
+          const keys: Record<string, string> = {};
+          files.forEach((f) => {
+            const k = readUploadedMarker(
+              storedAuditId,
+              `wholesaler:${f.wholesaler_name}`,
+            );
+            if (k) keys[f.wholesaler_name] = k;
+          });
+          setUploadedKeys(keys);
+        }
       })
       .catch(() => {});
   }, []);
@@ -528,6 +560,47 @@ const UploadWholesalersStep = ({
       );
       clearInterval(intervalRef.current!);
       setUploadProgress(100);
+
+      // Sync "previously uploaded" state so Preview/Download work right away
+      // and keep working after leaving and re-entering this step.
+      const uploadedRows: { wholesaler_name: string; file_name: string }[] =
+        Array.isArray(res.data?.data) ? res.data.data : [];
+      if (uploadedRows.length > 0) {
+        setExistingWholesalerFiles((prev) => {
+          const byName = new Map<
+            string,
+            { wholesaler_name: string; file_name: string }
+          >();
+          prev.forEach((f) => byName.set(f.wholesaler_name, f));
+          uploadedRows.forEach((r) =>
+            byName.set(r.wholesaler_name, {
+              wholesaler_name: r.wholesaler_name,
+              file_name: r.file_name,
+            }),
+          );
+          return Array.from(byName.values());
+        });
+      } else {
+        // Fallback: re-read the list if the response shape ever changes.
+        axios
+          .get(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/wholesaler-files`,
+          )
+          .then((r) => {
+            if (Array.isArray(r.data)) setExistingWholesalerFiles(r.data);
+          })
+          .catch(() => {});
+      }
+      const keys: Record<string, string> = {};
+      wholesalers.forEach((w) => {
+        if (w.file && newUploads.includes(w.id)) {
+          writeUploadedMarker(id, `wholesaler:${w.name}`, w.file);
+          keys[w.name] = fileKey(w.file);
+        }
+      });
+      setUploadedKeys((prev) => ({ ...prev, ...keys }));
+      setAuditId(id);
+
       setTimeout(() => {
         setIsUploading(false);
         setUploadSuccess(true);
@@ -602,6 +675,12 @@ const UploadWholesalersStep = ({
     setExistingWholesalerFiles((prev) =>
       prev.filter((f) => f.wholesaler_name !== name),
     );
+    setUploadedKeys((prev) => {
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+    if (auditId) clearUploadedMarker(auditId, `wholesaler:${name}`);
 
     // Also remove from supplier context (syncs with Settings page)
     removeFromContext(name);
@@ -697,6 +776,19 @@ const UploadWholesalersStep = ({
             const mappingCount = Object.keys(
               wholesalerFieldMappings[wholesaler.id] || {},
             ).length;
+            const existing = existingWholesalerFiles.find(
+              (f) => f.wholesaler_name === wholesaler.name,
+            );
+            // Preview/Download act on the SERVER copy: show them only when
+            // there is no local pick, or the local pick is the one uploaded.
+            const localFileOnServer =
+              !wholesaler.file ||
+              uploadedIds.has(wholesaler.id) ||
+              (!!uploadedKeys[wholesaler.name] &&
+                fileKey(wholesaler.file) === uploadedKeys[wholesaler.name]);
+            const showStoredActions =
+              !!auditId && !!existing && localFileOnServer;
+            const storedContentUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/wholesaler-file/content?name=${encodeURIComponent(wholesaler.name)}`;
             return (
               <div key={wholesaler.id}>
                 <div
@@ -725,20 +817,22 @@ const UploadWholesalersStep = ({
                         {mappingCount > 0 &&
                           ` · ${mappingCount} columns mapped`}
                       </p>
-                    ) : existingWholesalerFiles.find(
-                        (f) => f.wholesaler_name === wholesaler.name,
-                      ) ? (
+                    ) : existing ? (
                       <p className="text-[11px] text-emerald-600 mt-0.5 truncate">
-                        {
-                          existingWholesalerFiles.find(
-                            (f) => f.wholesaler_name === wholesaler.name,
-                          )!.file_name
-                        }{" "}
-                        · Previously uploaded
+                        {prettyUploadName(existing.file_name)} · Previously
+                        uploaded
                       </p>
                     ) : null}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Kept outside the <label> below so clicks don't open the file picker. */}
+                    {showStoredActions && (
+                      <StoredCsvActions
+                        size="xs"
+                        fileName={existing!.file_name ?? ""}
+                        contentUrl={storedContentUrl}
+                      />
+                    )}
                     {wholesaler.file && showMappingFor !== wholesaler.id && (
                       <button
                         onClick={() => setShowMappingFor(wholesaler.id)}
