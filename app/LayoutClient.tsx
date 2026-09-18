@@ -6,7 +6,7 @@ import InactiveAccount from "@/components/inactiveAccount";
 import SupportBubble from "@/components/SupportBubble";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
+// import { X } from "lucide-react"; // only used by the disabled BetaBanner below
 
 export default function LayoutClient({
   children,
@@ -42,6 +42,9 @@ export default function LayoutClient({
       "/company",
     ].some((p) => pathname.startsWith(p));
 
+  // Beta banner disabled — uncomment this block, the BetaBanner component,
+  // its render line in the JSX below, and the `X` import to restore it.
+  /*
   // Allowlist, not a denylist: the banner must never reach a public page, since
   // crawlers read DOM order and were picking "Beta" as the page title.
   const appRoutes = [
@@ -67,12 +70,16 @@ export default function LayoutClient({
   const shouldShowBanner = appRoutes.some((route) =>
     pathname.startsWith(route),
   );
+  */
 
   useEffect(() => {
     const storedRole = localStorage.getItem("role");
     setRole(storedRole);
   }, []);
 
+  // Beta banner disabled — see note above appRoutes. Inner JSX comments were
+  // changed to `//` so they don't terminate this block comment early.
+  /*
   function BetaBanner() {
     const [visible, setVisible] = useState(true);
 
@@ -102,7 +109,7 @@ export default function LayoutClient({
     flex items-center justify-center
     border-t border-white/10"
       >
-        {/* Content */}
+        // Content
         <div className="text-center">
           Beta — This application is currently in testing. Some features may not
           work as expected.{" "}
@@ -117,7 +124,7 @@ export default function LayoutClient({
           for any issues or feedback.
         </div>
 
-        {/* Close button */}
+        // Close button
         <button
           onClick={handleClose}
           aria-label="Dismiss beta notice"
@@ -128,6 +135,7 @@ export default function LayoutClient({
       </div>
     );
   }
+  */
 
   return (
     <>
@@ -137,9 +145,10 @@ export default function LayoutClient({
       <SupplierProvider>{children}</SupplierProvider>
       {/* Floating live-support bubble, shown only on the home page. */}
       {pathname === "/" && <SupportBubble />}
-      {/* Rendered last so it trails the page content in the DOM; it is
-          position: fixed, so this is visually identical. */}
-      {shouldShowBanner && <BetaBanner />}
+      {/* Beta banner disabled. When re-enabled, keep it rendered last so it
+          trails the page content in the DOM; it is position: fixed, so this
+          is visually identical. */}
+      {/* {shouldShowBanner && <BetaBanner />} */}
     </>
   );
 }

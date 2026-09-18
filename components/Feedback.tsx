@@ -4,7 +4,7 @@ import { useState } from "react";
 import axios from "axios";
 import api from "@/lib/api";
 
-const API_BASE = "https://api.auditprorx.com";
+const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}`;
 
 export default function Feedback({
   open,

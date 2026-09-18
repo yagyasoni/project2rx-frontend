@@ -9,6 +9,7 @@ import {
   Copy,
   Check,
   History,
+  AlertTriangle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,7 +17,7 @@ import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import axios from "axios";
 
-const API_BASE = "https://api.auditprorx.com";
+const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}`;
 const RECENT_KEY = "binSearchRecent";
 const RECENT_MAX = 8;
 
@@ -485,6 +486,17 @@ export default function BinSearch() {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* ── Disclaimer ── */}
+            <div className="mt-6 mx-auto w-fit max-w-full rounded-xl border border-slate-200 bg-slate-100/70 px-5 py-4 flex items-start gap-3">
+              <AlertTriangle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-slate-500 leading-relaxed">
+                <span className="font-semibold text-slate-600">Disclaimer:</span>{" "}
+                Results are for reference only and may not always be accurate.
+                Please verify PBM and payer type details with the plan before
+                relying on them.
+              </p>
             </div>
           </div>
         </main>
