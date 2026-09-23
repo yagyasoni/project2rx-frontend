@@ -40,6 +40,7 @@ export default function LayoutClient({
       "/report-listings",
       "/support",
       "/company",
+      "/maintenance",
     ].some((p) => pathname.startsWith(p));
 
   // Beta banner disabled — uncomment this block, the BetaBanner component,
