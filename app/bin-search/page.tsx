@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import axios from "axios";
+import { trackEvent } from "@/lib/gtm";
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}`;
 const RECENT_KEY = "binSearchRecent";
@@ -120,6 +121,10 @@ export default function BinSearch() {
         `${API_BASE}/api/bin-search?${params.toString()}`,
       );
       setResults(res.data || []);
+      trackEvent({
+        event: "bin_search",
+        result_count: Array.isArray(res.data) ? res.data.length : 0,
+      });
     } catch (err) {
       console.error("BIN search error:", err);
       setResults([]);
