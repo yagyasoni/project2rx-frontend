@@ -65,7 +65,7 @@ const ACCESS_TIERS = [
     name: "Base",
     price: "$99",
     inherits: null,
-    extra: ["Inventory Reports", "Bin Search"],
+    extra: ["Inventory Reports", "Bin Search", "Temperature Logs"],
   },
   {
     id: "professional",
