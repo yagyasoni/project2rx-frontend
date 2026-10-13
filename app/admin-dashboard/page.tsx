@@ -65,7 +65,7 @@ const ACCESS_TIERS = [
     name: "Base",
     price: "$99",
     inherits: null,
-    extra: ["Inventory Reports", "Bin Search"],
+    extra: ["Inventory Reports", "Bin Search", "Temperature Logs"],
   },
   {
     id: "professional",
@@ -1178,7 +1178,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* License & DEA */}
-              <div>
+              {/* <div>
                 <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   License & DEA
                 </h3>
@@ -1239,7 +1239,7 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
               {/* Access Controls — three subscription-tier buttons (single-select) */}
               <div>

@@ -14,6 +14,7 @@ import {
   FileText,
   X,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -417,52 +418,94 @@ const UploadInventoryStep = ({
     return result.filter((h) => h.length > 0);
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-    setInventoryFile(file);
-    if (file) {
+  const parseHeadersFromFile = (file: File): Promise<string[]> =>
+    new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const text = (e.target?.result as string) || "";
         const firstNonEmptyLine =
           text.split(/\r?\n/).find((line) => line.trim().length > 0) || "";
-        const parsedHeaders = parseCsvHeaderLine(firstNonEmptyLine);
-        setHeaders(parsedHeaders);
-        const auto = buildAutoMapping(parsedHeaders);
-        setFieldMapping(auto);
-        setShowWarning(false);
-        setMissingRequiredHeaders([]);
+        resolve(parseCsvHeaderLine(firstNonEmptyLine));
       };
+      reader.onerror = () => reject(reader.error);
       reader.readAsText(file);
-    } else {
-      setHeaders([]);
-      setFieldMapping({});
-    }
+    });
+
+  // Headers and the auto-mapping are DERIVED from the selected File rather than
+  // set in the change handler. The wizard keeps the File across steps, but this
+  // step remounts on Continue → Back; it used to come back showing the file as
+  // selected with "0/17 mapped" and Submit disabled, so the exclusion options
+  // could not be changed and re-applied.
+  useEffect(() => {
+    if (!inventoryFile) return;
+    let cancelled = false;
+    parseHeadersFromFile(inventoryFile)
+      .then((parsed) => {
+        if (cancelled) return;
+        setHeaders(parsed);
+        setFieldMapping(buildAutoMapping(parsed));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setHeaders([]);
+        setFieldMapping({});
+        toast.error("Could not read that file. Please choose it again.");
+      });
+    return () => {
+      cancelled = true;
+    };
+    // parseHeadersFromFile / buildAutoMapping are pure helpers over constant
+    // tables; only the File identity matters here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inventoryFile]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    // Reset the native value so picking the same file again (after ✕, or a
+    // second Replace) still fires onChange — browsers skip the event when the
+    // path is unchanged, which made Replace look dead.
+    event.target.value = "";
+    if (!file) return; // picker cancelled — keep the current selection
+    setShowWarning(false);
+    setMissingRequiredHeaders([]);
+    setInventoryFile(file);
   };
 
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  // Fetching the stored file back before a re-process (button spinner only).
+  const [preparing, setPreparing] = useState(false);
+  // "reprocess" = re-sending the file already on the server with the current
+  // exclusion options. Only changes the loader/button copy.
+  const [uploadMode, setUploadMode] = useState<"upload" | "reprocess">(
+    "upload",
+  );
 
-  const handleSubmit = async () => {
-    const missing = REQUIRED_FIELDS.filter((field) => !fieldMapping[field.key]);
-    if (missing.length > 0) {
-      setMissingRequiredHeaders(missing.map((f) => f.label));
-      setShowWarning(true);
+  // There is deliberately no "force success after 60s" timer any more: it
+  // showed "Upload Successful" while the request was still running or had
+  // already failed, so a replace could look applied when it was not.
+  const uploadFile = async (
+    file: File,
+    mapping: Record<string, string>,
+    mode: "upload" | "reprocess",
+  ) => {
+    const id = auditId ?? localStorage.getItem("auditId");
+    if (!id) {
+      toast.error("No audit selected. Please start again from the Name step.");
       return;
     }
 
-    if (!inventoryFile) return;
-
     const formData = new FormData();
-    formData.append("file", inventoryFile);
-    formData.append("headerMapping", JSON.stringify(fieldMapping));
+    formData.append("file", file);
+    formData.append("headerMapping", JSON.stringify(mapping));
     formData.append("excludeTransferred", String(excludeTransferred));
     formData.append("excludeUnbilled", String(excludeUnbilled));
 
+    setUploadMode(mode);
     setUploadProgress(0);
     setIsUploading(true);
 
-    // Animate progress 0 → 90% over ~8 seconds
+    // Animate progress 0 → 90% over ~8 seconds; the rest is the server.
     let current = 0;
     const interval = setInterval(() => {
       current += Math.random() * 3 + 1;
@@ -473,17 +516,12 @@ const UploadInventoryStep = ({
       setUploadProgress(Math.round(current));
     }, 300);
 
-    // Safety net — force success after 60s no matter what
-    const safetyTimer = setTimeout(() => {
-      clearInterval(interval);
-      setUploadProgress(100);
-      setIsUploading(false);
-      setSubmitSuccess(true);
-    }, 60000);
-
     try {
-      const id = localStorage.getItem("auditId");
-      console.log("⬆️ Starting upload...");
+      console.log("⬆️ Starting upload...", {
+        mode,
+        excludeTransferred,
+        excludeUnbilled,
+      });
 
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/inventory`,
@@ -492,7 +530,6 @@ const UploadInventoryStep = ({
 
       console.log("✅ Upload complete:", res.status, res.data);
 
-      clearTimeout(safetyTimer);
       clearInterval(interval);
       setUploadProgress(100);
       setIsUploading(false);
@@ -502,23 +539,86 @@ const UploadInventoryStep = ({
       // and keep working after Continue → Back (see lib/storedCsv.ts).
       const newName: string | undefined = res.data?.file?.file_name;
       if (newName) setExistingFileName(newName);
-      if (id) {
-        setAuditId(id);
-        if (inventoryFile) {
-          writeUploadedMarker(id, "inventory", inventoryFile);
-          setUploadedKey(fileKey(inventoryFile));
-        }
-      }
-    } catch (err: any) {
-      clearTimeout(safetyTimer);
+      setAuditId(id);
+      writeUploadedMarker(id, "inventory", file);
+      setUploadedKey(fileKey(file));
+      if (file !== inventoryFile) setInventoryFile(file);
+    } catch (err) {
       clearInterval(interval);
       setIsUploading(false);
       setUploadProgress(0);
       console.error("❌ Upload error:", err);
       const message =
-        err?.response?.data?.message || err?.message || "Please try again.";
+        (axios.isAxiosError(err) && err.response?.data?.message) ||
+        (err instanceof Error && err.message) ||
+        "Please try again.";
       toast("Upload failed: " + message);
     }
+  };
+
+  const handleSubmit = async () => {
+    const missing = REQUIRED_FIELDS.filter((field) => !fieldMapping[field.key]);
+    if (missing.length > 0) {
+      setMissingRequiredHeaders(missing.map((f) => f.label));
+      setShowWarning(true);
+      return;
+    }
+
+    if (!inventoryFile) return;
+    await uploadFile(inventoryFile, fieldMapping, "upload");
+  };
+
+  // Edit mode (Reports → Inventory Files) and any reload: the file is on the
+  // server but there is no local File, so the only way to apply changed
+  // exclusion options is to fetch the stored CSV back and upload it again with
+  // them. The backend keeps neither the options nor a "re-process" endpoint.
+  const handleReprocess = async () => {
+    if (!auditId || !existingFileName) return;
+    setPreparing(true);
+    let file: File;
+    let parsed: string[];
+    try {
+      // mode=raw: the untouched upload. Preview/Download serve the file with
+      // the audit's exclusions applied, but a re-process must re-send every
+      // row so that un-checking an option brings its rows back.
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/inventory-file/content?mode=raw`,
+        { responseType: "blob" },
+      );
+      const blob =
+        res.data instanceof Blob
+          ? res.data
+          : new Blob([res.data], { type: "text/csv" });
+      file = new File(
+        [blob],
+        prettyUploadName(existingFileName) || "inventory.csv",
+        { type: "text/csv" },
+      );
+      parsed = await parseHeadersFromFile(file);
+    } catch (err: unknown) {
+      const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+      toast.error(
+        status === 404
+          ? "The previously uploaded file is no longer on the server. Please upload it again."
+          : "Could not load the previously uploaded file. Please try again, or upload it again.",
+      );
+      return;
+    } finally {
+      setPreparing(false);
+    }
+
+    const auto = buildAutoMapping(parsed);
+    const missing = REQUIRED_FIELDS.filter((field) => !auto[field.key]);
+    if (missing.length > 0) {
+      // Auto-detection could not map everything: select the file so the
+      // mapping table appears, and ask for the rest before uploading.
+      setUploadedKey(fileKey(file)); // same bytes as the server copy
+      setInventoryFile(file);
+      setMissingRequiredHeaders(missing.map((f) => f.label));
+      setShowWarning(true);
+      return;
+    }
+    await uploadFile(file, auto, "reprocess");
   };
 
   // ── END ORIGINAL LOGIC ─────────────────────────────────────────────────────
@@ -526,6 +626,16 @@ const UploadInventoryStep = ({
   const mappedCount = Object.keys(fieldMapping).length;
   const totalRequired = REQUIRED_FIELDS.length;
   const allMapped = mappedCount === totalRequired;
+  // A file on the server but none selected locally: the primary button becomes
+  // "Re-process File" (see handleReprocess).
+  const canReprocess = !inventoryFile && !!existingFileName && !!auditId;
+  const submitDisabled =
+    isUploading ||
+    preparing ||
+    (inventoryFile ? headers.length === 0 : !canReprocess);
+  const activeFileName =
+    inventoryFile?.name ??
+    (existingFileName ? prettyUploadName(existingFileName) : undefined);
 
   return (
     <div className="w-full max-w-3xl mx-auto px-2">
@@ -793,11 +903,11 @@ const UploadInventoryStep = ({
           {/* Submit Button */}
           <div className="flex justify-end pt-1">
             <Button
-              onClick={handleSubmit}
-              disabled={!inventoryFile || headers.length === 0 || isUploading}
+              onClick={inventoryFile ? handleSubmit : handleReprocess}
+              disabled={submitDisabled}
               className="px-8 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
             >
-              {isUploading ? (
+              {isUploading || preparing ? (
                 <>
                   <svg
                     className="animate-spin w-4 h-4 mr-2"
@@ -818,12 +928,21 @@ const UploadInventoryStep = ({
                       d="M4 12a8 8 0 018-8v8z"
                     />
                   </svg>
-                  Uploading...
+                  {preparing
+                    ? "Loading file..."
+                    : uploadMode === "reprocess"
+                      ? "Re-processing..."
+                      : "Uploading..."}
                 </>
-              ) : (
+              ) : inventoryFile ? (
                 <>
                   <Upload className="w-4 h-4 mr-2" />
                   Submit Upload
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Re-process File
                 </>
               )}
             </Button>
@@ -831,18 +950,23 @@ const UploadInventoryStep = ({
         </div>
       </div>
 
-      {/* ── Success Modal ── */}
       {/* ── Upload Progress Modal ── */}
       <Loader
         show={isUploading}
         variant="card"
         tone="dark"
         progress={uploadProgress}
-        title="Uploading File..."
-        subtitle={inventoryFile?.name}
+        title={
+          uploadMode === "reprocess"
+            ? "Re-processing File..."
+            : "Uploading File..."
+        }
+        subtitle={activeFileName}
         progressLabel={
           uploadProgress < 90
-            ? "Uploading file..."
+            ? uploadMode === "reprocess"
+              ? "Re-sending stored file..."
+              : "Uploading file..."
             : uploadProgress < 100
               ? "Processing on server..."
               : "Finalizing..."
@@ -863,7 +987,7 @@ const UploadInventoryStep = ({
               Inventory file processed successfully.
             </p>
             <p className="text-xs text-gray-400 bg-gray-100 rounded-lg px-3 py-1.5 mb-6 font-mono truncate max-w-full">
-              {inventoryFile?.name}
+              {activeFileName}
             </p>
             <Button
               onClick={() => {

@@ -79,6 +79,12 @@ const AuditWizard = ({
           setWholesalerStartDate(new Date(a.wholesaler_start_date));
         if (a.wholesaler_end_date)
           setWholesalerEndDate(new Date(a.wholesaler_end_date));
+        // Exclusion options used for the last inventory upload. Present once
+        // the backend stores them on the audit; the defaults stay until then.
+        if (typeof a.exclude_transferred === "boolean")
+          setExcludeTransferred(a.exclude_transferred);
+        if (typeof a.exclude_unbilled === "boolean")
+          setExcludeUnbilled(a.exclude_unbilled);
       })
       .catch((err) => {
         console.warn("Failed to prefill audit:", err?.message);

@@ -986,7 +986,7 @@ export default function Index() {
           <div className="mt-9 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground animate-fadeInUp stagger-5">
             <div className="flex -space-x-2">
               {[
-                { initial: "UC", gradients: "from-blue-400 to-cyan-300" },
+                { initial: "RA", gradients: "from-blue-400 to-cyan-300" },
                 { initial: "IA", gradients: "from-cyan-300 to-cyan-500" },
                 { initial: "KA", gradients: "from-pink-300 to-rose-400" },
               ].map((item, i) => (
