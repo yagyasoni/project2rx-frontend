@@ -1178,7 +1178,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* License & DEA */}
-              <div>
+              {/* <div>
                 <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   License & DEA
                 </h3>
@@ -1239,7 +1239,7 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
               {/* Access Controls — three subscription-tier buttons (single-select) */}
               <div>
