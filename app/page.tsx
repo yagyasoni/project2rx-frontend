@@ -70,7 +70,7 @@
 //   {
 //     id: "full_access",
 //     name: "Full Access",
-//     price: "$499",
+//     price: "$399",
 //     period: "/month",
 //     description: "Complete platform access including all premium modules.",
 //     features: [
@@ -2592,7 +2592,7 @@
 //   {
 //     id: "full_access",
 //     name: "Full Access Platform",
-//     price: "$499",
+//     price: "$399",
 //     period: "/month",
 //     description:
 //       "The complete AuditProRx platform — every premium module, fully unlocked and integrated.",
@@ -5113,7 +5113,7 @@ import HomeClient from "./HomeClient";
 const SITE_URL = "https://www.auditprorx.com";
 const TITLE = "Pharmacy Audit Software for Independent Pharmacies | AuditProRx";
 const DESCRIPTION =
-  "Cut PBM recoupments with pharmacy audit software built for independent pharmacies. Reconcile McKesson, AXIA, Kinray & Anda invoices. Free 7-day trial.";
+  "Cut PBM recoupments with pharmacy audit software built for independent pharmacies. Reconcile McKesson, AXIA, Kinray & Anda invoices. Free 14-day trial.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -5269,7 +5269,7 @@ const faqJsonLd = {
       name: "Do I need a long-term contract to use AuditProRx?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "No. AuditProRx is a month-to-month subscription with no long-term contract. The Professional plan is $99 per month and includes a 7-day full-access free trial.",
+        text: "No. AuditProRx is a month-to-month subscription with no long-term contract. The Professional plan is $99 per month and includes a 14-day full-access free trial.",
       },
     },
     {

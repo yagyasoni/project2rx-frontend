@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import axios from "axios";
+import api from "@/lib/api";
 
-const API_BASE = "https://api.auditprorx.com";
+const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}`;
 
 export default function Feedback({
   open,
@@ -40,7 +41,7 @@ export default function Feedback({
     try {
       const userId = localStorage.getItem("userId");
 
-      const res = await axios.post(`${API_BASE}/admin/feedbacks`, {
+      const res = await api.post(`/admin/feedbacks`, {
         user_id: userId || null,
         subject: feedback.subject,
         message: feedback.message,

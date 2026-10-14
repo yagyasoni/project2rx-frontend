@@ -8,7 +8,7 @@ const SITE_URL = "https://www.auditprorx.com";
 export const metadata: Metadata = {
   title: "Cancellation & Refund Policy",
   description:
-    "AuditProRx cancellation and refund terms. Month-to-month pharmacy audit software subscription with no long-term contract and a 7-day free trial.",
+    "AuditProRx cancellation and refund terms. Month-to-month pharmacy audit software subscription with no long-term contract and a 14-day free trial.",
   alternates: { canonical: SITE_URL + "/cancellation-policy" },
   openGraph: {
     type: "article",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     siteName: "AuditProRx",
     title: "Cancellation & Refund Policy | AuditProRx",
     description:
-      "AuditProRx cancellation and refund terms — month-to-month with a 7-day free trial.",
+      "AuditProRx cancellation and refund terms — month-to-month with a 14-day free trial.",
     locale: "en_US",
     images: [
       {

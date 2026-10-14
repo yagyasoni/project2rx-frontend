@@ -17,6 +17,13 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
+import StoredCsvActions from "@/components/StoredCsvActions";
+import {
+  prettyUploadName,
+  fileKey,
+  readUploadedMarker,
+  writeUploadedMarker,
+} from "@/lib/storedCsv";
 
 interface UploadInventoryStepProps {
   inventoryFile: File | null;
@@ -189,13 +196,21 @@ const UploadInventoryStep = ({
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const [existingFileName, setExistingFileName] = useState<string | null>(null);
+  // Needed to build the Preview/Download URLs; null until the mount effect runs.
+  const [auditId, setAuditId] = useState<string | null>(null);
+  // fileKey of the local File that is known to be on the server. Lets the
+  // Preview/Download buttons hide while a new, unsaved pick is selected but
+  // stay visible after Continue → Back (see lib/storedCsv.ts).
+  const [uploadedKey, setUploadedKey] = useState<string | null>(null);
 
   useEffect(() => {
-    const auditId = localStorage.getItem("auditId");
-    if (!auditId) return;
+    const storedAuditId = localStorage.getItem("auditId");
+    if (!storedAuditId) return;
+    setAuditId(storedAuditId);
+    setUploadedKey(readUploadedMarker(storedAuditId, "inventory"));
     axios
       .get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/inventory-files`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${storedAuditId}/inventory-files`,
       )
       .then((res) => {
         if (res.data?.length > 0) setExistingFileName(res.data[0].file_name);
@@ -482,6 +497,18 @@ const UploadInventoryStep = ({
       setUploadProgress(100);
       setIsUploading(false);
       setSubmitSuccess(true);
+
+      // Sync "previously uploaded" state so Preview/Download work right away
+      // and keep working after Continue → Back (see lib/storedCsv.ts).
+      const newName: string | undefined = res.data?.file?.file_name;
+      if (newName) setExistingFileName(newName);
+      if (id) {
+        setAuditId(id);
+        if (inventoryFile) {
+          writeUploadedMarker(id, "inventory", inventoryFile);
+          setUploadedKey(fileKey(inventoryFile));
+        }
+      }
     } catch (err: any) {
       clearTimeout(safetyTimer);
       clearInterval(interval);
@@ -560,7 +587,7 @@ const UploadInventoryStep = ({
                 ) : existingFileName ? (
                   <>
                     <p className="text-sm font-semibold text-emerald-800 truncate">
-                      {existingFileName}
+                      {prettyUploadName(existingFileName)}
                     </p>
                     <p className="text-xs text-emerald-600 mt-0.5">
                       Previously uploaded · Click Replace to update
@@ -578,6 +605,18 @@ const UploadInventoryStep = ({
                 )}
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Preview/Download act on the SERVER copy, so they hide while a
+                    new local file is picked but not yet uploaded. Kept outside
+                    the <label> below so clicks don't open the file picker. */}
+                {auditId &&
+                  existingFileName &&
+                  (!inventoryFile || fileKey(inventoryFile) === uploadedKey) && (
+                    <StoredCsvActions
+                      size="sm"
+                      fileName={existingFileName}
+                      contentUrl={`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/inventory-file/content`}
+                    />
+                  )}
                 {inventoryFile && (
                   <button
                     onClick={() => {

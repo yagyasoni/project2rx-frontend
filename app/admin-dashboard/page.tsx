@@ -48,7 +48,7 @@ import adminApi from "@/lib/adminApi";
 // ─────────────────────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────────────────────
-const API_BASE = "https://api.auditprorx.com";
+const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}`;
 const PAGE_SIZE = 10; // rows per page
 
 // ─────────────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ const ACCESS_TIERS = [
   {
     id: "full_access",
     name: "Full Access",
-    price: "$499",
+    price: "$399",
     inherits: "Everything in Professional",
     extra: ["Drug Lookup", "Leads"],
   },
@@ -95,6 +95,10 @@ interface PharmacyUser {
   status?: "active" | "inactive";
   createdAt?: string;
   pharmacyName?: string; // ✅ NEW — fetched from registration
+  pharmacyLicenseNumber?: string; // ✅ NEW
+  licenseExpiryDate?: string; // ✅ NEW
+  deaNumber?: string; // ✅ NEW
+  deaExpiryDate?: string;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -182,10 +186,12 @@ function SortHeader({
   className = "",
 }: {
   label: string;
-  columnKey: "name" | "phone" | "status" | "createdAt";
+  columnKey: "pharmacyName" | "name" | "phone" | "status" | "createdAt";
   activeKey: string;
   dir: "asc" | "desc";
-  onSort: (k: "name" | "phone" | "status" | "createdAt") => void;
+  onSort: (
+    k: "pharmacyName" | "name" | "phone" | "status" | "createdAt",
+  ) => void;
   className?: string;
 }) {
   const active = activeKey === columnKey;
@@ -251,7 +257,7 @@ export default function AdminDashboard() {
   });
   const [deletePassword, setDeletePassword] = useState("");
   const [sortKey, setSortKey] = useState<
-    "name" | "phone" | "status" | "createdAt"
+    "pharmacyName" | "name" | "phone" | "status" | "createdAt"
   >("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
@@ -304,9 +310,7 @@ export default function AdminDashboard() {
     setLoading(true);
     setFetchError("");
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/users`,
-      );
+      const res = await adminApi.get(`/auth/users`);
       const data = res.data?.users || res.data || [];
       setUsers(Array.isArray(data) ? data : []);
     } catch {
@@ -378,6 +382,7 @@ export default function AdminDashboard() {
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
     const matchesSearch =
+      u.pharmacyName?.toLowerCase().includes(q) ||
       u.name?.toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q) ||
       u.phone?.includes(q);
@@ -434,12 +439,26 @@ export default function AdminDashboard() {
     }
 
     // name / phone — strip non-digits for phone so brackets don't break ordering
+    // let av = (a[sortKey] || "").toString().toLowerCase();
+    // let bv = (b[sortKey] || "").toString().toLowerCase();
+    // if (sortKey === "phone") {
+    //   av = av.replace(/\D/g, "");
+    //   bv = bv.replace(/\D/g, "");
+    // }
+    // return av.localeCompare(bv, undefined, { numeric: true }) * dir;
+
     let av = (a[sortKey] || "").toString().toLowerCase();
     let bv = (b[sortKey] || "").toString().toLowerCase();
+
     if (sortKey === "phone") {
       av = av.replace(/\D/g, "");
       bv = bv.replace(/\D/g, "");
     }
+
+    if (!av && !bv) return 0;
+    if (!av) return 1;
+    if (!bv) return -1;
+
     return av.localeCompare(bv, undefined, { numeric: true }) * dir;
   });
 
@@ -537,7 +556,7 @@ export default function AdminDashboard() {
     setSubLoading(true);
 
     try {
-      const res = await axios.get(`${API_BASE}/pay/subscription/${user.id}`);
+      const res = await adminApi.get(`/pay/subscription/${user.id}`);
       const sub = res?.data?.subscription ?? null;
 
       setSubscription(sub);
@@ -628,7 +647,7 @@ export default function AdminDashboard() {
     if (!selected?.id) return;
     setSavingAccess(true);
     try {
-      await axios.post(`${API_BASE}/pay/admin/grant-access`, {
+      await adminApi.post(`/pay/admin/grant-access`, {
         userId: selected?.id,
         ...accessControls,
       });
@@ -728,7 +747,7 @@ export default function AdminDashboard() {
                   />
                   <Input
                     type="text"
-                    placeholder="Search name, email, phone…"
+                    placeholder="Search pharmacy, name, email, phone…"
                     value={search}
                     onChange={(e) => {
                       setSearch(e.target.value);
@@ -830,7 +849,7 @@ export default function AdminDashboard() {
                       </th>
                       <SortHeader
                         label="Pharmacy"
-                        columnKey="name"
+                        columnKey="pharmacyName"
                         activeKey={sortKey}
                         dir={sortDir}
                         onSort={handleSort}
@@ -922,12 +941,19 @@ export default function AdminDashboard() {
                                       : "bg-muted text-muted-foreground"
                                   }`}
                                 >
-                                  {avatarChar(user.name)}
+                                  {avatarChar(
+                                    user?.pharmacyName || "Pharmacy Name",
+                                  )}
                                 </div>
                                 <div>
                                   <span className="text-xs font-semibold text-foreground">
-                                    {user.name}
+                                    {user.pharmacyName}
                                   </span>
+
+                                  <div className="text-[10px] text-muted-foreground truncate max-w-[160px]">
+                                    {user.name}
+                                  </div>
+
                                   <div className="flex items-center gap-1 mt-0.5">
                                     <Mail
                                       size={10}
@@ -1057,12 +1083,13 @@ export default function AdminDashboard() {
             <div className="px-6 py-5 border-b border-border bg-muted/30">
               <div className="flex items-start gap-3">
                 <div className="w-12 h-12 rounded-xs bg-foreground flex items-center justify-center font-medium text-[40px] text-background shrink-0">
-                  {avatarChar(selected.name)}
+                  {avatarChar(selected?.pharmacyName || "Pharmacy Name")}
                 </div>
                 <div className="flex-1 min-w-0 w-full">
                   <div className="font-bold text-lg text-foreground tracking-tight truncate">
-                    {selected.name}
+                    {selected.pharmacyName}
                   </div>
+
                   <div className="text-[12px] text-muted-foreground mt-0.5 flex items-center gap-1">
                     <Mail size={10} /> {selected.email}
                   </div>
@@ -1127,6 +1154,70 @@ export default function AdminDashboard() {
                     {
                       label: "Registered On",
                       value: formatDate(selected.createdAt),
+                      icon: (
+                        <Calendar size={12} className="text-muted-foreground" />
+                      ),
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-lg border border-border p-3 hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        {item.icon}
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                          {item.label}
+                        </span>
+                      </div>
+                      <div className="text-xs text-foreground font-semibold truncate">
+                        {item.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* License & DEA */}
+              <div>
+                <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  License & DEA
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    {
+                      label: "Pharmacy License No.",
+                      value: selected.pharmacyLicenseNumber || "N/A",
+                      icon: (
+                        <ShieldCheck
+                          size={12}
+                          className="text-muted-foreground"
+                        />
+                      ),
+                    },
+                    {
+                      label: "License Expiry",
+                      value: selected.licenseExpiryDate
+                        ? formatDate(selected.licenseExpiryDate)
+                        : "N/A",
+                      icon: (
+                        <Calendar size={12} className="text-muted-foreground" />
+                      ),
+                    },
+                    {
+                      label: "DEA Number",
+                      value: selected.deaNumber || "N/A",
+                      icon: (
+                        <ShieldCheck
+                          size={12}
+                          className="text-muted-foreground"
+                        />
+                      ),
+                    },
+                    {
+                      label: "DEA Expiry",
+                      value: selected.deaExpiryDate
+                        ? formatDate(selected.deaExpiryDate)
+                        : "N/A",
                       icon: (
                         <Calendar size={12} className="text-muted-foreground" />
                       ),
@@ -1265,7 +1356,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="mt-3 pt-3 border-t border-border flex items-center gap-1.5 text-[10px] text-muted-foreground">
                     <ShieldCheck size={11} />
-                    Token valid for 15 min · Stored in localStorage · Audited
+                    Token valid for 3 hrs · Stored in localStorage · Audited
                   </div>
                 </div>
               </div>

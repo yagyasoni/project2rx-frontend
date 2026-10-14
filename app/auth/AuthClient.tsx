@@ -129,11 +129,13 @@ const AuthPageInner = () => {
         localStorage.setItem("status", res?.data?.user?.status);
         window.dispatchEvent(new Event("storage"));
 
-        router.push("/Mainpage");
-        // small delay to ensure navigation completes
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        window.location.href = "/Mainpage";
+
+        // router.push("/Mainpage");
+        // // small delay to ensure navigation completes
+        // setTimeout(() => {
+        //   window.location.reload();
+        // }, 500);
       } catch (err) {
         console.error("Login failed:", err);
 
@@ -405,9 +407,11 @@ const AuthPageInner = () => {
 
         {/* Brand */}
         <div className="text-center mb-10">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          {/* h2, not h1: the crawlable h1 lives in the server component
+              (page.tsx), since useSearchParams bails this tree to CSR. */}
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
             {isLogin ? "Welcome back" : "Create account"}
-          </h1>
+          </h2>
           <p className="text-muted-foreground text-sm mt-1.5">
             {isLogin ? "Sign in to continue" : "Get started for free"}
           </p>

@@ -18,6 +18,7 @@ import {
   Lock,
 } from "lucide-react";
 import axios from "axios";
+import api from "@/lib/api";
 
 // ─── NDC helpers ─────────────────────────────────────────────────────────
 const isNdcLike = (s: string) => {
@@ -101,9 +102,7 @@ export default function DrugLookupLandingPage() {
           return;
         }
 
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
-        );
+        const res = await api.get(`/pay/subscription/${userId}`);
 
         setSubscription(res.data.subscription);
       } catch (err) {
@@ -121,9 +120,7 @@ export default function DrugLookupLandingPage() {
 
         if (!userId) return;
 
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/pay/subscription/${userId}`,
-        );
+        const res = await api.get(`/pay/subscription/${userId}`);
 
         setSubscription(res.data.subscription);
       } catch {}

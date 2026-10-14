@@ -3,9 +3,10 @@
 import { Toaster } from "@/components/ui/sonner";
 import { SupplierProvider } from "@/context/SupplierContext";
 import InactiveAccount from "@/components/inactiveAccount";
+import SupportBubble from "@/components/SupportBubble";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
+// import { X } from "lucide-react"; // only used by the disabled BetaBanner below
 
 export default function LayoutClient({
   children,
@@ -15,20 +16,71 @@ export default function LayoutClient({
   const [role, setRole] = useState<string | null>(null);
   const pathname = usePathname();
 
-  const hideBannerRoutes = [
-    "/",
-    "/admin",
-    "/terms-of-service",
-    "/privacy-policy",
-    "/cancellation-policy",
+  // Public routes carry no logged-in session work. Not mounting InactiveAccount
+  // here keeps its polling effect from firing authed calls that 401 and bounce
+  // the user to /auth. UI behavior is unchanged — it already rendered null here.
+  const isPublicRoute =
+    pathname === "/" ||
+    [
+      "/privacy-policy",
+      "/terms-of-service",
+      "/cancellation-policy",
+      "/auth",
+      "/reset-password",
+      "/admin",
+      "/admin-dashboard",
+      "/info-page",
+      "/agreements",
+      "/feedbacks",
+      "/publishing",
+      "/supplier-mappings",
+      "/master-sheet",
+      "/master-sheet-queue",
+      "/ndc-sheet",
+      "/report-listings",
+      "/support",
+      "/company",
+      "/maintenance",
+    ].some((p) => pathname.startsWith(p));
+
+  // Beta banner disabled — uncomment this block, the BetaBanner component,
+  // its render line in the JSX below, and the `X` import to restore it.
+  /*
+  // Allowlist, not a denylist: the banner must never reach a public page, since
+  // crawlers read DOM order and were picking "Beta" as the page title.
+  const appRoutes = [
+    "/Mainpage",
+    "/ReportsPage",
+    "/reports",
+    "/report-listings",
+    "/group-reports",
+    "/InventoryView",
+    "/DrugLookup",
+    "/ndc-sheet",
+    "/master-sheet",
+    "/master-sheet-queue",
+    "/supplier-mappings",
+    "/settings",
+    "/Notification",
+    "/agreements",
+    "/publishing",
+    "/feedbacks",
+    "/admin-dashboard",
+    "/dashboard",
   ];
-  const shouldShowBanner = !hideBannerRoutes.includes(pathname);
+  const shouldShowBanner = appRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
+  */
 
   useEffect(() => {
     const storedRole = localStorage.getItem("role");
     setRole(storedRole);
   }, []);
 
+  // Beta banner disabled — see note above appRoutes. Inner JSX comments were
+  // changed to `//` so they don't terminate this block comment early.
+  /*
   function BetaBanner() {
     const [visible, setVisible] = useState(true);
 
@@ -58,10 +110,10 @@ export default function LayoutClient({
     flex items-center justify-center
     border-t border-white/10"
       >
-        {/* Content */}
+        // Content
         <div className="text-center">
-          <span className="font-semibold">Beta</span> — This application is
-          currently in testing. Some features may not work as expected.{" "}
+          Beta — This application is currently in testing. Some features may not
+          work as expected.{" "}
           <a
             href={`https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com&su=${subject}&body=${body}`}
             target="_blank"
@@ -73,7 +125,7 @@ export default function LayoutClient({
           for any issues or feedback.
         </div>
 
-        {/* Close button */}
+        // Close button
         <button
           onClick={handleClose}
           aria-label="Dismiss beta notice"
@@ -84,14 +136,20 @@ export default function LayoutClient({
       </div>
     );
   }
+  */
 
   return (
     <>
-      {shouldShowBanner && <BetaBanner />}
-      {/* {role !== null && role !== "admin" ? <InactiveAccount /> : null} */}
-      <InactiveAccount />
+      {!isPublicRoute && <InactiveAccount />}
+      {/* <InactiveAccount /> */}
       <Toaster />
       <SupplierProvider>{children}</SupplierProvider>
+      {/* Floating live-support bubble, shown only on the home page. */}
+      {pathname === "/" && <SupportBubble />}
+      {/* Beta banner disabled. When re-enabled, keep it rendered last so it
+          trails the page content in the DOM; it is position: fixed, so this
+          is visually identical. */}
+      {/* {shouldShowBanner && <BetaBanner />} */}
     </>
   );
 }

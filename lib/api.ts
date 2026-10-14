@@ -25,6 +25,13 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
+const forceClientLogout = () => {
+  localStorage.clear();
+  if (window.location.pathname !== "/auth") {
+    window.location.replace("/auth");
+  }
+};
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -51,8 +58,10 @@ api.interceptors.response.use(
 
       if (!refreshToken) {
         // No refresh token — force logout
-        localStorage.clear();
-        window.location.href = "/login";
+        // localStorage.clear();
+        // window.location.href = "/login";
+        forceClientLogout();
+        isRefreshing = false;
         return Promise.reject(error);
       }
 
@@ -74,8 +83,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        localStorage.clear();
-        window.location.href = "/login";
+        forceClientLogout();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

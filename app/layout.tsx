@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import LayoutClient from "./LayoutClient";
+import { GoogleTagManager } from "@next/third-parties/google";
 
 const SITE_URL = "https://www.auditprorx.com";
 const SITE_NAME = "AuditProRx";
@@ -126,7 +127,7 @@ const organizationJsonLd = {
   logo: `${SITE_URL}/icon.png`,
   description: DEFAULT_DESCRIPTION,
   email: "drugdroprx@gmail.com",
-  foundingDate: "2024",
+  foundingDate: "2026",
   areaServed: "US",
   sameAs: [
     "https://www.linkedin.com/company/auditprorx/",
@@ -163,6 +164,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <GoogleTagManager gtmId="GTM-NZ8KRHJ4" />
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://js.stripe.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />

@@ -273,7 +273,7 @@ export default function Reports() {
     return () => clearInterval(interval);
   }, []);
 
-  const mapRow = (r: any, isMine: boolean): ListingRow => ({
+  const mapRow = (r: any): ListingRow => ({
     id: String(r.id),
     ndc: r.ndc || "—",
     drug_name: r.drug_name || "—",
@@ -295,26 +295,37 @@ export default function Reports() {
       r.pharmacy_name || r.pharmacy?.pharmacy_name || r.pharmacy?.name || "—",
     pharmacy_email: r.pharmacy_email || r.pharmacy?.email || r.email || "—",
     phone: r.phone || r.pharmacy?.phone || "—",
-    isMine,
+    isMine: false,
   });
 
   const fetchListings = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
 
-      const res = await adminApi.get(`${BASE}/listings`);
+      // const res = await adminApi.get(`${BASE}/listings`);
 
-      const others = res?.data?.listings ?? [];
-      console.log("listings", others);
-      const mine = res?.data?.my_listings ?? [];
+      // const others = res?.data?.listings ?? [];
+      // console.log("listings", others);
+      // const mine = res?.data?.my_listings ?? [];
 
-      // ✅ Defensive mapping + ownership flag
-      const merged: ListingRow[] = [
-        ...mine.map((r: any) => mapRow(r, true)),
-        ...others.map((r: any) => mapRow(r, false)),
-      ];
+      // // ✅ Defensive mapping + ownership flag
+      // const merged: ListingRow[] = [
+      //   ...mine.map((r: any) => mapRow(r, true)),
+      //   ...others.map((r: any) => mapRow(r, false)),
+      // ];
 
-      // de-dupe by id
+      // // de-dupe by id
+      // const uniqueMap = new Map<string, ListingRow>();
+      // merged.forEach((item) => uniqueMap.set(item.id, item));
+
+      // setListings(Array.from(uniqueMap.values()));
+
+      const res = await adminApi.get(`${BASE}/listings/reports`);
+
+      const reports = res?.data?.reports ?? [];
+
+      const merged: ListingRow[] = reports.map((r: any) => mapRow(r));
+
       const uniqueMap = new Map<string, ListingRow>();
       merged.forEach((item) => uniqueMap.set(item.id, item));
 
@@ -422,7 +433,7 @@ export default function Reports() {
     setDeleting(true);
 
     try {
-      await adminApi.delete(`${BASE}/listings/${id}`);
+      await adminApi.delete(`${BASE}/listings/reports/${id}`);
       toast.success("Listing deleted successfully");
     } catch (err: any) {
       console.error("Delete error:", err);

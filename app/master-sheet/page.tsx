@@ -40,7 +40,7 @@ import adminApi from "@/lib/adminApi";
 // ─────────────────────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────────────────────
-const API_BASE = "https://api.auditprorx.com";
+const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}`;
 
 type CellValue = string | null;
 

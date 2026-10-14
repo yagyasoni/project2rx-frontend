@@ -16,12 +16,21 @@ import {
   X,
   Sparkles,
   Building2,
+  Loader2,
 } from "lucide-react";
 import axios from "axios";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useSuppliers } from "@/context/SupplierContext";
 // import api from "@/lib/api";
+import StoredCsvActions from "@/components/StoredCsvActions";
+import {
+  prettyUploadName,
+  fileKey,
+  readUploadedMarker,
+  writeUploadedMarker,
+  clearUploadedMarker,
+} from "@/lib/storedCsv";
 
 interface Wholesaler {
   id: string;
@@ -264,16 +273,47 @@ const UploadWholesalersStep = ({
   const [existingWholesalerFiles, setExistingWholesalerFiles] = useState<
     { wholesaler_name: string; file_name: string }[]
   >([]);
+  // Needed to build the Preview/Download URLs; null until the mount effect runs.
+  const [auditId, setAuditId] = useState<string | null>(null);
+  // wholesaler_name -> fileKey of the local File known to be on the server.
+  // Unlike `uploadedIds`, this survives leaving and re-entering the step
+  // (see lib/storedCsv.ts).
+  const [uploadedKeys, setUploadedKeys] = useState<Record<string, string>>({});
+
+  // Delete-confirmation modal: holds the supplier row pending deletion.
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const auditId = localStorage.getItem("auditId");
-    if (!auditId) return;
+    const storedAuditId = localStorage.getItem("auditId");
+    if (!storedAuditId) return;
+    setAuditId(storedAuditId);
     axios
       .get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/wholesaler-files`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${storedAuditId}/wholesaler-files`,
       )
       .then((res) => {
-        if (res.data?.length > 0) setExistingWholesalerFiles(res.data);
+        if (res.data?.length > 0) {
+          const files = res.data as {
+            wholesaler_name: string;
+            file_name: string;
+          }[];
+          setExistingWholesalerFiles(files);
+          // Rehydrate which local Files are already on the server so the
+          // Preview/Download buttons survive a remount of this step.
+          const keys: Record<string, string> = {};
+          files.forEach((f) => {
+            const k = readUploadedMarker(
+              storedAuditId,
+              `wholesaler:${f.wholesaler_name}`,
+            );
+            if (k) keys[f.wholesaler_name] = k;
+          });
+          setUploadedKeys(keys);
+        }
       })
       .catch(() => {});
   }, []);
@@ -520,6 +560,47 @@ const UploadWholesalersStep = ({
       );
       clearInterval(intervalRef.current!);
       setUploadProgress(100);
+
+      // Sync "previously uploaded" state so Preview/Download work right away
+      // and keep working after leaving and re-entering this step.
+      const uploadedRows: { wholesaler_name: string; file_name: string }[] =
+        Array.isArray(res.data?.data) ? res.data.data : [];
+      if (uploadedRows.length > 0) {
+        setExistingWholesalerFiles((prev) => {
+          const byName = new Map<
+            string,
+            { wholesaler_name: string; file_name: string }
+          >();
+          prev.forEach((f) => byName.set(f.wholesaler_name, f));
+          uploadedRows.forEach((r) =>
+            byName.set(r.wholesaler_name, {
+              wholesaler_name: r.wholesaler_name,
+              file_name: r.file_name,
+            }),
+          );
+          return Array.from(byName.values());
+        });
+      } else {
+        // Fallback: re-read the list if the response shape ever changes.
+        axios
+          .get(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/wholesaler-files`,
+          )
+          .then((r) => {
+            if (Array.isArray(r.data)) setExistingWholesalerFiles(r.data);
+          })
+          .catch(() => {});
+      }
+      const keys: Record<string, string> = {};
+      wholesalers.forEach((w) => {
+        if (w.file && newUploads.includes(w.id)) {
+          writeUploadedMarker(id, `wholesaler:${w.name}`, w.file);
+          keys[w.name] = fileKey(w.file);
+        }
+      });
+      setUploadedKeys((prev) => ({ ...prev, ...keys }));
+      setAuditId(id);
+
       setTimeout(() => {
         setIsUploading(false);
         setUploadSuccess(true);
@@ -547,16 +628,65 @@ const UploadWholesalersStep = ({
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || isDeleting) return;
+    const { id, name } = deleteTarget;
     const wholesaler = wholesalers.find((w) => w.id === id);
+    if (!wholesaler) {
+      setDeleteTarget(null);
+      return;
+    }
+
+    // Was there a previously-uploaded file on the server for this supplier?
+    const hadUploadedFile = existingWholesalerFiles.some(
+      (f) => f.wholesaler_name === name,
+    );
+
+    setIsDeleting(true);
+
+    // ── Permanently delete the uploaded file on the server (DB + disk) ──
+    // so it doesn't reappear on reload and drops out of the report.
+    if (hadUploadedFile) {
+      const auditId = localStorage.getItem("auditId");
+      if (auditId) {
+        try {
+          await axios.delete(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/wholesalers`,
+            { params: { name } },
+          );
+        } catch (err) {
+          console.error("Failed to delete wholesaler file:", err);
+          toast(
+            `Failed to delete "${name}" file on the server. Please try again.`,
+          );
+          setIsDeleting(false);
+          return; // keep the modal open so the user can retry
+        }
+      }
+    }
+
+    // ── Remove from the UI once the server is in sync ──
     setWholesalers(wholesalers.filter((w) => w.id !== id));
     setEdit(false);
     setEditId(null);
 
+    // Clear any "Previously uploaded" entry so re-adding this supplier
+    // shows an empty row instead of the stale filename.
+    setExistingWholesalerFiles((prev) =>
+      prev.filter((f) => f.wholesaler_name !== name),
+    );
+    setUploadedKeys((prev) => {
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+    if (auditId) clearUploadedMarker(auditId, `wholesaler:${name}`);
+
     // Also remove from supplier context (syncs with Settings page)
-    if (wholesaler) {
-      removeFromContext(wholesaler.name);
-    }
+    removeFromContext(name);
+
+    setIsDeleting(false);
+    setDeleteTarget(null);
   };
 
   const handleConfirmAddFromDrawer = () => {
@@ -646,6 +776,19 @@ const UploadWholesalersStep = ({
             const mappingCount = Object.keys(
               wholesalerFieldMappings[wholesaler.id] || {},
             ).length;
+            const existing = existingWholesalerFiles.find(
+              (f) => f.wholesaler_name === wholesaler.name,
+            );
+            // Preview/Download act on the SERVER copy: show them only when
+            // there is no local pick, or the local pick is the one uploaded.
+            const localFileOnServer =
+              !wholesaler.file ||
+              uploadedIds.has(wholesaler.id) ||
+              (!!uploadedKeys[wholesaler.name] &&
+                fileKey(wholesaler.file) === uploadedKeys[wholesaler.name]);
+            const showStoredActions =
+              !!auditId && !!existing && localFileOnServer;
+            const storedContentUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/wholesaler-file/content?name=${encodeURIComponent(wholesaler.name)}`;
             return (
               <div key={wholesaler.id}>
                 <div
@@ -674,20 +817,22 @@ const UploadWholesalersStep = ({
                         {mappingCount > 0 &&
                           ` · ${mappingCount} columns mapped`}
                       </p>
-                    ) : existingWholesalerFiles.find(
-                        (f) => f.wholesaler_name === wholesaler.name,
-                      ) ? (
+                    ) : existing ? (
                       <p className="text-[11px] text-emerald-600 mt-0.5 truncate">
-                        {
-                          existingWholesalerFiles.find(
-                            (f) => f.wholesaler_name === wholesaler.name,
-                          )!.file_name
-                        }{" "}
-                        · Previously uploaded
+                        {prettyUploadName(existing.file_name)} · Previously
+                        uploaded
                       </p>
                     ) : null}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Kept outside the <label> below so clicks don't open the file picker. */}
+                    {showStoredActions && (
+                      <StoredCsvActions
+                        size="xs"
+                        fileName={existing!.file_name ?? ""}
+                        contentUrl={storedContentUrl}
+                      />
+                    )}
                     {wholesaler.file && showMappingFor !== wholesaler.id && (
                       <button
                         onClick={() => setShowMappingFor(wholesaler.id)}
@@ -716,7 +861,12 @@ const UploadWholesalersStep = ({
                     </label>
                     <button
                       type="button"
-                      onClick={() => handleDelete(wholesaler.id)}
+                      onClick={() =>
+                        setDeleteTarget({
+                          id: wholesaler.id,
+                          name: wholesaler.name,
+                        })
+                      }
                       title="Delete supplier"
                       aria-label="Delete supplier"
                       className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
@@ -1014,6 +1164,52 @@ const UploadWholesalersStep = ({
             >
               OK
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Supplier Confirmation */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/40 z-[10000] flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 flex flex-col items-center text-center">
+            <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
+              <Trash2 className="w-7 h-7 text-red-500" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">
+              Delete Supplier File
+            </h3>
+            <p className="text-sm text-slate-500 mb-1">
+              Are you sure you want to delete this supplier&apos;s file?
+            </p>
+            <p className="text-xs text-slate-400 bg-slate-100 rounded-lg px-3 py-1.5 mb-1 font-semibold truncate max-w-full">
+              {deleteTarget.name}
+            </p>
+            <p className="text-[11px] text-red-400 mb-5">
+              This permanently removes the uploaded file and its report data.
+            </p>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors disabled:cursor-not-allowed disabled:bg-red-400"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Deleting…
+                  </>
+                ) : (
+                  "Yes, Delete"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
