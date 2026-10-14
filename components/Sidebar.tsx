@@ -26,6 +26,7 @@ import {
   Bell,
   Lock,
   Users,
+  Thermometer,
 } from "lucide-react";
 
 import api from "@/lib/api";
@@ -358,6 +359,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   );
 
   const leadsAccess = !!subscription?.leads_access;
+  // Temperature Logs ships with the base plan, so it follows the reports flag.
+  const tempLogsAccess = hasAccess("inventory_reports_access");
 
   return (
     <aside
@@ -490,6 +493,27 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 <span className="truncate">Leads</span>
               </div>
             )}
+
+            {tempLogsAccess ? (
+              <Link
+                href="/temperature-logs"
+                className={navLinkClass("/temperature-logs")}
+              >
+                <Thermometer className={navIconClass("/temperature-logs")} />
+
+                <span className="truncate">Temperature Logs</span>
+              </Link>
+            ) : subscriptionLoaded ? (
+              <Link key="/temperature-logs" href="/temperature-logs">
+                <LockedRow icon={Thermometer} label="Temperature Logs" />
+              </Link>
+            ) : (
+              <div className="flex items-center gap-3 py-[11px] px-3.5 text-[15px] font-medium text-gray-600 rounded-xl">
+                <Thermometer className="h-[18px] w-[18px] shrink-0" />
+
+                <span className="truncate">Temperature Logs</span>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -513,6 +537,22 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
             ) : (
               <div className="flex h-10 w-10 items-center justify-center rounded-xl mx-auto opacity-30">
                 <Bell className="h-[18px] w-[18px] text-gray-500" />
+              </div>
+            )}
+
+            {tempLogsAccess ? (
+              <CollapsedNavItem
+                path="/temperature-logs"
+                label="Temperature Logs"
+                icon={Thermometer}
+              />
+            ) : subscriptionLoaded ? (
+              <Link key="/temperature-logs" href="/temperature-logs">
+                <LockedIcon icon={Thermometer} label="Temperature Logs" />
+              </Link>
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl mx-auto opacity-30">
+                <Thermometer className="h-[18px] w-[18px] text-gray-500" />
               </div>
             )}
           </>

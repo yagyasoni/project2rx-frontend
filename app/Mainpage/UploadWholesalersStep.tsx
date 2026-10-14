@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/Loader";
+import { trackEvent } from "@/lib/gtm";
 import {
   Upload,
   Trash2,
@@ -560,6 +561,7 @@ const UploadWholesalersStep = ({
       );
       clearInterval(intervalRef.current!);
       setUploadProgress(100);
+      trackEvent({ event: "audit_completed", file_count: newUploads.length });
 
       // Sync "previously uploaded" state so Preview/Download work right away
       // and keep working after leaving and re-entering this step.

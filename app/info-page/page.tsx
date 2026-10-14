@@ -189,8 +189,8 @@ const PharmacyDetailsForm = () => {
     zipCode: "",
     phone: "",
     fax: "",
-    pharmacyLicenseNumber: "",
-    deaNumber: "",
+    // pharmacyLicenseNumber: "",
+    // deaNumber: "",
     general: "",
   });
 
@@ -511,12 +511,11 @@ const PharmacyDetailsForm = () => {
               </div>
             </div>
 
-            <div>
+            {/* <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                 Licensing & Identifiers
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Pharmacy License Number */}
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">
                     Pharmacy License Number *
@@ -540,7 +539,6 @@ const PharmacyDetailsForm = () => {
                   )}
                 </div>
 
-                {/* License Expiry */}
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">
                     License Expiry Date
@@ -572,7 +570,6 @@ const PharmacyDetailsForm = () => {
                   </Popover>
                 </div>
 
-                {/* DEA Number */}
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">
                     DEA Number *
@@ -592,7 +589,6 @@ const PharmacyDetailsForm = () => {
                   )}
                 </div>
 
-                {/* DEA Expiry */}
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">
                     DEA Expiry Date
@@ -624,7 +620,7 @@ const PharmacyDetailsForm = () => {
                   </Popover>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div className="space-y-4 pt-2">
               <div

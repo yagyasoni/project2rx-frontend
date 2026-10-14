@@ -164,10 +164,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <GoogleTagManager gtmId="GTM-NZ8KRHJ4" />
-
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://js.stripe.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <script
           type="application/ld+json"
@@ -185,6 +184,9 @@ export default function RootLayout({
       <body>
         <LayoutClient>{children}</LayoutClient>
       </body>
+      <GoogleTagManager
+        gtmId={process.env.NEXT_PUBLIC_GTM_ID || "GTM-PR88R5R4"}
+      />
     </html>
   );
 }

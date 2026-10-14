@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import api from "@/lib/api";
+import { trackEvent } from "@/lib/gtm";
 
 // ─── NDC helpers ─────────────────────────────────────────────────────────
 const isNdcLike = (s: string) => {
@@ -242,6 +243,8 @@ export default function DrugLookupLandingPage() {
     } catch {
       /* ignore */
     }
+
+    trackEvent({ event: "drug_lookup", search_type: isNdcLike(t) ? "ndc" : "name" });
 
     if (isNdcLike(t)) {
       router.push(
