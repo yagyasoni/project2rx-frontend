@@ -189,8 +189,8 @@ const PharmacyDetailsForm = () => {
     zipCode: "",
     phone: "",
     fax: "",
-    // pharmacyLicenseNumber: "",
-    // deaNumber: "",
+    pharmacyLicenseNumber: "",
+    deaNumber: "",
     general: "",
   });
 
