@@ -2,7 +2,7 @@
 
 import { Eye, FolderOpen, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ExportMenu, { type ExportKind } from "./ExportMenu";
+import DownloadPdfButton from "./DownloadPdfButton";
 import { logLabel, logStats, savedOn, type SavedLog } from "./history";
 import { MONTHS } from "./temperatureLog";
 
@@ -11,7 +11,7 @@ type Props = {
   onOpen: (log: SavedLog) => void;
   onPreview: (log: SavedLog) => void;
   onDelete: (log: SavedLog) => void;
-  onExport: (kind: ExportKind, log: SavedLog) => Promise<void>;
+  onDownload: (log: SavedLog) => Promise<void>;
   onGoToSetup: () => void;
 };
 
@@ -20,7 +20,7 @@ export default function HistoryPanel({
   onOpen,
   onPreview,
   onDelete,
-  onExport,
+  onDownload,
   onGoToSetup,
 }: Props) {
   if (logs.length === 0) {
@@ -98,10 +98,7 @@ export default function HistoryPanel({
                     <Pencil className="h-3.5 w-3.5" />
                     Edit
                   </Button>
-                  <ExportMenu
-                    heading={`Export ${logLabel(log)}`}
-                    onExport={(kind) => onExport(kind, log)}
-                  />
+                  <DownloadPdfButton onDownload={() => onDownload(log)} />
                   <Button
                     variant="ghost"
                     size="sm"

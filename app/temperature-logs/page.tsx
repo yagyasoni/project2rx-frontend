@@ -31,8 +31,7 @@ import SetupPanel from "./SetupPanel";
 import LogGrid from "./LogGrid";
 import HistoryPanel from "./HistoryPanel";
 import LogPreview, { panelDialogStyle } from "./LogPreview";
-import type { ExportKind } from "./ExportMenu";
-import { downloadCsv, downloadExcel, downloadPdf } from "./export";
+import { downloadPdf } from "./export";
 import {
   logIdFor,
   logLabel,
@@ -366,18 +365,13 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
     toast("Log deleted", { description: logLabel(log) });
   };
 
-  const exportLog = async (kind: ExportKind, log: SavedLog) => {
+  const downloadLogPdf = async (log: SavedLog) => {
     try {
-      if (kind === "csv") downloadCsv(log.setup, log.rows, log.calibration);
-      else if (kind === "excel") await downloadExcel(log.setup, log.rows, log.calibration);
-      else await downloadPdf(log.setup, log.rows, log.calibration);
-      toast.success(
-        { csv: "CSV downloaded", excel: "Excel downloaded", pdf: "PDF downloaded" }[kind],
-        { description: logLabel(log) },
-      );
+      await downloadPdf(log.setup, log.rows, log.calibration);
+      toast.success("PDF downloaded", { description: logLabel(log) });
     } catch (err) {
       console.error(err);
-      toast.error("Couldn't build the file", { description: "Please try again." });
+      toast.error("Couldn't build the PDF", { description: "Please try again." });
     }
   };
 
@@ -497,7 +491,7 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
             onOpen={handleOpen}
             onPreview={setPreview}
             onDelete={handleDelete}
-            onExport={exportLog}
+            onDownload={downloadLogPdf}
             onGoToSetup={() => setTab("setup")}
           />
         )}
@@ -508,7 +502,7 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
         sidebarWidth={sidebarWidth}
         onClose={() => setPreview(null)}
         onEdit={handleOpen}
-        onExport={exportLog}
+        onDownload={downloadLogPdf}
       />
 
       {/* ── Confirmations ── */}

@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import ExportMenu, { type ExportKind } from "./ExportMenu";
+import DownloadPdfButton from "./DownloadPdfButton";
 import { logLabel, logStats, savedOn, type SavedLog } from "./history";
 import {
   PERIODS,
@@ -27,7 +27,7 @@ type Props = {
   sidebarWidth: number;
   onClose: () => void;
   onEdit: (log: SavedLog) => void;
-  onExport: (kind: ExportKind, log: SavedLog) => Promise<void>;
+  onDownload: (log: SavedLog) => Promise<void>;
 };
 
 // Dialogs are position: fixed, so by default they center on the viewport and
@@ -53,14 +53,14 @@ const th =
   "border-b border-slate-200 bg-slate-50 px-2.5 py-1.5 text-left text-[10.5px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap";
 const td = "border-b border-slate-100 px-2.5 py-1.5 whitespace-nowrap";
 
-export default function LogPreview({ log, sidebarWidth, onClose, onEdit, onExport }: Props) {
+export default function LogPreview({ log, sidebarWidth, onClose, onEdit, onDownload }: Props) {
   return (
     <Dialog open={log !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         style={panelDialogStyle(sidebarWidth, "72rem")}
         className="flex max-h-[90vh] w-full flex-col gap-0 overflow-hidden p-0"
       >
-        {log && <PreviewBody log={log} onEdit={onEdit} onExport={onExport} />}
+        {log && <PreviewBody log={log} onEdit={onEdit} onDownload={onDownload} />}
       </DialogContent>
     </Dialog>
   );
@@ -69,7 +69,7 @@ export default function LogPreview({ log, sidebarWidth, onClose, onEdit, onExpor
 function PreviewBody({
   log,
   onEdit,
-  onExport,
+  onDownload,
 }: Omit<Props, "onClose" | "sidebarWidth"> & { log: SavedLog }) {
   const keys = tempKeys(log.setup.fridges);
   const stats = logStats(log.rows, log.setup.fridges);
@@ -185,11 +185,7 @@ function PreviewBody({
           <Pencil className="h-3.5 w-3.5" />
           Edit
         </Button>
-        <ExportMenu
-          heading={`Export ${logLabel(log)}`}
-          variant="default"
-          onExport={(kind) => onExport(kind, log)}
-        />
+        <DownloadPdfButton variant="default" onDownload={() => onDownload(log)} />
       </DialogFooter>
     </>
   );
