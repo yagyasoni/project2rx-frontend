@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import axios from "axios";
 import api from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,15 +34,13 @@ import LogPreview, { panelDialogStyle } from "./LogPreview";
 import type { ExportKind } from "./ExportMenu";
 import { downloadCsv, downloadExcel, downloadPdf } from "./export";
 import {
-  loadHistory,
   logIdFor,
   logLabel,
-  persistHistory,
   removeLog,
-  seedHistory,
-  upsertLog,
+  sortLogs,
   type SavedLog,
 } from "./history";
+import { deleteLog, listLogs, saveLog } from "@/lib/temperatureLogsApi";
 import {
   DISCLAIMER,
   EMPTY_CALIBRATION,
@@ -140,10 +139,9 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
   // still matches, and clears the moment anything changes.
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
 
-  // Dummy data until the API exists: sample months seeded on the first visit.
-  const [history, setHistory] = useState<SavedLog[]>(
-    () => loadHistory() ?? seedHistory("Bergen Road"),
-  );
+  // Saved logs come from the API; null while the first load is in flight.
+  const [history, setHistory] = useState<SavedLog[] | null>(null);
+  const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState<Tab>(() => restored?.tab ?? "setup");
   const [preview, setPreview] = useState<SavedLog | null>(null);
 
@@ -176,10 +174,24 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
     seedLocation();
   }, []);
 
-  /* ── History persists for good; the sheet only across a refresh ── */
+  /* ── History lives on the server; the sheet only across a refresh ── */
+  const loadLogs = async () => {
+    try {
+      setHistory(sortLogs(await listLogs()));
+    } catch (err) {
+      // 403 means the plan doesn't include this page; the lock screen covers it.
+      if (!axios.isAxiosError(err) || err.response?.status !== 403) console.error(err);
+      setHistory((h) => h ?? []);
+      toast.error("Couldn't load saved logs", {
+        action: { label: "Retry", onClick: () => loadLogs() },
+      });
+    }
+  };
+
   useEffect(() => {
-    persistHistory(history);
-  }, [history]);
+    loadLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     try {
@@ -266,27 +278,43 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
   };
 
   /* ── History actions ── */
-  const doSave = (id: string) => {
-    if (!rows) return;
-    setHistory((h) => upsertLog(h, { id, setup, rows, calibration }));
-    setLogId(id);
-    setSavedSnapshot(snapshot());
-    toast.success("Saved to History", {
-      description: monthLabel,
-      action: { label: "Open History", onClick: () => setTab("history") },
-    });
+  // The server upserts by month and location and returns the saved log with
+  // its server id, which replaces any earlier entry for the same id.
+  const doSave = async () => {
+    if (!rows || saving) return;
+    const sent = snapshot();
+    setSaving(true);
+    try {
+      const log = await saveLog({ setup, rows, calibration });
+      setHistory((h) => sortLogs([...(h ?? []).filter((l) => l.id !== log.id), log]));
+      setLogId(log.id);
+      setSavedSnapshot(sent);
+      toast.success("Saved to History", {
+        description: monthLabel,
+        action: { label: "Open History", onClick: () => setTab("history") },
+      });
+    } catch (err) {
+      console.error(err);
+      const firstError = axios.isAxiosError(err) ? err.response?.data?.errors?.[0] : undefined;
+      toast.error("Couldn't save the log", {
+        description: firstError ?? "Please try again.",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   // One log per month and location: saving a sheet that collides with a
   // different saved log asks before replacing it.
   const handleSave = () => {
     if (!rows) return;
-    const id = logIdFor(setup);
-    if (id !== logId && history.some((l) => l.id === id)) {
+    const key = logIdFor(setup);
+    const existing = history?.find((l) => logIdFor(l.setup) === key);
+    if (existing && existing.id !== logId) {
       setConfirm("overwriteLog");
       return;
     }
-    doSave(id);
+    doSave();
   };
 
   const doOpen = (log: SavedLog) => {
@@ -322,13 +350,20 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
     setConfirm("deleteLog");
   };
 
-  const doDelete = () => {
+  const doDelete = async () => {
     if (!pendingLog) return;
-    const id = pendingLog.id;
-    setHistory((h) => removeLog(h, id));
-    if (preview?.id === id) setPreview(null);
-    if (logId === id) setLogId(null);
-    toast("Log deleted", { description: logLabel(pendingLog) });
+    const log = pendingLog;
+    try {
+      await deleteLog(log.id);
+    } catch (err) {
+      console.error(err);
+      toast.error("Couldn't delete the log", { description: "Please try again." });
+      return;
+    }
+    setHistory((h) => removeLog(h ?? [], log.id));
+    if (preview?.id === log.id) setPreview(null);
+    if (logId === log.id) setLogId(null);
+    toast("Log deleted", { description: logLabel(log) });
   };
 
   const exportLog = async (kind: ExportKind, log: SavedLog) => {
@@ -360,7 +395,7 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
     if (confirm === "removeFridge") applyFridges(1);
     if (confirm === "openLog" && pendingLog) doOpen(pendingLog);
     if (confirm === "deleteLog") doDelete();
-    if (confirm === "overwriteLog") doSave(logIdFor(setup));
+    if (confirm === "overwriteLog") doSave();
     closeConfirm();
   };
 
@@ -404,7 +439,7 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
           <History className="h-4 w-4" />
           History
           <span className="rounded-full bg-slate-900 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white group-data-[state=active]:bg-white group-data-[state=active]:text-slate-900">
-            {history.length}
+            {history?.length ?? "…"}
           </span>
         </TabsTrigger>
       </TabsList>
@@ -450,14 +485,22 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
 
       {/* ── History tab: saved logs by month ── */}
       <TabsContent value="history" className="mt-0">
-        <HistoryPanel
-          logs={history}
-          onOpen={handleOpen}
-          onPreview={setPreview}
-          onDelete={handleDelete}
-          onExport={exportLog}
-          onGoToSetup={() => setTab("setup")}
-        />
+        {history === null ? (
+          <div className="space-y-3">
+            <Skeleton className="h-20 w-full rounded-xl" />
+            <Skeleton className="h-20 w-full rounded-xl" />
+            <Skeleton className="h-20 w-full rounded-xl" />
+          </div>
+        ) : (
+          <HistoryPanel
+            logs={history}
+            onOpen={handleOpen}
+            onPreview={setPreview}
+            onDelete={handleDelete}
+            onExport={exportLog}
+            onGoToSetup={() => setTab("setup")}
+          />
+        )}
       </TabsContent>
 
       <LogPreview

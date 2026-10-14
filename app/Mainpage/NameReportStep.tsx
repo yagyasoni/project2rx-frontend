@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
+import { trackEvent } from "@/lib/gtm";
 import { toast } from "sonner";
 
 interface NameReportStepProps {
@@ -45,6 +46,7 @@ const NameReportStep = ({
       );
       console.log(res.data);
       localStorage.setItem("auditId", res.data.id);
+      trackEvent({ event: "audit_started" });
       toast("success");
       onContinue();
     } catch (err) {

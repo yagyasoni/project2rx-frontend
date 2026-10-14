@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { trackEvent } from "@/lib/gtm";
 
 const reportTypes = [
   {
@@ -63,6 +64,28 @@ export default function BatchRxDashboard() {
 
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Stripe redirects here with ?payment=success — record the purchase once,
+  // then strip the query so a refresh does not count it again.
+  useEffect(() => {
+    if (searchParams.get("payment") !== "success") return;
+    let checkout: { plan?: string; value?: number; trial?: boolean } = {};
+    try {
+      checkout = JSON.parse(localStorage.getItem("pendingCheckout") || "{}");
+      localStorage.removeItem("pendingCheckout");
+    } catch {
+      /* ignore */
+    }
+    trackEvent({
+      event: "purchase",
+      transaction_id: searchParams.get("session_id") || undefined,
+      plan_name: checkout.plan || "unknown",
+      value: checkout.trial ? 0 : checkout.value || 0,
+      currency: "USD",
+      is_trial: !!checkout.trial,
+    });
+    router.replace("/Mainpage");
+  }, [searchParams, router]);
 
   useEffect(() => {
     const auditId = searchParams.get("auditId");

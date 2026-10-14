@@ -1,27 +1,25 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, ArrowRight } from "lucide-react";
-import { GoogleLogin } from "@react-oauth/google";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import { Label } from "@/components/ui/label";
+import { trackEvent } from "@/lib/gtm";
 import axios from "axios";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { toast } from "sonner";
-import { createCheckoutSession } from "@/components/checkoutSession";
 
 // ─────────────────────────────────────────────────────────────
 // Inner component — reads search params
@@ -128,6 +126,7 @@ const AuthPageInner = () => {
 
         localStorage.setItem("status", res?.data?.user?.status);
         window.dispatchEvent(new Event("storage"));
+        trackEvent({ event: "login", method: "email" });
 
         window.location.href = "/Mainpage";
 
@@ -205,6 +204,7 @@ const AuthPageInner = () => {
       } else {
         // ✅ User verified
         toast(res?.data?.message);
+        trackEvent({ event: "sign_up", method: "email" });
         router.push("/info-page");
 
         // const userId = localStorage.getItem("userId");
@@ -424,22 +424,20 @@ const AuthPageInner = () => {
             <button
               type="button"
               onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
-                isLogin
+              className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isLogin
                   ? "bg-accent text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               Sign In
             </button>
             <button
               type="button"
               onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
-                !isLogin
+              className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${!isLogin
                   ? "bg-accent text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               Sign Up
             </button>
