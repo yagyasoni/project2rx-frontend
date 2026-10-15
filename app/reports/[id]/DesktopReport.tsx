@@ -1068,7 +1068,7 @@ export default function DesktopReport() {
         shortageMedicare: sMed,
         shortageNjMedicaid: sNj,
         njBilled: row.medicare + row.njMedicaid,
-        shortageNjBilled: +(sMed + sNj).toFixed(2),
+        shortageNjBilled: +(nto - (row.medicare + row.njMedicaid)).toFixed(2),
         highestShortage: minPkg < 0 ? minPkg : 0,
       };
     }
@@ -1137,7 +1137,7 @@ export default function DesktopReport() {
         njMedicaid: nnj,
         shortageNjMedicaid: sNj,
         njBilled: nm + nnj,
-        shortageNjBilled: +(sMed + sNj).toFixed(2),
+        shortageNjBilled: +(row.totalOrdered - (nm + nnj)).toFixed(2),
         highestShortage: minUnit < 0 ? minUnit : 0,
       };
     }

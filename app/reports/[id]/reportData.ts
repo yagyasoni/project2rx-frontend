@@ -77,7 +77,6 @@ export function normalizeReportRows(json: unknown): InventoryRow[] {
     const medicareVal = n(row.medicare);
     const njMedicaidVal = n(row.nj_medicaid ?? row.njMedicaid);
     const njBilledVal = medicareVal + njMedicaidVal;
-    // Shortages calculated individually first so combined can sum them
     const shortageMedicareVal = to - medicareVal;
     const shortageNjMedicaidVal = to - njMedicaidVal;
 
@@ -130,9 +129,9 @@ export function normalizeReportRows(json: unknown): InventoryRow[] {
       // Medicaid
       njMedicaid: njMedicaidVal,
       shortageNjMedicaid: shortageNjMedicaidVal,
-      // NJ Billed = njMedicaid + medicare; shortage = sum of both shortages
+      // NJ Billed = njMedicaid + medicare; shortage = ordered - combined billed
       njBilled: njBilledVal,
-      shortageNjBilled: shortageMedicareVal + shortageNjMedicaidVal,
+      shortageNjBilled: to - njBilledVal,
       // Aberrant report
       claimsCount: n(row.claims_count),
       isAberrant: Boolean(row.is_aberrant),
