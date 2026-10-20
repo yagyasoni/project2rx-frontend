@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, Upload, Calendar, X } from "lucide-react";
+import { ArrowRight, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -99,6 +99,21 @@ const US_STATES = [
   { code: "PR", name: "Puerto Rico" },
 ];
 
+const EMPTY_ERRORS = {
+  pharmacyName: "",
+  address: "",
+  city: "",
+  stateCode: "",
+  zipCode: "",
+  phone: "",
+  fax: "",
+  pharmacyLicenseNumber: "",
+  deaNumber: "",
+  general: "",
+};
+
+type FormErrors = typeof EMPTY_ERRORS;
+
 const PharmacyDetailsForm = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -181,36 +196,14 @@ const PharmacyDetailsForm = () => {
     name: "",
   });
 
-  const [errors, setErrors] = useState({
-    pharmacyName: "",
-    address: "",
-    city: "",
-    stateCode: "",
-    zipCode: "",
-    phone: "",
-    fax: "",
-    pharmacyLicenseNumber: "",
-    deaNumber: "",
-    general: "",
-  });
+  const [errors, setErrors] = useState<FormErrors>(EMPTY_ERRORS);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    setErrors({
-      pharmacyName: "",
-      address: "",
-      city: "",
-      stateCode: "",
-      zipCode: "",
-      phone: "",
-      fax: "",
-      pharmacyLicenseNumber: "",
-      deaNumber: "",
-      general: "",
-    });
+    setErrors(EMPTY_ERRORS);
 
-    const newErrors: any = {};
+    const newErrors: Partial<FormErrors> = {};
 
     if (!pharmacyName.trim())
       newErrors.pharmacyName = "Pharmacy name is required";
@@ -230,35 +223,44 @@ const PharmacyDetailsForm = () => {
       newErrors.phone = "Phone must be exactly 10 digits";
     }
 
-    if (!fax) {
-      newErrors.fax = "Fax number is required";
-    } else if (!/^\d{10}$/.test(fax)) {
-      newErrors.fax = "Fax must be exactly 10 digits";
-    }
+    // if (!fax) {
+    //   newErrors.fax = "Fax number is required";
+    // } else if (!/^\d{10}$/.test(fax)) {
+    //   newErrors.fax = "Fax must be exactly 10 digits";
+    // }
 
-    const licenseClean = pharmacyLicenseNumber.trim().toUpperCase();
-    if (!licenseClean) {
-      newErrors.pharmacyLicenseNumber = "Pharmacy license number is required";
-    } else if (licenseClean.length < 5) {
-      newErrors.pharmacyLicenseNumber = "License number looks too short";
-    }
+    // const licenseClean = pharmacyLicenseNumber.trim().toUpperCase();
+    // if (!licenseClean) {
+    //   newErrors.pharmacyLicenseNumber = "Pharmacy license number is required";
+    // } else if (licenseClean.length < 5) {
+    //   newErrors.pharmacyLicenseNumber = "License number looks too short";
+    // }
 
-    const deaClean = deaNumber.trim().toUpperCase();
-    if (!deaClean) {
-      newErrors.deaNumber = "DEA number is required";
-    } else if (!isValidDEA(deaClean)) {
-      newErrors.deaNumber = "Invalid DEA number (format or checksum failed)";
-    }
+    // const deaClean = deaNumber.trim().toUpperCase();
+    // if (!deaClean) {
+    //   newErrors.deaNumber = "DEA number is required";
+    // } else if (!isValidDEA(deaClean)) {
+    //   newErrors.deaNumber = "Invalid DEA number (format or checksum failed)";
+    // }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors((prev) => ({ ...prev, ...newErrors }));
       return;
     }
 
+    const userId = localStorage.getItem("userId");
+    if (!userId || userId === "undefined" || userId === "null") {
+      setErrors((prev) => ({
+        ...prev,
+        general: "Your session could not be found. Please sign in again.",
+      }));
+      return;
+    }
+
     setIsSubmitting(true);
 
     const formData = new FormData();
-    formData.append("userId", localStorage.getItem("userId") || "");
+    formData.append("userId", userId);
 
     formData.append("pharmacyName", pharmacyName);
     formData.append("address", address);
@@ -313,24 +315,23 @@ const PharmacyDetailsForm = () => {
       formData.append("voidedChequeFile", voidedChequeFile.file);
 
     try {
-      const res = await axios.post(
+      await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/pharmacy`,
         formData,
       );
-      console.log(res?.data);
       localStorage.setItem("pharmacyName", pharmacyName);
       toast.success(
         "Details submitted successfully! Your pharmacy details have been saved.",
       );
       router.push("/agreements");
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setErrors((prev) => ({
-        ...prev,
-        general:
-          err?.response?.data?.message ||
-          "Something went wrong. Please try again.",
-      }));
+      const message =
+        axios.isAxiosError<{ message?: string }>(err) &&
+        typeof err.response?.data?.message === "string"
+          ? err.response.data.message
+          : "Something went wrong. Please try again.";
+      setErrors((prev) => ({ ...prev, general: message }));
     } finally {
       setIsSubmitting(false);
     }
@@ -493,7 +494,7 @@ const PharmacyDetailsForm = () => {
 
                 {/* Fax */}
                 <div className="space-y-2 md:col-span-2">
-                  <Label className="text-sm text-muted-foreground">Fax *</Label>
+                  <Label className="text-sm text-muted-foreground">Fax</Label>
                   <Input
                     value={fax}
                     onChange={(e) => {
