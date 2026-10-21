@@ -185,7 +185,7 @@ export default function SetupPanel({
               id="tl-location"
               value={setup.location}
               onChange={(e) => update("location", e.target.value)}
-              placeholder="e.g. Bergen Road"
+              placeholder="e.g. Location Name"
               className="h-10"
             />
             <p className="text-[11px] text-slate-400">

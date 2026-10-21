@@ -11,33 +11,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, Calendar } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 
 // DEA validator — checksum-based, runs client-side
-function isValidDEA(dea: string): boolean {
-  const s = dea.toUpperCase().trim();
-  if (!/^[ABFGMPRX][A-Z9]\d{7}$/.test(s)) return false;
-  // if (!/^[ABFGMPRX][A-Z]\d{7}$/.test(s)) return false;
+// function isValidDEA(dea: string): boolean {
+//   const s = dea.toUpperCase().trim();
+//   if (!/^[ABFGMPRX][A-Z9]\d{7}$/.test(s)) return false;
+//   // if (!/^[ABFGMPRX][A-Z]\d{7}$/.test(s)) return false;
 
-  const digits = s.slice(2).split("").map(Number);
-  const sum1 = digits[0] + digits[2] + digits[4];
-  const sum2 = (digits[1] + digits[3] + digits[5]) * 2;
-  const checkDigit = (sum1 + sum2) % 10;
+//   const digits = s.slice(2).split("").map(Number);
+//   const sum1 = digits[0] + digits[2] + digits[4];
+//   const sum2 = (digits[1] + digits[3] + digits[5]) * 2;
+//   const checkDigit = (sum1 + sum2) % 10;
 
-  return checkDigit === digits[6];
-}
+//   return checkDigit === digits[6];
+// }
 
 interface FileUpload {
   file: File | null;
@@ -139,22 +131,13 @@ const PharmacyDetailsForm = () => {
   const [deaNumber, setDeaNumber] = useState("");
   const [deaExpiryDate, setDeaExpiryDate] = useState<Date | undefined>();
   const [deaFile, setDeaFile] = useState<FileUpload>({ file: null, name: "" });
-
-  const [cdsNumber, setCdsNumber] = useState("");
-  const [cdsExpiry, setCdsExpiry] = useState<Date | undefined>();
   const [cdsFile, setCdsFile] = useState<FileUpload>({ file: null, name: "" });
 
-  const [pharmacistName, setPharmacistName] = useState("");
-  const [pharmacistLicenseNumber, setPharmacistLicenseNumber] = useState("");
-  const [pharmacistExpiration, setPharmacistExpiration] = useState<
-    Date | undefined
-  >();
   const [pharmacistFile, setPharmacistFile] = useState<FileUpload>({
     file: null,
     name: "",
   });
 
-  const [cmeaExpiry, setCmeaExpiry] = useState<Date | undefined>();
   const [cmeaFile, setCmeaFile] = useState<FileUpload>({
     file: null,
     name: "",
@@ -493,7 +476,7 @@ const PharmacyDetailsForm = () => {
                 </div>
 
                 {/* Fax */}
-                <div className="space-y-2 md:col-span-2">
+                {/* <div className="space-y-2 md:col-span-2">
                   <Label className="text-sm text-muted-foreground">Fax</Label>
                   <Input
                     value={fax}
@@ -508,7 +491,7 @@ const PharmacyDetailsForm = () => {
                   {errors.fax && (
                     <p className="text-xs text-red-500">{errors.fax}</p>
                   )}
-                </div>
+                </div> */}
               </div>
             </div>
 
