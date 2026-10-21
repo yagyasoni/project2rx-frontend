@@ -98,9 +98,6 @@ const EMPTY_ERRORS = {
   stateCode: "",
   zipCode: "",
   phone: "",
-  fax: "",
-  pharmacyLicenseNumber: "",
-  deaNumber: "",
   general: "",
 };
 
@@ -242,11 +239,16 @@ const PharmacyDetailsForm = () => {
 
     setIsSubmitting(true);
 
+    // Backend stores a single `address` column (no city/state/zip columns),
+    // so send the full formatted address there. The separate parts are also
+    // sent in case the backend adds dedicated columns later.
+    const fullAddress = `${address.trim()}, ${city.trim()}, ${stateCode} ${zipCode.trim()}`;
+
     const formData = new FormData();
     formData.append("userId", userId);
 
     formData.append("pharmacyName", pharmacyName);
-    formData.append("address", address);
+    formData.append("address", fullAddress);
     formData.append("city", city);
     formData.append("state", stateCode);
     formData.append("zipCode", zipCode);
