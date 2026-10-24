@@ -289,9 +289,9 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
       setLogId(log.id);
       setSavedSnapshot(sent);
       toast.success("Saved to History", {
-        description: monthLabel,
-        action: { label: "Open History", onClick: () => setTab("history") },
+        description: monthLabel
       });
+      setTab("history");
     } catch (err) {
       console.error(err);
       const firstError = axios.isAxiosError(err) ? err.response?.data?.errors?.[0] : undefined;
