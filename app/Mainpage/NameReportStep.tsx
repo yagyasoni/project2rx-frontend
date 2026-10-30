@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import api from "@/lib/api";
+import api, { failureMessage } from "@/lib/api";
 import { trackEvent } from "@/lib/gtm";
 import { toast } from "sonner";
 
@@ -50,7 +50,7 @@ const NameReportStep = ({
       toast("success");
       onContinue();
     } catch (err) {
-      toast("failed");
+      toast(failureMessage(err, "Couldn't create the report. Please try again."));
     }
   };
 

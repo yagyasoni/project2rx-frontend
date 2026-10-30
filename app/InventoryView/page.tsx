@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { lockGuardProps } from "@/lib/lockGuard";
 import { useRouter } from "next/navigation";
 import AppSidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import api from "@/lib/api";
+import api, { subscriptionMessage } from "@/lib/api";
 import {
   Search,
   Plus,
@@ -271,6 +272,8 @@ export default function InventoryViewPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const viewLocked = subscriptionLoaded && !subscription?.inventory_view_access;
+
   return (
     <ProtectedRoute role="user">
       <div className="relative w-full bg-[#fafafa] h-screen overflow-hidden">
@@ -324,7 +327,9 @@ export default function InventoryViewPage() {
                 </div>
               </div>
             )}
-            <InventoryViewContent router={router} />
+            <div className="contents" inert={viewLocked} {...lockGuardProps(viewLocked)}>
+              <InventoryViewContent router={router} />
+            </div>
           </div>
         </div>
       </div>
@@ -1468,8 +1473,9 @@ function ReportListingModal({
     } catch (err: any) {
       console.error("Failed to submit report:", err);
       alert(
-        "Failed to submit report. " +
-          (err?.response?.data?.error || "Please try again."),
+        subscriptionMessage(err) ??
+          "Failed to submit report. " +
+            (err?.response?.data?.error || "Please try again."),
       );
       setSubmitting(false);
     }
@@ -2662,7 +2668,7 @@ function AddListingModal({
     } catch (err: any) {
       console.error("Failed to create listing:", err);
       const msg = err?.response?.data?.error || "Please try again.";
-      alert("Failed to publish listing. " + msg);
+      alert(subscriptionMessage(err) ?? "Failed to publish listing. " + msg);
     }
   };
 

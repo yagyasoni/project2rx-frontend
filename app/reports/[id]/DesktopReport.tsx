@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import { lockGuardProps } from "@/lib/lockGuard";
 import { createPortal } from "react-dom";
 import {
   fetchReportRows,
@@ -70,6 +71,7 @@ import {
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CommunityLinkPageCopy from "@/components/communityLink";
 import api from "@/lib/api";
+import { authFetch } from "@/lib/authFetch";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -831,7 +833,7 @@ export default function DesktopReport() {
     setDrugDetailLoading(true);
     setDrugDetail(null);
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/drug-detail/${encodeURIComponent(ndc)}?outside_range=${outside}&include_billed=${billed}`,
       );
       const data = await res.json();
@@ -851,7 +853,7 @@ export default function DesktopReport() {
     setDrugLookup(null);
     setLookupSort(null);
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/drug-lookup?ingredient=${encodeURIComponent(ingredient)}`,
       );
       const data = await res.json();
@@ -960,7 +962,7 @@ export default function DesktopReport() {
         const norm = await fetchReportRows(auditId);
 
         setInventoryData(norm);
-        const ar = await fetch(
+        const ar = await authFetch(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}`,
         );
         setAuditDates(await ar.json());
@@ -995,7 +997,7 @@ export default function DesktopReport() {
             .then((r) => r.json())
             .catch(() => [])
         : Promise.resolve([]),
-      fetch(`${base}/api/audits/${auditId}/wholesaler-files`)
+      authFetch(`${base}/api/audits/${auditId}/wholesaler-files`)
         .then((r) => r.json())
         .catch(() => []),
     ])
@@ -1445,7 +1447,7 @@ export default function DesktopReport() {
     setRxFilters([]);
     setBilledSort(null);
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/inventory-detail/${encodeURIComponent(row.ndc)}`,
       );
       const json = await res.json();
@@ -1517,7 +1519,7 @@ export default function DesktopReport() {
     setOrderFilters([]);
     setOrderedSort(null);
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/wholesaler-detail/${encodeURIComponent(row.ndc)}`,
       );
       const json = await res.json();
@@ -1931,6 +1933,9 @@ export default function DesktopReport() {
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────
 
+  const groupsPanelLocked = subscriptionLoaded && !subscription?.inventory_view_access;
+  const drugPanelLocked = subscriptionLoaded && !subscription?.drug_lookup_access;
+
   return (
     <ProtectedRoute>
       <div
@@ -2061,7 +2066,7 @@ export default function DesktopReport() {
                               setMonthModalOpen(true);
                               setMonthStats(null);
                               setMonthStatsLoading(true);
-                              fetch(
+                              authFetch(
                                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/aberrant-summary?month=${m.value}`,
                               )
                                 .then((r) => r.json())
@@ -4010,460 +4015,462 @@ export default function DesktopReport() {
                           </div>
                         </div>
                       )}
-                    {/* Top Bar */}
-                    <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-100 flex-shrink-0">
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <button
-                          onClick={() => setOpenGroupsModal(false)}
-                          className="h-7 w-7 flex-shrink-0 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                        {groupView !== "list" && (
+                    <div className="contents" inert={groupsPanelLocked} {...lockGuardProps(groupsPanelLocked)}>
+                      {/* Top Bar */}
+                      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-100 flex-shrink-0">
+                        <div className="flex min-w-0 items-center gap-2.5">
                           <button
-                            onClick={() =>
-                              setGroupView(
-                                groupView === "report" ? "reports" : "list",
-                              )
-                            }
-                            className="flex flex-shrink-0 items-center gap-1 rounded-md px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
+                            onClick={() => setOpenGroupsModal(false)}
+                            className="h-7 w-7 flex-shrink-0 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                           >
-                            <MoveLeftIcon className="h-4 w-4" /> Back
+                            <X className="w-4 h-4" />
                           </button>
-                        )}
-                        <span className="h-2.5 w-2.5 rounded-full bg-indigo-500 shrink-0" />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-bold uppercase tracking-widest text-slate-800">
-                            {groupView === "list"
-                              ? "Inventory Groups"
-                              : groupView === "reports"
-                                ? viewingGroup?.name
-                                : openReport?.report.label ||
-                                  openReport?.report.pharmacy_name ||
-                                  "Report"}
-                          </p>
-                          <p className="truncate text-[11px] font-medium normal-case tracking-normal text-slate-400">
-                            {groupView === "list"
-                              ? "Pharmacies sharing shortage reports"
-                              : groupView === "reports"
-                                ? "Reports in this group"
-                                : "Highest shortage report"}
-                          </p>
+                          {groupView !== "list" && (
+                            <button
+                              onClick={() =>
+                                setGroupView(
+                                  groupView === "report" ? "reports" : "list",
+                                )
+                              }
+                              className="flex flex-shrink-0 items-center gap-1 rounded-md px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
+                            >
+                              <MoveLeftIcon className="h-4 w-4" /> Back
+                            </button>
+                          )}
+                          <span className="h-2.5 w-2.5 rounded-full bg-indigo-500 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold uppercase tracking-widest text-slate-800">
+                              {groupView === "list"
+                                ? "Inventory Groups"
+                                : groupView === "reports"
+                                  ? viewingGroup?.name
+                                  : openReport?.report.label ||
+                                    openReport?.report.pharmacy_name ||
+                                    "Report"}
+                            </p>
+                            <p className="truncate text-[11px] font-medium normal-case tracking-normal text-slate-400">
+                              {groupView === "list"
+                                ? "Pharmacies sharing shortage reports"
+                                : groupView === "reports"
+                                  ? "Reports in this group"
+                                  : "Highest shortage report"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Contextual action */}
-                      {groupView === "list" && (
-                        <Button
-                          size="sm"
-                          className="flex-shrink-0 gap-1.5"
-                          onClick={() => router.push(INVENTORY_GROUPS_ROUTE)}
-                        >
-                          <Plus className="h-3.5 w-3.5" /> Create a group
-                        </Button>
-                      )}
-                      {groupView === "reports" &&
-                        viewingGroup &&
-                        !addFormOpen && (
+                        {/* Contextual action */}
+                        {groupView === "list" && (
                           <Button
                             size="sm"
                             className="flex-shrink-0 gap-1.5"
-                            onClick={() => {
-                              setAddFormOpen(true);
-                              setAddName("");
-                              setAddNotice(null);
-                            }}
+                            onClick={() => router.push(INVENTORY_GROUPS_ROUTE)}
                           >
-                            <Plus className="h-3.5 w-3.5" /> Add to this group
+                            <Plus className="h-3.5 w-3.5" /> Create a group
                           </Button>
                         )}
-                      {groupView === "report" && openReport && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-shrink-0 gap-1.5"
-                          onClick={handleDownloadReportCsv}
-                        >
-                          <Download className="h-3.5 w-3.5" /> Download CSV
-                        </Button>
-                      )}
-                    </div>
+                        {groupView === "reports" &&
+                          viewingGroup &&
+                          !addFormOpen && (
+                            <Button
+                              size="sm"
+                              className="flex-shrink-0 gap-1.5"
+                              onClick={() => {
+                                setAddFormOpen(true);
+                                setAddName("");
+                                setAddNotice(null);
+                              }}
+                            >
+                              <Plus className="h-3.5 w-3.5" /> Add to this group
+                            </Button>
+                          )}
+                        {groupView === "report" && openReport && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-shrink-0 gap-1.5"
+                            onClick={handleDownloadReportCsv}
+                          >
+                            <Download className="h-3.5 w-3.5" /> Download CSV
+                          </Button>
+                        )}
+                      </div>
 
-                    {/* Body */}
-                    <div className="flex-1 overflow-auto px-5 py-4">
-                      {groupView === "list" && (
-                        <>
-                          {groupsLoading ? (
-                            <div className="py-10 text-center text-sm text-slate-500">
-                              Loading groups…
-                            </div>
-                          ) : groups.length === 0 ? (
-                            <div className="flex flex-col items-center gap-3 py-10 text-center">
-                              <Users className="h-8 w-8 text-slate-300" />
-                              <p className="text-sm text-slate-500">
-                                You don&apos;t have any groups yet.
-                              </p>
-                              <Button
-                                size="sm"
-                                className="gap-1.5"
-                                onClick={() =>
-                                  router.push(INVENTORY_GROUPS_ROUTE)
-                                }
-                              >
-                                <Plus className="h-3.5 w-3.5" /> Create a group
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <p className="mb-2 px-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                                {groups.length}{" "}
-                                {groups.length === 1 ? "group" : "groups"}
-                              </p>
-                              <div className="space-y-2.5">
-                                {groups.map((g) => (
-                                  <button
-                                    key={g.id}
-                                    onClick={() => handleViewReports(g)}
-                                    className="group flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-left transition-all hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm"
-                                  >
-                                    <div className="flex min-w-0 items-center gap-3">
-                                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-bold text-white">
-                                        {g.name
-                                          .trim()
-                                          .split(/\s+/)
-                                          .map((w) => w[0])
-                                          .slice(0, 2)
-                                          .join("")
-                                          .toUpperCase()}
-                                      </div>
-                                      <div className="min-w-0">
-                                        <p className="truncate text-sm font-semibold text-slate-800">
-                                          {g.name}
-                                        </p>
-                                        <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
-                                          <Users className="h-3 w-3" />
-                                          {g.members_count}{" "}
-                                          {g.members_count === 1
-                                            ? "member"
-                                            : "members"}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <span className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors group-hover:border-indigo-300 group-hover:text-indigo-600">
-                                      <FileText className="h-3.5 w-3.5" /> View
-                                      reports
-                                    </span>
-                                  </button>
-                                ))}
+                      {/* Body */}
+                      <div className="flex-1 overflow-auto px-5 py-4">
+                        {groupView === "list" && (
+                          <>
+                            {groupsLoading ? (
+                              <div className="py-10 text-center text-sm text-slate-500">
+                                Loading groups…
                               </div>
-                            </>
-                          )}
-
-                          {addNotice && (
-                            <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-center text-xs text-emerald-700">
-                              {addNotice}
-                            </p>
-                          )}
-                        </>
-                      )}
-
-                      {groupView === "reports" && (
-                        <>
-                          {addFormOpen && (
-                            <div className="mb-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
-                              <Input
-                                autoFocus
-                                value={addName}
-                                onChange={(e) => setAddName(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (
-                                    e.key === "Enter" &&
-                                    addName.trim() &&
-                                    viewingGroup
-                                  )
-                                    handleAddToGroup(viewingGroup, addName);
-                                }}
-                                placeholder="Report name…"
-                                className="h-8 text-xs"
-                              />
-                              <Button
-                                size="sm"
-                                className="flex-shrink-0 text-xs"
-                                disabled={
-                                  !addName.trim() ||
-                                  addingTo === viewingGroup?.id
-                                }
-                                onClick={() =>
-                                  viewingGroup &&
-                                  handleAddToGroup(viewingGroup, addName)
-                                }
-                              >
-                                {addingTo === viewingGroup?.id
-                                  ? "Adding…"
-                                  : "Add"}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="flex-shrink-0 text-xs"
-                                onClick={() => {
-                                  setAddFormOpen(false);
-                                  setAddName("");
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          )}
-
-                          {groupReportsLoading ? (
-                            <div className="py-10 text-center text-sm text-slate-500">
-                              Loading reports…
-                            </div>
-                          ) : groupReports.length === 0 ? (
-                            <div className="py-10 text-center text-sm text-slate-500">
-                              No reports yet. Use “Add to this group” to add
-                              one.
-                            </div>
-                          ) : (
-                            <>
-                              <p className="mb-2 px-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                                {groupReports.length}{" "}
-                                {groupReports.length === 1
-                                  ? "report"
-                                  : "reports"}
-                              </p>
-                              <div className="space-y-2.5">
-                                {groupReports.map((rep) => (
-                                  <div
-                                    key={rep.id}
-                                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3"
-                                  >
-                                    <div className="flex min-w-0 items-center gap-3">
-                                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
-                                        <FileText className="h-4 w-4" />
-                                      </div>
-                                      <div className="min-w-0">
-                                        <p className="truncate text-sm font-semibold text-slate-800">
-                                          {rep.label || rep.pharmacy_name}
-                                        </p>
-                                        <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-slate-500">
-                                          <Users className="h-3 w-3" />
-                                          {rep.contributor_count}{" "}
-                                          {rep.contributor_count === 1
-                                            ? "pharmacy"
-                                            : "pharmacies"}{" "}
-                                          ·{" "}
-                                          {new Date(
-                                            rep.created_at,
-                                          ).toLocaleDateString()}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-shrink-0 items-center gap-2">
-                                      <Button
-                                        variant={
-                                          rep.has_contributed
-                                            ? "ghost"
-                                            : "default"
-                                        }
-                                        size="sm"
-                                        className="text-xs"
-                                        disabled={
-                                          rep.has_contributed ||
-                                          addingTo === rep.id
-                                        }
-                                        onClick={() => handleContribute(rep)}
-                                      >
-                                        {rep.has_contributed
-                                          ? "Added"
-                                          : addingTo === rep.id
-                                            ? "Adding…"
-                                            : "Add to this report"}
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-xs"
-                                        disabled={!rep.has_contributed}
-                                        title={
-                                          rep.has_contributed
-                                            ? "Open report"
-                                            : "Add your data first to open"
-                                        }
-                                        onClick={() => {
-                                          if (!viewingGroup) return;
-                                          setOpenGroupsModal(false);
-                                          router.push(
-                                            `/group-reports/${viewingGroup.id}/${rep.id}`,
-                                          );
-                                        }}
-                                      >
-                                        Open
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
-                                        disabled={deletingReport === rep.id}
-                                        onClick={() =>
-                                          handleDeleteReport(rep.id)
-                                        }
-                                        aria-label="Delete report"
-                                        title="Delete report"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-
-                              <p className="mt-3 truncate rounded-md bg-cyan-50 px-3 py-2 text-center text-[11px] text-cyan-700">
-                                Open a report only after adding your own data.
-                              </p>
-                            </>
-                          )}
-
-                          {addNotice && (
-                            <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-center text-xs text-emerald-700">
-                              {addNotice}
-                            </p>
-                          )}
-                        </>
-                      )}
-
-                      {groupView === "report" && (
-                        <>
-                          {reportLoading ? (
-                            <div className="py-10 text-center text-sm text-slate-500">
-                              Loading report…
-                            </div>
-                          ) : !openReport ? (
-                            <div className="py-10 text-center text-sm text-slate-500">
-                              Could not load this report.
-                            </div>
-                          ) : (
-                            <>
-                              <div className="relative mb-2 w-64 max-w-full">
-                                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                                <Input
-                                  value={reportSearch}
-                                  onChange={(e) =>
-                                    setReportSearch(e.target.value)
+                            ) : groups.length === 0 ? (
+                              <div className="flex flex-col items-center gap-3 py-10 text-center">
+                                <Users className="h-8 w-8 text-slate-300" />
+                                <p className="text-sm text-slate-500">
+                                  You don&apos;t have any groups yet.
+                                </p>
+                                <Button
+                                  size="sm"
+                                  className="gap-1.5"
+                                  onClick={() =>
+                                    router.push(INVENTORY_GROUPS_ROUTE)
                                   }
-                                  placeholder="Search drug name or NDC…"
-                                  className="h-8 pl-8 text-xs"
-                                />
+                                >
+                                  <Plus className="h-3.5 w-3.5" /> Create a group
+                                </Button>
                               </div>
-                              <div className="max-h-[55vh] overflow-auto">
-                                <div className="inline-block min-w-full rounded-lg border border-slate-200">
-                                  {(() => {
-                                    // Fixed columns + one per contributor pharmacy
-                                    const baseColumns: {
-                                      key: string;
-                                      label: string;
-                                      mono?: boolean;
-                                    }[] = [
-                                      { key: "rank", label: "Rank" },
-                                      { key: "ndc", label: "NDC", mono: true },
-                                      { key: "drug_name", label: "Drug Name" },
-                                      {
-                                        key: "package_size",
-                                        label: "Pkg Size",
-                                      },
-                                    ];
-                                    const pharmacyCols =
-                                      openReport.pharmacies.map((ph) => ({
-                                        key: ph,
-                                        label: ph,
-                                        mono: false,
-                                      }));
-                                    const allColumns = [
-                                      ...baseColumns,
-                                      ...pharmacyCols,
-                                    ];
-                                    const isPharmacyKey = (key: string) =>
-                                      openReport.pharmacies.includes(key);
-                                    return (
-                                      <table className="w-full text-left text-xs">
-                                        <thead className="sticky top-0 bg-slate-50 text-slate-600">
-                                          <tr>
-                                            {allColumns.map((col) => {
-                                              const active =
-                                                reportSort?.key === col.key;
-                                              const right = isPharmacyKey(
-                                                col.key,
-                                              );
-                                              return (
-                                                <th
-                                                  key={col.key}
-                                                  className={`whitespace-nowrap px-3 py-2 font-semibold ${right ? "text-right" : ""}`}
-                                                >
-                                                  <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                      toggleReportSort(col.key)
-                                                    }
-                                                    className={`inline-flex items-center gap-1 hover:text-slate-900 ${right ? "flex-row-reverse" : ""}`}
-                                                  >
-                                                    {col.label}
-                                                    {active ? (
-                                                      <ChevronDown
-                                                        className={`h-3 w-3 transition-transform ${reportSort?.dir === "asc" ? "rotate-180" : ""}`}
-                                                      />
-                                                    ) : (
-                                                      <ArrowUpDown className="h-3 w-3 text-slate-300" />
-                                                    )}
-                                                  </button>
-                                                </th>
-                                              );
-                                            })}
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {getSortedReportRows().map(
-                                            (row, i) => (
-                                              <tr
-                                                key={i}
-                                                className="border-t border-slate-100"
-                                              >
-                                                {allColumns.map((col) => {
-                                                  const pharmacy =
-                                                    isPharmacyKey(col.key);
-                                                  const val = pharmacy
-                                                    ? row.values[col.key]
-                                                    : (row as any)[col.key];
-                                                  const num = Number(val ?? 0);
-                                                  const has =
-                                                    val !== null &&
-                                                    val !== undefined;
-                                                  return (
-                                                    <td
-                                                      key={col.key}
-                                                      className={`whitespace-nowrap px-3 py-1.5 ${col.mono ? "font-mono" : ""} ${pharmacy ? "text-right" : ""} ${pharmacy && has ? `font-medium ${num < 0 ? "text-red-600" : "text-slate-700"}` : ""}`}
-                                                    >
-                                                      {pharmacy
-                                                        ? has
-                                                          ? num
-                                                          : "—"
-                                                        : (val ?? "")}
-                                                    </td>
-                                                  );
-                                                })}
-                                              </tr>
-                                            ),
-                                          )}
-                                        </tbody>
-                                      </table>
-                                    );
-                                  })()}
+                            ) : (
+                              <>
+                                <p className="mb-2 px-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                  {groups.length}{" "}
+                                  {groups.length === 1 ? "group" : "groups"}
+                                </p>
+                                <div className="space-y-2.5">
+                                  {groups.map((g) => (
+                                    <button
+                                      key={g.id}
+                                      onClick={() => handleViewReports(g)}
+                                      className="group flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-left transition-all hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm"
+                                    >
+                                      <div className="flex min-w-0 items-center gap-3">
+                                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-bold text-white">
+                                          {g.name
+                                            .trim()
+                                            .split(/\s+/)
+                                            .map((w) => w[0])
+                                            .slice(0, 2)
+                                            .join("")
+                                            .toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0">
+                                          <p className="truncate text-sm font-semibold text-slate-800">
+                                            {g.name}
+                                          </p>
+                                          <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
+                                            <Users className="h-3 w-3" />
+                                            {g.members_count}{" "}
+                                            {g.members_count === 1
+                                              ? "member"
+                                              : "members"}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <span className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors group-hover:border-indigo-300 group-hover:text-indigo-600">
+                                        <FileText className="h-3.5 w-3.5" /> View
+                                        reports
+                                      </span>
+                                    </button>
+                                  ))}
                                 </div>
+                              </>
+                            )}
+
+                            {addNotice && (
+                              <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-center text-xs text-emerald-700">
+                                {addNotice}
+                              </p>
+                            )}
+                          </>
+                        )}
+
+                        {groupView === "reports" && (
+                          <>
+                            {addFormOpen && (
+                              <div className="mb-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                                <Input
+                                  autoFocus
+                                  value={addName}
+                                  onChange={(e) => setAddName(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (
+                                      e.key === "Enter" &&
+                                      addName.trim() &&
+                                      viewingGroup
+                                    )
+                                      handleAddToGroup(viewingGroup, addName);
+                                  }}
+                                  placeholder="Report name…"
+                                  className="h-8 text-xs"
+                                />
+                                <Button
+                                  size="sm"
+                                  className="flex-shrink-0 text-xs"
+                                  disabled={
+                                    !addName.trim() ||
+                                    addingTo === viewingGroup?.id
+                                  }
+                                  onClick={() =>
+                                    viewingGroup &&
+                                    handleAddToGroup(viewingGroup, addName)
+                                  }
+                                >
+                                  {addingTo === viewingGroup?.id
+                                    ? "Adding…"
+                                    : "Add"}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="flex-shrink-0 text-xs"
+                                  onClick={() => {
+                                    setAddFormOpen(false);
+                                    setAddName("");
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
                               </div>
-                            </>
-                          )}
-                        </>
-                      )}
+                            )}
+
+                            {groupReportsLoading ? (
+                              <div className="py-10 text-center text-sm text-slate-500">
+                                Loading reports…
+                              </div>
+                            ) : groupReports.length === 0 ? (
+                              <div className="py-10 text-center text-sm text-slate-500">
+                                No reports yet. Use “Add to this group” to add
+                                one.
+                              </div>
+                            ) : (
+                              <>
+                                <p className="mb-2 px-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                  {groupReports.length}{" "}
+                                  {groupReports.length === 1
+                                    ? "report"
+                                    : "reports"}
+                                </p>
+                                <div className="space-y-2.5">
+                                  {groupReports.map((rep) => (
+                                    <div
+                                      key={rep.id}
+                                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3"
+                                    >
+                                      <div className="flex min-w-0 items-center gap-3">
+                                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
+                                          <FileText className="h-4 w-4" />
+                                        </div>
+                                        <div className="min-w-0">
+                                          <p className="truncate text-sm font-semibold text-slate-800">
+                                            {rep.label || rep.pharmacy_name}
+                                          </p>
+                                          <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-slate-500">
+                                            <Users className="h-3 w-3" />
+                                            {rep.contributor_count}{" "}
+                                            {rep.contributor_count === 1
+                                              ? "pharmacy"
+                                              : "pharmacies"}{" "}
+                                            ·{" "}
+                                            {new Date(
+                                              rep.created_at,
+                                            ).toLocaleDateString()}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <div className="flex flex-shrink-0 items-center gap-2">
+                                        <Button
+                                          variant={
+                                            rep.has_contributed
+                                              ? "ghost"
+                                              : "default"
+                                          }
+                                          size="sm"
+                                          className="text-xs"
+                                          disabled={
+                                            rep.has_contributed ||
+                                            addingTo === rep.id
+                                          }
+                                          onClick={() => handleContribute(rep)}
+                                        >
+                                          {rep.has_contributed
+                                            ? "Added"
+                                            : addingTo === rep.id
+                                              ? "Adding…"
+                                              : "Add to this report"}
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="text-xs"
+                                          disabled={!rep.has_contributed}
+                                          title={
+                                            rep.has_contributed
+                                              ? "Open report"
+                                              : "Add your data first to open"
+                                          }
+                                          onClick={() => {
+                                            if (!viewingGroup) return;
+                                            setOpenGroupsModal(false);
+                                            router.push(
+                                              `/group-reports/${viewingGroup.id}/${rep.id}`,
+                                            );
+                                          }}
+                                        >
+                                          Open
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
+                                          disabled={deletingReport === rep.id}
+                                          onClick={() =>
+                                            handleDeleteReport(rep.id)
+                                          }
+                                          aria-label="Delete report"
+                                          title="Delete report"
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <p className="mt-3 truncate rounded-md bg-cyan-50 px-3 py-2 text-center text-[11px] text-cyan-700">
+                                  Open a report only after adding your own data.
+                                </p>
+                              </>
+                            )}
+
+                            {addNotice && (
+                              <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-center text-xs text-emerald-700">
+                                {addNotice}
+                              </p>
+                            )}
+                          </>
+                        )}
+
+                        {groupView === "report" && (
+                          <>
+                            {reportLoading ? (
+                              <div className="py-10 text-center text-sm text-slate-500">
+                                Loading report…
+                              </div>
+                            ) : !openReport ? (
+                              <div className="py-10 text-center text-sm text-slate-500">
+                                Could not load this report.
+                              </div>
+                            ) : (
+                              <>
+                                <div className="relative mb-2 w-64 max-w-full">
+                                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                                  <Input
+                                    value={reportSearch}
+                                    onChange={(e) =>
+                                      setReportSearch(e.target.value)
+                                    }
+                                    placeholder="Search drug name or NDC…"
+                                    className="h-8 pl-8 text-xs"
+                                  />
+                                </div>
+                                <div className="max-h-[55vh] overflow-auto">
+                                  <div className="inline-block min-w-full rounded-lg border border-slate-200">
+                                    {(() => {
+                                      // Fixed columns + one per contributor pharmacy
+                                      const baseColumns: {
+                                        key: string;
+                                        label: string;
+                                        mono?: boolean;
+                                      }[] = [
+                                        { key: "rank", label: "Rank" },
+                                        { key: "ndc", label: "NDC", mono: true },
+                                        { key: "drug_name", label: "Drug Name" },
+                                        {
+                                          key: "package_size",
+                                          label: "Pkg Size",
+                                        },
+                                      ];
+                                      const pharmacyCols =
+                                        openReport.pharmacies.map((ph) => ({
+                                          key: ph,
+                                          label: ph,
+                                          mono: false,
+                                        }));
+                                      const allColumns = [
+                                        ...baseColumns,
+                                        ...pharmacyCols,
+                                      ];
+                                      const isPharmacyKey = (key: string) =>
+                                        openReport.pharmacies.includes(key);
+                                      return (
+                                        <table className="w-full text-left text-xs">
+                                          <thead className="sticky top-0 bg-slate-50 text-slate-600">
+                                            <tr>
+                                              {allColumns.map((col) => {
+                                                const active =
+                                                  reportSort?.key === col.key;
+                                                const right = isPharmacyKey(
+                                                  col.key,
+                                                );
+                                                return (
+                                                  <th
+                                                    key={col.key}
+                                                    className={`whitespace-nowrap px-3 py-2 font-semibold ${right ? "text-right" : ""}`}
+                                                  >
+                                                    <button
+                                                      type="button"
+                                                      onClick={() =>
+                                                        toggleReportSort(col.key)
+                                                      }
+                                                      className={`inline-flex items-center gap-1 hover:text-slate-900 ${right ? "flex-row-reverse" : ""}`}
+                                                    >
+                                                      {col.label}
+                                                      {active ? (
+                                                        <ChevronDown
+                                                          className={`h-3 w-3 transition-transform ${reportSort?.dir === "asc" ? "rotate-180" : ""}`}
+                                                        />
+                                                      ) : (
+                                                        <ArrowUpDown className="h-3 w-3 text-slate-300" />
+                                                      )}
+                                                    </button>
+                                                  </th>
+                                                );
+                                              })}
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {getSortedReportRows().map(
+                                              (row, i) => (
+                                                <tr
+                                                  key={i}
+                                                  className="border-t border-slate-100"
+                                                >
+                                                  {allColumns.map((col) => {
+                                                    const pharmacy =
+                                                      isPharmacyKey(col.key);
+                                                    const val = pharmacy
+                                                      ? row.values[col.key]
+                                                      : (row as any)[col.key];
+                                                    const num = Number(val ?? 0);
+                                                    const has =
+                                                      val !== null &&
+                                                      val !== undefined;
+                                                    return (
+                                                      <td
+                                                        key={col.key}
+                                                        className={`whitespace-nowrap px-3 py-1.5 ${col.mono ? "font-mono" : ""} ${pharmacy ? "text-right" : ""} ${pharmacy && has ? `font-medium ${num < 0 ? "text-red-600" : "text-slate-700"}` : ""}`}
+                                                      >
+                                                        {pharmacy
+                                                          ? has
+                                                            ? num
+                                                            : "—"
+                                                          : (val ?? "")}
+                                                      </td>
+                                                    );
+                                                  })}
+                                                </tr>
+                                              ),
+                                            )}
+                                          </tbody>
+                                        </table>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </>,
@@ -4815,721 +4822,723 @@ export default function DesktopReport() {
                           </div>
                         </div>
                       )}
-                    {/* Top Bar */}
-                    <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white flex-shrink-0">
-                      <div className="flex items-center gap-2.5">
-                        <button
-                          onClick={() => {
-                            setOpenDrugSidebar(false);
-                            setActiveSidebar(null);
-                            setDrugLookup(null);
-                            setExpandedLookupDrug(null);
-                          }}
-                          className="cursor-pointer h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                        <span className="h-2.5 w-2.5 rounded-full bg-indigo-500 shrink-0" />
-                        <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">
-                          Drug Lookup
-                        </span>
-                        <span className="text-xs text-slate-400 ml-1">
-                          ·{" "}
-                          {drugLookup?.ingredient ??
-                            extractIngredient(activeDrug.drugName)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                          Clicked from
-                        </span>
-                        <span className="text-[11px] font-semibold text-slate-700 truncate max-w-[220px]">
-                          {activeDrug.drugName}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* KPI Cards */}
-                    <div className="px-5 py-4 bg-white border-b border-slate-200 flex-shrink-0">
-                      <div className="grid grid-cols-4 gap-2.5">
-                        <div
-                          className="rounded-xl p-3 border border-slate-200"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
-                          }}
-                        >
-                          <p
-                            className="text-[9px] font-bold uppercase tracking-widest mb-1"
-                            style={{ color: "#b45309" }}
+                    <div className="contents" inert={drugPanelLocked} {...lockGuardProps(drugPanelLocked)}>
+                      {/* Top Bar */}
+                      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white flex-shrink-0">
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            onClick={() => {
+                              setOpenDrugSidebar(false);
+                              setActiveSidebar(null);
+                              setDrugLookup(null);
+                              setExpandedLookupDrug(null);
+                            }}
+                            className="cursor-pointer h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                           >
-                            Variants
-                          </p>
-                          <p
-                            className="text-[15px] font-extrabold tabular-nums"
-                            style={{ color: "#b45309" }}
-                          >
-                            {drugLookup?.drugs?.length ?? 0}
-                          </p>
-                        </div>
-                        <div
-                          className="rounded-xl p-3 border border-slate-200"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)",
-                          }}
-                        >
-                          <p
-                            className="text-[9px] font-bold uppercase tracking-widest mb-1"
-                            style={{ color: "#1d4ed8" }}
-                          >
-                            Total Rx
-                          </p>
-                          <p
-                            className="text-[15px] font-extrabold tabular-nums"
-                            style={{ color: "#1d4ed8" }}
-                          >
-                            {drugLookupAgg
-                              ? Number(drugLookupAgg.totalRxs).toLocaleString()
-                              : "—"}
-                          </p>
-                        </div>
-                        <div
-                          className="rounded-xl p-3 border border-slate-200"
-                          style={{ background: "#f0fdf4" }}
-                        >
-                          <p
-                            className="text-[9px] font-bold uppercase tracking-widest mb-1"
-                            style={{ color: "#16a34a" }}
-                          >
-                            Total Ins Paid
-                          </p>
-                          <p
-                            className="text-[15px] font-extrabold tabular-nums"
-                            style={{ color: "#16a34a" }}
-                          >
-                            {drugLookupAgg
-                              ? `$${Number(
-                                  drugLookupAgg.totalInsPaid,
-                                ).toLocaleString("en-US", {
-                                  minimumFractionDigits: 0,
-                                  maximumFractionDigits: 0,
-                                })}`
-                              : "—"}
-                          </p>
-                        </div>
-                        <div
-                          className="rounded-xl p-3 border border-slate-200"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)",
-                          }}
-                        >
-                          <p
-                            className="text-[9px] font-bold uppercase tracking-widest mb-1"
-                            style={{ color: "#6d28d9" }}
-                          >
-                            Avg / Unit
-                          </p>
-                          <p
-                            className="text-[15px] font-extrabold tabular-nums"
-                            style={{ color: "#6d28d9" }}
-                          >
-                            {drugLookupAgg
-                              ? `$${Number(drugLookupAgg.weightedAvgPerUnit).toFixed(2)}`
-                              : "—"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Body: scrollable stack */}
-                    <div className="flex-1 overflow-auto px-5 py-4 space-y-4">
-                      {/* Table Card */}
-                      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                        <div className="px-4 py-2.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-                          <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-widest">
-                            Medications
-                          </h3>
-                          <span className="text-[10px] text-slate-400">
-                            Click a row to expand NDC breakdown
+                            <X className="w-4 h-4" />
+                          </button>
+                          <span className="h-2.5 w-2.5 rounded-full bg-indigo-500 shrink-0" />
+                          <span className="text-sm font-bold text-slate-800 uppercase tracking-widest">
+                            Drug Lookup
+                          </span>
+                          <span className="text-xs text-slate-400 ml-1">
+                            ·{" "}
+                            {drugLookup?.ingredient ??
+                              extractIngredient(activeDrug.drugName)}
                           </span>
                         </div>
-
-                        {drugLookupLoading ? (
-                          <div className="flex items-center justify-center h-48 gap-3">
-                            <div className="h-5 w-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
-                            <span className="text-sm text-slate-400 font-medium">
-                              Loading drug data…
-                            </span>
-                          </div>
-                        ) : !drugLookup ||
-                          !drugLookup.drugs ||
-                          drugLookup.drugs.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center h-48 gap-2">
-                            <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-1">
-                              <Search className="w-4 h-4 text-slate-400" />
-                            </div>
-                            <p className="text-sm font-semibold text-slate-500">
-                              No drugs found for this ingredient
-                            </p>
-                          </div>
-                        ) : (
-                          <table
-                            style={{
-                              borderCollapse: "collapse",
-                              width: "100%",
-                              tableLayout: "fixed",
-                            }}
-                          >
-                            <colgroup>
-                              <col style={{ width: "30%" }} />
-                              <col style={{ width: "12%" }} />
-                              <col style={{ width: "13%" }} />
-                              <col style={{ width: "15%" }} />
-                              <col style={{ width: "15%" }} />
-                              <col style={{ width: "15%" }} />
-                            </colgroup>
-                            <thead>
-                              <tr style={{ background: "#1e293b" }}>
-                                {[
-                                  {
-                                    key: "drug_name",
-                                    line1: "Medications",
-                                    line2: "",
-                                    align: "left" as const,
-                                  },
-                                  {
-                                    key: "avg_qty_per_rx",
-                                    line1: "Avg Qty",
-                                    line2: "per Rx",
-                                    align: "right" as const,
-                                  },
-                                  {
-                                    key: "avg_copay_per_rx",
-                                    line1: "Avg CoPay",
-                                    line2: "per Rx",
-                                    align: "right" as const,
-                                  },
-                                  {
-                                    key: "avg_ins_paid_per_rx",
-                                    line1: "Avg Ins Paid",
-                                    line2: "per Rx",
-                                    align: "right" as const,
-                                  },
-                                  {
-                                    key: "avg_ins_paid_per_unit",
-                                    line1: "Avg Ins Paid",
-                                    line2: "per Unit",
-                                    align: "right" as const,
-                                  },
-                                  {
-                                    key: "rx_count",
-                                    line1: "Rx Count",
-                                    line2: "",
-                                    align: "right" as const,
-                                  },
-                                ].map((h, i) => {
-                                  const dir =
-                                    lookupSort && lookupSort.key === h.key
-                                      ? lookupSort.dir
-                                      : undefined;
-                                  return (
-                                    <th
-                                      key={i}
-                                      onClick={() =>
-                                        cycleDrawerSort(setLookupSort, h.key)
-                                      }
-                                      style={{
-                                        padding: "8px 10px",
-                                        textAlign: h.align,
-                                        fontSize: 10,
-                                        fontWeight: 700,
-                                        color: "#fff",
-                                        letterSpacing: "0.05em",
-                                        textTransform: "uppercase",
-                                        lineHeight: 1.3,
-                                        cursor: "pointer",
-                                        userSelect: "none",
-                                      }}
-                                    >
-                                      <div
-                                        style={{
-                                          display: "inline-flex",
-                                          alignItems: "center",
-                                          gap: 4,
-                                        }}
-                                      >
-                                        <span>
-                                          <div>{h.line1}</div>
-                                          {h.line2 && (
-                                            <div
-                                              style={{
-                                                color: "#94a3b8",
-                                                fontWeight: 500,
-                                                fontSize: 9,
-                                              }}
-                                            >
-                                              {h.line2}
-                                            </div>
-                                          )}
-                                        </span>
-                                        <span
-                                          style={{
-                                            marginLeft: 4,
-                                            fontSize: 9,
-                                            color: dir ? "#fff" : "#64748b",
-                                            display: "inline-block",
-                                            lineHeight: 1,
-                                            userSelect: "none",
-                                          }}
-                                        >
-                                          {dir === "asc"
-                                            ? "▲"
-                                            : dir === "desc"
-                                              ? "▼"
-                                              : "↕"}
-                                        </span>
-                                      </div>
-                                    </th>
-                                  );
-                                })}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {applyDrawerSort(drugLookup.drugs, lookupSort, {
-                                drug_name: (d: DrugLookupDrug) =>
-                                  d.drug_name ?? "",
-                                avg_qty_per_rx: (d: DrugLookupDrug) =>
-                                  Number(d.avg_qty_per_rx ?? 0),
-                                avg_copay_per_rx: (d: DrugLookupDrug) =>
-                                  d.avg_copay_per_rx == null
-                                    ? null
-                                    : Number(d.avg_copay_per_rx),
-                                avg_ins_paid_per_rx: (d: DrugLookupDrug) =>
-                                  Number(d.avg_ins_paid_per_rx ?? 0),
-                                avg_ins_paid_per_unit: (d: DrugLookupDrug) =>
-                                  Number(d.avg_ins_paid_per_unit ?? 0),
-                                rx_count: (d: DrugLookupDrug) =>
-                                  Number(d.rx_count ?? 0),
-                              }).map((drug, di) => {
-                                const isExpanded =
-                                  expandedLookupDrug === drug.drug_name;
-                                return (
-                                  <React.Fragment key={drug.drug_name}>
-                                    <tr
-                                      style={{
-                                        borderBottom: "1px solid #e2e8f0",
-                                        background: isExpanded
-                                          ? "#eef2ff"
-                                          : di % 2 === 1
-                                            ? "#f8fafc"
-                                            : "#fff",
-                                        cursor: "pointer",
-                                      }}
-                                      onClick={() =>
-                                        setExpandedLookupDrug(
-                                          isExpanded ? null : drug.drug_name,
-                                        )
-                                      }
-                                      className="hover:bg-indigo-50/60 transition-colors"
-                                    >
-                                      <td
-                                        style={{
-                                          padding: "9px 10px",
-                                          fontSize: 12,
-                                        }}
-                                      >
-                                        <div className="flex items-center gap-2">
-                                          <ChevronDown
-                                            className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${isExpanded ? "" : "-rotate-90"}`}
-                                          />
-                                          <span className="text-slate-400 tabular-nums text-[11px] shrink-0">
-                                            {di + 1}.
-                                          </span>
-                                          <span className="font-semibold text-slate-800 truncate">
-                                            {drug.drug_name}
-                                          </span>
-                                          {brandPill(drug.brand)}
-                                        </div>
-                                      </td>
-                                      <td
-                                        style={{
-                                          padding: "9px 10px",
-                                          fontSize: 12,
-                                          textAlign: "right",
-                                        }}
-                                      >
-                                        <span className="tabular-nums text-slate-700">
-                                          {Number(
-                                            drug.avg_qty_per_rx ?? 0,
-                                          ).toFixed(0)}
-                                        </span>
-                                      </td>
-                                      <td
-                                        style={{
-                                          padding: "9px 10px",
-                                          fontSize: 12,
-                                          textAlign: "right",
-                                          background: "rgba(240,253,250,0.6)",
-                                        }}
-                                      >
-                                        <span className="tabular-nums text-slate-700">
-                                          {drug.avg_copay_per_rx != null
-                                            ? `$${Number(drug.avg_copay_per_rx).toFixed(2)}`
-                                            : "—"}
-                                        </span>
-                                      </td>
-                                      <td
-                                        style={{
-                                          padding: "9px 10px",
-                                          fontSize: 12,
-                                          textAlign: "right",
-                                          background: "rgba(240,253,250,0.6)",
-                                        }}
-                                      >
-                                        <span className="tabular-nums font-semibold text-slate-800">
-                                          $
-                                          {Number(
-                                            drug.avg_ins_paid_per_rx ?? 0,
-                                          ).toFixed(2)}
-                                        </span>
-                                      </td>
-                                      <td
-                                        style={{
-                                          padding: "9px 10px",
-                                          fontSize: 12,
-                                          textAlign: "right",
-                                          background: "rgba(240,253,250,0.6)",
-                                        }}
-                                      >
-                                        <span className="tabular-nums text-slate-700">
-                                          $
-                                          {Number(
-                                            drug.avg_ins_paid_per_unit ?? 0,
-                                          ).toFixed(2)}
-                                        </span>
-                                      </td>
-                                      <td
-                                        style={{
-                                          padding: "9px 10px",
-                                          fontSize: 12,
-                                          textAlign: "right",
-                                          background: "rgba(236,254,255,0.6)",
-                                        }}
-                                      >
-                                        <span className="tabular-nums font-bold text-cyan-800">
-                                          {Number(
-                                            drug.rx_count ?? 0,
-                                          ).toLocaleString()}
-                                        </span>
-                                      </td>
-                                    </tr>
-
-                                    {isExpanded &&
-                                      drug.ndcs &&
-                                      drug.ndcs.map((ndc, ni) => (
-                                        <tr
-                                          key={ndc.ndc}
-                                          style={{
-                                            borderBottom: "1px solid #f1f5f9",
-                                            background:
-                                              ni % 2 === 1 ? "#f8fafc" : "#fff",
-                                          }}
-                                          className="hover:bg-indigo-50/40 transition-colors"
-                                        >
-                                          <td
-                                            style={{
-                                              padding: "7px 10px 7px 36px",
-                                              fontSize: 12,
-                                            }}
-                                          >
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-indigo-400 text-sm leading-none shrink-0">
-                                                ◦
-                                              </span>
-                                              <span className="font-mono text-[11px] text-slate-600 tabular-nums">
-                                                {ndc.ndc}
-                                              </span>
-                                              {brandPill(ndc.brand)}
-                                              <button
-                                                className="cursor-pointer text-[10px] text-indigo-600 hover:underline ml-auto"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-
-                                                  setActiveDrug(
-                                                    (prev: any) => ({
-                                                      ...prev,
-                                                      ndc: ndc.ndc,
-                                                    }),
-                                                  );
-
-                                                  setActiveSidebar("drug");
-                                                  setOpenDrugSidebar(true);
-                                                }}
-                                              >
-                                                Community ↗
-                                              </button>
-                                            </div>
-                                          </td>
-                                          <td
-                                            style={{
-                                              padding: "7px 10px",
-                                              fontSize: 12,
-                                              textAlign: "right",
-                                            }}
-                                          >
-                                            <span className="tabular-nums text-slate-600">
-                                              {Number(
-                                                ndc.avg_qty_per_rx ?? 0,
-                                              ).toFixed(0)}
-                                            </span>
-                                          </td>
-                                          <td
-                                            style={{
-                                              padding: "7px 10px",
-                                              fontSize: 12,
-                                              textAlign: "right",
-                                              background:
-                                                "rgba(240,253,250,0.4)",
-                                            }}
-                                          >
-                                            <span className="tabular-nums text-slate-600">
-                                              {ndc.avg_copay_per_rx != null
-                                                ? `$${Number(ndc.avg_copay_per_rx).toFixed(2)}`
-                                                : "—"}
-                                            </span>
-                                          </td>
-                                          <td
-                                            style={{
-                                              padding: "7px 10px",
-                                              fontSize: 12,
-                                              textAlign: "right",
-                                              background:
-                                                "rgba(240,253,250,0.4)",
-                                            }}
-                                          >
-                                            <span className="tabular-nums text-slate-700">
-                                              $
-                                              {Number(
-                                                ndc.avg_ins_paid_per_rx ?? 0,
-                                              ).toFixed(2)}
-                                            </span>
-                                          </td>
-                                          <td
-                                            style={{
-                                              padding: "7px 10px",
-                                              fontSize: 12,
-                                              textAlign: "right",
-                                              background:
-                                                "rgba(240,253,250,0.4)",
-                                            }}
-                                          >
-                                            <span className="tabular-nums text-slate-600">
-                                              $
-                                              {Number(
-                                                ndc.avg_ins_paid_per_unit ?? 0,
-                                              ).toFixed(2)}
-                                            </span>
-                                          </td>
-                                          <td
-                                            style={{
-                                              padding: "7px 10px",
-                                              fontSize: 12,
-                                              textAlign: "right",
-                                              background:
-                                                "rgba(236,254,255,0.4)",
-                                            }}
-                                          >
-                                            <span className="tabular-nums font-semibold text-cyan-700">
-                                              {Number(
-                                                ndc.rx_count ?? 0,
-                                              ).toLocaleString()}
-                                            </span>
-                                          </td>
-                                        </tr>
-                                      ))}
-                                  </React.Fragment>
-                                );
-                              })}
-                            </tbody>
-                            {drugLookupAgg && (
-                              <tfoot>
-                                <tr
-                                  style={{
-                                    background: "#f1f5f9",
-                                    borderTop: "2px solid #cbd5e1",
-                                  }}
-                                >
-                                  <td
-                                    style={{
-                                      padding: "10px 10px",
-                                      fontSize: 11,
-                                      fontWeight: 700,
-                                      color: "#475569",
-                                      textTransform: "uppercase",
-                                      letterSpacing: "0.05em",
-                                    }}
-                                  >
-                                    Totals / Weighted Avg
-                                  </td>
-                                  <td
-                                    style={{
-                                      padding: "10px 10px",
-                                      fontSize: 12,
-                                      textAlign: "right",
-                                    }}
-                                  >
-                                    <span className="tabular-nums font-bold text-slate-800">
-                                      {Number(
-                                        drugLookupAgg.weightedAvgQty,
-                                      ).toFixed(0)}
-                                    </span>
-                                  </td>
-                                  <td
-                                    style={{
-                                      padding: "10px 10px",
-                                      fontSize: 12,
-                                      textAlign: "right",
-                                    }}
-                                  >
-                                    <span className="tabular-nums text-slate-400">
-                                      —
-                                    </span>
-                                  </td>
-                                  <td
-                                    style={{
-                                      padding: "10px 10px",
-                                      fontSize: 12,
-                                      textAlign: "right",
-                                    }}
-                                  >
-                                    <span className="tabular-nums font-bold text-slate-800">
-                                      $
-                                      {Number(
-                                        drugLookupAgg.weightedAvgInsPerRx,
-                                      ).toFixed(2)}
-                                    </span>
-                                  </td>
-                                  <td
-                                    style={{
-                                      padding: "10px 10px",
-                                      fontSize: 12,
-                                      textAlign: "right",
-                                    }}
-                                  >
-                                    <span className="tabular-nums font-bold text-emerald-700">
-                                      $
-                                      {Number(
-                                        drugLookupAgg.weightedAvgPerUnit,
-                                      ).toFixed(2)}
-                                    </span>
-                                  </td>
-                                  <td
-                                    style={{
-                                      padding: "10px 10px",
-                                      fontSize: 12,
-                                      textAlign: "right",
-                                    }}
-                                  >
-                                    <span className="tabular-nums font-extrabold text-cyan-800">
-                                      {Number(
-                                        drugLookupAgg.totalRxs,
-                                      ).toLocaleString()}
-                                    </span>
-                                  </td>
-                                </tr>
-                              </tfoot>
-                            )}
-                          </table>
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Clicked from
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-700 truncate max-w-[220px]">
+                            {activeDrug.drugName}
+                          </span>
+                        </div>
                       </div>
 
-                      {/* Insights Cards */}
-                      {drugLookupAgg &&
-                        drugLookup &&
-                        drugLookup.drugs &&
-                        drugLookup.drugs.length > 1 && (
-                          <div>
-                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">
-                              Insights
+                      {/* KPI Cards */}
+                      <div className="px-5 py-4 bg-white border-b border-slate-200 flex-shrink-0">
+                        <div className="grid grid-cols-4 gap-2.5">
+                          <div
+                            className="rounded-xl p-3 border border-slate-200"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+                            }}
+                          >
+                            <p
+                              className="text-[9px] font-bold uppercase tracking-widest mb-1"
+                              style={{ color: "#b45309" }}
+                            >
+                              Variants
+                            </p>
+                            <p
+                              className="text-[15px] font-extrabold tabular-nums"
+                              style={{ color: "#b45309" }}
+                            >
+                              {drugLookup?.drugs?.length ?? 0}
+                            </p>
+                          </div>
+                          <div
+                            className="rounded-xl p-3 border border-slate-200"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)",
+                            }}
+                          >
+                            <p
+                              className="text-[9px] font-bold uppercase tracking-widest mb-1"
+                              style={{ color: "#1d4ed8" }}
+                            >
+                              Total Rx
+                            </p>
+                            <p
+                              className="text-[15px] font-extrabold tabular-nums"
+                              style={{ color: "#1d4ed8" }}
+                            >
+                              {drugLookupAgg
+                                ? Number(drugLookupAgg.totalRxs).toLocaleString()
+                                : "—"}
+                            </p>
+                          </div>
+                          <div
+                            className="rounded-xl p-3 border border-slate-200"
+                            style={{ background: "#f0fdf4" }}
+                          >
+                            <p
+                              className="text-[9px] font-bold uppercase tracking-widest mb-1"
+                              style={{ color: "#16a34a" }}
+                            >
+                              Total Ins Paid
+                            </p>
+                            <p
+                              className="text-[15px] font-extrabold tabular-nums"
+                              style={{ color: "#16a34a" }}
+                            >
+                              {drugLookupAgg
+                                ? `$${Number(
+                                    drugLookupAgg.totalInsPaid,
+                                  ).toLocaleString("en-US", {
+                                    minimumFractionDigits: 0,
+                                    maximumFractionDigits: 0,
+                                  })}`
+                                : "—"}
+                            </p>
+                          </div>
+                          <div
+                            className="rounded-xl p-3 border border-slate-200"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)",
+                            }}
+                          >
+                            <p
+                              className="text-[9px] font-bold uppercase tracking-widest mb-1"
+                              style={{ color: "#6d28d9" }}
+                            >
+                              Avg / Unit
+                            </p>
+                            <p
+                              className="text-[15px] font-extrabold tabular-nums"
+                              style={{ color: "#6d28d9" }}
+                            >
+                              {drugLookupAgg
+                                ? `$${Number(drugLookupAgg.weightedAvgPerUnit).toFixed(2)}`
+                                : "—"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Body: scrollable stack */}
+                      <div className="flex-1 overflow-auto px-5 py-4 space-y-4">
+                        {/* Table Card */}
+                        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                          <div className="px-4 py-2.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+                            <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-widest">
+                              Medications
                             </h3>
-                            <div className="grid grid-cols-3 gap-2.5">
-                              <div className="bg-white border border-slate-200 rounded-xl p-3.5">
-                                <div className="flex items-center gap-1.5 mb-1.5">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 shrink-0" />
-                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                    Most Prescribed
-                                  </p>
-                                </div>
-                                <p
-                                  className="text-[12px] font-bold text-slate-900 truncate mb-0.5"
-                                  title={
-                                    drugLookupAgg.mostPrescribed?.drug_name ??
-                                    ""
-                                  }
-                                >
-                                  {drugLookupAgg.mostPrescribed?.drug_name ??
-                                    "—"}
-                                </p>
-                                <p className="text-[11px] text-slate-500 tabular-nums">
-                                  {Number(
-                                    drugLookupAgg.mostPrescribed?.rx_count ?? 0,
-                                  ).toLocaleString()}{" "}
-                                  prescriptions
-                                </p>
+                            <span className="text-[10px] text-slate-400">
+                              Click a row to expand NDC breakdown
+                            </span>
+                          </div>
+
+                          {drugLookupLoading ? (
+                            <div className="flex items-center justify-center h-48 gap-3">
+                              <div className="h-5 w-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+                              <span className="text-sm text-slate-400 font-medium">
+                                Loading drug data…
+                              </span>
+                            </div>
+                          ) : !drugLookup ||
+                            !drugLookup.drugs ||
+                            drugLookup.drugs.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-48 gap-2">
+                              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-1">
+                                <Search className="w-4 h-4 text-slate-400" />
                               </div>
-                              <div className="bg-white border border-slate-200 rounded-xl p-3.5">
-                                <div className="flex items-center gap-1.5 mb-1.5">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
-                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                    Highest $/Unit
+                              <p className="text-sm font-semibold text-slate-500">
+                                No drugs found for this ingredient
+                              </p>
+                            </div>
+                          ) : (
+                            <table
+                              style={{
+                                borderCollapse: "collapse",
+                                width: "100%",
+                                tableLayout: "fixed",
+                              }}
+                            >
+                              <colgroup>
+                                <col style={{ width: "30%" }} />
+                                <col style={{ width: "12%" }} />
+                                <col style={{ width: "13%" }} />
+                                <col style={{ width: "15%" }} />
+                                <col style={{ width: "15%" }} />
+                                <col style={{ width: "15%" }} />
+                              </colgroup>
+                              <thead>
+                                <tr style={{ background: "#1e293b" }}>
+                                  {[
+                                    {
+                                      key: "drug_name",
+                                      line1: "Medications",
+                                      line2: "",
+                                      align: "left" as const,
+                                    },
+                                    {
+                                      key: "avg_qty_per_rx",
+                                      line1: "Avg Qty",
+                                      line2: "per Rx",
+                                      align: "right" as const,
+                                    },
+                                    {
+                                      key: "avg_copay_per_rx",
+                                      line1: "Avg CoPay",
+                                      line2: "per Rx",
+                                      align: "right" as const,
+                                    },
+                                    {
+                                      key: "avg_ins_paid_per_rx",
+                                      line1: "Avg Ins Paid",
+                                      line2: "per Rx",
+                                      align: "right" as const,
+                                    },
+                                    {
+                                      key: "avg_ins_paid_per_unit",
+                                      line1: "Avg Ins Paid",
+                                      line2: "per Unit",
+                                      align: "right" as const,
+                                    },
+                                    {
+                                      key: "rx_count",
+                                      line1: "Rx Count",
+                                      line2: "",
+                                      align: "right" as const,
+                                    },
+                                  ].map((h, i) => {
+                                    const dir =
+                                      lookupSort && lookupSort.key === h.key
+                                        ? lookupSort.dir
+                                        : undefined;
+                                    return (
+                                      <th
+                                        key={i}
+                                        onClick={() =>
+                                          cycleDrawerSort(setLookupSort, h.key)
+                                        }
+                                        style={{
+                                          padding: "8px 10px",
+                                          textAlign: h.align,
+                                          fontSize: 10,
+                                          fontWeight: 700,
+                                          color: "#fff",
+                                          letterSpacing: "0.05em",
+                                          textTransform: "uppercase",
+                                          lineHeight: 1.3,
+                                          cursor: "pointer",
+                                          userSelect: "none",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: 4,
+                                          }}
+                                        >
+                                          <span>
+                                            <div>{h.line1}</div>
+                                            {h.line2 && (
+                                              <div
+                                                style={{
+                                                  color: "#94a3b8",
+                                                  fontWeight: 500,
+                                                  fontSize: 9,
+                                                }}
+                                              >
+                                                {h.line2}
+                                              </div>
+                                            )}
+                                          </span>
+                                          <span
+                                            style={{
+                                              marginLeft: 4,
+                                              fontSize: 9,
+                                              color: dir ? "#fff" : "#64748b",
+                                              display: "inline-block",
+                                              lineHeight: 1,
+                                              userSelect: "none",
+                                            }}
+                                          >
+                                            {dir === "asc"
+                                              ? "▲"
+                                              : dir === "desc"
+                                                ? "▼"
+                                                : "↕"}
+                                          </span>
+                                        </div>
+                                      </th>
+                                    );
+                                  })}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {applyDrawerSort(drugLookup.drugs, lookupSort, {
+                                  drug_name: (d: DrugLookupDrug) =>
+                                    d.drug_name ?? "",
+                                  avg_qty_per_rx: (d: DrugLookupDrug) =>
+                                    Number(d.avg_qty_per_rx ?? 0),
+                                  avg_copay_per_rx: (d: DrugLookupDrug) =>
+                                    d.avg_copay_per_rx == null
+                                      ? null
+                                      : Number(d.avg_copay_per_rx),
+                                  avg_ins_paid_per_rx: (d: DrugLookupDrug) =>
+                                    Number(d.avg_ins_paid_per_rx ?? 0),
+                                  avg_ins_paid_per_unit: (d: DrugLookupDrug) =>
+                                    Number(d.avg_ins_paid_per_unit ?? 0),
+                                  rx_count: (d: DrugLookupDrug) =>
+                                    Number(d.rx_count ?? 0),
+                                }).map((drug, di) => {
+                                  const isExpanded =
+                                    expandedLookupDrug === drug.drug_name;
+                                  return (
+                                    <React.Fragment key={drug.drug_name}>
+                                      <tr
+                                        style={{
+                                          borderBottom: "1px solid #e2e8f0",
+                                          background: isExpanded
+                                            ? "#eef2ff"
+                                            : di % 2 === 1
+                                              ? "#f8fafc"
+                                              : "#fff",
+                                          cursor: "pointer",
+                                        }}
+                                        onClick={() =>
+                                          setExpandedLookupDrug(
+                                            isExpanded ? null : drug.drug_name,
+                                          )
+                                        }
+                                        className="hover:bg-indigo-50/60 transition-colors"
+                                      >
+                                        <td
+                                          style={{
+                                            padding: "9px 10px",
+                                            fontSize: 12,
+                                          }}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <ChevronDown
+                                              className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${isExpanded ? "" : "-rotate-90"}`}
+                                            />
+                                            <span className="text-slate-400 tabular-nums text-[11px] shrink-0">
+                                              {di + 1}.
+                                            </span>
+                                            <span className="font-semibold text-slate-800 truncate">
+                                              {drug.drug_name}
+                                            </span>
+                                            {brandPill(drug.brand)}
+                                          </div>
+                                        </td>
+                                        <td
+                                          style={{
+                                            padding: "9px 10px",
+                                            fontSize: 12,
+                                            textAlign: "right",
+                                          }}
+                                        >
+                                          <span className="tabular-nums text-slate-700">
+                                            {Number(
+                                              drug.avg_qty_per_rx ?? 0,
+                                            ).toFixed(0)}
+                                          </span>
+                                        </td>
+                                        <td
+                                          style={{
+                                            padding: "9px 10px",
+                                            fontSize: 12,
+                                            textAlign: "right",
+                                            background: "rgba(240,253,250,0.6)",
+                                          }}
+                                        >
+                                          <span className="tabular-nums text-slate-700">
+                                            {drug.avg_copay_per_rx != null
+                                              ? `$${Number(drug.avg_copay_per_rx).toFixed(2)}`
+                                              : "—"}
+                                          </span>
+                                        </td>
+                                        <td
+                                          style={{
+                                            padding: "9px 10px",
+                                            fontSize: 12,
+                                            textAlign: "right",
+                                            background: "rgba(240,253,250,0.6)",
+                                          }}
+                                        >
+                                          <span className="tabular-nums font-semibold text-slate-800">
+                                            $
+                                            {Number(
+                                              drug.avg_ins_paid_per_rx ?? 0,
+                                            ).toFixed(2)}
+                                          </span>
+                                        </td>
+                                        <td
+                                          style={{
+                                            padding: "9px 10px",
+                                            fontSize: 12,
+                                            textAlign: "right",
+                                            background: "rgba(240,253,250,0.6)",
+                                          }}
+                                        >
+                                          <span className="tabular-nums text-slate-700">
+                                            $
+                                            {Number(
+                                              drug.avg_ins_paid_per_unit ?? 0,
+                                            ).toFixed(2)}
+                                          </span>
+                                        </td>
+                                        <td
+                                          style={{
+                                            padding: "9px 10px",
+                                            fontSize: 12,
+                                            textAlign: "right",
+                                            background: "rgba(236,254,255,0.6)",
+                                          }}
+                                        >
+                                          <span className="tabular-nums font-bold text-cyan-800">
+                                            {Number(
+                                              drug.rx_count ?? 0,
+                                            ).toLocaleString()}
+                                          </span>
+                                        </td>
+                                      </tr>
+
+                                      {isExpanded &&
+                                        drug.ndcs &&
+                                        drug.ndcs.map((ndc, ni) => (
+                                          <tr
+                                            key={ndc.ndc}
+                                            style={{
+                                              borderBottom: "1px solid #f1f5f9",
+                                              background:
+                                                ni % 2 === 1 ? "#f8fafc" : "#fff",
+                                            }}
+                                            className="hover:bg-indigo-50/40 transition-colors"
+                                          >
+                                            <td
+                                              style={{
+                                                padding: "7px 10px 7px 36px",
+                                                fontSize: 12,
+                                              }}
+                                            >
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-indigo-400 text-sm leading-none shrink-0">
+                                                  ◦
+                                                </span>
+                                                <span className="font-mono text-[11px] text-slate-600 tabular-nums">
+                                                  {ndc.ndc}
+                                                </span>
+                                                {brandPill(ndc.brand)}
+                                                <button
+                                                  className="cursor-pointer text-[10px] text-indigo-600 hover:underline ml-auto"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+
+                                                    setActiveDrug(
+                                                      (prev: any) => ({
+                                                        ...prev,
+                                                        ndc: ndc.ndc,
+                                                      }),
+                                                    );
+
+                                                    setActiveSidebar("drug");
+                                                    setOpenDrugSidebar(true);
+                                                  }}
+                                                >
+                                                  Community ↗
+                                                </button>
+                                              </div>
+                                            </td>
+                                            <td
+                                              style={{
+                                                padding: "7px 10px",
+                                                fontSize: 12,
+                                                textAlign: "right",
+                                              }}
+                                            >
+                                              <span className="tabular-nums text-slate-600">
+                                                {Number(
+                                                  ndc.avg_qty_per_rx ?? 0,
+                                                ).toFixed(0)}
+                                              </span>
+                                            </td>
+                                            <td
+                                              style={{
+                                                padding: "7px 10px",
+                                                fontSize: 12,
+                                                textAlign: "right",
+                                                background:
+                                                  "rgba(240,253,250,0.4)",
+                                              }}
+                                            >
+                                              <span className="tabular-nums text-slate-600">
+                                                {ndc.avg_copay_per_rx != null
+                                                  ? `$${Number(ndc.avg_copay_per_rx).toFixed(2)}`
+                                                  : "—"}
+                                              </span>
+                                            </td>
+                                            <td
+                                              style={{
+                                                padding: "7px 10px",
+                                                fontSize: 12,
+                                                textAlign: "right",
+                                                background:
+                                                  "rgba(240,253,250,0.4)",
+                                              }}
+                                            >
+                                              <span className="tabular-nums text-slate-700">
+                                                $
+                                                {Number(
+                                                  ndc.avg_ins_paid_per_rx ?? 0,
+                                                ).toFixed(2)}
+                                              </span>
+                                            </td>
+                                            <td
+                                              style={{
+                                                padding: "7px 10px",
+                                                fontSize: 12,
+                                                textAlign: "right",
+                                                background:
+                                                  "rgba(240,253,250,0.4)",
+                                              }}
+                                            >
+                                              <span className="tabular-nums text-slate-600">
+                                                $
+                                                {Number(
+                                                  ndc.avg_ins_paid_per_unit ?? 0,
+                                                ).toFixed(2)}
+                                              </span>
+                                            </td>
+                                            <td
+                                              style={{
+                                                padding: "7px 10px",
+                                                fontSize: 12,
+                                                textAlign: "right",
+                                                background:
+                                                  "rgba(236,254,255,0.4)",
+                                              }}
+                                            >
+                                              <span className="tabular-nums font-semibold text-cyan-700">
+                                                {Number(
+                                                  ndc.rx_count ?? 0,
+                                                ).toLocaleString()}
+                                              </span>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                    </React.Fragment>
+                                  );
+                                })}
+                              </tbody>
+                              {drugLookupAgg && (
+                                <tfoot>
+                                  <tr
+                                    style={{
+                                      background: "#f1f5f9",
+                                      borderTop: "2px solid #cbd5e1",
+                                    }}
+                                  >
+                                    <td
+                                      style={{
+                                        padding: "10px 10px",
+                                        fontSize: 11,
+                                        fontWeight: 700,
+                                        color: "#475569",
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.05em",
+                                      }}
+                                    >
+                                      Totals / Weighted Avg
+                                    </td>
+                                    <td
+                                      style={{
+                                        padding: "10px 10px",
+                                        fontSize: 12,
+                                        textAlign: "right",
+                                      }}
+                                    >
+                                      <span className="tabular-nums font-bold text-slate-800">
+                                        {Number(
+                                          drugLookupAgg.weightedAvgQty,
+                                        ).toFixed(0)}
+                                      </span>
+                                    </td>
+                                    <td
+                                      style={{
+                                        padding: "10px 10px",
+                                        fontSize: 12,
+                                        textAlign: "right",
+                                      }}
+                                    >
+                                      <span className="tabular-nums text-slate-400">
+                                        —
+                                      </span>
+                                    </td>
+                                    <td
+                                      style={{
+                                        padding: "10px 10px",
+                                        fontSize: 12,
+                                        textAlign: "right",
+                                      }}
+                                    >
+                                      <span className="tabular-nums font-bold text-slate-800">
+                                        $
+                                        {Number(
+                                          drugLookupAgg.weightedAvgInsPerRx,
+                                        ).toFixed(2)}
+                                      </span>
+                                    </td>
+                                    <td
+                                      style={{
+                                        padding: "10px 10px",
+                                        fontSize: 12,
+                                        textAlign: "right",
+                                      }}
+                                    >
+                                      <span className="tabular-nums font-bold text-emerald-700">
+                                        $
+                                        {Number(
+                                          drugLookupAgg.weightedAvgPerUnit,
+                                        ).toFixed(2)}
+                                      </span>
+                                    </td>
+                                    <td
+                                      style={{
+                                        padding: "10px 10px",
+                                        fontSize: 12,
+                                        textAlign: "right",
+                                      }}
+                                    >
+                                      <span className="tabular-nums font-extrabold text-cyan-800">
+                                        {Number(
+                                          drugLookupAgg.totalRxs,
+                                        ).toLocaleString()}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                </tfoot>
+                              )}
+                            </table>
+                          )}
+                        </div>
+
+                        {/* Insights Cards */}
+                        {drugLookupAgg &&
+                          drugLookup &&
+                          drugLookup.drugs &&
+                          drugLookup.drugs.length > 1 && (
+                            <div>
+                              <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">
+                                Insights
+                              </h3>
+                              <div className="grid grid-cols-3 gap-2.5">
+                                <div className="bg-white border border-slate-200 rounded-xl p-3.5">
+                                  <div className="flex items-center gap-1.5 mb-1.5">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 shrink-0" />
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                      Most Prescribed
+                                    </p>
+                                  </div>
+                                  <p
+                                    className="text-[12px] font-bold text-slate-900 truncate mb-0.5"
+                                    title={
+                                      drugLookupAgg.mostPrescribed?.drug_name ??
+                                      ""
+                                    }
+                                  >
+                                    {drugLookupAgg.mostPrescribed?.drug_name ??
+                                      "—"}
+                                  </p>
+                                  <p className="text-[11px] text-slate-500 tabular-nums">
+                                    {Number(
+                                      drugLookupAgg.mostPrescribed?.rx_count ?? 0,
+                                    ).toLocaleString()}{" "}
+                                    prescriptions
                                   </p>
                                 </div>
-                                <p
-                                  className="text-[12px] font-bold text-slate-900 truncate mb-0.5"
-                                  title={
-                                    drugLookupAgg.highestUnit?.drug_name ?? ""
-                                  }
-                                >
-                                  {drugLookupAgg.highestUnit?.drug_name ?? "—"}
-                                </p>
-                                <p className="text-[11px] text-red-600 tabular-nums font-semibold">
-                                  $
-                                  {Number(
-                                    drugLookupAgg.highestUnit
-                                      ?.avg_ins_paid_per_unit ?? 0,
-                                  ).toFixed(2)}{" "}
-                                  / unit
-                                </p>
-                              </div>
-                              <div className="bg-white border border-slate-200 rounded-xl p-3.5">
-                                <div className="flex items-center gap-1.5 mb-1.5">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                    Lowest $/Unit
+                                <div className="bg-white border border-slate-200 rounded-xl p-3.5">
+                                  <div className="flex items-center gap-1.5 mb-1.5">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                      Highest $/Unit
+                                    </p>
+                                  </div>
+                                  <p
+                                    className="text-[12px] font-bold text-slate-900 truncate mb-0.5"
+                                    title={
+                                      drugLookupAgg.highestUnit?.drug_name ?? ""
+                                    }
+                                  >
+                                    {drugLookupAgg.highestUnit?.drug_name ?? "—"}
+                                  </p>
+                                  <p className="text-[11px] text-red-600 tabular-nums font-semibold">
+                                    $
+                                    {Number(
+                                      drugLookupAgg.highestUnit
+                                        ?.avg_ins_paid_per_unit ?? 0,
+                                    ).toFixed(2)}{" "}
+                                    / unit
                                   </p>
                                 </div>
-                                <p
-                                  className="text-[12px] font-bold text-slate-900 truncate mb-0.5"
-                                  title={
-                                    drugLookupAgg.lowestUnit?.drug_name ?? ""
-                                  }
-                                >
-                                  {drugLookupAgg.lowestUnit?.drug_name ?? "—"}
-                                </p>
-                                <p className="text-[11px] text-emerald-600 tabular-nums font-semibold">
-                                  $
-                                  {Number(
-                                    drugLookupAgg.lowestUnit
-                                      ?.avg_ins_paid_per_unit ?? 0,
-                                  ).toFixed(2)}{" "}
-                                  / unit
-                                </p>
+                                <div className="bg-white border border-slate-200 rounded-xl p-3.5">
+                                  <div className="flex items-center gap-1.5 mb-1.5">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                      Lowest $/Unit
+                                    </p>
+                                  </div>
+                                  <p
+                                    className="text-[12px] font-bold text-slate-900 truncate mb-0.5"
+                                    title={
+                                      drugLookupAgg.lowestUnit?.drug_name ?? ""
+                                    }
+                                  >
+                                    {drugLookupAgg.lowestUnit?.drug_name ?? "—"}
+                                  </p>
+                                  <p className="text-[11px] text-emerald-600 tabular-nums font-semibold">
+                                    $
+                                    {Number(
+                                      drugLookupAgg.lowestUnit
+                                        ?.avg_ins_paid_per_unit ?? 0,
+                                    ).toFixed(2)}{" "}
+                                    / unit
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
+                          )}
+                      </div>
                     </div>
                   </div>
                 </>

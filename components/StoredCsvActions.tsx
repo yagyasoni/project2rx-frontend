@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
+import api, { PLAN_REFUSAL_TEXT, SUBSCRIPTION_REQUIRED_MESSAGE } from "@/lib/api";
 import { toast } from "sonner";
 import {
   AlertTriangle,
@@ -91,6 +92,14 @@ async function describeError(
     }
   }
 
+  // Blob responses skip the api client's rewrite, so recognise the plan
+  // refusal here too and show the same professional message.
+  if (
+    status === 403 &&
+    (message === PLAN_REFUSAL_TEXT || message === SUBSCRIPTION_REQUIRED_MESSAGE)
+  ) {
+    return { message: SUBSCRIPTION_REQUIRED_MESSAGE, missing: false };
+  }
   if (code === "FILE_MISSING" || code === "NOT_FOUND") {
     return { message: MISSING_MESSAGE, missing: true };
   }
@@ -126,7 +135,7 @@ export default function StoredCsvActions({
       setPreview({ status: "loading" });
       try {
         // axios joins with "?" or "&" as needed, so contentUrl may already have a query.
-        const res = await axios.get<PreviewData>(contentUrl, {
+        const res = await api.get<PreviewData>(contentUrl, {
           params: { mode: "preview" },
         });
         if (isCancelled?.()) return;
@@ -157,7 +166,7 @@ export default function StoredCsvActions({
     if (downloading) return;
     setDownloading(true);
     try {
-      const res = await axios.get(contentUrl, { responseType: "blob" });
+      const res = await api.get(contentUrl, { responseType: "blob" });
       const blob =
         res.data instanceof Blob
           ? res.data

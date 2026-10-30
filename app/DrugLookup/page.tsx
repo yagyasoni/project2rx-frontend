@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { lockGuardProps } from "@/lib/lockGuard";
 import { useRouter } from "next/navigation";
 import AppSidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import api from "@/lib/api";
+import { authFetch } from "@/lib/authFetch";
 import { trackEvent } from "@/lib/gtm";
 
 // ─── NDC helpers ─────────────────────────────────────────────────────────
@@ -144,7 +146,7 @@ export default function DrugLookupLandingPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-lookup-landing`,
         );
         if (!res.ok) throw new Error("Failed");
@@ -176,7 +178,7 @@ export default function DrugLookupLandingPage() {
           `?q=${encodeURIComponent(searchTerm)}` +
           (ndcMode ? "&type=ndc" : "&type=name");
 
-        const res = await fetch(url);
+        const res = await authFetch(url);
         if (!res.ok) throw new Error("Search failed");
         const data: { name: string; ndc?: string; rx_count: number }[] =
           await res.json();
@@ -260,6 +262,8 @@ export default function DrugLookupLandingPage() {
     localStorage.removeItem("drugLookup_recentSearches");
   };
 
+  const locked = subscriptionLoaded && !subscription?.drug_lookup_access;
+
   return (
     <ProtectedRoute role="user">
       <div className="relative w-full bg-white h-screen overflow-hidden">
@@ -321,216 +325,218 @@ export default function DrugLookupLandingPage() {
                   </div>
                 </div>
               )}
-              {/* Decorative layers */}
-              <div
-                className="absolute inset-0 opacity-20 pointer-events-none"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 20% 30%, rgba(94, 234, 212, 0.35) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(129, 140, 248, 0.25) 0%, transparent 45%)",
-                }}
-              />
-              <div
-                className="absolute inset-0 opacity-[0.07] pointer-events-none"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(rgba(255,255,255,.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.4) 1px, transparent 1px)",
-                  backgroundSize: "48px 48px",
-                }}
-              />
+              <div className="contents" inert={locked} {...lockGuardProps(locked)}>
+                {/* Decorative layers */}
+                <div
+                  className="absolute inset-0 opacity-20 pointer-events-none"
+                  style={{
+                    backgroundImage:
+                      "radial-gradient(circle at 20% 30%, rgba(94, 234, 212, 0.35) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(129, 140, 248, 0.25) 0%, transparent 45%)",
+                  }}
+                />
+                <div
+                  className="absolute inset-0 opacity-[0.07] pointer-events-none"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(rgba(255,255,255,.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.4) 1px, transparent 1px)",
+                    backgroundSize: "48px 48px",
+                  }}
+                />
 
-              {/* Centered content */}
-              <div className="relative flex-1 flex items-center justify-center px-8">
-                <div className="w-full max-w-6xl">
-                  {/* Breadcrumb / label */}
-                  <div className="flex items-center justify-center gap-2 mb-5">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-[11px] font-semibold text-teal-100 uppercase tracking-widest">
-                      <Pill className="w-3 h-3" />
-                      Drug Lookup
-                    </span>
-                  </div>
-
-                  {/* Headline */}
-                  <h1 className="text-center text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight mb-3">
-                    What do you want to search today?
-                  </h1>
-                  <p className="text-center text-teal-100/80 text-sm md:text-base max-w-2xl mx-auto mb-10 leading-relaxed">
-                    AuditProRx Community-powered drug intelligence. Search the
-                    AuditProRx network for drug variants, NDC codes, payer
-                    performance, and unit pricing all in one place.
-                  </p>
-
-                  {/* Search bar */}
-                  <div className="relative max-w-3xl mx-auto" ref={searchRef}>
-                    <div
-                      className={`relative flex items-center bg-white rounded-full shadow-2xl transition-all duration-200 ${
-                        focused
-                          ? "ring-4 ring-teal-300/40 shadow-teal-500/20"
-                          : ""
-                      }`}
-                    >
-                      <Search className="absolute left-6 h-5 w-5 text-slate-400 pointer-events-none" />
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        onFocus={() => setFocused(true)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") submit(query);
-                          if (e.key === "Escape") {
-                            setFocused(false);
-                            inputRef.current?.blur();
-                          }
-                        }}
-                        placeholder="Type drug name or NDC (e.g. Eliquis or 73352-0086-60)..."
-                        className="flex-1 h-16 pl-16 pr-4 bg-transparent text-[15px] text-slate-800 placeholder:text-slate-400 focus:outline-none"
-                      />
-
-                      {query && (
-                        <button
-                          onClick={() => {
-                            setQuery("");
-                            inputRef.current?.focus();
-                          }}
-                          className="mr-2 h-9 w-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                          title="Clear"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => submit(query)}
-                        disabled={!query.trim()}
-                        className="mr-2 h-12 px-6 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold transition-all shadow-lg shadow-teal-500/30 flex items-center gap-2"
-                      >
-                        Search
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
+                {/* Centered content */}
+                <div className="relative flex-1 flex items-center justify-center px-8">
+                  <div className="w-full max-w-6xl">
+                    {/* Breadcrumb / label */}
+                    <div className="flex items-center justify-center gap-2 mb-5">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-[11px] font-semibold text-teal-100 uppercase tracking-widest">
+                        <Pill className="w-3 h-3" />
+                        Drug Lookup
+                      </span>
                     </div>
 
-                    {/* Autocomplete dropdown */}
-                    {focused &&
-                      (suggestions.length > 0 || recentSearches.length > 0) && (
-                        <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50">
-                          {suggestions.length > 0 && (
-                            <div className="py-2">
-                              <p className="px-4 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                <Sparkles className="w-3 h-3" />
-                                Suggestions
-                              </p>
-                              <div className="max-h-[min(15rem,calc(100vh-17rem))] overflow-y-auto">
-                                {suggestions.map((s) => (
-                                  <button
-                                    key={s}
-                                    onClick={() => fillSearch(s)}
-                                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-teal-50/70 text-left group transition-colors"
-                                  >
-                                    <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-teal-600" />
-                                    <span className="text-sm text-slate-700 group-hover:text-teal-800 font-medium">
-                                      {s}
-                                    </span>
-                                    <ArrowRight className="w-3.5 h-3.5 text-slate-300 ml-auto group-hover:text-teal-500 group-hover:translate-x-0.5 transition-transform" />
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
+                    {/* Headline */}
+                    <h1 className="text-center text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight mb-3">
+                      What do you want to search today?
+                    </h1>
+                    <p className="text-center text-teal-100/80 text-sm md:text-base max-w-2xl mx-auto mb-10 leading-relaxed">
+                      AuditProRx Community-powered drug intelligence. Search the
+                      AuditProRx network for drug variants, NDC codes, payer
+                      performance, and unit pricing all in one place.
+                    </p>
 
-                          {suggestions.length === 0 &&
-                            recentSearches.length > 0 && (
+                    {/* Search bar */}
+                    <div className="relative max-w-3xl mx-auto" ref={searchRef}>
+                      <div
+                        className={`relative flex items-center bg-white rounded-full shadow-2xl transition-all duration-200 ${
+                          focused
+                            ? "ring-4 ring-teal-300/40 shadow-teal-500/20"
+                            : ""
+                        }`}
+                      >
+                        <Search className="absolute left-6 h-5 w-5 text-slate-400 pointer-events-none" />
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={query}
+                          onChange={(e) => setQuery(e.target.value)}
+                          onFocus={() => setFocused(true)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") submit(query);
+                            if (e.key === "Escape") {
+                              setFocused(false);
+                              inputRef.current?.blur();
+                            }
+                          }}
+                          placeholder="Type drug name or NDC (e.g. Eliquis or 73352-0086-60)..."
+                          className="flex-1 h-16 pl-16 pr-4 bg-transparent text-[15px] text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                        />
+
+                        {query && (
+                          <button
+                            onClick={() => {
+                              setQuery("");
+                              inputRef.current?.focus();
+                            }}
+                            className="mr-2 h-9 w-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                            title="Clear"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => submit(query)}
+                          disabled={!query.trim()}
+                          className="mr-2 h-12 px-6 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold transition-all shadow-lg shadow-teal-500/30 flex items-center gap-2"
+                        >
+                          Search
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Autocomplete dropdown */}
+                      {focused &&
+                        (suggestions.length > 0 || recentSearches.length > 0) && (
+                          <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50">
+                            {suggestions.length > 0 && (
                               <div className="py-2">
-                                <div className="px-4 py-1.5 flex items-center justify-between">
-                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                    <Clock className="w-3 h-3" />
-                                    Recent Searches
-                                  </p>
-                                  <button
-                                    onClick={clearRecent}
-                                    className="text-[10px] font-semibold text-slate-400 hover:text-red-500"
-                                  >
-                                    Clear
-                                  </button>
-                                </div>
+                                <p className="px-4 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                  <Sparkles className="w-3 h-3" />
+                                  Suggestions
+                                </p>
                                 <div className="max-h-[min(15rem,calc(100vh-17rem))] overflow-y-auto">
-                                  {recentSearches.map((s) => (
+                                  {suggestions.map((s) => (
                                     <button
                                       key={s}
                                       onClick={() => fillSearch(s)}
-                                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-left group transition-colors"
+                                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-teal-50/70 text-left group transition-colors"
                                     >
-                                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                      <span className="text-sm text-slate-700 font-medium">
+                                      <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-teal-600" />
+                                      <span className="text-sm text-slate-700 group-hover:text-teal-800 font-medium">
                                         {s}
                                       </span>
+                                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 ml-auto group-hover:text-teal-500 group-hover:translate-x-0.5 transition-transform" />
                                     </button>
                                   ))}
                                 </div>
                               </div>
                             )}
-                        </div>
-                      )}
-                  </div>
 
-                  {/* Trending searches */}
-                  {/* Trending searches (live from DB) */}
-                  <div className="max-w-3xl mx-auto mt-8">
-                    <div className="flex items-start gap-3 flex-wrap justify-center">
-                      <span className="text-[11px] font-bold text-teal-100/70 uppercase tracking-widest flex items-center gap-1.5 pt-1.5">
-                        <TrendingUp className="w-3 h-3" />
-                        Trending
-                      </span>
-                      <div className="flex items-center gap-2 flex-wrap justify-center">
-                        {(landingData?.trending?.length
-                          ? landingData.trending.map((t) => t.query)
-                          : FALLBACK_TRENDING
-                        ).map((term) => (
-                          <button
-                            key={term}
-                            onClick={() => fillSearch(term)}
-                            className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/40 text-[12px] font-semibold text-white transition-all hover:scale-105"
-                          >
-                            {term}
-                          </button>
-                        ))}
+                            {suggestions.length === 0 &&
+                              recentSearches.length > 0 && (
+                                <div className="py-2">
+                                  <div className="px-4 py-1.5 flex items-center justify-between">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                      <Clock className="w-3 h-3" />
+                                      Recent Searches
+                                    </p>
+                                    <button
+                                      onClick={clearRecent}
+                                      className="text-[10px] font-semibold text-slate-400 hover:text-red-500"
+                                    >
+                                      Clear
+                                    </button>
+                                  </div>
+                                  <div className="max-h-[min(15rem,calc(100vh-17rem))] overflow-y-auto">
+                                    {recentSearches.map((s) => (
+                                      <button
+                                        key={s}
+                                        onClick={() => fillSearch(s)}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-left group transition-colors"
+                                      >
+                                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                        <span className="text-sm text-slate-700 font-medium">
+                                          {s}
+                                        </span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                          </div>
+                        )}
+                    </div>
+
+                    {/* Trending searches */}
+                    {/* Trending searches (live from DB) */}
+                    <div className="max-w-3xl mx-auto mt-8">
+                      <div className="flex items-start gap-3 flex-wrap justify-center">
+                        <span className="text-[11px] font-bold text-teal-100/70 uppercase tracking-widest flex items-center gap-1.5 pt-1.5">
+                          <TrendingUp className="w-3 h-3" />
+                          Trending
+                        </span>
+                        <div className="flex items-center gap-2 flex-wrap justify-center">
+                          {(landingData?.trending?.length
+                            ? landingData.trending.map((t) => t.query)
+                            : FALLBACK_TRENDING
+                          ).map((term) => (
+                            <button
+                              key={term}
+                              onClick={() => fillSearch(term)}
+                              className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/40 text-[12px] font-semibold text-white transition-all hover:scale-105"
+                            >
+                              {term}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Stats strip pinned to bottom of hero */}
-              {/* Stats strip (live from DB) */}
-              <div className="relative border-t border-white/10 bg-white/5 backdrop-blur-sm">
-                <div className="max-w-6xl mx-auto px-8 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {(
-                    [
-                      "drugs_indexed",
-                      "ndc_codes",
-                      "total_prescriptions",
-                      "unique_rx",
-                    ] as const
-                  ).map((key) => {
-                    const meta = STAT_META[key];
-                    const Icon = meta.icon;
-                    const value = landingData?.stats?.[key];
+                {/* Stats strip pinned to bottom of hero */}
+                {/* Stats strip (live from DB) */}
+                <div className="relative border-t border-white/10 bg-white/5 backdrop-blur-sm">
+                  <div className="max-w-6xl mx-auto px-8 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {(
+                      [
+                        "drugs_indexed",
+                        "ndc_codes",
+                        "total_prescriptions",
+                        "unique_rx",
+                      ] as const
+                    ).map((key) => {
+                      const meta = STAT_META[key];
+                      const Icon = meta.icon;
+                      const value = landingData?.stats?.[key];
 
-                    return (
-                      <div key={key} className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-lg bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
-                          <Icon className="w-4 h-4 text-teal-300" />
+                      return (
+                        <div key={key} className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-lg bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                            <Icon className="w-4 h-4 text-teal-300" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-bold text-teal-200/70 uppercase tracking-widest">
+                              {meta.label}
+                            </p>
+                            <p className="text-sm font-extrabold text-white tabular-nums">
+                              {formatStat(value)}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-bold text-teal-200/70 uppercase tracking-widest">
-                            {meta.label}
-                          </p>
-                          <p className="text-sm font-extrabold text-white tabular-nums">
-                            {formatStat(value)}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </section>

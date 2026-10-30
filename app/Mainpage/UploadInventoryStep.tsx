@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import axios from "axios";
+import api, { failureMessage, subscriptionMessage } from "@/lib/api";
 import { toast } from "sonner";
 import StoredCsvActions from "@/components/StoredCsvActions";
 import {
@@ -209,7 +210,7 @@ const UploadInventoryStep = ({
     if (!storedAuditId) return;
     setAuditId(storedAuditId);
     setUploadedKey(readUploadedMarker(storedAuditId, "inventory"));
-    axios
+    api
       .get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${storedAuditId}/inventory-files`,
       )
@@ -523,7 +524,7 @@ const UploadInventoryStep = ({
         excludeUnbilled,
       });
 
-      const res = await axios.post(
+      const res = await api.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/inventory`,
         formData,
       );
@@ -552,7 +553,7 @@ const UploadInventoryStep = ({
         (axios.isAxiosError(err) && err.response?.data?.message) ||
         (err instanceof Error && err.message) ||
         "Please try again.";
-      toast("Upload failed: " + message);
+      toast(subscriptionMessage(err) ?? "Upload failed: " + message);
     }
   };
 
@@ -581,7 +582,7 @@ const UploadInventoryStep = ({
       // mode=raw: the untouched upload. Preview/Download serve the file with
       // the audit's exclusions applied, but a re-process must re-send every
       // row so that un-checking an option brings its rows back.
-      const res = await axios.get(
+      const res = await api.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/inventory-file/content?mode=raw`,
         { responseType: "blob" },
       );
@@ -598,9 +599,12 @@ const UploadInventoryStep = ({
     } catch (err: unknown) {
       const status = axios.isAxiosError(err) ? err.response?.status : undefined;
       toast.error(
-        status === 404
-          ? "The previously uploaded file is no longer on the server. Please upload it again."
-          : "Could not load the previously uploaded file. Please try again, or upload it again.",
+        failureMessage(
+          err,
+          status === 404
+            ? "The previously uploaded file is no longer on the server. Please upload it again."
+            : "Could not load the previously uploaded file. Please try again, or upload it again.",
+        ),
       );
       return;
     } finally {

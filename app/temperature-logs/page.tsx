@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { lockGuardProps } from "@/lib/lockGuard";
 import {
   History,
   Lock,
@@ -14,7 +15,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import axios from "axios";
-import api from "@/lib/api";
+import api, { subscriptionMessage } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -178,12 +179,16 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
     try {
       setHistory(sortLogs(await listLogs()));
     } catch (err) {
-      // 403 means the plan doesn't include this page; the lock screen covers it.
-      if (!axios.isAxiosError(err) || err.response?.status !== 403) console.error(err);
+      // 403 means the plan doesn't include this page; the lock overlay says so,
+      // so no console noise and no toast for it.
+      const forbidden =
+        axios.isAxiosError(err) && err.response?.status === 403;
+      if (!forbidden) console.error(err);
       setHistory((h) => h ?? []);
-      toast.error("Couldn't load saved logs", {
-        action: { label: "Retry", onClick: () => loadLogs() },
-      });
+      if (!forbidden)
+        toast.error("Couldn't load saved logs", {
+          action: { label: "Retry", onClick: () => loadLogs() },
+        });
     }
   };
 
@@ -294,9 +299,10 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
       setTab("history");
     } catch (err) {
       console.error(err);
+      const subMessage = subscriptionMessage(err);
       const firstError = axios.isAxiosError(err) ? err.response?.data?.errors?.[0] : undefined;
-      toast.error("Couldn't save the log", {
-        description: firstError ?? "Please try again.",
+      toast.error(subMessage ?? "Couldn't save the log", {
+        description: subMessage ? undefined : (firstError ?? "Please try again."),
       });
     } finally {
       setSaving(false);
@@ -356,7 +362,10 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
       await deleteLog(log.id);
     } catch (err) {
       console.error(err);
-      toast.error("Couldn't delete the log", { description: "Please try again." });
+      const subMessage = subscriptionMessage(err);
+      toast.error(subMessage ?? "Couldn't delete the log", {
+        description: subMessage ? undefined : "Please try again.",
+      });
       return;
     }
     setHistory((h) => removeLog(h ?? [], log.id));
@@ -581,28 +590,16 @@ export default function TemperatureLogsPage() {
           setActivePanel={setActivePanel}
         />
 
-        <main className="flex-1 overflow-auto [&_button:not(:disabled)]:cursor-pointer">
-          {/* ── Header ── */}
-          <div className="bg-white border-b border-slate-200">
-            <div className="px-8 py-6 flex items-center gap-4">
-              <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm">
-                <Thermometer className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                  Temperature Logs
-                </h1>
-                <p className="text-sm font-medium text-slate-500 mt-0.5">
-                  Build a month of fridge and ambient readings, save it, and
-                  download it as PDF, Excel or CSV.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Locked: no base plan ── */}
+        <main
+          className={`relative flex-1 [&_button:not(:disabled)]:cursor-pointer ${
+            locked ? "overflow-hidden" : "overflow-auto"
+          }`}
+        >
+          {/* ── Locked: no base plan. The page stays visible underneath,
+              blurred and inert (nothing clickable), with the lock card on top —
+              the same pattern as Drug Lookup and Inventory View. ── */}
           {locked && (
-            <div className="flex min-h-[60vh] items-center justify-center px-8 py-12">
+            <div className="absolute inset-0 z-[129] flex items-center justify-center bg-white/55 px-8 backdrop-blur-[5px]">
               <div className="relative min-w-[340px] overflow-hidden rounded-2xl border border-rose-200 bg-white/95 px-8 py-7 shadow-2xl">
                 <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-rose-200/30 blur-3xl" />
                 <div className="relative flex flex-col items-center text-center">
@@ -630,28 +627,46 @@ export default function TemperatureLogsPage() {
             </div>
           )}
 
-          {/* ── Content ── */}
-          {!locked && (
-          <div className="px-8 py-6 space-y-6">
-            <p className="flex gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-3 text-[12px] leading-relaxed text-slate-500 shadow-sm">
-              <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-              <span>
-                <span className="font-semibold text-slate-700">Disclaimer. </span>
-                {DISCLAIMER}
-              </span>
-            </p>
+          <div inert={locked} {...lockGuardProps(locked)}>
+            {/* ── Header ── */}
+            <div className="bg-white border-b border-slate-200">
+              <div className="px-8 py-6 flex items-center gap-4">
+                <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm">
+                  <Thermometer className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    Temperature Logs
+                  </h1>
+                  <p className="text-sm font-medium text-slate-500 mt-0.5">
+                    Build a month of fridge and ambient readings, save it, and
+                    download it as PDF, Excel or CSV.
+                  </p>
+                </div>
+              </div>
+            </div>
 
-            {isClient ? (
-              <TemperatureLogWorkspace sidebarWidth={sidebarWidth} />
-            ) : (
-              <>
-                <Skeleton className="h-11 w-56 rounded-xl" />
-                <Skeleton className="h-[72px] w-full rounded-xl" />
-                <Skeleton className="h-[420px] w-full rounded-xl" />
-              </>
-            )}
+            {/* ── Content ── */}
+            <div className="px-8 py-6 space-y-6">
+              <p className="flex gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-3 text-[12px] leading-relaxed text-slate-500 shadow-sm">
+                <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                <span>
+                  <span className="font-semibold text-slate-700">Disclaimer. </span>
+                  {DISCLAIMER}
+                </span>
+              </p>
+
+              {isClient ? (
+                <TemperatureLogWorkspace sidebarWidth={sidebarWidth} />
+              ) : (
+                <>
+                  <Skeleton className="h-11 w-56 rounded-xl" />
+                  <Skeleton className="h-[72px] w-full rounded-xl" />
+                  <Skeleton className="h-[420px] w-full rounded-xl" />
+                </>
+              )}
+            </div>
           </div>
-          )}
         </main>
       </div>
     </ProtectedRoute>

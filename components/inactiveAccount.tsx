@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import axios from "axios";
@@ -87,7 +87,16 @@ const plans = [
   },
 ];
 
-export default function InactiveAccount() {
+/** open: app usable · loading: status still being checked · locked: paywall showing */
+export type GateState = "open" | "loading" | "locked";
+
+type Props = {
+  /** Reports the gate state so the layout can make the page behind the paywall
+   *  inert and answer stray interactions with the subscription toast. */
+  onGateChange?: (state: GateState) => void;
+};
+
+export default function InactiveAccount({ onGateChange }: Props) {
   const pathname = usePathname();
 
   const [status, setStatus] = useState<string | null>(null);
@@ -286,456 +295,473 @@ export default function InactiveAccount() {
     }
   };
 
-  // =========================================
-  // ALLOW ROUTES
-  // =========================================
+  // What the gate renders: null (app usable), the loading spinner, or one of
+  // the paywall screens. Computed in one place so the layout can also be told
+  // whether the app behind it must be inert.
+  const renderGate = (): ReactNode => {
+    // =========================================
+    // ALLOW ROUTES
+    // =========================================
 
-  if (
-    pathname === "/" ||
-    pathname.startsWith("/privacy-policy") ||
-    pathname.startsWith("/terms-of-service") ||
-    pathname.startsWith("/cancellation-policy") ||
-    pathname.startsWith("/auth") ||
-    pathname.startsWith("/reset-password") ||
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/admin-dashboard") ||
-    pathname.startsWith("/info-page") ||
-    pathname.startsWith("/agreements") ||
-    pathname.startsWith("/feedbacks") ||
-    pathname.startsWith("/publishing") ||
-    pathname.startsWith("/supplier-mappings") ||
-    pathname.startsWith("/master-sheet") ||
-    pathname.startsWith("/master-sheet-queue") ||
-    pathname.startsWith("/ndc-sheet") ||
-    pathname.startsWith("/report-listings") ||
-    pathname.startsWith("/support") ||
-    pathname.startsWith("/company")
-  ) {
-    return null;
-  }
+    if (
+      pathname === "/" ||
+      pathname.startsWith("/privacy-policy") ||
+      pathname.startsWith("/terms-of-service") ||
+      pathname.startsWith("/cancellation-policy") ||
+      pathname.startsWith("/auth") ||
+      pathname.startsWith("/reset-password") ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/admin-dashboard") ||
+      pathname.startsWith("/info-page") ||
+      pathname.startsWith("/agreements") ||
+      pathname.startsWith("/feedbacks") ||
+      pathname.startsWith("/publishing") ||
+      pathname.startsWith("/supplier-mappings") ||
+      pathname.startsWith("/master-sheet") ||
+      pathname.startsWith("/master-sheet-queue") ||
+      pathname.startsWith("/ndc-sheet") ||
+      pathname.startsWith("/report-listings") ||
+      pathname.startsWith("/support") ||
+      pathname.startsWith("/company")
+    ) {
+      return null;
+    }
 
-  // Profile verification is the FIRST priority. An unverified / inactive
-  // profile is never allowed through, even when access was admin-granted —
-  // the access check only matters once the profile itself is verified.
-  const profileVerified = status === "active";
-  const hasPlatformAccess = paymentStatus === "active";
+    // Profile verification is the FIRST priority. An unverified / inactive
+    // profile is never allowed through, even when access was admin-granted —
+    // the access check only matters once the profile itself is verified.
+    const profileVerified = status === "active";
+    const hasPlatformAccess = paymentStatus === "active";
 
-  if (profileVerified && hasPlatformAccess) {
-    return null;
-  }
+    if (profileVerified && hasPlatformAccess) {
+      return null;
+    }
 
-  // =========================================
-  // MESSAGE
-  // =========================================
+    // =========================================
+    // MESSAGE
+    // =========================================
 
-  let title = "Subscription Required";
-  let message = "Select a subscription package to continue.";
+    let title = "Subscription Required";
+    let message = "Select a subscription package to continue.";
 
-  if (status === "inactive") {
-    title = "Account Inactive";
-    message = "Your account is currently inactive. Please contact support.";
-  }
+    if (status === "inactive") {
+      title = "Account Inactive";
+      message = "Your account is currently inactive. Please contact support.";
+    }
 
-  if (paymentStatus === "past_due") {
-    title = "Payment Required";
-    message = "Your payment is currently past due.";
-  }
+    if (paymentStatus === "past_due") {
+      title = "Payment Required";
+      message = "Your payment is currently past due.";
+    }
 
-  if (paymentStatus === "canceled") {
-    title = "Subscription Canceled";
-    message = "Renew your subscription to continue.";
-  }
+    if (paymentStatus === "canceled") {
+      title = "Subscription Canceled";
+      message = "Renew your subscription to continue.";
+    }
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-[13000] bg-black/70 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
-      </div>
-    );
-  }
+    if (loading) {
+      return (
+        <div className="fixed inset-0 z-[13000] bg-black/70 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+        </div>
+      );
+    }
 
-  // =========================================
-  // FIRST POPUP
-  // =========================================
+    // =========================================
+    // FIRST POPUP
+    // =========================================
 
-  if (!showPlans) {
-    return (
-      <div className="fixed inset-0 z-[13000] bg-black/55 backdrop-blur-sm flex items-center justify-center px-4">
-        <div className="w-full max-w-md border border-zinc-200 bg-white rounded-lg shadow-2xl p-7">
-          <div className="flex items-start gap-4">
-            <div className="h-11 w-11 rounded-md bg-red-50 flex items-center justify-center shrink-0">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
+    if (!showPlans) {
+      return (
+        <div className="fixed inset-0 z-[13000] bg-black/55 backdrop-blur-sm flex items-center justify-center px-4">
+          <div className="w-full max-w-md border border-zinc-200 bg-white rounded-lg shadow-2xl p-7">
+            <div className="flex items-start gap-4">
+              <div className="h-11 w-11 rounded-md bg-red-50 flex items-center justify-center shrink-0">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+              </div>
+
+              <div className="flex-1">
+                <h2 className="text-[20px] font-semibold text-zinc-900">
+                  {title}
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500 leading-relaxed">
+                  {message}
+                </p>
+              </div>
             </div>
 
-            <div className="flex-1">
-              <h2 className="text-[20px] font-semibold text-zinc-900">
-                {title}
-              </h2>
-              <p className="mt-1 text-sm text-zinc-500 leading-relaxed">
-                {message}
-              </p>
-            </div>
-          </div>
+            <div className="mt-6 flex flex-col gap-2">
+              {(paymentStatus === "no_subscription" ||
+                paymentStatus === "inactive" ||
+                paymentStatus === "past_due") &&
+                status === "active" && (
+                  <Button
+                    onClick={() => setShowPlans(true)}
+                    className="h-11 rounded-md text-sm font-medium"
+                  >
+                    Proceed with Payment
+                  </Button>
+                )}
 
-          <div className="mt-6 flex flex-col gap-2">
-            {(paymentStatus === "no_subscription" ||
-              paymentStatus === "inactive" ||
-              paymentStatus === "past_due") &&
-              status === "active" && (
+              {paymentStatus === "canceled" && status === "active" && (
                 <Button
-                  onClick={() => setShowPlans(true)}
+                  onClick={renewSubscription}
                   className="h-11 rounded-md text-sm font-medium"
                 >
-                  Proceed with Payment
+                  Renew Subscription
                 </Button>
               )}
 
-            {paymentStatus === "canceled" && status === "active" && (
               <Button
-                onClick={renewSubscription}
-                className="h-11 rounded-md text-sm font-medium"
+                variant="outline"
+                className="h-11 rounded-md border-zinc-300"
+                onClick={() => {
+                  window.open(
+                    "https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com",
+                    "_blank",
+                  );
+                }}
               >
-                Renew Subscription
+                <Mail className="h-4 w-4 mr-2" />
+                Contact Support
               </Button>
-            )}
-
-            <Button
-              variant="outline"
-              className="h-11 rounded-md border-zinc-300"
-              onClick={() => {
-                window.open(
-                  "https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com",
-                  "_blank",
-                );
-              }}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              Contact Support
-            </Button>
+            </div>
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  // =========================================
-  // PLAN SELECTION SCREEN
-  // =========================================
+    // =========================================
+    // PLAN SELECTION SCREEN
+    // =========================================
 
-  const accentColor = "hsl(210 15% 60%)";
-  const accentLight = "hsl(210 15% 80%)";
-  const textLight = "hsl(0 0% 95%)";
-  const textDark = "hsl(0 0% 5%)";
-  const color262626 = "hsl(0 0% 15%)";
-  const color0D0D0D = "hsl(0 0% 5%)";
+    const accentColor = "hsl(210 15% 60%)";
+    const accentLight = "hsl(210 15% 80%)";
+    const textLight = "hsl(0 0% 95%)";
+    const textDark = "hsl(0 0% 5%)";
+    const color262626 = "hsl(0 0% 15%)";
+    const color0D0D0D = "hsl(0 0% 5%)";
 
-  return (
-    <div
-      className="fixed inset-0 z-[13000] overflow-auto"
-      style={{
-        background: `linear-gradient(180deg, ${color0D0D0D} 0%, ${color262626} 50%, ${color0D0D0D} 100%)`,
-      }}
-    >
-      <div className="relative min-h-screen py-10 px-4">
-        <div className="max-w-7xl mx-auto">
-          {/* HEADER */}
-          <div className="text-center mb-8">
-            <span
-              className="text-[11px] uppercase tracking-[0.22em] font-semibold"
-              style={{ color: accentColor }}
-            >
-              Subscription Plans
-            </span>
+    return (
+      <div
+        className="fixed inset-0 z-[13000] overflow-auto"
+        style={{
+          background: `linear-gradient(180deg, ${color0D0D0D} 0%, ${color262626} 50%, ${color0D0D0D} 100%)`,
+        }}
+      >
+        <div className="relative min-h-screen py-10 px-4">
+          <div className="max-w-7xl mx-auto">
+            {/* HEADER */}
+            <div className="text-center mb-8">
+              <span
+                className="text-[11px] uppercase tracking-[0.22em] font-semibold"
+                style={{ color: accentColor }}
+              >
+                Subscription Plans
+              </span>
 
-            <h2
-              className="text-3xl md:text-4xl font-bold mt-3"
-              style={{ color: textLight }}
-            >
-              Choose Your Subscription
-            </h2>
+              <h2
+                className="text-3xl md:text-4xl font-bold mt-3"
+                style={{ color: textLight }}
+              >
+                Choose Your Subscription
+              </h2>
 
-            <p
-              className="mt-2 text-sm max-w-lg mx-auto"
-              style={{ color: "hsl(0 0% 72%)" }}
-            >
-              Unlock premium pharmacy audit workflows and platform access.
-            </p>
-          </div>
+              <p
+                className="mt-2 text-sm max-w-lg mx-auto"
+                style={{ color: "hsl(0 0% 72%)" }}
+              >
+                Unlock premium pharmacy audit workflows and platform access.
+              </p>
+            </div>
 
-          {/* THREE PLAN CARDS */}
-          <div className="mt-14 grid items-stretch gap-6 md:grid-cols-3 max-w-8xl mx-auto">
-            {plans.map((plan, idx) => {
-              const active = selectedPlan === plan.id;
+            {/* THREE PLAN CARDS */}
+            <div className="mt-14 grid items-stretch gap-6 md:grid-cols-3 max-w-8xl mx-auto">
+              {plans.map((plan, idx) => {
+                const active = selectedPlan === plan.id;
 
-              return (
-                <div
-                  key={plan.id}
-                  onClick={() => selectPlan(plan.id)}
-                  className={`relative flex cursor-pointer flex-col rounded-2xl border p-7 text-left animate-fadeInUp transition-all duration-300 ease-out ${
-                    active
-                      ? "border-zinc-600 bg-gradient-to-b from-zinc-900 to-black ring-1 ring-zinc-500/50 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.75)] hover:-translate-y-1 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.85)]"
-                      : "border-zinc-800 bg-zinc-900 hover:-translate-y-1 hover:border-zinc-600 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.55)]"
-                  }`}
-                  style={{ animationDelay: `${0.1 + idx * 0.15}s` }}
-                >
-                  {/* Premium Top Accent */}
+                return (
                   <div
-                    className={`absolute inset-x-0 top-0 h-px ${
+                    key={plan.id}
+                    onClick={() => selectPlan(plan.id)}
+                    className={`relative flex cursor-pointer flex-col rounded-2xl border p-7 text-left animate-fadeInUp transition-all duration-300 ease-out ${
                       active
-                        ? "bg-gradient-to-r from-transparent via-zinc-300 to-transparent"
-                        : "bg-gradient-to-r from-transparent via-zinc-700 to-transparent"
+                        ? "border-zinc-600 bg-gradient-to-b from-zinc-900 to-black ring-1 ring-zinc-500/50 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.75)] hover:-translate-y-1 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.85)]"
+                        : "border-zinc-800 bg-zinc-900 hover:-translate-y-1 hover:border-zinc-600 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.55)]"
                     }`}
-                  />
-
-                  {/* Static "Most Popular" badge — absolute, so it never affects alignment */}
-                  {plan.highlighted && (
-                    <span className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-zinc-300/20 bg-gradient-to-b from-zinc-100 to-zinc-300 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-black shadow-lg">
-                      {(plan as any).badge ?? "Most Popular"}
-                    </span>
-                  )}
-
-                  {/* Name */}
-                  <div
-                    className="flex items-center gap-2 animate-fadeInUp"
-                    style={{ animationDelay: `${0.15 + idx * 0.15}s` }}
+                    style={{ animationDelay: `${0.1 + idx * 0.15}s` }}
                   >
-                    <span className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-400 transition-colors duration-300">
-                      {plan.name}
-                    </span>
-                  </div>
+                    {/* Premium Top Accent */}
+                    <div
+                      className={`absolute inset-x-0 top-0 h-px ${
+                        active
+                          ? "bg-gradient-to-r from-transparent via-zinc-300 to-transparent"
+                          : "bg-gradient-to-r from-transparent via-zinc-700 to-transparent"
+                      }`}
+                    />
 
-                  {/* Price — explicit white so it stays readable on the dark card */}
-                  <div
-                    className="mt-5 flex items-baseline gap-1 animate-fadeInUp"
-                    style={{ animationDelay: `${0.2 + idx * 0.15}s` }}
-                  >
-                    <span className="text-4xl font-semibold tracking-tight text-white">
-                      {plan.price}
-                    </span>
-                    <span className="text-sm text-zinc-400">{plan.period}</span>
-                  </div>
+                    {/* Static "Most Popular" badge — absolute, so it never affects alignment */}
+                    {plan.highlighted && (
+                      <span className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-zinc-300/20 bg-gradient-to-b from-zinc-100 to-zinc-300 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-black shadow-lg">
+                        {(plan as any).badge ?? "Most Popular"}
+                      </span>
+                    )}
 
-                  {/* Optional trial badge — only renders if the plan defines it */}
-                  {(plan as any).trial && (
-                    <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-[11px] font-semibold text-sky-300">
-                      {(plan as any).trial}
-                    </span>
-                  )}
+                    {/* Name */}
+                    <div
+                      className="flex items-center gap-2 animate-fadeInUp"
+                      style={{ animationDelay: `${0.15 + idx * 0.15}s` }}
+                    >
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-400 transition-colors duration-300">
+                        {plan.name}
+                      </span>
+                    </div>
 
-                  {/* Description — min-height reserves space so feature lists start at the same line */}
-                  <p
-                    className="mt-3 min-h-[40px] text-sm leading-relaxed text-zinc-400 animate-fadeInUp"
-                    style={{ animationDelay: `${0.25 + idx * 0.15}s` }}
-                  >
-                    {plan.description}
-                  </p>
+                    {/* Price — explicit white so it stays readable on the dark card */}
+                    <div
+                      className="mt-5 flex items-baseline gap-1 animate-fadeInUp"
+                      style={{ animationDelay: `${0.2 + idx * 0.15}s` }}
+                    >
+                      <span className="text-4xl font-semibold tracking-tight text-white">
+                        {plan.price}
+                      </span>
+                      <span className="text-sm text-zinc-400">{plan.period}</span>
+                    </div>
 
-                  {/* Optional value note — only renders if the plan defines it */}
-                  {(plan as any).valueNote && (
-                    <p className="mt-2 text-xs leading-relaxed text-emerald-300/80 italic">
-                      {(plan as any).valueNote}
+                    {/* Optional trial badge — only renders if the plan defines it */}
+                    {(plan as any).trial && (
+                      <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-[11px] font-semibold text-sky-300">
+                        {(plan as any).trial}
+                      </span>
+                    )}
+
+                    {/* Description — min-height reserves space so feature lists start at the same line */}
+                    <p
+                      className="mt-3 min-h-[40px] text-sm leading-relaxed text-zinc-400 animate-fadeInUp"
+                      style={{ animationDelay: `${0.25 + idx * 0.15}s` }}
+                    >
+                      {plan.description}
                     </p>
-                  )}
 
-                  {/* Features */}
-                  <ul className="mt-6 space-y-3 text-sm">
-                    {plan.features.map((feature, fIdx) => (
-                      <li
-                        key={feature}
-                        className="flex items-start gap-2.5 animate-fadeInUp"
-                        style={{
-                          animationDelay: `${0.3 + fIdx * 0.05 + idx * 0.15}s`,
-                        }}
-                      >
-                        <span
-                          className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full transition-all duration-300 ${
-                            active ? "bg-emerald-500/15" : "bg-zinc-800"
-                          }`}
-                        >
-                          <Check className="h-3.5 w-3.5 text-emerald-400" />
-                        </span>
-                        <span
-                          className={
-                            fIdx === 0
-                              ? "font-semibold text-zinc-200 transition-colors duration-300"
-                              : "text-zinc-300"
-                          }
-                        >
-                          {feature}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* Button — mt-auto pins it to the bottom of every card, so all three align */}
-                  <Button
-                    type="button"
-                    className={`${plan.price === "$399" ? "mt-6" : "mt-4"} w-full rounded-lg px-4 py-6 text-sm font-medium transition-all duration-300 animate-fadeInUp ${
-                      active
-                        ? "bg-gradient-to-b from-zinc-100 to-zinc-300 text-black shadow-md hover:from-white hover:to-zinc-200 hover:shadow-xl"
-                        : "border border-zinc-700 bg-transparent text-zinc-100 hover:border-zinc-500 hover:bg-zinc-900/50"
-                    }`}
-                    style={{ animationDelay: `${0.6 + idx * 0.15}s` }}
-                  >
-                    {active ? "Selected Plan" : "Choose Plan"}
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* ACTION CARD */}
-          <div className="max-w-md mx-auto mt-10">
-            <div
-              className="border rounded-xl p-5 flex flex-col gap-5"
-              style={{
-                background: `linear-gradient(180deg, ${color262626}, ${color0D0D0D})`,
-                borderColor: "hsl(0 0% 18%)",
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: "hsl(0 0% 14%)" }}
-                >
-                  <Lock
-                    className="h-4 w-4"
-                    style={{ color: "hsl(0 0% 72%)" }}
-                  />
-                </div>
-
-                <div>
-                  <p
-                    className="text-[15px] font-semibold leading-none mb-1"
-                    style={{ color: textLight }}
-                  >
-                    Complete checkout
-                  </p>
-                  <p
-                    className="text-[12px] leading-none"
-                    style={{ color: "hsl(0 0% 52%)" }}
-                  >
-                    Review your plan and confirm
-                  </p>
-                </div>
-              </div>
-
-              <div style={{ height: "0.5px", background: "hsl(0 0% 20%)" }} />
-
-              {/* TRIAL / PROMO CODE */}
-              <div className="flex flex-col gap-2">
-                <label
-                  className="text-[12px] font-medium flex items-center gap-1.5"
-                  style={{ color: "hsl(0 0% 72%)" }}
-                >
-                  <Tag className="h-3.5 w-3.5" />
-                  Have a code?
-                </label>
-
-                <div className="flex gap-2">
-                  <input
-                    value={couponCode}
-                    onChange={(e) => {
-                      setCouponCode(e.target.value.toUpperCase());
-                      setCodeStatus(null);
-                    }}
-                    placeholder="Enter code"
-                    className="flex-1 h-10 rounded-lg px-3 text-sm outline-none"
-                    style={{
-                      background: "hsl(0 0% 12%)",
-                      border: "1px solid hsl(0 0% 24%)",
-                      color: textLight,
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    onClick={applyCode}
-                    disabled={checkingCode || !couponCode.trim()}
-                    className="h-10 rounded-lg text-sm font-semibold px-4"
-                    style={{
-                      background: "hsl(0 0% 18%)",
-                      border: "1px solid hsl(0 0% 28%)",
-                      color: textLight,
-                    }}
-                  >
-                    {checkingCode ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      "Apply"
+                    {/* Optional value note — only renders if the plan defines it */}
+                    {(plan as any).valueNote && (
+                      <p className="mt-2 text-xs leading-relaxed text-emerald-300/80 italic">
+                        {(plan as any).valueNote}
+                      </p>
                     )}
-                  </Button>
-                </div>
 
-                {codeStatus && (
-                  <p
-                    className="text-[12px] flex items-center gap-1.5"
-                    style={{
-                      color: codeStatus.valid
-                        ? "hsl(142 60% 55%)"
-                        : "hsl(0 70% 60%)",
-                    }}
-                  >
-                    {codeStatus.valid && (
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                    )}
-                    {codeStatus.message}
-                  </p>
-                )}
-              </div>
+                    {/* Features */}
+                    <ul className="mt-6 space-y-3 text-sm">
+                      {plan.features.map((feature, fIdx) => (
+                        <li
+                          key={feature}
+                          className="flex items-start gap-2.5 animate-fadeInUp"
+                          style={{
+                            animationDelay: `${0.3 + fIdx * 0.05 + idx * 0.15}s`,
+                          }}
+                        >
+                          <span
+                            className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full transition-all duration-300 ${
+                              active ? "bg-emerald-500/15" : "bg-zinc-800"
+                            }`}
+                          >
+                            <Check className="h-3.5 w-3.5 text-emerald-400" />
+                          </span>
+                          <span
+                            className={
+                              fIdx === 0
+                                ? "font-semibold text-zinc-200 transition-colors duration-300"
+                                : "text-zinc-300"
+                            }
+                          >
+                            {feature}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
 
-              <div style={{ height: "0.5px", background: "hsl(0 0% 20%)" }} />
-
-              <div className="flex flex-col gap-2">
-                {(paymentStatus === "no_subscription" ||
-                  paymentStatus === "inactive" ||
-                  paymentStatus === "past_due") &&
-                  status === "active" && (
+                    {/* Button — mt-auto pins it to the bottom of every card, so all three align */}
                     <Button
-                      onClick={handleCheckout}
-                      disabled={!selectedPlan}
-                      className="h-10 rounded-lg text-sm font-semibold flex items-center gap-2"
+                      type="button"
+                      className={`${plan.price === "$399" ? "mt-6" : "mt-4"} w-full rounded-lg px-4 py-6 text-sm font-medium transition-all duration-300 animate-fadeInUp ${
+                        active
+                          ? "bg-gradient-to-b from-zinc-100 to-zinc-300 text-black shadow-md hover:from-white hover:to-zinc-200 hover:shadow-xl"
+                          : "border border-zinc-700 bg-transparent text-zinc-100 hover:border-zinc-500 hover:bg-zinc-900/50"
+                      }`}
+                      style={{ animationDelay: `${0.6 + idx * 0.15}s` }}
+                    >
+                      {active ? "Selected Plan" : "Choose Plan"}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ACTION CARD */}
+            <div className="max-w-md mx-auto mt-10">
+              <div
+                className="border rounded-xl p-5 flex flex-col gap-5"
+                style={{
+                  background: `linear-gradient(180deg, ${color262626}, ${color0D0D0D})`,
+                  borderColor: "hsl(0 0% 18%)",
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: "hsl(0 0% 14%)" }}
+                  >
+                    <Lock
+                      className="h-4 w-4"
+                      style={{ color: "hsl(0 0% 72%)" }}
+                    />
+                  </div>
+
+                  <div>
+                    <p
+                      className="text-[15px] font-semibold leading-none mb-1"
+                      style={{ color: textLight }}
+                    >
+                      Complete checkout
+                    </p>
+                    <p
+                      className="text-[12px] leading-none"
+                      style={{ color: "hsl(0 0% 52%)" }}
+                    >
+                      Review your plan and confirm
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ height: "0.5px", background: "hsl(0 0% 20%)" }} />
+
+                {/* TRIAL / PROMO CODE */}
+                <div className="flex flex-col gap-2">
+                  <label
+                    className="text-[12px] font-medium flex items-center gap-1.5"
+                    style={{ color: "hsl(0 0% 72%)" }}
+                  >
+                    <Tag className="h-3.5 w-3.5" />
+                    Have a code?
+                  </label>
+
+                  <div className="flex gap-2">
+                    <input
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value.toUpperCase());
+                        setCodeStatus(null);
+                      }}
+                      placeholder="Enter code"
+                      className="flex-1 h-10 rounded-lg px-3 text-sm outline-none"
                       style={{
-                        background: `linear-gradient(135deg, ${textLight}, ${accentLight})`,
-                        color: textDark,
+                        background: "hsl(0 0% 12%)",
+                        border: "1px solid hsl(0 0% 24%)",
+                        color: textLight,
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      onClick={applyCode}
+                      disabled={checkingCode || !couponCode.trim()}
+                      className="h-10 rounded-lg text-sm font-semibold px-4"
+                      style={{
+                        background: "hsl(0 0% 18%)",
+                        border: "1px solid hsl(0 0% 28%)",
+                        color: textLight,
                       }}
                     >
-                      <CreditCard className="h-4 w-4" />
-                      Continue payment
+                      {checkingCode ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Apply"
+                      )}
                     </Button>
+                  </div>
+
+                  {codeStatus && (
+                    <p
+                      className="text-[12px] flex items-center gap-1.5"
+                      style={{
+                        color: codeStatus.valid
+                          ? "hsl(142 60% 55%)"
+                          : "hsl(0 70% 60%)",
+                      }}
+                    >
+                      {codeStatus.valid && (
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      )}
+                      {codeStatus.message}
+                    </p>
                   )}
+                </div>
 
-                <Button
-                  variant="outline"
-                  className="h-10 rounded-lg text-sm flex items-center gap-2"
-                  style={{
-                    borderColor: "hsl(0 0% 26%)",
-                    color: textLight,
-                    background: "transparent",
-                  }}
-                  onClick={() => setShowPlans(false)}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back
-                </Button>
+                <div style={{ height: "0.5px", background: "hsl(0 0% 20%)" }} />
 
-                <Button
-                  variant="ghost"
-                  className="h-10 rounded-lg text-sm flex items-center gap-2 hover:text-black/80 text-white"
-                  onClick={() => {
-                    window.open(
-                      "https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com",
-                      "_blank",
-                    );
-                  }}
-                >
-                  <Mail className="h-4 w-4" />
-                  Contact support
-                </Button>
+                <div className="flex flex-col gap-2">
+                  {(paymentStatus === "no_subscription" ||
+                    paymentStatus === "inactive" ||
+                    paymentStatus === "past_due") &&
+                    status === "active" && (
+                      <Button
+                        onClick={handleCheckout}
+                        disabled={!selectedPlan}
+                        className="h-10 rounded-lg text-sm font-semibold flex items-center gap-2"
+                        style={{
+                          background: `linear-gradient(135deg, ${textLight}, ${accentLight})`,
+                          color: textDark,
+                        }}
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        Continue payment
+                      </Button>
+                    )}
+
+                  <Button
+                    variant="outline"
+                    className="h-10 rounded-lg text-sm flex items-center gap-2"
+                    style={{
+                      borderColor: "hsl(0 0% 26%)",
+                      color: textLight,
+                      background: "transparent",
+                    }}
+                    onClick={() => setShowPlans(false)}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className="h-10 rounded-lg text-sm flex items-center gap-2 hover:text-black/80 text-white"
+                    onClick={() => {
+                      window.open(
+                        "https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com",
+                        "_blank",
+                      );
+                    }}
+                  >
+                    <Mail className="h-4 w-4" />
+                    Contact support
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+  const gate = renderGate();
+  const state: GateState = gate === null ? "open" : loading ? "loading" : "locked";
+
+  useEffect(() => {
+    onGateChange?.(state);
+  }, [state, onGateChange]);
+
+  // Unmounting (public routes) must never leave the app inert.
+  useEffect(() => () => onGateChange?.("open"), [onGateChange]);
+
+  return gate;
 }

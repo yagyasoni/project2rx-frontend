@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef, Suspense } from "react";
-import axios from "axios";
+import { lockGuardProps } from "@/lib/lockGuard";
 import { useRouter } from "next/navigation";
 
 import Sidebar from "@/components/Sidebar";
@@ -34,7 +34,7 @@ import {
   ChevronsUpDown,
   Lock,
 } from "lucide-react";
-import api from "@/lib/api";
+import api, { failureMessage } from "@/lib/api";
 import { toast } from "sonner";
 
 interface Group {
@@ -321,7 +321,7 @@ export default function AuditGroupsPage() {
     try {
       setLoadingGroups(true);
 
-      const res = await axios.get(
+      const res = await api.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/audit-groups/user/${uid}`,
       );
 
@@ -343,7 +343,7 @@ export default function AuditGroupsPage() {
     try {
       setLoadingInvites(true);
 
-      const res = await axios.get(
+      const res = await api.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/audit-groups/invites/${uid}`,
       );
 
@@ -381,7 +381,7 @@ export default function AuditGroupsPage() {
 
       setCreatingGroup(true);
 
-      const res = await axios.post(
+      const res = await api.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/audit-groups`,
         {
           name: groupName,
@@ -413,7 +413,7 @@ export default function AuditGroupsPage() {
 
       setSendingInvite(true);
 
-      await axios.post(
+      await api.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/audit-groups/invite`,
         {
           group_id: createdGroupId,
@@ -462,7 +462,7 @@ export default function AuditGroupsPage() {
     try {
       setRowSendingInvite(true);
 
-      await axios.post(
+      await api.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/audit-groups/invite`,
         {
           group_id: inviteGroup.id,
@@ -487,7 +487,7 @@ export default function AuditGroupsPage() {
 
   const handleAcceptInvite = async (inviteId: string) => {
     try {
-      await axios.post(
+      await api.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/audit-groups/invite/accept`,
         {
           invite_id: inviteId,
@@ -517,7 +517,7 @@ export default function AuditGroupsPage() {
 
       setLoadingMembers(true);
 
-      const res = await axios.get(
+      const res = await api.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/audit-groups/${group.id}/members`,
       );
 
@@ -616,7 +616,7 @@ export default function AuditGroupsPage() {
       document.body.removeChild(a);
     } catch (err) {
       console.error("Download failed:", err);
-      toast.error("Failed to download report");
+      toast.error(failureMessage(err, "Failed to download report"));
     }
   };
 
@@ -626,7 +626,7 @@ export default function AuditGroupsPage() {
 
   const handleRemoveMember = async (groupId: string, memberUserId: string) => {
     try {
-      await axios.delete(
+      await api.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/audit-groups/${groupId}/member/${memberUserId}`,
         {
           data: {
@@ -657,7 +657,7 @@ export default function AuditGroupsPage() {
         label: "Leave",
         onClick: async () => {
           try {
-            await axios.delete(
+            await api.delete(
               `${process.env.NEXT_PUBLIC_API_BASE_URL}/audit-groups/${groupId}/leave/${userId}`,
             );
 
@@ -690,7 +690,7 @@ export default function AuditGroupsPage() {
         label: "Delete",
         onClick: async () => {
           try {
-            await axios.delete(
+            await api.delete(
               `${process.env.NEXT_PUBLIC_API_BASE_URL}/audit-groups/${groupId}`,
               {
                 data: {
@@ -862,6 +862,8 @@ export default function AuditGroupsPage() {
     );
   };
 
+  const groupsLocked = subscriptionLoaded && !subscription?.inventory_view_access;
+
   return (
     <ProtectedRoute role="user">
       <Suspense fallback={<Loading />}>
@@ -908,821 +910,825 @@ export default function AuditGroupsPage() {
                   </div>
                 </div>
               )}
-              <div className="px-8 pt-8 pb-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm shrink-0">
-                      <Users className="w-6 h-6 text-white" />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2.5">
-                        <h1 className="text-[22px] font-bold tracking-tight text-slate-900">
-                          GROUP INVENTORY REPORTS
-                        </h1>
-
-                        <button
-                          onClick={() => {
-                            loadGroups(userId);
-
-                            loadInvites(userId);
-                          }}
-                          title="Refresh"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                        >
-                          <RotateCw className="w-4 h-4" />
-                        </button>
+              <div className="contents" inert={groupsLocked} {...lockGuardProps(groupsLocked)}>
+                <div className="px-8 pt-8 pb-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm shrink-0">
+                        <Users className="w-6 h-6 text-white" />
                       </div>
 
-                      <p className="text-sm font-medium text-slate-600 mt-0.5">
-                        {pharmacyName}
-                      </p>
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <h1 className="text-[22px] font-bold tracking-tight text-slate-900">
+                            GROUP INVENTORY REPORTS
+                          </h1>
 
-                      {pharmacyEmail ? (
-                        <p className="text-xs text-slate-400">
-                          {pharmacyEmail}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
+                          <button
+                            onClick={() => {
+                              loadGroups(userId);
 
-                  <button
-                    onClick={() => setGroupModal(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-colors shrink-0"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Create Group
-                  </button>
-                </div>
-              </div>
-
-              <div className="px-8 pb-5 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setActiveView("groups")}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      activeView === "groups"
-                        ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
-                  >
-                    Your Groups ({groups.length})
-                  </button>
-
-                  <button
-                    onClick={() => setActiveView("invites")}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      activeView === "invites"
-                        ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
-                  >
-                    Pending Invites ({invites.length})
-                  </button>
-                </div>
-
-                {activeView === "groups" && (
-                  <div className="flex items-center gap-3">
-                    <div className="relative" ref={roleFilterRef}>
-                      <button
-                        onClick={() => setRoleFilterOpen((o) => !o)}
-                        className="inline-flex items-center gap-2 pl-3.5 pr-3 py-2 text-sm font-semibold text-slate-700 border border-slate-200 rounded-xl bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 transition-colors"
-                      >
-                        <Filter className="w-4 h-4 text-slate-400" />
-
-                        <span>{roleLabel}</span>
-
-                        <ChevronDown
-                          className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
-                            roleFilterOpen ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
-
-                      {roleFilterOpen && (
-                        <div className="absolute left-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-200/60 z-20 p-1.5">
-                          {ROLE_OPTIONS.map((opt) => (
-                            <button
-                              key={opt.value}
-                              onClick={() => {
-                                setRoleFilter(opt.value);
-
-                                setRoleFilterOpen(false);
-                              }}
-                              className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                roleFilter === opt.value
-                                  ? "bg-slate-900 text-white"
-                                  : "text-slate-700 hover:bg-slate-100"
-                              }`}
-                            >
-                              <span>{opt.label}</span>
-
-                              {roleFilter === opt.value && (
-                                <Check className="w-4 h-4" />
-                              )}
-                            </button>
-                          ))}
+                              loadInvites(userId);
+                            }}
+                            title="Refresh"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                          >
+                            <RotateCw className="w-4 h-4" />
+                          </button>
                         </div>
-                      )}
+
+                        <p className="text-sm font-medium text-slate-600 mt-0.5">
+                          {pharmacyName}
+                        </p>
+
+                        {pharmacyEmail ? (
+                          <p className="text-xs text-slate-400">
+                            {pharmacyEmail}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
 
-                    <div className="relative w-72">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-
-                      <input
-                        type="text"
-                        placeholder="Search groups..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-200 transition-colors"
-                      />
-                    </div>
+                    <button
+                      onClick={() => setGroupModal(true)}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-colors shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Create Group
+                    </button>
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
 
-            {activeView === "groups" && (
-              <div className="px-8 py-6">
-                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="px-4 py-3 text-left">
-                          <button
-                            onClick={() => toggleSort("name")}
-                            className="group inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
-                          >
-                            Group Name
-                            <SortIcon column="name" />
-                          </button>
-                        </th>
+                <div className="px-8 pb-5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setActiveView("groups")}
+                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                        activeView === "groups"
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      Your Groups ({groups.length})
+                    </button>
 
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          Reports
-                        </th>
+                    <button
+                      onClick={() => setActiveView("invites")}
+                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                        activeView === "invites"
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      Pending Invites ({invites.length})
+                    </button>
+                  </div>
 
-                        <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          Members
-                        </th>
+                  {activeView === "groups" && (
+                    <div className="flex items-center gap-3">
+                      <div className="relative" ref={roleFilterRef}>
+                        <button
+                          onClick={() => setRoleFilterOpen((o) => !o)}
+                          className="inline-flex items-center gap-2 pl-3.5 pr-3 py-2 text-sm font-semibold text-slate-700 border border-slate-200 rounded-xl bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 transition-colors"
+                        >
+                          <Filter className="w-4 h-4 text-slate-400" />
 
-                        <th className="px-4 py-3 text-left">
-                          <button
-                            onClick={() => toggleSort("role")}
-                            className="group inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
-                          >
-                            Role
-                            <SortIcon column="role" />
-                          </button>
-                        </th>
+                          <span>{roleLabel}</span>
 
-                        <th className="px-4 py-3 text-left">
-                          <button
-                            onClick={() => toggleSort("created_at")}
-                            className="group inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
-                          >
-                            Created
-                            <SortIcon column="created_at" />
-                          </button>
-                        </th>
+                          <ChevronDown
+                            className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                              roleFilterOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
 
-                        <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          Action
-                        </th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {loadingGroups ? (
-                        <tr>
-                          <td colSpan={6} className="py-20 text-center">
-                            <Loader
-                              variant="inline"
-                              title="Loading groups..."
-                            />
-                          </td>
-                        </tr>
-                      ) : sortedGroups.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="py-20 text-center">
-                            <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-
-                            <p className="text-sm text-slate-500">
-                              No groups found
-                            </p>
-                          </td>
-                        </tr>
-                      ) : (
-                        pagedGroups.map((group) => (
-                          <tr
-                            key={group.id}
-                            className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors"
-                          >
-                            <td className="px-4 py-3">
-                              <p className="text-sm font-semibold text-slate-900">
-                                {group.name}
-                              </p>
-                            </td>
-
-                            <td className="px-4 py-3 text-left">
+                        {roleFilterOpen && (
+                          <div className="absolute left-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-200/60 z-20 p-1.5">
+                            {ROLE_OPTIONS.map((opt) => (
                               <button
-                                onClick={() => openReports(group)}
-                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
-                              >
-                                <FileText className="w-4 h-4 text-slate-400" />
-                                <span>{group.reports_count}</span>
-                              </button>
-                            </td>
+                                key={opt.value}
+                                onClick={() => {
+                                  setRoleFilter(opt.value);
 
-                            <td className="px-4 py-3 text-sm font-medium text-slate-600">
-                              {group.members_count}
-                            </td>
-
-                            <td className="px-4 py-3">
-                              <span
-                                className={`capitalize text-[11px] font-bold px-3 py-1 rounded-full ${
-                                  group.role === "admin"
-                                    ? "bg-disclaimer-100 text-disclaimer-700"
-                                    : "bg-slate-100 text-slate-600"
+                                  setRoleFilterOpen(false);
+                                }}
+                                className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                  roleFilter === opt.value
+                                    ? "bg-slate-900 text-white"
+                                    : "text-slate-700 hover:bg-slate-100"
                                 }`}
                               >
-                                {group.role}
-                              </span>
-                            </td>
+                                <span>{opt.label}</span>
 
-                            <td className="px-4 py-3 text-sm text-slate-500">
-                              {formatDate(group.created_at)}
-                            </td>
-
-                            <td className="px-4 py-3 text-right">
-                              <div className="inline-flex items-center gap-2">
-                                {group.role === "admin" && (
-                                  <button
-                                    onClick={() => openInviteModal(group)}
-                                    title="Add member"
-                                    className="inline-flex items-center justify-center w-8 h-8 border border-slate-200 rounded-lg hover:bg-slate-900 hover:text-white hover:border-slate-900 text-slate-600 transition-colors"
-                                  >
-                                    <UserPlus className="w-4 h-4" />
-                                  </button>
+                                {roleFilter === opt.value && (
+                                  <Check className="w-4 h-4" />
                                 )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
-                                <button
-                                  onClick={() => openMembers(group)}
-                                  className="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm font-semibold text-slate-700 transition-colors"
-                                >
-                                  <Users className="w-4 h-4" />
-                                  Members
-                                  <ChevronRight className="w-4 h-4 text-slate-400" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                      <div className="relative w-72">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
 
-                  {!loadingGroups && sortedGroups.length > 0 && (
-                    <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-4">
-                      <span className="text-xs text-slate-500">
-                        Showing{" "}
-                        <b className="text-slate-700">{pageStart + 1}</b>–
-                        <b className="text-slate-700">
-                          {pageStart + pagedGroups.length}
-                        </b>{" "}
-                        of{" "}
-                        <b className="text-slate-700">{sortedGroups.length}</b>{" "}
-                        groups
-                      </span>
-
-                      {totalPages > 1 && (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() =>
-                              setCurrentPage((p) => Math.max(1, p - 1))
-                            }
-                            disabled={currentPage === 1}
-                            className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                          >
-                            Prev
-                          </button>
-                          {Array.from(
-                            { length: totalPages },
-                            (_, i) => i + 1,
-                          ).map((page) => (
-                            <button
-                              key={page}
-                              onClick={() => setCurrentPage(page)}
-                              className={`min-w-[28px] px-2 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
-                                page === currentPage
-                                  ? "bg-slate-900 text-white border-slate-900"
-                                  : "text-slate-600 border-slate-200 bg-white hover:bg-slate-50"
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          ))}
-                          <button
-                            onClick={() =>
-                              setCurrentPage((p) => Math.min(totalPages, p + 1))
-                            }
-                            disabled={currentPage === totalPages}
-                            className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                          >
-                            Next
-                          </button>
-                        </div>
-                      )}
+                        <input
+                          type="text"
+                          placeholder="Search groups..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-200 transition-colors"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
-            )}
+            </div>
 
-            {activeView === "invites" && (
-              <div className="p-8">
-                {loadingInvites ? (
-                  <div className="flex items-center justify-center py-32">
-                    <Loader variant="inline" title="Loading invites..." />
-                  </div>
-                ) : invites.length === 0 ? (
-                  <div className="bg-white border border-slate-200 rounded-2xl p-14 text-center">
-                    <Mail className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <div className="contents" inert={groupsLocked} {...lockGuardProps(groupsLocked)}>
+              {activeView === "groups" && (
+                <div className="px-8 py-6">
+                  <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="px-4 py-3 text-left">
+                            <button
+                              onClick={() => toggleSort("name")}
+                              className="group inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
+                            >
+                              Group Name
+                              <SortIcon column="name" />
+                            </button>
+                          </th>
 
-                    <h3 className="text-lg font-bold text-slate-900">
-                      No Pending Invites
-                    </h3>
+                          <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            Reports
+                          </th>
 
-                    <p className="text-sm text-slate-500 mt-1">
-                      You're all caught up
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {invites.map((invite) => (
-                      <div
-                        key={invite.id}
-                        className="bg-white border border-slate-200 rounded-2xl p-6 flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                            <Users className="w-6 h-6 text-slate-500" />
-                          </div>
+                          <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            Members
+                          </th>
 
-                          <div>
-                            <h3 className="text-base font-bold text-slate-900">
-                              {invite.group_name}
-                            </h3>
+                          <th className="px-4 py-3 text-left">
+                            <button
+                              onClick={() => toggleSort("role")}
+                              className="group inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
+                            >
+                              Role
+                              <SortIcon column="role" />
+                            </button>
+                          </th>
 
-                            <p className="text-sm text-slate-500 mt-1">
-                              Invited by{" "}
-                              <span className="font-semibold text-slate-700">
-                                {invite.inviter_pharmacy_name || "Pharmacy"}
-                              </span>
-                            </p>
+                          <th className="px-4 py-3 text-left">
+                            <button
+                              onClick={() => toggleSort("created_at")}
+                              className="group inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-900 transition-colors"
+                            >
+                              Created
+                              <SortIcon column="created_at" />
+                            </button>
+                          </th>
 
-                            {invite.inviter_email && (
-                              <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-                                <Mail className="w-3 h-3" />
-                                {invite.inviter_email}
+                          <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {loadingGroups ? (
+                          <tr>
+                            <td colSpan={6} className="py-20 text-center">
+                              <Loader
+                                variant="inline"
+                                title="Loading groups..."
+                              />
+                            </td>
+                          </tr>
+                        ) : sortedGroups.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="py-20 text-center">
+                              <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+
+                              <p className="text-sm text-slate-500">
+                                No groups found
                               </p>
-                            )}
+                            </td>
+                          </tr>
+                        ) : (
+                          pagedGroups.map((group) => (
+                            <tr
+                              key={group.id}
+                              className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors"
+                            >
+                              <td className="px-4 py-3">
+                                <p className="text-sm font-semibold text-slate-900">
+                                  {group.name}
+                                </p>
+                              </td>
 
-                            <p className="text-xs text-slate-400 mt-2">
-                              Received on {formatDate(invite.created_at)}
-                            </p>
+                              <td className="px-4 py-3 text-left">
+                                <button
+                                  onClick={() => openReports(group)}
+                                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
+                                >
+                                  <FileText className="w-4 h-4 text-slate-400" />
+                                  <span>{group.reports_count}</span>
+                                </button>
+                              </td>
+
+                              <td className="px-4 py-3 text-sm font-medium text-slate-600">
+                                {group.members_count}
+                              </td>
+
+                              <td className="px-4 py-3">
+                                <span
+                                  className={`capitalize text-[11px] font-bold px-3 py-1 rounded-full ${
+                                    group.role === "admin"
+                                      ? "bg-disclaimer-100 text-disclaimer-700"
+                                      : "bg-slate-100 text-slate-600"
+                                  }`}
+                                >
+                                  {group.role}
+                                </span>
+                              </td>
+
+                              <td className="px-4 py-3 text-sm text-slate-500">
+                                {formatDate(group.created_at)}
+                              </td>
+
+                              <td className="px-4 py-3 text-right">
+                                <div className="inline-flex items-center gap-2">
+                                  {group.role === "admin" && (
+                                    <button
+                                      onClick={() => openInviteModal(group)}
+                                      title="Add member"
+                                      className="inline-flex items-center justify-center w-8 h-8 border border-slate-200 rounded-lg hover:bg-slate-900 hover:text-white hover:border-slate-900 text-slate-600 transition-colors"
+                                    >
+                                      <UserPlus className="w-4 h-4" />
+                                    </button>
+                                  )}
+
+                                  <button
+                                    onClick={() => openMembers(group)}
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm font-semibold text-slate-700 transition-colors"
+                                  >
+                                    <Users className="w-4 h-4" />
+                                    Members
+                                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+
+                    {!loadingGroups && sortedGroups.length > 0 && (
+                      <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-4">
+                        <span className="text-xs text-slate-500">
+                          Showing{" "}
+                          <b className="text-slate-700">{pageStart + 1}</b>–
+                          <b className="text-slate-700">
+                            {pageStart + pagedGroups.length}
+                          </b>{" "}
+                          of{" "}
+                          <b className="text-slate-700">{sortedGroups.length}</b>{" "}
+                          groups
+                        </span>
+
+                        {totalPages > 1 && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() =>
+                                setCurrentPage((p) => Math.max(1, p - 1))
+                              }
+                              disabled={currentPage === 1}
+                              className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              Prev
+                            </button>
+                            {Array.from(
+                              { length: totalPages },
+                              (_, i) => i + 1,
+                            ).map((page) => (
+                              <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`min-w-[28px] px-2 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                                  page === currentPage
+                                    ? "bg-slate-900 text-white border-slate-900"
+                                    : "text-slate-600 border-slate-200 bg-white hover:bg-slate-50"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            ))}
+                            <button
+                              onClick={() =>
+                                setCurrentPage((p) => Math.min(totalPages, p + 1))
+                              }
+                              disabled={currentPage === totalPages}
+                              className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              Next
+                            </button>
                           </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeView === "invites" && (
+                <div className="p-8">
+                  {loadingInvites ? (
+                    <div className="flex items-center justify-center py-32">
+                      <Loader variant="inline" title="Loading invites..." />
+                    </div>
+                  ) : invites.length === 0 ? (
+                    <div className="bg-white border border-slate-200 rounded-2xl p-14 text-center">
+                      <Mail className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+
+                      <h3 className="text-lg font-bold text-slate-900">
+                        No Pending Invites
+                      </h3>
+
+                      <p className="text-sm text-slate-500 mt-1">
+                        You're all caught up
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {invites.map((invite) => (
+                        <div
+                          key={invite.id}
+                          className="bg-white border border-slate-200 rounded-2xl p-6 flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                              <Users className="w-6 h-6 text-slate-500" />
+                            </div>
+
+                            <div>
+                              <h3 className="text-base font-bold text-slate-900">
+                                {invite.group_name}
+                              </h3>
+
+                              <p className="text-sm text-slate-500 mt-1">
+                                Invited by{" "}
+                                <span className="font-semibold text-slate-700">
+                                  {invite.inviter_pharmacy_name || "Pharmacy"}
+                                </span>
+                              </p>
+
+                              {invite.inviter_email && (
+                                <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                                  <Mail className="w-3 h-3" />
+                                  {invite.inviter_email}
+                                </p>
+                              )}
+
+                              <p className="text-xs text-slate-400 mt-2">
+                                Received on {formatDate(invite.created_at)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleAcceptInvite(invite.id)}
+                            className="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors shrink-0"
+                          >
+                            <Check className="w-4 h-4" />
+                            Accept Invite
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {membersModal && selectedGroup && (
+                <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex items-center justify-center">
+                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+                    <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900">
+                          {selectedGroup.name}
+                        </h2>
+
+                        <p className="text-xs text-slate-500 mt-1">
+                          Group members
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {selectedGroup.role === "admin" && (
+                          <button
+                            onClick={() => openInviteModal(selectedGroup)}
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-colors"
+                          >
+                            <UserPlus className="w-4 h-4" />
+                            Add Member
+                          </button>
+                        )}
+
+                        {selectedGroup.role === "admin" ? (
+                          <button
+                            onClick={() => handleDeleteGroup(selectedGroup.id)}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-semibold transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete Group
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleLeaveGroup(selectedGroup.id)}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-semibold transition-colors"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            Leave Group
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => setMembersModal(false)}
+                          className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="p-6">
+                      {loadingMembers ? (
+                        <div className="flex items-center justify-center py-16">
+                          <Loader variant="inline" title="Loading members..." />
+                        </div>
+                      ) : groupMembers.length === 0 ? (
+                        <div className="text-center py-12">
+                          <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+
+                          <p className="text-sm text-slate-500">
+                            No members found
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {groupMembers.map((member) => (
+                            <div
+                              key={member.id}
+                              className="border border-slate-200 rounded-2xl p-4 flex items-center justify-between"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center">
+                                  {member.role === "admin" ? (
+                                    <Crown className="w-5 h-5 text-rose-500" />
+                                  ) : (
+                                    <User className="w-5 h-5 text-slate-500" />
+                                  )}
+                                </div>
+
+                                <div>
+                                  <h4 className="text-sm font-bold text-slate-900">
+                                    {member.pharmacy_name || member.name}
+                                  </h4>
+
+                                  <p className="text-xs text-slate-500 mt-0.5">
+                                    {member.email}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className={`capitalize text-[11px] font-bold px-3 py-1 rounded-full ${
+                                    member.role === "admin"
+                                      ? "bg-disclaimer-100 text-disclaimer-700"
+                                      : "bg-slate-100 text-slate-600"
+                                  }`}
+                                >
+                                  {member.role}
+                                </span>
+
+                                {selectedGroup.role === "admin" &&
+                                  member.user_id !== userId && (
+                                    <button
+                                      onClick={() =>
+                                        handleRemoveMember(
+                                          selectedGroup.id,
+                                          member.user_id,
+                                        )
+                                      }
+                                      className="flex items-center gap-1 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-semibold transition-colors"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                      Remove
+                                    </button>
+                                  )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {reportsModal && selectedReportsGroup && (
+                <div className="fixed inset-0 z-50">
+                  <div
+                    onClick={closeReports}
+                    className={`absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity duration-300 ${
+                      reportsShow ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+
+                  <div
+                    className={`absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+                      reportsShow ? "translate-x-0" : "translate-x-full"
+                    }`}
+                  >
+                    <div className="px-6 pt-6 pb-5 border-b border-slate-100">
+                      <div className="flex items-start justify-between">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2.5">
+                            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                              Reports
+                            </h2>
+
+                            <span className="text-[11px] font-bold text-slate-500 bg-slate-100 rounded-full px-2.5 py-0.5">
+                              {groupReports.length}
+                            </span>
+                          </div>
+
+                          <p className="text-sm text-slate-500 mt-1 truncate">
+                            {selectedReportsGroup.name}
+                          </p>
                         </div>
 
                         <button
-                          onClick={() => handleAcceptInvite(invite.id)}
-                          className="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors shrink-0"
+                          onClick={closeReports}
+                          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                         >
-                          <Check className="w-4 h-4" />
-                          Accept Invite
+                          <X className="w-5 h-5" />
                         </button>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
 
-            {membersModal && selectedGroup && (
-              <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex items-center justify-center">
-                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
-                  <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-bold text-slate-900">
-                        {selectedGroup.name}
-                      </h2>
+                      <div className="relative mt-4">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
 
-                      <p className="text-xs text-slate-500 mt-1">
-                        Group members
-                      </p>
+                        <input
+                          type="text"
+                          placeholder="Search reports..."
+                          value={reportsSearch}
+                          onChange={(e) => setReportsSearch(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-200 transition-colors"
+                        />
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      {selectedGroup.role === "admin" && (
-                        <button
-                          onClick={() => openInviteModal(selectedGroup)}
-                          className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-colors"
-                        >
-                          <UserPlus className="w-4 h-4" />
-                          Add Member
-                        </button>
-                      )}
+                    <div className="flex-1 overflow-y-auto px-6 py-5">
+                      {filteredReports.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center text-center py-20">
+                          <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                            <FileText className="w-7 h-7 text-slate-300" />
+                          </div>
 
-                      {selectedGroup.role === "admin" ? (
-                        <button
-                          onClick={() => handleDeleteGroup(selectedGroup.id)}
-                          className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-semibold transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete Group
-                        </button>
+                          <p className="text-sm font-semibold text-slate-700">
+                            {groupReports.length === 0
+                              ? "No reports yet"
+                              : "No matches found"}
+                          </p>
+
+                          <p className="text-xs text-slate-400 mt-1">
+                            {groupReports.length === 0
+                              ? "Reports shared to this group will appear here"
+                              : "Try a different search term"}
+                          </p>
+                        </div>
                       ) : (
-                        <button
-                          onClick={() => handleLeaveGroup(selectedGroup.id)}
-                          className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-semibold transition-colors"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          Leave Group
-                        </button>
+                        <div className="rounded-2xl border border-slate-200 overflow-hidden">
+                          {filteredReports.map((report, idx) => (
+                            <div
+                              key={report.id}
+                              className={`group flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 transition-colors ${
+                                idx !== 0 ? "border-t border-slate-100" : ""
+                              }`}
+                            >
+                              <button
+                                onClick={() => handleOpenReport(report)}
+                                className="flex items-center gap-3.5 flex-1 min-w-0 text-left"
+                              >
+                                <div className="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-white group-hover:ring-1 group-hover:ring-slate-200 flex items-center justify-center shrink-0 transition-all">
+                                  <FileText className="w-[18px] h-[18px] text-slate-500" />
+                                </div>
+
+                                <div className="min-w-0">
+                                  <p className="text-sm font-semibold text-slate-900 truncate">
+                                    {report.name}
+                                  </p>
+
+                                  <p className="text-xs text-slate-400 mt-0.5">
+                                    {formatLongDate(report.created_at)}
+                                  </p>
+                                </div>
+                              </button>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="hidden sm:inline-flex text-[10px] font-bold text-slate-400 border border-slate-200 rounded-md px-1.5 py-0.5 uppercase tracking-wider">
+                                  CSV
+                                </span>
+
+                                <button
+                                  onClick={() => handleDownloadReport(report)}
+                                  title="Download"
+                                  className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </button>
+
+                                <button
+                                  onClick={() => handleOpenReport(report)}
+                                  title="Open"
+                                  className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                                >
+                                  <ArrowUpRight className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {inviteModal && inviteGroup && (
+                <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex items-center justify-center">
+                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+                    <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900">
+                          Add Member
+                        </h2>
+
+                        <p className="text-xs text-slate-500 mt-1">
+                          Invite a pharmacy to{" "}
+                          <span className="font-semibold text-slate-700">
+                            {inviteGroup.name}
+                          </span>
+                        </p>
+                      </div>
 
                       <button
-                        onClick={() => setMembersModal(false)}
+                        onClick={closeInviteModal}
                         className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
                       >
                         <X className="w-5 h-5" />
                       </button>
                     </div>
-                  </div>
 
-                  <div className="p-6">
-                    {loadingMembers ? (
-                      <div className="flex items-center justify-center py-16">
-                        <Loader variant="inline" title="Loading members..." />
+                    <div className="p-6">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        Pharmacy Email
+                      </label>
+
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+
+                        <input
+                          type="email"
+                          placeholder="Enter pharmacy email"
+                          value={rowInviteEmail}
+                          onChange={(e) => setRowInviteEmail(e.target.value)}
+                          className="w-full border border-slate-200 rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+                        />
                       </div>
-                    ) : groupMembers.length === 0 ? (
-                      <div className="text-center py-12">
-                        <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
 
-                        <p className="text-sm text-slate-500">
-                          No members found
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {groupMembers.map((member) => (
-                          <div
-                            key={member.id}
-                            className="border border-slate-200 rounded-2xl p-4 flex items-center justify-between"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center">
-                                {member.role === "admin" ? (
-                                  <Crown className="w-5 h-5 text-rose-500" />
-                                ) : (
-                                  <User className="w-5 h-5 text-slate-500" />
-                                )}
-                              </div>
-
-                              <div>
-                                <h4 className="text-sm font-bold text-slate-900">
-                                  {member.pharmacy_name || member.name}
-                                </h4>
-
-                                <p className="text-xs text-slate-500 mt-0.5">
-                                  {member.email}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                              <span
-                                className={`capitalize text-[11px] font-bold px-3 py-1 rounded-full ${
-                                  member.role === "admin"
-                                    ? "bg-disclaimer-100 text-disclaimer-700"
-                                    : "bg-slate-100 text-slate-600"
-                                }`}
-                              >
-                                {member.role}
-                              </span>
-
-                              {selectedGroup.role === "admin" &&
-                                member.user_id !== userId && (
-                                  <button
-                                    onClick={() =>
-                                      handleRemoveMember(
-                                        selectedGroup.id,
-                                        member.user_id,
-                                      )
-                                    }
-                                    className="flex items-center gap-1 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-semibold transition-colors"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                    Remove
-                                  </button>
-                                )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                      <button
+                        onClick={handleInviteToGroup}
+                        disabled={rowSendingInvite}
+                        className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3 text-sm font-semibold transition-colors"
+                      >
+                        {rowSendingInvite ? "Sending..." : "Send Invite"}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {reportsModal && selectedReportsGroup && (
-              <div className="fixed inset-0 z-50">
-                <div
-                  onClick={closeReports}
-                  className={`absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity duration-300 ${
-                    reportsShow ? "opacity-100" : "opacity-0"
-                  }`}
-                />
+              {groupModal && (
+                <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex items-center justify-center">
+                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+                    <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900">
+                          {groupStep === 1 ? "Create Group" : "Invite Members"}
+                        </h2>
 
-                <div
-                  className={`absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
-                    reportsShow ? "translate-x-0" : "translate-x-full"
-                  }`}
-                >
-                  <div className="px-6 pt-6 pb-5 border-b border-slate-100">
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2.5">
-                          <h2 className="text-xl font-bold tracking-tight text-slate-900">
-                            Reports
-                          </h2>
-
-                          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 rounded-full px-2.5 py-0.5">
-                            {groupReports.length}
-                          </span>
-                        </div>
-
-                        <p className="text-sm text-slate-500 mt-1 truncate">
-                          {selectedReportsGroup.name}
+                        <p className="text-xs text-slate-500 mt-1">
+                          {groupStep === 1
+                            ? "Create a new audit sharing group"
+                            : "Invite pharmacies by email"}
                         </p>
                       </div>
 
                       <button
-                        onClick={closeReports}
-                        className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                        onClick={closeGroupModal}
+                        className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
                       >
                         <X className="w-5 h-5" />
                       </button>
                     </div>
 
-                    <div className="relative mt-4">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-
-                      <input
-                        type="text"
-                        placeholder="Search reports..."
-                        value={reportsSearch}
-                        onChange={(e) => setReportsSearch(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-200 transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto px-6 py-5">
-                    {filteredReports.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center text-center py-20">
-                        <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-                          <FileText className="w-7 h-7 text-slate-300" />
-                        </div>
-
-                        <p className="text-sm font-semibold text-slate-700">
-                          {groupReports.length === 0
-                            ? "No reports yet"
-                            : "No matches found"}
-                        </p>
-
-                        <p className="text-xs text-slate-400 mt-1">
-                          {groupReports.length === 0
-                            ? "Reports shared to this group will appear here"
-                            : "Try a different search term"}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="rounded-2xl border border-slate-200 overflow-hidden">
-                        {filteredReports.map((report, idx) => (
-                          <div
-                            key={report.id}
-                            className={`group flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 transition-colors ${
-                              idx !== 0 ? "border-t border-slate-100" : ""
-                            }`}
-                          >
-                            <button
-                              onClick={() => handleOpenReport(report)}
-                              className="flex items-center gap-3.5 flex-1 min-w-0 text-left"
-                            >
-                              <div className="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-white group-hover:ring-1 group-hover:ring-slate-200 flex items-center justify-center shrink-0 transition-all">
-                                <FileText className="w-[18px] h-[18px] text-slate-500" />
-                              </div>
-
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold text-slate-900 truncate">
-                                  {report.name}
-                                </p>
-
-                                <p className="text-xs text-slate-400 mt-0.5">
-                                  {formatLongDate(report.created_at)}
-                                </p>
-                              </div>
-                            </button>
-
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="hidden sm:inline-flex text-[10px] font-bold text-slate-400 border border-slate-200 rounded-md px-1.5 py-0.5 uppercase tracking-wider">
-                                CSV
-                              </span>
-
-                              <button
-                                onClick={() => handleDownloadReport(report)}
-                                title="Download"
-                                className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-                              >
-                                <Download className="w-4 h-4" />
-                              </button>
-
-                              <button
-                                onClick={() => handleOpenReport(report)}
-                                title="Open"
-                                className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-                              >
-                                <ArrowUpRight className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {inviteModal && inviteGroup && (
-              <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex items-center justify-center">
-                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-                  <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-bold text-slate-900">
-                        Add Member
-                      </h2>
-
-                      <p className="text-xs text-slate-500 mt-1">
-                        Invite a pharmacy to{" "}
-                        <span className="font-semibold text-slate-700">
-                          {inviteGroup.name}
-                        </span>
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={closeInviteModal}
-                      className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <div className="p-6">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                      Pharmacy Email
-                    </label>
-
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-
-                      <input
-                        type="email"
-                        placeholder="Enter pharmacy email"
-                        value={rowInviteEmail}
-                        onChange={(e) => setRowInviteEmail(e.target.value)}
-                        className="w-full border border-slate-200 rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
-                      />
-                    </div>
-
-                    <button
-                      onClick={handleInviteToGroup}
-                      disabled={rowSendingInvite}
-                      className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3 text-sm font-semibold transition-colors"
-                    >
-                      {rowSendingInvite ? "Sending..." : "Send Invite"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {groupModal && (
-              <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex items-center justify-center">
-                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-                  <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-bold text-slate-900">
-                        {groupStep === 1 ? "Create Group" : "Invite Members"}
-                      </h2>
-
-                      <p className="text-xs text-slate-500 mt-1">
-                        {groupStep === 1
-                          ? "Create a new audit sharing group"
-                          : "Invite pharmacies by email"}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={closeGroupModal}
-                      className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <div className="p-6">
-                    {groupStep === 1 && (
-                      <>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                          Group Name
-                        </label>
-
-                        <input
-                          type="text"
-                          placeholder="Enter group name"
-                          value={groupName}
-                          onChange={(e) => setGroupName(e.target.value)}
-                          className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
-                        />
-
-                        <button
-                          onClick={handleCreateGroup}
-                          disabled={creatingGroup}
-                          className="w-full mt-5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
-                        >
-                          {creatingGroup ? (
-                            "Creating..."
-                          ) : (
-                            <>
-                              Next
-                              <ArrowRight className="w-4 h-4" />
-                            </>
-                          )}
-                        </button>
-                      </>
-                    )}
-
-                    {groupStep === 2 && (
-                      <>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                          Pharmacy Email
-                        </label>
-
-                        <div className="relative">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <div className="p-6">
+                      {groupStep === 1 && (
+                        <>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                            Group Name
+                          </label>
 
                           <input
-                            type="email"
-                            placeholder="Enter pharmacy email"
-                            value={inviteEmail}
-                            onChange={(e) => setInviteEmail(e.target.value)}
-                            className="w-full border border-slate-200 rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+                            type="text"
+                            placeholder="Enter group name"
+                            value={groupName}
+                            onChange={(e) => setGroupName(e.target.value)}
+                            className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                           />
-                        </div>
-
-                        <button
-                          onClick={handleInvite}
-                          disabled={sendingInvite}
-                          className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3 text-sm font-semibold transition-colors"
-                        >
-                          {sendingInvite ? "Sending..." : "Send Invite"}
-                        </button>
-
-                        <div className="grid grid-cols-2 gap-3 mt-4">
-                          <button
-                            onClick={closeGroupModal}
-                            className="border border-slate-200 rounded-2xl py-3 text-sm font-semibold hover:bg-slate-50 transition-colors"
-                          >
-                            Skip
-                          </button>
 
                           <button
-                            onClick={closeGroupModal}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl py-3 text-sm font-semibold transition-colors"
+                            onClick={handleCreateGroup}
+                            disabled={creatingGroup}
+                            className="w-full mt-5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
                           >
-                            Finish
+                            {creatingGroup ? (
+                              "Creating..."
+                            ) : (
+                              <>
+                                Next
+                                <ArrowRight className="w-4 h-4" />
+                              </>
+                            )}
                           </button>
-                        </div>
-                      </>
-                    )}
+                        </>
+                      )}
+
+                      {groupStep === 2 && (
+                        <>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                            Pharmacy Email
+                          </label>
+
+                          <div className="relative">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+
+                            <input
+                              type="email"
+                              placeholder="Enter pharmacy email"
+                              value={inviteEmail}
+                              onChange={(e) => setInviteEmail(e.target.value)}
+                              className="w-full border border-slate-200 rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+                            />
+                          </div>
+
+                          <button
+                            onClick={handleInvite}
+                            disabled={sendingInvite}
+                            className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3 text-sm font-semibold transition-colors"
+                          >
+                            {sendingInvite ? "Sending..." : "Send Invite"}
+                          </button>
+
+                          <div className="grid grid-cols-2 gap-3 mt-4">
+                            <button
+                              onClick={closeGroupModal}
+                              className="border border-slate-200 rounded-2xl py-3 text-sm font-semibold hover:bg-slate-50 transition-colors"
+                            >
+                              Skip
+                            </button>
+
+                            <button
+                              onClick={closeGroupModal}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl py-3 text-sm font-semibold transition-colors"
+                            >
+                              Finish
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </main>
         </div>
       </Suspense>

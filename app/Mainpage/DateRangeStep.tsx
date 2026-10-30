@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
-import axios from "axios";
+import api, { failureMessage } from "@/lib/api";
 import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -466,7 +466,7 @@ const DateRangeStep = ({
   const handleSubmit = async () => {
     try {
       const id = localStorage.getItem("auditId");
-      const res = await axios.patch(
+      const res = await api.patch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/dates`,
         {
           inventory_start_date: formatDate(inventoryStartDate),
@@ -478,7 +478,7 @@ const DateRangeStep = ({
       console.log(res.data);
       onContinue();
     } catch (err) {
-      toast("Failed to save dates. Please try again.");
+      toast(failureMessage(err, "Failed to save dates. Please try again."));
     }
   };
 

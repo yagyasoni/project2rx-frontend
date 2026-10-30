@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { X, ArrowLeft } from "lucide-react";
 import StepIndicator from "./StepIndicator";
 import NameReportStep from "./NameReportStep";
@@ -62,7 +62,7 @@ const AuditWizard = ({
     if (!initialAuditId) return;
     localStorage.setItem("auditId", initialAuditId);
 
-    axios
+    api
       .get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${initialAuditId}`,
       )

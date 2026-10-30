@@ -7,6 +7,8 @@
  * figures for the same drug.
  */
 
+import { authFetch } from "@/lib/authFetch";
+
 export interface InventoryRow {
   id: number;
   ndc: string;
@@ -172,7 +174,7 @@ export function normalizeReportRows(json: unknown): InventoryRow[] {
 
 /** Fetches the report for an audit and returns fully normalized rows. */
 export async function fetchReportRows(auditId: string): Promise<InventoryRow[]> {
-  const res = await fetch(
+  const res = await authFetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/report`,
   );
   return normalizeReportRows(await res.json());

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { authFetch } from "@/lib/authFetch";
 import { useParams } from "next/navigation";
 import { Search, ArrowUpDown } from "lucide-react";
 import AppSidebar from "@/components/Sidebar";
@@ -72,7 +73,7 @@ export default function MobileReport() {
         setLoading(true);
         const [reportRows, auditRes] = await Promise.all([
           fetchReportRows(auditId),
-          fetch(
+          authFetch(
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}`,
           ).then((r) => r.json()),
         ]);
