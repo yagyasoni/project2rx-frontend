@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,19 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, Upload, Calendar, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+import { ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 // DEA validator — checksum-based, runs client-side
 function isValidDEA(dea: string): boolean {
@@ -205,8 +197,8 @@ const PharmacyDetailsForm = () => {
       zipCode: "",
       phone: "",
       fax: "",
-      pharmacyLicenseNumber: "",
-      deaNumber: "",
+      // pharmacyLicenseNumber: "",
+      // deaNumber: "",
       general: "",
     });
 
@@ -236,19 +228,19 @@ const PharmacyDetailsForm = () => {
       newErrors.fax = "Fax must be exactly 10 digits";
     }
 
-    const licenseClean = pharmacyLicenseNumber.trim().toUpperCase();
-    if (!licenseClean) {
-      newErrors.pharmacyLicenseNumber = "Pharmacy license number is required";
-    } else if (licenseClean.length < 5) {
-      newErrors.pharmacyLicenseNumber = "License number looks too short";
-    }
+    // const licenseClean = pharmacyLicenseNumber.trim().toUpperCase();
+    // if (!licenseClean) {
+    //   newErrors.pharmacyLicenseNumber = "Pharmacy license number is required";
+    // } else if (licenseClean.length < 5) {
+    //   newErrors.pharmacyLicenseNumber = "License number looks too short";
+    // }
 
-    const deaClean = deaNumber.trim().toUpperCase();
-    if (!deaClean) {
-      newErrors.deaNumber = "DEA number is required";
-    } else if (!isValidDEA(deaClean)) {
-      newErrors.deaNumber = "Invalid DEA number (format or checksum failed)";
-    }
+    // const deaClean = deaNumber.trim().toUpperCase();
+    // if (!deaClean) {
+    //   newErrors.deaNumber = "DEA number is required";
+    // } else if (!isValidDEA(deaClean)) {
+    //   newErrors.deaNumber = "Invalid DEA number (format or checksum failed)";
+    // }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors((prev) => ({ ...prev, ...newErrors }));

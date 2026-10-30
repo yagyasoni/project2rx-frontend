@@ -1,22 +1,21 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import axios from "axios";
 import {
+  Building2,
   CheckCircle2,
   ChevronRight,
   FileText,
-  PenLine,
-  Shield,
-  Search,
-  X,
-  Building2,
   Monitor,
+  Search,
+  Shield,
+  X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import axios from "axios";
 
 // ─── Step Config ──────────────────────────────────────────────────────────────
 interface StepConfig {
@@ -2070,7 +2069,7 @@ const AgreementsPage = () => {
                     isCompleted &&
                       !isCurrent &&
                       "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 cursor-pointer border border-emerald-200",
-                    isLocked && "text-slate-300 cursor-not-allowed",
+                    isLocked && "text-slate-500 cursor-not-allowed",
                     !isCurrent &&
                       !isCompleted &&
                       !isLocked &&

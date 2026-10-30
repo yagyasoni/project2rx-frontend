@@ -14,7 +14,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
-import { trackEvent } from "@/lib/gtm";
+import { trackEvent, newEventId, getMetaCookies } from "@/lib/gtm";
 import axios from "axios";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -190,7 +190,13 @@ const AuthPageInner = () => {
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/admin/verify-otp`
         : `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/verify-otp`;
 
-      const res = await axios.post(url, { email, otp });
+      const eventId = newEventId();
+      const res = await axios.post(url, {
+        email,
+        otp,
+        eventId,
+        ...getMetaCookies(),
+      });
       console.log(res?.data);
 
       if (isLogin) {
@@ -204,7 +210,7 @@ const AuthPageInner = () => {
       } else {
         // ✅ User verified
         toast(res?.data?.message);
-        trackEvent({ event: "sign_up", method: "email" });
+        trackEvent({ event: "sign_up", method: "email", event_id: eventId });
         router.push("/info-page");
 
         // const userId = localStorage.getItem("userId");

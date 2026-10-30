@@ -3579,7 +3579,9 @@ export default function DesktopReport() {
                               }}
                             >
                               <span className="text-xs text-slate-600 tabular-nums">
-                                {row.pkgSize}
+                                {Number.isFinite(Number(row.pkgSize))
+                                  ? Number(row.pkgSize).toFixed(1)
+                                  : row.pkgSize}
                               </span>
                             </td>
                           )}
