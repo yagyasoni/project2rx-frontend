@@ -962,6 +962,7 @@ export default function AuditGroupsPage() {
                 <div className="px-8 pb-5 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
                     <button
+                      data-lock-exempt
                       onClick={() => setActiveView("groups")}
                       className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                         activeView === "groups"
@@ -973,6 +974,7 @@ export default function AuditGroupsPage() {
                     </button>
 
                     <button
+                      data-lock-exempt
                       onClick={() => setActiveView("invites")}
                       className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                         activeView === "invites"

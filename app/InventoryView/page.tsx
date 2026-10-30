@@ -832,6 +832,7 @@ function InventoryViewContent({ router }: { router: any }) {
           {/* Sub-tabs */}
           <div className="mb-5 flex w-fit items-center gap-1 rounded-xl bg-white p-1 shadow-sm ring-1 ring-gray-100">
             <button
+              data-lock-exempt
               onClick={() => setGroupSubTab("my")}
               className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
                 groupSubTab === "my"
@@ -852,6 +853,7 @@ function InventoryViewContent({ router }: { router: any }) {
               </span>
             </button>
             <button
+              data-lock-exempt
               onClick={() => setGroupSubTab("discover")}
               className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
                 groupSubTab === "discover"
@@ -985,6 +987,7 @@ function Tab({
   };
   return (
     <button
+      data-lock-exempt
       onClick={onClick}
       className={`inline-flex items-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-bold transition ${
         active

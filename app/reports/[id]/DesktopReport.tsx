@@ -4020,6 +4020,7 @@ export default function DesktopReport() {
                       <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-100 flex-shrink-0">
                         <div className="flex min-w-0 items-center gap-2.5">
                           <button
+                            data-lock-exempt
                             onClick={() => setOpenGroupsModal(false)}
                             className="h-7 w-7 flex-shrink-0 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                           >
@@ -4027,6 +4028,7 @@ export default function DesktopReport() {
                           </button>
                           {groupView !== "list" && (
                             <button
+                              data-lock-exempt
                               onClick={() =>
                                 setGroupView(
                                   groupView === "report" ? "reports" : "list",
@@ -4827,6 +4829,7 @@ export default function DesktopReport() {
                       <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white flex-shrink-0">
                         <div className="flex items-center gap-2.5">
                           <button
+                            data-lock-exempt
                             onClick={() => {
                               setOpenDrugSidebar(false);
                               setActiveSidebar(null);

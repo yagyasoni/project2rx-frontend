@@ -3,7 +3,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { SupplierProvider } from "@/context/SupplierContext";
 import InactiveAccount, { type GateState } from "@/components/inactiveAccount";
-import { lockGuardProps } from "@/lib/lockGuard";
 import SupportBubble from "@/components/SupportBubble";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -152,14 +151,12 @@ export default function LayoutClient({
       )}
       <Toaster />
       {/* The app stays mounted and visible behind the paywall but is inert while
-          it shows, so deleting the popup in DevTools leaves nothing clickable;
-          the guards answer anything that still gets through with the
-          subscription toast. */}
-      <div
-        className="contents"
-        inert={gate !== "open" && !isPublicRoute}
-        {...lockGuardProps(gate === "locked" && !isPublicRoute)}
-      >
+          it shows, so deleting the popup in DevTools leaves nothing clickable.
+          No click guard here on purpose: without a subscription the app is
+          free to browse, and the check happens at the action itself — paid
+          pages carry their own lock guard, and every other action reaches the
+          API, which refuses with the subscription message. */}
+      <div className="contents" inert={gate !== "open" && !isPublicRoute}>
         <SupplierProvider>{children}</SupplierProvider>
       </div>
       {/* Floating live-support bubble, shown only on the home page. */}

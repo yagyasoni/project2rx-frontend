@@ -364,6 +364,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
 
   return (
     <aside
+      data-lock-exempt
       className={`relative z-[9999] flex h-screen flex-col border-r border-gray-200 bg-white transition-all duration-300 ${
         sidebarOpen ? "w-[17rem]" : "w-[76px]"
       }`}

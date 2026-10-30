@@ -140,7 +140,7 @@ export default function SetupPanel({
           </span>
         </span>
 
-        <Button variant="outline" size="sm" onClick={() => onToggle(true)}>
+        <Button data-lock-exempt variant="outline" size="sm" onClick={() => onToggle(true)}>
           <Pencil className="h-3.5 w-3.5" />
           Edit setup
         </Button>
@@ -168,7 +168,7 @@ export default function SetupPanel({
         </div>
 
         {hasSheet && (
-          <Button variant="ghost" size="sm" onClick={() => onToggle(false)}>
+          <Button data-lock-exempt variant="ghost" size="sm" onClick={() => onToggle(false)}>
             Collapse
           </Button>
         )}

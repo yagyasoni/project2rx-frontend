@@ -14,6 +14,10 @@ import { SUBSCRIPTION_ACTION_MESSAGE } from "@/lib/api";
  * the features that call the API.
  *
  *   <div className="contents" inert={locked} {...lockGuardProps(locked)}>
+ *
+ * Browsing is never locked: tabs and sub-tabs (anything with role="tab"), and
+ * navigation chrome such as the sidebar, view switches and panel close buttons,
+ * which opt out with `data-lock-exempt`. Only the feature itself is locked.
  */
 type GuardProps = Pick<
   HTMLAttributes<HTMLElement>,
@@ -27,6 +31,7 @@ type GuardProps = Pick<
 >;
 
 const TOAST_ID = "subscription-required";
+const EXEMPT = '[data-lock-exempt], [role="tab"], [role="tablist"]';
 
 const INTERACTIVE = [
   "button",
@@ -53,6 +58,9 @@ const INTERACTIVE = [
 // Keys that only move focus or dismiss things; nothing to lock there.
 const PASS_KEYS = new Set(["Tab", "Escape", "Shift", "Control", "Alt", "Meta", "CapsLock"]);
 
+const isExempt = (target: EventTarget | null): boolean =>
+  target instanceof Element && target.closest(EXEMPT) !== null;
+
 const isInteractive = (target: EventTarget | null): boolean => {
   if (!(target instanceof Element)) return false;
   if (target.closest(INTERACTIVE)) return true;
@@ -65,6 +73,7 @@ const notify = () => toast.error(SUBSCRIPTION_ACTION_MESSAGE, { id: TOAST_ID });
 // Pointer phases: stop the page's handlers (menus and selects open on
 // pointerdown) without preventDefault, so scrolling and text selection still work.
 const swallow = (e: SyntheticEvent) => {
+  if (isExempt(e.target)) return;
   e.stopPropagation();
   if (isInteractive(e.target)) notify();
 };
@@ -72,6 +81,7 @@ const swallow = (e: SyntheticEvent) => {
 // Clicks, submits and changes: also cancel the native default (links,
 // checkboxes, form posts).
 const cancel = (e: SyntheticEvent) => {
+  if (isExempt(e.target)) return;
   e.preventDefault();
   e.stopPropagation();
   if (isInteractive(e.target)) notify();

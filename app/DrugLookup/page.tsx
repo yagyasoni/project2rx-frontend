@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { lockGuardProps } from "@/lib/lockGuard";
 import { useRouter } from "next/navigation";
 import AppSidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -325,7 +324,10 @@ export default function DrugLookupLandingPage() {
                   </div>
                 </div>
               )}
-              <div className="contents" inert={locked} {...lockGuardProps(locked)}>
+              {/* No click guard here: searching is how the user reaches the results
+                  view, and that page shows the subscription notice where the data
+                  would be. */}
+              <div className="contents" inert={locked}>
                 {/* Decorative layers */}
                 <div
                   className="absolute inset-0 opacity-20 pointer-events-none"
