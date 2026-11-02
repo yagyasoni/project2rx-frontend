@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef, Suspense } from "react";
+import { authFetch } from "@/lib/authFetch";
+import { SUBSCRIPTION_REQUIRED_MESSAGE } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppSidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -22,6 +24,7 @@ import {
   Filter,
   RotateCcw,
   ExternalLink,
+  Lock,
 } from "lucide-react";
 // import DrugLookupComponent from "@/components/drugLookup";
 import CommunityLinkPageCopy from "@/components/communityLink";
@@ -191,9 +194,10 @@ function DrugLookupResultsInner() {
         if (urlPcn) p.set("pcn", urlPcn);
         if (urlGrp) p.set("grp", urlGrp);
 
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-lookup-global?${p.toString()}`,
         );
+        if (res.status === 403) throw new Error(SUBSCRIPTION_REQUIRED_MESSAGE);
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
         const json = await res.json();
         setData(json);
@@ -225,7 +229,7 @@ function DrugLookupResultsInner() {
           `?q=${encodeURIComponent(searchTerm)}` +
           (ndcMode ? "&type=ndc" : "&type=name");
 
-        const res = await fetch(url);
+        const res = await authFetch(url);
         if (!res.ok) return;
         const out: { name: string; ndc?: string; rx_count: number }[] =
           await res.json();
@@ -631,7 +635,18 @@ function DrugLookupResultsInner() {
                 </div>
               )}
 
-              {!loading && error && (
+              {!loading && error === SUBSCRIPTION_REQUIRED_MESSAGE && (
+                <div className="bg-white border border-slate-200 rounded-2xl p-16 flex flex-col items-center gap-3 shadow-sm">
+                  <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center">
+                    <Lock className="w-5 h-5 text-slate-400" />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-600">
+                    {SUBSCRIPTION_REQUIRED_MESSAGE}
+                  </p>
+                </div>
+              )}
+
+              {!loading && error && error !== SUBSCRIPTION_REQUIRED_MESSAGE && (
                 <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
                   <p className="text-sm font-semibold text-red-700">
                     Something went wrong

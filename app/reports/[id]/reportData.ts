@@ -7,6 +7,8 @@
  * figures for the same drug.
  */
 
+import { authFetch } from "@/lib/authFetch";
+
 export interface InventoryRow {
   id: number;
   ndc: string;
@@ -83,7 +85,6 @@ export function normalizeReportRows(json: unknown): InventoryRow[] {
     const medicareVal = n(row.medicare);
     const njMedicaidVal = n(row.nj_medicaid ?? row.njMedicaid);
     const njBilledVal = medicareVal + njMedicaidVal;
-    // Shortages calculated individually first so combined can sum them
     const shortageMedicareVal = to - medicareVal;
     const shortageNjMedicaidVal = to - njMedicaidVal;
 
@@ -143,9 +144,9 @@ export function normalizeReportRows(json: unknown): InventoryRow[] {
       // Medicaid
       njMedicaid: njMedicaidVal,
       shortageNjMedicaid: shortageNjMedicaidVal,
-      // NJ Billed = njMedicaid + medicare; shortage = sum of both shortages
+      // NJ Billed = njMedicaid + medicare; shortage = ordered - combined billed
       njBilled: njBilledVal,
-      shortageNjBilled: shortageMedicareVal + shortageNjMedicaidVal,
+      shortageNjBilled: to - njBilledVal,
       // Aberrant report
       claimsCount: n(row.claims_count),
       isAberrant: Boolean(row.is_aberrant),
@@ -189,7 +190,7 @@ export function normalizeReportRows(json: unknown): InventoryRow[] {
 
 /** Fetches the report for an audit and returns fully normalized rows. */
 export async function fetchReportRows(auditId: string): Promise<InventoryRow[]> {
-  const res = await fetch(
+  const res = await authFetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/report`,
   );
   return normalizeReportRows(await res.json());

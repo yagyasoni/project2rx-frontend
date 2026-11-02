@@ -10,12 +10,13 @@ import {
   Check,
   History,
   AlertTriangle,
+  Lock,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import axios from "axios";
+import api, { subscriptionMessage } from "@/lib/api";
 import { trackEvent } from "@/lib/gtm";
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL}`;
@@ -58,6 +59,8 @@ export default function BinSearch() {
   const [pcnNumber, setPcnNumber] = useState("");
   const [groupNumber, setGroupNumber] = useState("");
   const [results, setResults] = useState<BinEntry[]>([]);
+  // Set when the plan does not include Bin Search; shown in place of results.
+  const [lockedNotice, setLockedNotice] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -112,12 +115,13 @@ export default function BinSearch() {
   const runSearch = async (bin: string, pcn: string, group: string) => {
     if (bin.length < 1) return;
     setLoading(true);
+    setLockedNotice(null);
     try {
       const params = new URLSearchParams({ bin });
       if (pcn.trim()) params.append("pcn", pcn.trim());
       if (group.trim()) params.append("group", group.trim());
 
-      const res = await axios.get(
+      const res = await api.get(
         `${API_BASE}/api/bin-search?${params.toString()}`,
       );
       setResults(res.data || []);
@@ -126,7 +130,9 @@ export default function BinSearch() {
         result_count: Array.isArray(res.data) ? res.data.length : 0,
       });
     } catch (err) {
-      console.error("BIN search error:", err);
+      const locked = subscriptionMessage(err);
+      if (!locked) console.error("BIN search error:", err);
+      setLockedNotice(locked);
       setResults([]);
     } finally {
       setLoading(false);
@@ -467,6 +473,16 @@ export default function BinSearch() {
                           </button>
                         </div>
                       ))}
+                    </div>
+                  ) : lockedNotice ? (
+                    /* Plan does not include Bin Search */
+                    <div className="flex flex-col items-center justify-center text-center py-16">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                        <Lock className="w-7 h-7 text-slate-400" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-700">
+                        {lockedNotice}
+                      </p>
                     </div>
                   ) : (
                     /* No results */

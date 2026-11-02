@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { lockGuardProps } from "@/lib/lockGuard";
 import { useRouter } from "next/navigation";
 import AppSidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import api from "@/lib/api";
+import api, { subscriptionMessage } from "@/lib/api";
 import {
   Search,
   Plus,
@@ -271,6 +272,8 @@ export default function InventoryViewPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const viewLocked = subscriptionLoaded && !subscription?.inventory_view_access;
+
   return (
     <ProtectedRoute role="user">
       <div className="relative w-full bg-[#fafafa] h-screen overflow-hidden">
@@ -324,7 +327,9 @@ export default function InventoryViewPage() {
                 </div>
               </div>
             )}
-            <InventoryViewContent router={router} />
+            <div className="contents" inert={viewLocked} {...lockGuardProps(viewLocked)}>
+              <InventoryViewContent router={router} />
+            </div>
           </div>
         </div>
       </div>
@@ -827,6 +832,7 @@ function InventoryViewContent({ router }: { router: any }) {
           {/* Sub-tabs */}
           <div className="mb-5 flex w-fit items-center gap-1 rounded-xl bg-white p-1 shadow-sm ring-1 ring-gray-100">
             <button
+              data-lock-exempt
               onClick={() => setGroupSubTab("my")}
               className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
                 groupSubTab === "my"
@@ -847,6 +853,7 @@ function InventoryViewContent({ router }: { router: any }) {
               </span>
             </button>
             <button
+              data-lock-exempt
               onClick={() => setGroupSubTab("discover")}
               className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
                 groupSubTab === "discover"
@@ -980,6 +987,7 @@ function Tab({
   };
   return (
     <button
+      data-lock-exempt
       onClick={onClick}
       className={`inline-flex items-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-bold transition ${
         active
@@ -1468,8 +1476,9 @@ function ReportListingModal({
     } catch (err: any) {
       console.error("Failed to submit report:", err);
       alert(
-        "Failed to submit report. " +
-          (err?.response?.data?.error || "Please try again."),
+        subscriptionMessage(err) ??
+          "Failed to submit report. " +
+            (err?.response?.data?.error || "Please try again."),
       );
       setSubmitting(false);
     }
@@ -2662,7 +2671,7 @@ function AddListingModal({
     } catch (err: any) {
       console.error("Failed to create listing:", err);
       const msg = err?.response?.data?.error || "Please try again.";
-      alert("Failed to publish listing. " + msg);
+      alert(subscriptionMessage(err) ?? "Failed to publish listing. " + msg);
     }
   };
 

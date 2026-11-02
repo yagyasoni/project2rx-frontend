@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
-import axios from "axios";
-import api from "@/lib/api";
+import api, { failureMessage } from "@/lib/api";
 import {
   Layers,
   RotateCw,
@@ -173,13 +172,13 @@ export default function ReportsPage() {
     if (!deletingReportId || isDeleting) return;
     setIsDeleting(true);
     try {
-      await axios.delete(
+      await api.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${deletingReportId}`,
       );
       setReportsData((prev) => prev.filter((r) => r.id !== deletingReportId));
     } catch (e) {
       console.error("Delete failed:", e);
-      alert("Delete failed. Check backend logs.");
+      alert(failureMessage(e, "Delete failed. Check backend logs."));
     } finally {
       setIsDeleting(false);
       setDeleteModal(false);
@@ -191,7 +190,7 @@ export default function ReportsPage() {
 
   const handleEdit = (report: Report) => {
     setEditingReport(report);
-    axios
+    api
       .get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${report.id}`)
       .then((res) => {
         const a = res.data;
@@ -209,7 +208,7 @@ export default function ReportsPage() {
   const handleEditSave = async () => {
     if (!editingReport) return;
     try {
-      await axios.patch(
+      await api.patch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${editingReport.id}/dates`,
         editForm,
       );
@@ -234,7 +233,7 @@ export default function ReportsPage() {
       setEditingReport(null);
     } catch (e) {
       console.error("Edit failed:", e);
-      alert("Failed to save. Check backend logs.");
+      alert(failureMessage(e, "Failed to save. Check backend logs."));
     }
   };
 

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { ArrowUpDown } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 
 type CommunityRow = {
   bin: string;
@@ -80,7 +80,7 @@ export default function CommunityLinkPageCopy({
       if (filterGrp) params.grp = filterGrp;
       if (active === "opportunities" && userId) params.userId = userId;
 
-      const res = await axios.get(
+      const res = await api.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/community/${ndcNumber}`,
         { params },
       );
@@ -112,7 +112,7 @@ export default function CommunityLinkPageCopy({
 
     if (active === "opportunities" && userId) params.userId = userId;
 
-    const res = await axios.get(
+    const res = await api.get(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/community/${ndcNumber}`,
       { params },
     );

@@ -19,7 +19,7 @@ import {
   Building2,
   Loader2,
 } from "lucide-react";
-import axios from "axios";
+import api, { failureMessage, subscriptionMessage } from "@/lib/api";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useSuppliers } from "@/context/SupplierContext";
@@ -292,7 +292,7 @@ const UploadWholesalersStep = ({
     const storedAuditId = localStorage.getItem("auditId");
     if (!storedAuditId) return;
     setAuditId(storedAuditId);
-    axios
+    api
       .get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${storedAuditId}/wholesaler-files`,
       )
@@ -445,7 +445,7 @@ const UploadWholesalersStep = ({
 
         // ✅ Step 1: Try to fetch admin mapping from DB
         try {
-          const res = await axios.get(
+          const res = await api.get(
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/supplier-mapping-by-name/${encodeURIComponent(wholesaler.name)}`,
           );
 
@@ -555,7 +555,7 @@ const UploadWholesalersStep = ({
     }, 350);
 
     try {
-      const res = await axios.post(
+      const res = await api.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/wholesalers`,
         formData,
       );
@@ -584,7 +584,7 @@ const UploadWholesalersStep = ({
         });
       } else {
         // Fallback: re-read the list if the response shape ever changes.
-        axios
+        api
           .get(
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/wholesaler-files`,
           )
@@ -626,7 +626,7 @@ const UploadWholesalersStep = ({
             : typeof data?.error === "string"
               ? data.error
               : err?.message || "Please try again.";
-      toast("Upload failed: " + message);
+      toast(subscriptionMessage(err) ?? "Upload failed: " + message);
     }
   };
 
@@ -652,14 +652,17 @@ const UploadWholesalersStep = ({
       const auditId = localStorage.getItem("auditId");
       if (auditId) {
         try {
-          await axios.delete(
+          await api.delete(
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/wholesalers`,
             { params: { name } },
           );
         } catch (err) {
           console.error("Failed to delete wholesaler file:", err);
           toast(
-            `Failed to delete "${name}" file on the server. Please try again.`,
+            failureMessage(
+              err,
+              `Failed to delete "${name}" file on the server. Please try again.`,
+            ),
           );
           setIsDeleting(false);
           return; // keep the modal open so the user can retry

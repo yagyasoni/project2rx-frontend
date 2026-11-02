@@ -2,7 +2,7 @@
 
 import { Toaster } from "@/components/ui/sonner";
 import { SupplierProvider } from "@/context/SupplierContext";
-import InactiveAccount from "@/components/inactiveAccount";
+import InactiveAccount, { type GateState } from "@/components/inactiveAccount";
 import SupportBubble from "@/components/SupportBubble";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -14,6 +14,7 @@ export default function LayoutClient({
   children: React.ReactNode;
 }) {
   const [role, setRole] = useState<string | null>(null);
+  const [gate, setGate] = useState<GateState>("open");
   const pathname = usePathname();
 
   // Public routes carry no logged-in session work. Not mounting InactiveAccount
@@ -140,10 +141,24 @@ export default function LayoutClient({
 
   return (
     <>
-      {!isPublicRoute && <InactiveAccount />}
-      {/* <InactiveAccount /> */}
+      {/* The paywall gets its own wrapper so a popup node deleted in DevTools
+          can never be the reference node for React's sibling insertions (the
+          "insertBefore … is not a child of this node" crash). */}
+      {!isPublicRoute && (
+        <div className="contents">
+          <InactiveAccount onGateChange={setGate} />
+        </div>
+      )}
       <Toaster />
-      <SupplierProvider>{children}</SupplierProvider>
+      {/* The app stays mounted and visible behind the paywall but is inert while
+          it shows, so deleting the popup in DevTools leaves nothing clickable.
+          No click guard here on purpose: without a subscription the app is
+          free to browse, and the check happens at the action itself — paid
+          pages carry their own lock guard, and every other action reaches the
+          API, which refuses with the subscription message. */}
+      <div className="contents" inert={gate !== "open" && !isPublicRoute}>
+        <SupplierProvider>{children}</SupplierProvider>
+      </div>
       {/* Floating live-support bubble, shown only on the home page. */}
       {pathname === "/" && <SupportBubble />}
       {/* Beta banner disabled. When re-enabled, keep it rendered last so it
