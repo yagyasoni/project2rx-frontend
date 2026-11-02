@@ -35,6 +35,12 @@ export interface InventoryRow {
   shortageSsc: number;
   pdmi: number;
   shortagePdmi: number;
+  medimpact: number;
+  shortageMedimpact: number;
+  primeTherapeutics: number;
+  shortagePrimeTherapeutics: number;
+  benecard: number;
+  shortageBenecard: number;
   // Coupon
   coupon: number;
   shortageCoupon: number;
@@ -118,6 +124,13 @@ export function normalizeReportRows(json: unknown): InventoryRow[] {
       shortageSsc: to - n(row.ssc),
       pdmi: n(row.pdmi),
       shortagePdmi: to - n(row.pdmi),
+      medimpact: n(row.medimpact),
+      shortageMedimpact: to - n(row.medimpact),
+      primeTherapeutics: n(row.prime_therapeutics ?? row.primeTherapeutics),
+      shortagePrimeTherapeutics:
+        to - n(row.prime_therapeutics ?? row.primeTherapeutics),
+      benecard: n(row.benecard),
+      shortageBenecard: to - n(row.benecard),
       // Coupon
       coupon: n(row.coupon),
       shortageCoupon: to - n(row.coupon),
@@ -160,6 +173,9 @@ export function normalizeReportRows(json: unknown): InventoryRow[] {
       r.shortageHumana,
       r.shortageSsc,
       r.shortagePdmi,
+      r.shortageMedimpact,
+      r.shortagePrimeTherapeutics,
+      r.shortageBenecard,
       r.shortageCoupon,
       r.shortageGovMilitary,
       r.shortageMedicare,

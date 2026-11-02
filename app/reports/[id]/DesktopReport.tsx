@@ -303,6 +303,35 @@ const ALL_COLS: ColDef[] = [
     group: "commercial",
     isShortage: true,
   },
+  { key: "medimpact", label: "MedImpact", w: 110, group: "commercial" },
+  {
+    key: "shortageMedimpact",
+    label: "Short MedImpact",
+    w: 130,
+    group: "commercial",
+    isShortage: true,
+  },
+  {
+    key: "primeTherapeutics",
+    label: "Prime Therapeutics",
+    w: 140,
+    group: "commercial",
+  },
+  {
+    key: "shortagePrimeTherapeutics",
+    label: "Short Prime",
+    w: 110,
+    group: "commercial",
+    isShortage: true,
+  },
+  { key: "benecard", label: "Benecard", w: 110, group: "commercial" },
+  {
+    key: "shortageBenecard",
+    label: "Short Benecard",
+    w: 120,
+    group: "commercial",
+    isShortage: true,
+  },
   // Coupon
   { key: "coupon", label: "Coupon", w: 100, group: "coupon" },
   {
@@ -361,6 +390,9 @@ const COLUMN_TO_PBM_NAMES: Partial<Record<ColKey, string[]>> = {
   optumrx: ["OPTUMRX"],
   ssc: ["SS&C (FORMERLY HUMANA, ARGUS, AND DST)"],
   pdmi: ["PDMI (CO-PAY CARD)"],
+  medimpact: ["MEDIMPACT"],
+  primeTherapeutics: ["PRIME THERAPEUTICS"],
+  benecard: ["BENECARD"],
   njMedicaid: ["NJ MEDICAID"],
 };
 
@@ -1036,6 +1068,9 @@ export default function DesktopReport() {
       const sHumana = +(nto - row.humana).toFixed(2);
       const sSsc = +(nto - row.ssc).toFixed(2);
       const sPdmi = +(nto - row.pdmi).toFixed(2);
+      const sMedimpact = +(nto - row.medimpact).toFixed(2);
+      const sPrime = +(nto - row.primeTherapeutics).toFixed(2);
+      const sBenecard = +(nto - row.benecard).toFixed(2);
       const sCoupon = +(nto - row.coupon).toFixed(2);
       const sGovMil = +(nto - row.govMilitary).toFixed(2);
       const minPkg = Math.min(
@@ -1046,6 +1081,9 @@ export default function DesktopReport() {
         sHumana,
         sSsc,
         sPdmi,
+        sMedimpact,
+        sPrime,
+        sBenecard,
         sCoupon,
         sGovMil,
         sMed,
@@ -1063,6 +1101,9 @@ export default function DesktopReport() {
         shortageHumana: sHumana,
         shortageSsc: sSsc,
         shortagePdmi: sPdmi,
+        shortageMedimpact: sMedimpact,
+        shortagePrimeTherapeutics: sPrime,
+        shortageBenecard: sBenecard,
         shortageCoupon: sCoupon,
         shortageGovMilitary: sGovMil,
         shortageMedicare: sMed,
@@ -1081,6 +1122,9 @@ export default function DesktopReport() {
         nhu = d(row.humana),
         ns = d(row.ssc);
       const np = d(row.pdmi),
+        nmi = d(row.medimpact),
+        npt = d(row.primeTherapeutics),
+        nb = d(row.benecard),
         nco = d(row.coupon),
         ngm = d(row.govMilitary),
         nm = d(row.medicare),
@@ -1095,6 +1139,9 @@ export default function DesktopReport() {
       const uSHu = +(row.totalOrdered - nhu).toFixed(2);
       const uSS = +(row.totalOrdered - ns).toFixed(2);
       const uSP = +(row.totalOrdered - np).toFixed(2);
+      const uSMi = +(row.totalOrdered - nmi).toFixed(2);
+      const uSPt = +(row.totalOrdered - npt).toFixed(2);
+      const uSB = +(row.totalOrdered - nb).toFixed(2);
       const uSCo = +(row.totalOrdered - nco).toFixed(2);
       const uSGm = +(row.totalOrdered - ngm).toFixed(2);
       const minUnit = Math.min(
@@ -1105,6 +1152,9 @@ export default function DesktopReport() {
         uSHu,
         uSS,
         uSP,
+        uSMi,
+        uSPt,
+        uSB,
         uSCo,
         uSGm,
         sMed,
@@ -1128,6 +1178,12 @@ export default function DesktopReport() {
         shortageSsc: uSS,
         pdmi: np,
         shortagePdmi: uSP,
+        medimpact: nmi,
+        shortageMedimpact: uSMi,
+        primeTherapeutics: npt,
+        shortagePrimeTherapeutics: uSPt,
+        benecard: nb,
+        shortageBenecard: uSB,
         coupon: nco,
         shortageCoupon: uSCo,
         govMilitary: ngm,
@@ -1576,7 +1632,7 @@ export default function DesktopReport() {
   };
 
   // Smallest SHORTAGE value shown in a drug's "Highest Shortage" sidebar.
-  // Mirrors the sidebar's pbmRows exactly (9 insurers, no Coupon/Gov-Military),
+  // Mirrors the sidebar's pbmRows exactly (12 insurers, no Coupon/Gov-Military),
   // the same `billed > 0 || shortage < 0` filter, and Math.min with no clamping.
   // Returns 0 when the sidebar would show no rows.
   const sidebarSmallestShortage = (r: InventoryRow): number => {
@@ -1587,6 +1643,9 @@ export default function DesktopReport() {
       { billed: r.humana, shortage: r.shortageHumana },
       { billed: r.njMedicaid, shortage: r.shortageNjMedicaid },
       { billed: r.pdmi, shortage: r.shortagePdmi },
+      { billed: r.medimpact, shortage: r.shortageMedimpact },
+      { billed: r.primeTherapeutics, shortage: r.shortagePrimeTherapeutics },
+      { billed: r.benecard, shortage: r.shortageBenecard },
       { billed: r.horizon, shortage: r.shortageHorizon },
       { billed: r.ssc, shortage: r.shortageSsc },
       { billed: r.medicare, shortage: r.shortageMedicare },
@@ -5641,27 +5700,17 @@ export default function DesktopReport() {
                             </span>
                           </div>
                           <div className="px-4 pb-4 max-h-[400px] overflow-y-auto">
-                            {[
-                              "EXPRESS SCRIPTS",
-                              "OPTUMRX",
-                              "CVS CAREMARK",
-                              "CASH",
-                              "SS&C (FORMERLY HUMANA, ARGUS, AND DST)",
-                              "HORIZON HEALTH",
-                              "NJ MEDICAID",
-                              "CAPITALRX",
-                              "CHANGE HEALTHCARE",
-                              "PDMI (CO-PAY CARD)",
-                              "MCKESSON HDS (CO-PAY CARD)",
-                              "SAVRX",
-                              "ELIXIR",
-                              "MEDIMPACT",
-                              "NAVITUS",
-                              "VIATRIS (CO-PAY CARD)",
-                              "ABARCA",
-                              "RXSENSE",
-                              "PREVI",
-                            ].map((name) => (
+                            {/* Insurers present in this drug's claims, using the
+                                master sheet's exact spelling so the filter matches */}
+                            {Array.from(
+                              new Set(
+                                rxLines
+                                  .map((r) => r.pri_insurance)
+                                  .filter((n): n is string => !!n),
+                              ),
+                            )
+                              .sort((a, b) => a.localeCompare(b))
+                              .map((name) => (
                               <label
                                 key={name}
                                 className="flex items-center gap-2.5 py-2 cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1 border-b border-slate-50 last:border-0"
@@ -5680,7 +5729,7 @@ export default function DesktopReport() {
                                   style={{ accentColor: "#1e293b" }}
                                 />
                                 <span className="text-[12px] text-slate-700 font-medium leading-tight">
-                                  {name}
+                                  {name.toUpperCase()}
                                 </span>
                               </label>
                             ))}
@@ -6817,6 +6866,21 @@ export default function DesktopReport() {
                           name: "MCKESSON HDS (CO-PAY CARD)",
                           billed: shortageDrug.pdmi,
                           shortage: shortageDrug.shortagePdmi,
+                        },
+                        {
+                          name: "MEDIMPACT",
+                          billed: shortageDrug.medimpact,
+                          shortage: shortageDrug.shortageMedimpact,
+                        },
+                        {
+                          name: "PRIME THERAPEUTICS",
+                          billed: shortageDrug.primeTherapeutics,
+                          shortage: shortageDrug.shortagePrimeTherapeutics,
+                        },
+                        {
+                          name: "BENECARD",
+                          billed: shortageDrug.benecard,
+                          shortage: shortageDrug.shortageBenecard,
                         },
                         {
                           name: "HORIZON",
