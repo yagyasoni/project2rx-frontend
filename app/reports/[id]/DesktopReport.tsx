@@ -13,6 +13,7 @@ import {
   Search,
   X,
   ChevronDown,
+  ChevronRight,
   RotateCw,
   Download,
   SlidersHorizontal,
@@ -207,6 +208,8 @@ interface ColDef {
   group: ColGroup;
   dot?: string;
   isShortage?: boolean;
+  /** Breakdown column of the Coupon total; only shown when the group is expanded. */
+  sub?: boolean;
 }
 
 const ALL_COLS: ColDef[] = [
@@ -289,22 +292,6 @@ const ALL_COLS: ColDef[] = [
     group: "commercial",
     isShortage: true,
   },
-  { key: "ssc", label: "SSC", w: 90, group: "commercial" },
-  {
-    key: "shortageSsc",
-    label: "Short SSC",
-    w: 90,
-    group: "commercial",
-    isShortage: true,
-  },
-  { key: "pdmi", label: "PDMI (Co-Pay)", w: 130, group: "commercial" },
-  {
-    key: "shortagePdmi",
-    label: "Short PDMI",
-    w: 110,
-    group: "commercial",
-    isShortage: true,
-  },
   { key: "medimpact", label: "MedImpact", w: 110, group: "commercial" },
   {
     key: "shortageMedimpact",
@@ -334,7 +321,7 @@ const ALL_COLS: ColDef[] = [
     group: "commercial",
     isShortage: true,
   },
-  // Coupon
+  // Coupon — the API's coupon value already includes SSC and PDMI
   { key: "coupon", label: "Coupon", w: 100, group: "coupon" },
   {
     key: "shortageCoupon",
@@ -342,6 +329,25 @@ const ALL_COLS: ColDef[] = [
     w: 110,
     group: "coupon",
     isShortage: true,
+  },
+  // Breakdown of the Coupon total, shown only when the group is expanded
+  { key: "ssc", label: "SSC", w: 90, group: "coupon", sub: true },
+  {
+    key: "shortageSsc",
+    label: "Short SSC",
+    w: 90,
+    group: "coupon",
+    isShortage: true,
+    sub: true,
+  },
+  { key: "pdmi", label: "PDMI (Co-Pay)", w: 130, group: "coupon", sub: true },
+  {
+    key: "shortagePdmi",
+    label: "Short PDMI",
+    w: 110,
+    group: "coupon",
+    isShortage: true,
+    sub: true,
   },
   // Medicare
   // Medicare
@@ -732,6 +738,8 @@ export default function DesktopReport() {
     initVis[c.key] = true;
   });
   const [vis, setVis] = useState<VisMap>(initVis);
+  // Coupon is a merged total (coupon + SSC + PDMI); expanding shows the breakdown
+  const [couponExpanded, setCouponExpanded] = useState(false);
   const toggleVis = (k: ColKey) => setVis((p) => ({ ...p, [k]: !p[k] }));
   const togglePair = (k: ColKey) =>
     setVis((p) => {
@@ -1319,7 +1327,9 @@ export default function DesktopReport() {
 
   // ── Visible cols split by group ───────────────────────────────────────────
 
-  const visCols = ALL_COLS.filter((c) => vis[c.key]);
+  const visCols = ALL_COLS.filter(
+    (c) => vis[c.key] && (!c.sub || couponExpanded),
+  );
   const baseScrollCols = visCols.filter((c) => c.group === "base-scroll");
   const commercialCols = visCols.filter((c) => c.group === "commercial");
   const couponCols = visCols.filter((c) => c.group === "coupon");
@@ -1468,6 +1478,14 @@ export default function DesktopReport() {
     if (!colKey) return true;
     if (colKey === "njBilled") {
       return r.pbm_column === "medicare" || r.pbm_column === "njMedicaid";
+    }
+    // Coupon is the merged total, so its drawer shows SSC and PDMI claims too
+    if (colKey === "coupon") {
+      return (
+        r.pbm_column === "coupon" ||
+        r.pbm_column === "ssc" ||
+        r.pbm_column === "pdmi"
+      );
     }
     return r.pbm_column === colKey;
   };
@@ -1634,8 +1652,9 @@ export default function DesktopReport() {
   };
 
   // Smallest SHORTAGE value shown in a drug's "Highest Shortage" sidebar.
-  // Mirrors the sidebar's pbmRows exactly (12 insurers, no Coupon/Gov-Military),
-  // the same `billed > 0 || shortage < 0` filter, and Math.min with no clamping.
+  // Mirrors the sidebar's pbmRows exactly (11 rows: 10 insurers plus the merged
+  // Coupon total that includes SSC and PDMI; no Gov-Military), the same
+  // `billed > 0 || shortage < 0` filter, and Math.min with no clamping.
   // Returns 0 when the sidebar would show no rows.
   const sidebarSmallestShortage = (r: InventoryRow): number => {
     const pbm = [
@@ -1644,12 +1663,11 @@ export default function DesktopReport() {
       { billed: r.cvsCaremark, shortage: r.shortageCvsCaremark },
       { billed: r.humana, shortage: r.shortageHumana },
       { billed: r.njMedicaid, shortage: r.shortageNjMedicaid },
-      { billed: r.pdmi, shortage: r.shortagePdmi },
       { billed: r.medimpact, shortage: r.shortageMedimpact },
       { billed: r.primeTherapeutics, shortage: r.shortagePrimeTherapeutics },
       { billed: r.benecard, shortage: r.shortageBenecard },
       { billed: r.horizon, shortage: r.shortageHorizon },
-      { billed: r.ssc, shortage: r.shortageSsc },
+      { billed: r.coupon, shortage: r.shortageCoupon },
       { billed: r.medicare, shortage: r.shortageMedicare },
     ].filter((x) => x.billed > 0 || x.shortage < 0);
     if (pbm.length === 0) return 0;
@@ -1981,6 +1999,7 @@ export default function DesktopReport() {
         onClick={(e) => handleSort(c.key, e)}
       >
         <div className="flex items-center justify-center gap-0.5">
+          {c.sub ? "↳ " : ""}
           {c.label}
           <SortIcon active={sortDir(c.key)} />
         </div>
@@ -2448,10 +2467,16 @@ export default function DesktopReport() {
                             >
                               <Checkbox
                                 checked={!!vis[c.key]}
-                                onCheckedChange={() => togglePair(c.key)}
+                                onCheckedChange={() => {
+                                  // Turning a breakdown column on also expands the group
+                                  if (c.sub && !vis[c.key]) setCouponExpanded(true);
+                                  togglePair(c.key);
+                                }}
                                 className="h-3 w-3"
                               />
-                              {c.label}
+                              <span className={c.sub ? "pl-2" : ""}>
+                                {c.label}
+                              </span>
                             </label>
                           ))}
                         </div>
@@ -3215,7 +3240,28 @@ export default function DesktopReport() {
                             padding: 0,
                           }}
                         >
-                          Coupon
+                          <div className="flex items-center justify-center gap-1">
+                            <span>Coupon</span>
+                            <button
+                              type="button"
+                              title={
+                                couponExpanded
+                                  ? "Hide SSC and PDMI breakdown"
+                                  : "Show SSC and PDMI breakdown"
+                              }
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCouponExpanded((v) => !v);
+                              }}
+                              className="h-4 w-4 flex items-center justify-center rounded hover:bg-purple-200/60"
+                            >
+                              {couponExpanded ? (
+                                <ChevronDown className="h-3 w-3" />
+                              ) : (
+                                <ChevronRight className="h-3 w-3" />
+                              )}
+                            </button>
+                          </div>
                         </th>
                       )}
 
@@ -6875,11 +6921,6 @@ export default function DesktopReport() {
                           shortage: shortageDrug.shortageNjMedicaid,
                         },
                         {
-                          name: "MCKESSON HDS (CO-PAY CARD)",
-                          billed: shortageDrug.pdmi,
-                          shortage: shortageDrug.shortagePdmi,
-                        },
-                        {
                           name: "MEDIMPACT",
                           billed: shortageDrug.medimpact,
                           shortage: shortageDrug.shortageMedimpact,
@@ -6900,9 +6941,9 @@ export default function DesktopReport() {
                           shortage: shortageDrug.shortageHorizon,
                         },
                         {
-                          name: "SSC",
-                          billed: shortageDrug.ssc,
-                          shortage: shortageDrug.shortageSsc,
+                          name: "COUPON (INCL. SSC, PDMI)",
+                          billed: shortageDrug.coupon,
+                          shortage: shortageDrug.shortageCoupon,
                         },
                         {
                           name: "MEDICARE",
