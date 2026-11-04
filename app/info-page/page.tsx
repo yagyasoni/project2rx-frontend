@@ -98,6 +98,9 @@ const EMPTY_ERRORS = {
   stateCode: "",
   zipCode: "",
   phone: "",
+  fax: "",
+  pharmacyLicenseNumber: "",
+  deaNumber: "",
   general: "",
 };
 
@@ -181,18 +184,7 @@ const PharmacyDetailsForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    setErrors({
-      pharmacyName: "",
-      address: "",
-      city: "",
-      stateCode: "",
-      zipCode: "",
-      phone: "",
-      fax: "",
-      // pharmacyLicenseNumber: "",
-      // deaNumber: "",
-      general: "",
-    });
+    setErrors(EMPTY_ERRORS);
 
     const newErrors: Partial<FormErrors> = {};
 
