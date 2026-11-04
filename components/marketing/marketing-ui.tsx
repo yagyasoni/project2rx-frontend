@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 export const SITE_URL = "https://www.auditprorx.com";
 export const SUPPORT_EMAIL = "support@auditprorx.com";
-export const SUPPORT_PHONE = "+1 (551) 229-6466";
+export const SUPPORT_PHONE = "+1 (201) 490-0776";
 export const BOOKING_URL = "https://calendar.app.google/BD5NtSvdCYkfP5FJ7";
 
 export const whatsappLink = (message: string) =>

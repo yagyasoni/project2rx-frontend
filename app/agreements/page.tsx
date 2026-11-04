@@ -116,6 +116,46 @@ const ALL_PMS = [
   "PRIMERX",
 ];
 
+// ─── Platform services covered by the agreements ──────────────────────────────
+const PLATFORM_SERVICES = [
+  {
+    name: "Inventory Reports",
+    desc: "Upload dispensing and billing records from your pharmacy management system together with wholesaler purchase invoices to generate inventory audit reports, including reconciliation of purchased versus dispensed quantities and PBM-level reimbursement breakdowns.",
+  },
+  {
+    name: "Aberrant Reports",
+    desc: "Analyze dispensing activity to identify unusual patterns and flag aberrant dispensing.",
+  },
+  {
+    name: "Group Reports",
+    desc: "Create or join a pharmacy group and share consolidated inventory reports with the other members of that group.",
+  },
+  {
+    name: "Bin Search",
+    desc: "Identify the PBM and payer type associated with an insurance BIN.",
+  },
+  {
+    name: "Drug Lookup",
+    desc: "Search drug variants, NDC codes, payer performance, and unit pricing drawn from aggregated data across the AuditProRx community.",
+  },
+  {
+    name: "Inventory View",
+    desc: "Discover verified surplus stock at other participating pharmacies for patient-specific transfers, subject to the separate Inventory Network Participation Agreement.",
+  },
+  {
+    name: "Temperature Logs",
+    desc: "Record, save, and export monthly refrigerator and ambient temperature logs, including staff initials, comments, thermometer calibration details, and Pharmacist-in-Charge sign-off.",
+  },
+  {
+    name: "Leads and Notifications",
+    desc: "Receive leads, product updates, and announcements published by AuditProRx inside the platform.",
+  },
+  {
+    name: "Wholesaler File Collection",
+    desc: "Where authorized under the Release and Authorization Agreement, collection of your secondary wholesaler invoices on your behalf through a dedicated AuditProRx email address.",
+  },
+];
+
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 const Navbar = ({
   completed,
@@ -299,7 +339,7 @@ const Spinner = () => (
 //       </p>
 //       <p className="text-slate-600 text-xs leading-relaxed">
 //         This Agreement is made between{" "}
-//         <span className="font-semibold text-slate-800">Drug Drop Rx LLC</span>{" "}
+//         <span className="font-semibold text-slate-800">AuditProRx</span>{" "}
 //         ("we," "us," or "our") and{" "}
 //         <span className="font-semibold text-slate-800">{pharmacyName}</span>{" "}
 //         ("you" or "your"). By signing, both parties agree to keep the
@@ -445,7 +485,7 @@ const Spinner = () => (
 //       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 //         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
 //           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-//             Drug Drop Rx LLC
+//             AuditProRx
 //           </p>
 //           <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
 //           <SigRow label="Title" value="CEO" />
@@ -502,7 +542,7 @@ const NDAContent = ({
       <p className="text-slate-600 text-xs leading-relaxed">
         This Non-Disclosure and Data Usage Agreement ("Agreement") is entered
         into between{" "}
-        <span className="font-semibold text-slate-800">Drug Drop Rx LLC</span>{" "}
+        <span className="font-semibold text-slate-800">AuditProRx</span>{" "}
         ("Company," "we," "us," or "our") and{" "}
         <span className="font-semibold text-slate-800">{pharmacyName}</span>{" "}
         ("Pharmacy," "you," or "your").
@@ -510,8 +550,9 @@ const NDAContent = ({
       <p className="text-slate-600 text-xs leading-relaxed mt-2">
         AuditProRx provides a technology platform designed to assist pharmacies
         in uploading, processing, and analyzing inventory records, supplier
-        invoices, and related operational data to generate insights, reports,
-        and analytical outputs. By accessing or using the platform, you confirm
+        invoices, temperature logs, and related operational data to generate
+        insights, reports, and analytical outputs through the services
+        described in Section 1. By accessing or using the platform, you confirm
         that you have read, understood, and agreed to be legally bound by the
         terms of this Agreement, including the AuditProRx{" "}
         <a
@@ -526,20 +567,46 @@ const NDAContent = ({
       </p>
     </div>
 
-    <DocSection number="1" title="Confidential Information">
-      <p className="text-slate-600">
-        For purposes of this Agreement, "Confidential Information" includes all
-        non-public data disclosed through the platform, including but not
-        limited to inventory records, prescription-related data, supplier
-        invoices, pricing information, reimbursement data, analytical reports,
-        system-generated outputs, and all communications between the Pharmacy
-        and AuditProRx. Such information shall be treated as confidential and
-        shall not be disclosed to third parties except as permitted under this
-        Agreement.
+    <DocSection number="1" title="Platform Services">
+      <p className="text-slate-600 mb-3">
+        This Agreement covers all data disclosed through, and all outputs
+        generated by, the AuditProRx platform, including the following
+        services:
+      </p>
+      <div className="space-y-2">
+        {PLATFORM_SERVICES.map(({ name, desc }) => (
+          <div key={name} className="flex gap-2 text-slate-600">
+            <span className="font-semibold text-slate-800 shrink-0">
+              {name}:
+            </span>
+            <span>{desc}</span>
+          </div>
+        ))}
+      </div>
+      <p className="text-slate-600 mt-3">
+        AuditProRx may add, modify, or retire features from time to time. Any
+        new feature made available through the platform is covered by this
+        Agreement from the date it is released.
       </p>
     </DocSection>
 
-    <DocSection number="2" title="Data Ownership and License">
+    <DocSection number="2" title="Confidential Information">
+      <p className="text-slate-600">
+        For purposes of this Agreement, "Confidential Information" includes all
+        non-public data disclosed through the platform, including but not
+        limited to inventory records, prescription-related and dispensing data,
+        supplier and wholesaler invoices, pricing information, reimbursement
+        data, insurance BIN, PCN, and group identifiers, temperature log
+        records, pharmacy group memberships and reports shared within a group,
+        inventory listings and connect requests, drug lookup queries,
+        analytical reports, system-generated outputs, and all communications
+        between the Pharmacy and AuditProRx. Such information shall be treated
+        as confidential and shall not be disclosed to third parties except as
+        permitted under this Agreement.
+      </p>
+    </DocSection>
+
+    <DocSection number="3" title="Data Ownership and License">
       <p className="text-slate-600">
         The Pharmacy retains ownership of the raw data it uploads to the
         platform. However, by submitting such data, the Pharmacy grants
@@ -558,7 +625,7 @@ const NDAContent = ({
       </p>
     </DocSection>
 
-    <DocSection number="3" title="Platform Use and Data Processing">
+    <DocSection number="4" title="Platform Use and Data Processing">
       <p className="text-slate-600">
         The Pharmacy acknowledges that AuditProRx operates as a data processing
         and analytics platform and that submitted data may be processed,
@@ -567,9 +634,16 @@ const NDAContent = ({
         aggregation, statistical analysis, and automated computation necessary
         for delivering platform functionality and improving system performance.
       </p>
+      <p className="text-slate-600 mt-3">
+        Certain services make information available to other platform users.
+        Drug Lookup results are derived from aggregated, de-identified
+        community data; reports shared to a pharmacy group are visible to the
+        members of that group; and Inventory View listings are visible to other
+        verified participating pharmacies.
+      </p>
     </DocSection>
 
-    <DocSection number="4" title="Regulatory Compliance">
+    <DocSection number="5" title="Regulatory Compliance">
       <p className="text-slate-600">
         The Pharmacy is solely responsible for ensuring that all data submitted
         to the platform complies with applicable federal, state, and industry
@@ -581,7 +655,7 @@ const NDAContent = ({
       </p>
     </DocSection>
 
-    <DocSection number="5" title="Platform Nature and No Warranty">
+    <DocSection number="6" title="Platform Nature and No Warranty">
       <p className="text-slate-600">
         The platform and all associated services are provided on an "as is" and
         "as available" basis. While AuditProRx endeavors to provide accurate and
@@ -591,7 +665,7 @@ const NDAContent = ({
       </p>
     </DocSection>
 
-    <DocSection number="6" title="Use of Outputs and Independent Judgment">
+    <DocSection number="7" title="Use of Outputs and Independent Judgment">
       <p className="text-slate-600">
         The Pharmacy acknowledges that all outputs, reports, and insights
         generated by the platform are intended solely for informational and
@@ -602,7 +676,7 @@ const NDAContent = ({
       </p>
     </DocSection>
 
-    <DocSection number="7" title="Security and Data Handling">
+    <DocSection number="8" title="Security and Data Handling">
       <p className="text-slate-600">
         AuditProRx implements commercially reasonable safeguards designed to
         protect data integrity and confidentiality. However, the Pharmacy
@@ -613,7 +687,7 @@ const NDAContent = ({
       </p>
     </DocSection>
 
-    <DocSection number="8" title="Subscription and Pricing">
+    <DocSection number="9" title="Subscription and Pricing">
       <p className="text-slate-600">
         The current subscription fee for AuditProRx is $99 per month, which
         provides access to core platform features. The Company may introduce
@@ -623,7 +697,7 @@ const NDAContent = ({
       </p>
     </DocSection>
 
-    <DocSection number="9" title="Limitation of Liability">
+    <DocSection number="10" title="Limitation of Liability">
       <p className="text-slate-600">
         To the maximum extent permitted by law, AuditProRx shall not be liable
         for any indirect, incidental, or consequential damages arising from the
@@ -634,7 +708,7 @@ const NDAContent = ({
       </p>
     </DocSection>
 
-    <DocSection number="10" title="Indemnification">
+    <DocSection number="11" title="Indemnification">
       <p className="text-slate-600">
         The Pharmacy agrees to indemnify and hold harmless AuditProRx and its
         affiliates from any claims, liabilities, or damages arising from the
@@ -643,7 +717,7 @@ const NDAContent = ({
       </p>
     </DocSection>
 
-    <DocSection number="11" title="Dispute Resolution">
+    <DocSection number="12" title="Dispute Resolution">
       <p className="text-slate-600">
         Any disputes arising out of or relating to this Agreement shall be
         resolved through binding arbitration conducted in the State of New
@@ -653,7 +727,7 @@ const NDAContent = ({
       </p>
     </DocSection>
 
-    <DocSection number="12" title="Term and Survival">
+    <DocSection number="13" title="Term and Survival">
       <p className="text-slate-600">
         This Agreement shall remain in effect for the duration of the Pharmacy’s
         use of the platform. Provisions relating to data rights, limitations of
@@ -662,7 +736,7 @@ const NDAContent = ({
       </p>
     </DocSection>
 
-    <DocSection number="13" title="General Provisions">
+    <DocSection number="14" title="General Provisions">
       <div className="space-y-3">
         {[
           {
@@ -692,7 +766,7 @@ const NDAContent = ({
       </div>
     </DocSection>
 
-    <DocSection number="14" title="Signatures">
+    <DocSection number="15" title="Signatures">
       <p className="text-slate-600 mb-4">
         By signing below, both parties agree to the terms of this Agreement.
       </p>
@@ -700,7 +774,7 @@ const NDAContent = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-            Drug Drop Rx LLC
+            AuditProRx
           </p>
           <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
           <SigRow label="Title" value="CEO" />
@@ -904,7 +978,7 @@ const WholesalerContent = () => (
 //           <p>
 //             2.{" "}
 //             <span className="font-semibold text-slate-800">
-//               Drug Drop Rx LLC
+//               AuditProRx
 //             </span>
 //             , a New Jersey limited liability company (hereinafter referred to as
 //             "AuditProRx").
@@ -1111,7 +1185,7 @@ const WholesalerContent = () => (
 //         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 //           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
 //             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-//               Drug Drop Rx LLC
+//               AuditProRx
 //             </p>
 //             <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
 //             <SigRow label="Title" value="CEO" />
@@ -1179,8 +1253,7 @@ const ReleaseAgreementContent = ({
           This Agreement is entered into between{" "}
           <span className="font-semibold text-slate-800">{pharmacyName}</span>{" "}
           ("Pharmacy") and{" "}
-          <span className="font-semibold text-slate-800">Drug Drop Rx LLC</span>{" "}
-          ("AuditProRx").
+          <span className="font-semibold text-slate-800">AuditProRx</span>.
         </p>
         <p className="text-xs text-slate-600 mt-2">
           <span className="font-semibold text-slate-800">Effective Date:</span>{" "}
@@ -1230,11 +1303,13 @@ const ReleaseAgreementContent = ({
       <DocSection number="4" title="Use of Data and Platform Outputs">
         <p className="text-slate-600">
           Pharmacy acknowledges that data collected under this Agreement will be
-          used within the AuditProRx platform to generate reports, analytics,
-          and insights. Such outputs are intended for informational purposes and
-          should be interpreted using independent professional judgment. The
-          Pharmacy remains solely responsible for decisions made based on such
-          outputs.
+          used within the AuditProRx platform, which includes the Inventory
+          Reports, Aberrant Reports, Group Reports, Bin Search, Drug Lookup,
+          Inventory View, Temperature Logs, and Leads and Notifications
+          services, to generate reports, analytics, and insights. Such outputs
+          are intended for informational purposes and should be interpreted
+          using independent professional judgment. The Pharmacy remains solely
+          responsible for decisions made based on such outputs.
         </p>
       </DocSection>
 
@@ -1311,7 +1386,7 @@ const ReleaseAgreementContent = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-              Drug Drop Rx LLC
+              AuditProRx
             </p>
             <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
             <SigRow label="Title" value="CEO" />
@@ -1826,12 +1901,12 @@ const AgreementsPage = () => {
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(255, 255, 255);
-    doc.text("NON-DISCLOSURE AGREEMENT", margin + 16, y + 14);
+    doc.text("NON-DISCLOSURE & DATA USAGE AGREEMENT", margin + 16, y + 14);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(180, 180, 180);
     doc.text(
-      "Drug Drop Rx LLC  ·  Confidential & Legally Binding",
+      "AuditProRx  ·  Confidential & Legally Binding",
       margin + 16,
       y + 30,
     );
@@ -1861,7 +1936,7 @@ const AgreementsPage = () => {
 
     // Intro
     addText(
-      `This Agreement is made between Drug Drop Rx LLC ("we," "us," or "our") and ${pharmacyName} ("you" or "your"). By signing, both parties agree to keep the information listed below strictly confidential.`,
+      `This Non-Disclosure and Data Usage Agreement ("Agreement") is entered into between AuditProRx ("Company," "we," "us," or "our") and ${pharmacyName} ("Pharmacy," "you," or "your"). AuditProRx provides a technology platform designed to assist pharmacies in uploading, processing, and analyzing inventory records, supplier invoices, temperature logs, and related operational data to generate insights, reports, and analytical outputs through the services described in Section 1. By accessing or using the platform, you confirm that you have read, understood, and agreed to be legally bound by the terms of this Agreement, including the AuditProRx Terms of Service, which are incorporated herein by reference.`,
       9,
       false,
       [80, 80, 80],
@@ -1872,65 +1947,99 @@ const AgreementsPage = () => {
     // ── Sections ────────────────────────────────────────────────────────────────
     addSection(
       "1",
-      "Confidential Information",
-      "The following information is considered confidential and is protected under this Agreement:\n\n• Billed Inventory (16 Fields): NDC Number, Rx Number, Status, Date Filled, Drug Name, Quantity, Package Size, Primary Insurance Bin Number, Primary Insurance Paid, Secondary Insurance BinNumber, Secondary Insurance Paid, Primary Insurance PCN, Primary Insurance Group, Secondary Insurance PCN, Secondary Insurance Group, Brand.\n\n• Purchased Invoices (6 Fields): NDC Number, Invoice Date, Item Description, Quantity, Unit Price, Total Price.\n\n• All Business Communication between you (the pharmacy) and us (AuditProRx).",
+      "Platform Services",
+      "This Agreement covers all data disclosed through, and all outputs generated by, the AuditProRx platform, including the following services:\n\n" +
+        PLATFORM_SERVICES.map((svc) => `• ${svc.name}: ${svc.desc}`).join(
+          "\n",
+        ) +
+        "\n\nAuditProRx may add, modify, or retire features from time to time. Any new feature made available through the platform is covered by this Agreement from the date it is released.",
     );
 
     addSection(
       "2",
-      "Scope of Confidentiality",
-      "Information that is already public, independently developed without reference to this data, or received from another source without breach is not covered under this Agreement.",
+      "Confidential Information",
+      'For purposes of this Agreement, "Confidential Information" includes all non-public data disclosed through the platform, including but not limited to inventory records, prescription-related and dispensing data, supplier and wholesaler invoices, pricing information, reimbursement data, insurance BIN, PCN, and group identifiers, temperature log records, pharmacy group memberships and reports shared within a group, inventory listings and connect requests, drug lookup queries, analytical reports, system-generated outputs, and all communications between the Pharmacy and AuditProRx. Such information shall be treated as confidential and shall not be disclosed to third parties except as permitted under this Agreement.',
     );
 
     addSection(
       "3",
-      "Purpose and Use of the Information",
-      "We will use these fields only to perform the agreed-upon services. We will not disclose this information to anyone else without your approval.",
+      "Data Ownership and License",
+      "The Pharmacy retains ownership of the raw data it uploads to the platform. However, by submitting such data, the Pharmacy grants AuditProRx a perpetual, irrevocable, worldwide, royalty-free, and transferable license to use, process, analyze, reproduce, adapt, modify, and create derivative works from such data. This license is granted for purposes including, but not limited to, providing services, improving platform functionality, developing new features, conducting research, and supporting analytical or commercial initiatives.\n\nAuditProRx may utilize aggregated or de-identified data derived from such submissions for broader analytical, benchmarking, or commercial purposes, provided that such use does not directly identify the Pharmacy.",
     );
 
     addSection(
       "4",
-      "Security and Confidentiality Obligations",
-      "1. All data is stored within your secure pharmacy login account, and only individuals with proper credentials may access it.\n2. You may delete any generated reports and uploaded data from your account at any time; if you do so, we will remove this data from our systems (unless required by law).\n3. Each party agrees to use at least the same level of care in protecting the other's confidential information as it uses for its own similar information.",
+      "Platform Use and Data Processing",
+      "The Pharmacy acknowledges that AuditProRx operates as a data processing and analytics platform and that submitted data may be processed, transformed, and integrated with internal systems or datasets to generate outputs. Such processing may include normalization, aggregation, statistical analysis, and automated computation necessary for delivering platform functionality and improving system performance.\n\nCertain services make information available to other platform users. Drug Lookup results are derived from aggregated, de-identified community data; reports shared to a pharmacy group are visible to the members of that group; and Inventory View listings are visible to other verified participating pharmacies.",
     );
 
     addSection(
       "5",
-      "Consideration",
-      "In exchange for receiving and using the confidential information, both parties agree to these terms. This mutual exchange of benefits is the consideration that makes this Agreement binding.",
+      "Regulatory Compliance",
+      "The Pharmacy is solely responsible for ensuring that all data submitted to the platform complies with applicable federal, state, and industry regulations, including healthcare and data privacy laws. AuditProRx is not intended to function as a HIPAA Business Associate unless expressly agreed to in a separate written agreement. Accordingly, the Company disclaims responsibility for any regulatory obligations associated with the Pharmacy's data.",
     );
 
     addSection(
       "6",
-      "Term and Termination",
-      "This Agreement starts on the date both parties sign and remains in effect as long as we work together—and for a reasonable period afterward. Either party may request that their confidential information be returned or destroyed, and we will comply unless otherwise required by law.",
+      "Platform Nature and No Warranty",
+      'The platform and all associated services are provided on an "as is" and "as available" basis. While AuditProRx endeavors to provide accurate and reliable outputs, no representations or warranties are made regarding the accuracy, completeness, or reliability of any data, reports, or analyses generated through the platform.',
     );
 
     addSection(
       "7",
-      "Remedies for Breach",
-      "If either party breaches this Agreement, the non-breaching party may seek injunctive relief (an order to stop the breach) and may recover any damages incurred as a result of the breach.",
+      "Use of Outputs and Independent Judgment",
+      "The Pharmacy acknowledges that all outputs, reports, and insights generated by the platform are intended solely for informational and analytical purposes. The Pharmacy agrees to exercise independent professional judgment in interpreting such outputs and shall not rely exclusively on them for medical, financial, compliance, or operational decisions.",
     );
 
     addSection(
       "8",
-      "Governing Law and Dispute Resolution",
-      "This Agreement shall be governed by and construed in accordance with the laws of the State of New Jersey. Any disputes arising from this Agreement shall be resolved in the state or federal courts located in New Jersey, or through agreed arbitration in New Jersey.",
+      "Security and Data Handling",
+      "AuditProRx implements commercially reasonable safeguards designed to protect data integrity and confidentiality. However, the Pharmacy acknowledges that no system is entirely secure and accepts the inherent risks associated with electronic data transmission and storage. The Company may retain data, including backups and system logs, as necessary for operational continuity, compliance, and service improvement.",
     );
 
     addSection(
       "9",
-      "Additional Provisions",
-      "Entire Agreement: This document contains the entire agreement between the parties regarding the confidential information and supersedes all prior understandings or agreements.\n\nSeverability: If any part of this Agreement is found to be unenforceable, the remainder will continue in full force.\n\nAmendments: This Agreement can only be modified in writing and signed by both parties.",
+      "Subscription and Pricing",
+      "The current subscription fee for AuditProRx is $99 per month, which provides access to core platform features. The Company may introduce additional features, services, or pricing structures in the future. Continued use of the platform following such changes constitutes acceptance of updated pricing.",
+    );
+
+    addSection(
+      "10",
+      "Limitation of Liability",
+      "To the maximum extent permitted by law, AuditProRx shall not be liable for any indirect, incidental, or consequential damages arising from the use of the platform, including but not limited to data inaccuracies, business interruptions, or regulatory implications. In any event, total liability shall not exceed the amount paid by the Pharmacy for one month of service immediately preceding the claim.",
+    );
+
+    addSection(
+      "11",
+      "Indemnification",
+      "The Pharmacy agrees to indemnify and hold harmless AuditProRx and its affiliates from any claims, liabilities, or damages arising from the Pharmacy's use of the platform, including data submitted, regulatory compliance matters, or third-party claims.",
+    );
+
+    addSection(
+      "12",
+      "Dispute Resolution",
+      "Any disputes arising out of or relating to this Agreement shall be resolved through binding arbitration conducted in the State of New Jersey, in accordance with applicable arbitration rules. Each party agrees to resolve disputes on an individual basis and waives the right to participate in class or collective actions.",
+    );
+
+    addSection(
+      "13",
+      "Term and Survival",
+      "This Agreement shall remain in effect for the duration of the Pharmacy's use of the platform. Provisions relating to data rights, limitations of liability, indemnification, and dispute resolution shall survive termination.",
+    );
+
+    addSection(
+      "14",
+      "General Provisions",
+      "Entire Agreement: This Agreement, together with the Terms of Service, constitutes the complete understanding between the parties.\n\nAmendments: AuditProRx may update this Agreement from time to time. Continued use implies acceptance.\n\nSeverability: If any provision is invalid, the remainder remains in effect.\n\nGoverning Law: This Agreement is governed by the laws of the State of New Jersey.",
     );
 
     // ── Signatures ──────────────────────────────────────────────────────────────
     checkPageBreak(180);
     y += 8;
     drawLine();
-    addText("10. SIGNATURES", 10, true, [15, 15, 15]);
+    addText("15. SIGNATURES", 10, true, [15, 15, 15]);
     addText(
-      "By signing below, both parties agree to abide by the terms of this Agreement.",
+      "By signing below, both parties agree to the terms of this Agreement.",
       9,
       false,
       [80, 80, 80],
@@ -1954,7 +2063,7 @@ const AgreementsPage = () => {
     doc.setFontSize(7.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(120, 120, 120);
-    doc.text("Drug Drop Rx LLC", margin + 12, y + 16);
+    doc.text("AuditProRx", margin + 12, y + 16);
 
     const sigRows = [
       { label: "Name", value: "Mr. Imtiyaz Ahmed Mulla" },

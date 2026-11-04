@@ -282,7 +282,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                 //         Support Team
                 //       </p>
                 //       <p className="text-xs text-gray-foreground">
-                //         +1 (551) 229-6466
+                //         +1 (201) 490-0776
                 //       </p>
                 //     </div>
                 //     <Phone size={14} className="text-brand shrink-0" />
@@ -308,7 +308,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                   <div
                     onClick={() =>
                       window.open(
-                        `https://wa.me/15512296466?text=Hello Support Team, I need help regarding the beta application.`,
+                        `https://wa.me/12014900776?text=Hello Support Team, I need help regarding the beta application.`,
                         "_blank",
                       )
                     }
@@ -323,7 +323,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
                         Support Team
                       </p>
                       <p className="text-xs text-gray-foreground">
-                        +1 (551) 229-6466
+                        +1 (201) 490-0776
                       </p>
                     </div>
 

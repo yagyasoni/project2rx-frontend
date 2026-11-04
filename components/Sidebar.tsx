@@ -638,12 +638,12 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 </p>
 
                 <p className="text-[11px] text-gray-500 flex items-center gap-1">
-                  <Phone className="h-3 w-3" /> +1 (551) 229-6466
+                  <Phone className="h-3 w-3" /> +1 (201) 490-0776
                 </p>
               </div>
 
               <a
-                href="https://wa.me/15512296466?text=Hi%20Fahad%2C%20I%20need%20help%20with%20AuditProRx"
+                href="https://wa.me/12014900776?text=Hi%20Fahad%2C%20I%20need%20help%20with%20AuditProRx"
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Chat on WhatsApp"

@@ -92,7 +92,7 @@ const faqs = [
   },
   {
     q: "How do I reach support?",
-    a: "Email support@auditprorx.com, message us on WhatsApp at +1 (551) 229-6466, or book a consultation. We typically respond within a few business hours.",
+    a: "Email support@auditprorx.com, message us on WhatsApp at +1 (201) 490-0776, or book a consultation. We typically respond within a few business hours.",
   },
 ];
 
