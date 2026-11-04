@@ -1,37 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import axios from "axios";
-import {
-  Users,
-  RefreshCw,
-  Search,
-  ChevronRight,
-  ChevronLeft,
-  Phone,
-  Mail,
-  Calendar,
-  ShieldCheck,
-  LogIn,
-  Building2,
-  Loader2,
-  AlertTriangle,
-  Activity,
-  TrendingUp,
-  Clock,
-  Check,
-  X,
-  Trash2,
-  ChevronDown,
-  ChevronUp,
-  ChevronsUpDown,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
 import AdminLayout from "@/components/adminLayout";
 import {
   AlertDialog,
@@ -41,10 +9,38 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import adminApi from "@/lib/adminApi";
+import {
+  Activity,
+  AlertTriangle,
+  Building2,
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  ChevronsUpDown,
+  Loader2,
+  LogIn,
+  Mail,
+  Phone,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Trash2,
+  TrendingUp,
+  Users,
+  X
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 // ─────────────────────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────────────────────
@@ -747,6 +743,8 @@ export default function AdminDashboard() {
                   />
                   <Input
                     type="text"
+                    name="pharmacy-search"
+                    autoComplete="off"
                     placeholder="Search pharmacy, name, email, phone…"
                     value={search}
                     onChange={(e) => {
@@ -1449,7 +1447,7 @@ export default function AdminDashboard() {
             </label>
             <Input
               type="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               placeholder="Enter admin password"
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}

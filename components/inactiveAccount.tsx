@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 
 import { toast } from "sonner";
 import api from "@/lib/api";
-import { trackEvent } from "@/lib/gtm";
+import { trackEvent, getMetaCookies } from "@/lib/gtm";
 
 // =========================================
 // PLANS — 3 fixed tiers (single-select)
@@ -249,6 +249,7 @@ export default function InactiveAccount({ onGateChange }: Props) {
         email,
         plan: selectedPlan, // single string — matches new backend
         trialCode: couponCode || null, // grants the trial if valid
+        ...getMetaCookies(), // Meta CAPI match keys, sent by the webhook
       });
 
       const planPrice = Number(

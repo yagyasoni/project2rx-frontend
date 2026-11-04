@@ -35,6 +35,7 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronsUpDown,
+  Loader2,
 } from "lucide-react";
 
 import AdminLayout from "@/components/adminLayout";
@@ -57,15 +58,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
-import axios from "axios";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import adminApi from "@/lib/adminApi";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
-import LinkExt from "@tiptap/extension-link";
-import UnderlineExt from "@tiptap/extension-underline";
 import StarterKit from "@tiptap/starter-kit";
-import Heading from "@tiptap/extension-heading";
-import BulletList from "@tiptap/extension-bullet-list";
-import OrderedList from "@tiptap/extension-ordered-list";
-import ListItem from "@tiptap/extension-list-item";
 
 interface Reaction {
   id: number;
@@ -201,7 +207,7 @@ export default function PublishingPage() {
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
-  const [location, setLocation] = useState("New York");
+  const [location, setLocation] = useState("All");
   const [locationFilter, setLocationFilter] = useState("All");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
@@ -210,6 +216,8 @@ export default function PublishingPage() {
   const [linkUrl, setLinkUrl] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [deleteTarget, setDeleteTarget] = useState<Post | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -221,24 +229,25 @@ export default function PublishingPage() {
   };
 
   const editor = useEditor({
+    // StarterKit v3 already bundles Underline and Link
     extensions: [
-      StarterKit,
-
-      UnderlineExt,
-
-      LinkExt.configure({
-        openOnClick: false,
-        autolink: true,
-        defaultProtocol: "https",
+      StarterKit.configure({
+        link: {
+          openOnClick: false,
+          autolink: true,
+          defaultProtocol: "https",
+        },
       }),
     ],
 
     content: "",
+    immediatelyRender: false, // avoid SSR hydration mismatch in Next.js
+    shouldRerenderOnTransaction: true, // keep toolbar active states in sync
 
     editorProps: {
       attributes: {
         class:
-          "min-h-[400px] outline-none prose prose-neutral dark:prose-invert max-w-none text-sm leading-7 focus:outline-none",
+          "tiptap-editor min-h-[400px] outline-none text-sm leading-6 focus:outline-none",
       },
     },
   });
@@ -303,8 +312,8 @@ export default function PublishingPage() {
 
   const fetchPosts = async () => {
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts`,
+      const res = await adminApi.get(
+        `/post/posts`,
       );
 
       const formatted = res.data.map((post: any) => ({
@@ -344,6 +353,7 @@ export default function PublishingPage() {
       setPosts(formatted);
     } catch (err) {
       console.error("Fetch posts error:", err);
+      toast.error("Couldn't load posts", { description: "Please try again." });
     }
   };
 
@@ -353,8 +363,8 @@ export default function PublishingPage() {
 
   const fetchEngagement = async (postId: string) => {
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/engagement/${postId}`,
+      const res = await adminApi.get(
+        `/post/engagement/${postId}`,
       );
 
       const reactionsData = res.data.reactions.map((r: any) => ({
@@ -377,13 +387,16 @@ export default function PublishingPage() {
       }));
     } catch (err) {
       console.error("Fetch engagement error:", err);
+      toast.error("Couldn't load reactions", {
+        description: "Please try again.",
+      });
     }
   };
 
   const fetchChat = async (postId: string) => {
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/chat/${postId}`,
+      const res = await adminApi.get(
+        `/post/chat/${postId}`,
       );
 
       setChatMessages(res.data);
@@ -391,6 +404,7 @@ export default function PublishingPage() {
       await fetchPosts();
     } catch (err) {
       console.error("Fetch chat error:", err);
+      toast.error("Couldn't load the chat", { description: "Please try again." });
     }
   };
 
@@ -398,8 +412,8 @@ export default function PublishingPage() {
     try {
       if (!selectedPost || !adminMessage.trim()) return;
 
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/chat/admin`,
+      await adminApi.post(
+        `/post/chat/admin`,
         {
           post_id: selectedPost.id,
           message: adminMessage,
@@ -411,13 +425,16 @@ export default function PublishingPage() {
       await fetchChat(selectedPost.id.toString());
     } catch (err) {
       console.error("Send admin message error:", err);
+      toast.error("Couldn't send the message", {
+        description: "Please try again.",
+      });
     }
   };
 
   const toggleChatStatus = async (postId: number, currentStatus: boolean) => {
     try {
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts/${postId}/chat-toggle`,
+      await adminApi.put(
+        `/post/posts/${postId}/chat-toggle`,
         {
           chat_enabled: !currentStatus,
         },
@@ -442,6 +459,9 @@ export default function PublishingPage() {
       }
     } catch (err) {
       console.error("Toggle chat error:", err);
+      toast.error("Couldn't change the chat setting", {
+        description: "Please try again.",
+      });
     }
   };
 
@@ -452,9 +472,17 @@ export default function PublishingPage() {
   const createPost = async () => {
     try {
       // if (!title || !editorRef.current?.innerHTML) return;
-      if (!title || !editor?.getHTML()) return;
+      if (!title.trim()) {
+        toast.error("Please enter a post title.");
+        return;
+      }
+      if (!editor || editor.isEmpty) {
+        toast.error("Please add some content to the post.");
+        return;
+      }
 
-      await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts`, {
+      setSaving(true);
+      await adminApi.post(`/post/posts`, {
         title,
         category: category || "General",
         content: editor?.getHTML(),
@@ -465,13 +493,19 @@ export default function PublishingPage() {
       setTitle("");
       setCategory("");
       setPostStatus("Published");
+      setLocation("All");
       editor?.commands.setContent("");
 
       await fetchPosts();
+      toast.success(
+        postStatus === "Draft" ? "Draft saved" : "Post published",
+      );
       setView("table");
     } catch (err: any) {
       console.error("Create post error:", err);
-      alert(err?.response?.data?.message || "Failed to create post.");
+      toast.error(err?.response?.data?.message || "Failed to create post.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -482,12 +516,21 @@ export default function PublishingPage() {
   const updatePost = async () => {
     try {
       if (!selectedPost) return;
+      if (!title.trim()) {
+        toast.error("Please enter a post title.");
+        return;
+      }
+      if (!editor || editor.isEmpty) {
+        toast.error("Please add some content to the post.");
+        return;
+      }
 
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts/${selectedPost.id}`,
+      setSaving(true);
+      await adminApi.put(
+        `/post/posts/${selectedPost.id}`,
         {
           title,
-          category,
+          category: category || "General", // same default as create
           content: editor?.getHTML(),
           status: postStatus,
           location,
@@ -495,10 +538,13 @@ export default function PublishingPage() {
       );
 
       await fetchPosts();
+      toast.success("Post updated");
       setView("table");
     } catch (err: any) {
       console.error("Update post error:", err);
-      alert(err?.response?.data?.message || "Failed to update post.");
+      toast.error(err?.response?.data?.message || "Failed to update post.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -506,16 +552,25 @@ export default function PublishingPage() {
   // DELETE POST
   // =========================================================
 
-  const deletePost = async (id: number) => {
-    try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/post/posts/${id}`,
-      );
+  // Same flow as the temperature logs delete: the dialog closes at once and
+  // the outcome is reported with a toast.
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const post = deleteTarget;
+    setDeleteTarget(null);
 
-      await fetchPosts();
+    try {
+      await adminApi.delete(`/post/posts/${post.id}`);
     } catch (err) {
       console.error("Delete post error:", err);
+      toast.error("Couldn't delete the post", {
+        description: "Please try again.",
+      });
+      return;
     }
+
+    setPosts((prev) => prev.filter((p) => p.id !== post.id));
+    toast("Post deleted", { description: post.title });
   };
 
   const formatChatTime = (dateString: string) => {
@@ -611,6 +666,7 @@ export default function PublishingPage() {
                       setTitle("");
                       setCategory("");
                       setPostStatus("Published");
+                      setLocation("All");
                       editor?.commands.setContent("");
                       setView("create");
                     }}
@@ -824,6 +880,9 @@ export default function PublishingPage() {
                       placeholder="Reply to client..."
                       value={adminMessage}
                       onChange={(e) => setAdminMessage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") sendAdminMessage();
+                      }}
                     />
 
                     <Button onClick={sendAdminMessage} className="gap-2">
@@ -859,10 +918,20 @@ export default function PublishingPage() {
                   <Button
                     size="sm"
                     onClick={view === "edit" ? updatePost : createPost}
+                    disabled={saving}
                     className="gap-1.5 text-xs"
                   >
-                    <Send size={13} />
-                    Post
+                    {saving ? (
+                      <>
+                        <Loader2 size={13} className="animate-spin" />
+                        {view === "edit" ? "Saving…" : "Posting…"}
+                      </>
+                    ) : (
+                      <>
+                        <Send size={13} />
+                        Post
+                      </>
+                    )}
                   </Button>
                 </div>
 
@@ -908,25 +977,10 @@ export default function PublishingPage() {
                   <ToolBtn
                     editor={editor}
                     Icon={Quote}
-                    onClick={() => {
-                      if (!editor) return;
-                      const { from, to, empty } = editor.state.selection;
-                      if (empty) {
-                        editor.chain().focus().insertContent('""').run();
-                        editor.commands.setTextSelection(from + 1);
-                      } else {
-                        const selectedText = editor.state.doc.textBetween(
-                          from,
-                          to,
-                          " ",
-                        );
-                        editor
-                          .chain()
-                          .focus()
-                          .insertContent(`"${selectedText}"`)
-                          .run();
-                      }
-                    }}
+                    onClick={() =>
+                      editor?.chain().focus().toggleBlockquote().run()
+                    }
+                    active={editor?.isActive("blockquote")}
                   />
                   <ToolBtn
                     editor={editor}
@@ -990,12 +1044,7 @@ export default function PublishingPage() {
                       </SelectContent>
                     </Select>
 
-                    <Select
-                      defaultValue={
-                        view === "edit" ? selectedPost?.location : "All"
-                      }
-                      onValueChange={setLocation}
-                    >
+                    <Select value={location} onValueChange={setLocation}>
                       <SelectTrigger className="w-[180px] h-9 text-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -1011,7 +1060,7 @@ export default function PublishingPage() {
                   {/* <div className="mt-6">
                     <EditorContent editor={editor} />
                   </div> */}
-                  <div className="mt-6 prose prose-neutral dark:prose-invert max-w-none">
+                  <div className="mt-6">
                     <EditorContent editor={editor} />
                   </div>
                 </div>
@@ -1047,7 +1096,7 @@ export default function PublishingPage() {
                     dangerouslySetInnerHTML={{
                       __html: selectedPost.content,
                     }}
-                    className="prose prose-neutral dark:prose-invert max-w-none"
+                    className="tiptap-editor text-sm leading-6"
                   />
                 </div>
               </div>
@@ -1333,6 +1382,8 @@ export default function PublishingPage() {
                                 <button
                                   onClick={async () => {
                                     setSelectedPost(post);
+                                    // don't show the previous post's messages
+                                    setChatMessages([]);
 
                                     await fetchChat(post.id.toString());
 
@@ -1465,12 +1516,11 @@ export default function PublishingPage() {
                                         setTitle(post.title);
                                         setCategory(post.category);
                                         setPostStatus(post.status);
+                                        setLocation(post.location || "All");
+                                        editor?.commands.setContent(
+                                          post.content || "",
+                                        );
                                         setView("edit");
-                                        setTimeout(() => {
-                                          editor?.commands.setContent(
-                                            post.content || "",
-                                          );
-                                        }, 100);
                                       }}
                                     >
                                       <PencilLine className="mr-2 h-4 w-4" />
@@ -1495,7 +1545,7 @@ export default function PublishingPage() {
                                     )}
 
                                     <DropdownMenuItem
-                                      onClick={() => deletePost(post.id)}
+                                      onClick={() => setDeleteTarget(post)}
                                       className="text-red-500"
                                     >
                                       <Trash2 className="mr-2 h-4 w-4" />
@@ -1516,6 +1566,32 @@ export default function PublishingPage() {
           </div>
         </div>
       </div>
+
+      {/* DELETE CONFIRMATION */}
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget
+                ? `"${deleteTarget.title}" will be removed from Lead Publishing. This can't be undone.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="cursor-pointer bg-red-600 text-white hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* LINK MODAL */}
       {linkModalOpen && (

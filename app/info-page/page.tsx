@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,11 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+import { ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 // DEA validator — checksum-based, runs client-side
 // function isValidDEA(dea: string): boolean {
@@ -181,7 +181,18 @@ const PharmacyDetailsForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    setErrors(EMPTY_ERRORS);
+    setErrors({
+      pharmacyName: "",
+      address: "",
+      city: "",
+      stateCode: "",
+      zipCode: "",
+      phone: "",
+      fax: "",
+      // pharmacyLicenseNumber: "",
+      // deaNumber: "",
+      general: "",
+    });
 
     const newErrors: Partial<FormErrors> = {};
 

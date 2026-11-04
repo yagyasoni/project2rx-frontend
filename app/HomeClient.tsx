@@ -49,6 +49,7 @@ import "./landing.css";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { BOOKING_URL } from "@/components/marketing/marketing-ui";
+import { trackEvent } from "@/lib/gtm";
 
 const plans = [
   {
@@ -795,6 +796,79 @@ export default function Index() {
     });
 
     return () => cancelAnimationFrame(id);
+  }, []);
+
+  // Landing page activity for GA4: scroll depth, sections seen, clicks. All of
+  // it happens on "/", so page reports alone can't show what visitors did here.
+  useEffect(() => {
+    // GTM keeps data layer values between pushes, so each event clears the
+    // other events' params or GA4 would report stale ones.
+    const trackLanding = (data: {
+      event: string;
+      scroll_percent?: number;
+      section_name?: string;
+      cta_text?: string;
+      cta_url?: string;
+    }) =>
+      trackEvent({
+        scroll_percent: undefined,
+        section_name: undefined,
+        cta_text: undefined,
+        cta_url: undefined,
+        ...data,
+      });
+
+    const seenDepths = new Set<number>();
+    const onScroll = () => {
+      const scrollable =
+        document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollable <= 0) return;
+      const percent = (window.scrollY / scrollable) * 100;
+      [25, 50, 75].forEach((depth) => {
+        if (percent >= depth && !seenDepths.has(depth)) {
+          seenDepths.add(depth);
+          trackLanding({ event: "landing_scroll", scroll_percent: depth });
+        }
+      });
+    };
+
+    const sectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            trackLanding({
+              event: "landing_section_view",
+              section_name: entry.target.id,
+            });
+            sectionObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.25 },
+    );
+    document
+      .querySelectorAll("section[id]")
+      .forEach((section) => sectionObserver.observe(section));
+
+    const onClick = (e: MouseEvent) => {
+      const el = (e.target as Element).closest?.("a, button");
+      if (!el) return;
+      const href = el.getAttribute("href");
+      trackLanding({
+        event: "landing_click",
+        cta_text: (el.textContent || "").trim().slice(0, 60),
+        // No query string: wa.me / mail links carry prefilled message text
+        cta_url: href ? href.split("?")[0] : undefined,
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("click", onClick);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("click", onClick);
+      sectionObserver.disconnect();
+    };
   }, []);
 
   const scheduleConsultation = () => {

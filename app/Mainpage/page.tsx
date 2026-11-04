@@ -76,9 +76,11 @@ export default function BatchRxDashboard() {
     } catch {
       /* ignore */
     }
+    const sessionId = searchParams.get("session_id") || undefined;
     trackEvent({
       event: "purchase",
-      transaction_id: searchParams.get("session_id") || undefined,
+      transaction_id: sessionId,
+      event_id: sessionId, // matches the webhook's Meta CAPI event_id
       plan_name: checkout.plan || "unknown",
       value: checkout.trial ? 0 : checkout.value || 0,
       currency: "USD",

@@ -96,7 +96,7 @@ export function normalizeReportRows(json: unknown): InventoryRow[] {
         .trim(),
       brand: row.brand ?? null,
       rank: 0,
-      pkgSize: row.package_size ?? 0,
+      pkgSize: n(row.package_size),
       unit:
         row.package_size > 0
           ? Number((n(row.total_billed) / Number(row.package_size)).toFixed(2))
