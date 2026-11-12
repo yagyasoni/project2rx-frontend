@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 
 import { toast } from "sonner";
 import api from "@/lib/api";
-import { trackEvent, getMetaCookies } from "@/lib/gtm";
+import { getMetaCookies } from "@/lib/gtm";
 
 // =========================================
 // PLANS — 3 fixed tiers (single-select)
@@ -255,13 +255,6 @@ export default function InactiveAccount({ onGateChange }: Props) {
       const planPrice = Number(
         plans.find((p) => p.id === selectedPlan)?.price.replace(/[^0-9.]/g, "") ?? 0,
       );
-      trackEvent({
-        event: "begin_checkout",
-        plan_name: selectedPlan,
-        value: planPrice,
-        currency: "USD",
-        has_trial_code: !!couponCode,
-      });
       try {
         localStorage.setItem(
           "pendingCheckout",

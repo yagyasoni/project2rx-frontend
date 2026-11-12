@@ -14,7 +14,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
-import { trackEvent, newEventId, getMetaCookies } from "@/lib/gtm";
+import { trackEvent, newEventId, getMetaCookies, getGA4ClientId } from "@/lib/gtm";
 import axios from "axios";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -33,7 +33,8 @@ const AuthPageInner = () => {
   const prefillPassword = searchParams.get("password") || "";
   const isPrefilled = searchParams.get("prefill") === "true";
 
-  const [isLogin, setIsLogin] = useState(true);
+  const modeParam = searchParams.get("mode");
+  const [isLogin, setIsLogin] = useState(modeParam !== "signup");
   const [showPassword, setShowPassword] = useState(isPrefilled); // show password if prefilled so admin can see it
   const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState(prefillPassword);
@@ -80,9 +81,6 @@ const AuthPageInner = () => {
 
     if (!isLogin) {
       if (!name) newErrors.name = "Full name is required";
-      if (!phone || phone.length < 10) {
-        newErrors.phone = "Phone number is required and it should be 10 digit";
-      }
 
       if (password && !validatePassword(password)) {
         newErrors.password =
@@ -195,20 +193,22 @@ const AuthPageInner = () => {
         email,
         otp,
         eventId,
+        clientId: getGA4ClientId(),
         ...getMetaCookies(),
       });
       console.log(res?.data);
 
       if (isLogin) {
         // Admin — store tokens and go to admin dashboard
-        // localStorage.setItem("accessToken", res?.data?.accessToken);
-        // localStorage.setItem("refreshToken", res?.data?.refreshToken);
         localStorage.setItem("adminAccessToken", res?.data?.accessToken);
         localStorage.setItem("adminRefreshToken", res?.data?.refreshToken);
         localStorage.setItem("userId", res?.data?.user?.id);
         router.push("/admin");
       } else {
-        // ✅ User verified
+        // ✅ User verified — persist selected plan so checkout can read it later
+        const planParam = searchParams.get("plan");
+        if (planParam) localStorage.setItem("selectedPlan", planParam);
+
         toast(res?.data?.message);
         trackEvent({ event: "sign_up", method: "email", event_id: eventId });
         router.push("/info-page");

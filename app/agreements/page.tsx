@@ -16,6 +16,14 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { createCheckoutSession } from "@/components/checkoutSession";
+
+// Map plan id → Stripe plan key the backend expects
+const PLAN_TO_STRIPE: Record<string, string> = {
+  base: "base",
+  professional: "professional",
+  full_access: "full_access",
+};
 
 // ─── Step Config ──────────────────────────────────────────────────────────────
 interface StepConfig {
@@ -1827,9 +1835,26 @@ const AgreementsPage = () => {
       setAgreed(false);
       documentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      toast.success("All steps completed! Redirecting to login...");
-      await new Promise((r) => setTimeout(r, 1000));
-      router.push("/auth");
+      // All steps done — redirect to Stripe checkout for the plan the user
+      // selected on the pricing page, falling back to professional.
+      const planKey = localStorage.getItem("selectedPlan") || "professional";
+      const stripePlan = PLAN_TO_STRIPE[planKey] ?? "professional";
+      const userId = localStorage.getItem("userId") || "";
+      const email = localStorage.getItem("userEmail") || "";
+
+      toast.success("All steps completed! Redirecting to checkout...");
+      try {
+        const checkout = await createCheckoutSession({
+          userId,
+          email,
+          plan: stripePlan,
+        });
+        localStorage.removeItem("selectedPlan");
+        window.location.href = checkout.url;
+      } catch {
+        toast.error("Could not start checkout. Please contact support.");
+        router.push("/auth");
+      }
     }
     setIsSubmitting(false);
   };
