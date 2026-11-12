@@ -268,11 +268,16 @@ const AuthPageInner = () => {
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/admin/verify-otp`
         : `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/verify-otp`;
 
-      // Admin sends the password-step token with the code.
-      const res = await axios.post(
-        url,
-        isLogin ? { email, otp, otpToken } : { email, otp },
-      );
+      // Pairs the browser sign_up event with the server-side Meta event.
+      const eventId = newEventId();
+      const res = await axios.post(url, {
+        email,
+        otp,
+        eventId,
+        ...getMetaCookies(),
+        // Admin login only: the password-step token the code step requires.
+        ...(isLogin ? { otpToken } : {}),
+      });
       console.log(res?.data);
 
       if (isLogin) {
