@@ -16,10 +16,38 @@ import {
 import { Label } from "@/components/ui/label";
 import { trackEvent, newEventId, getMetaCookies } from "@/lib/gtm";
 import axios from "axios";
-import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Timer } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
+
+// A new code can be requested once per this many seconds. The server enforces
+// it and sends the exact figure (resendAfter / retryAfter); this is only the
+// fallback for the on-screen timer.
+const RESEND_WAIT_SECONDS = 60;
+
+// 75 → "1:15", 9 → "0:09"
+const formatCountdown = (seconds: number) =>
+  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+
+// What the server sends when it refuses a request on purpose: a code check or
+// resend, or a limit on login / sign-up / forgot password.
+type ServerRefusal = {
+  code?: string;
+  message?: string;
+  retryAfter?: number;
+};
+
+const readRefusal = (err: unknown): ServerRefusal =>
+  axios.isAxiosError<ServerRefusal>(err) ? (err.response?.data ?? {}) : {};
+
+// The server's "Too many attempts. Please try again in 15 minutes." when a
+// limit was hit, otherwise null so the page shows its usual error.
+const tooManyAttemptsMessage = (err: unknown): string | null => {
+  const refusal = readRefusal(err);
+  if (refusal.code !== "RATE_LIMITED") return null;
+  return refusal.message || "Too many attempts. Please try again later.";
+};
 
 // ─────────────────────────────────────────────────────────────
 // Inner component — reads search params
@@ -51,6 +79,49 @@ const AuthPageInner = () => {
     forgotEmail: "",
     general: "",
   });
+
+  // Admin login only: proof that the password step was passed. The server
+  // returns it with the code email and refuses the code step without it.
+  const [otpToken, setOtpToken] = useState<string | null>(null);
+
+  // ── Resend timer ──
+  // resendAt is the moment "Resend code" unlocks; `now` ticks while the code
+  // screen is open so the countdown redraws.
+  const [resendAt, setResendAt] = useState(0);
+  const [now, setNow] = useState(0);
+  const [resending, setResending] = useState(false);
+  const resendIn = Math.max(0, Math.ceil((resendAt - now) / 1000));
+
+  const startResendTimer = (seconds?: number) => {
+    const wait =
+      typeof seconds === "number" && seconds > 0
+        ? seconds
+        : RESEND_WAIT_SECONDS;
+    const start = Date.now();
+    setNow(start);
+    setResendAt(start + wait * 1000);
+  };
+
+  useEffect(() => {
+    if (!showOtp || !resendAt) return;
+    // Driven by the clock, not by counting ticks, so it stays right when the
+    // tab has been in the background.
+    const id = setInterval(() => {
+      const current = Date.now();
+      setNow(current);
+      if (current >= resendAt) clearInterval(id);
+    }, 250);
+    return () => clearInterval(id);
+  }, [showOtp, resendAt]);
+
+  // Admin login: the code was cancelled or the login expired, so the password
+  // step has to be done again. Back to the form, with the reason.
+  const backToLogin = (message: string) => {
+    setShowOtp(false);
+    setOtp("");
+    setOtpToken(null);
+    setErrors((prev) => ({ ...prev, otp: "", general: message }));
+  };
 
   const validatePassword = (password: string) => {
     const regex =
@@ -112,6 +183,10 @@ const AuthPageInner = () => {
         localStorage.setItem("role", res?.data?.user?.role);
 
         if (res?.data?.requiresOtp) {
+          // Admin: keep the password-step token for the code step.
+          setOtpToken(res.data.otpToken ?? null);
+          setOtp("");
+          startResendTimer(res.data.resendAfter);
           setShowOtp(true);
           return;
         }
@@ -140,7 +215,7 @@ const AuthPageInner = () => {
 
         setErrors((prev) => ({
           ...prev,
-          general: "Invalid email or password",
+          general: tooManyAttemptsMessage(err) ?? "Invalid email or password",
         }));
       }
     }
@@ -159,6 +234,8 @@ const AuthPageInner = () => {
         localStorage.setItem("userEmail", email); // ✅ ADD THIS LINE TOO
         localStorage.setItem("signupName", name);
 
+        setOtp("");
+        startResendTimer(res?.data?.resendAfter);
         setShowOtp(true);
         // setIsLogin(true);
       } catch (err) {
@@ -166,7 +243,8 @@ const AuthPageInner = () => {
 
         setErrors((prev) => ({
           ...prev,
-          general: "Registration failed. Try again.",
+          general:
+            tooManyAttemptsMessage(err) ?? "Registration failed. Try again.",
         }));
       }
     }
@@ -190,13 +268,11 @@ const AuthPageInner = () => {
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/admin/verify-otp`
         : `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/verify-otp`;
 
-      const eventId = newEventId();
-      const res = await axios.post(url, {
-        email,
-        otp,
-        eventId,
-        ...getMetaCookies(),
-      });
+      // Admin sends the password-step token with the code.
+      const res = await axios.post(
+        url,
+        isLogin ? { email, otp, otpToken } : { email, otp },
+      );
       console.log(res?.data);
 
       if (isLogin) {
@@ -232,25 +308,69 @@ const AuthPageInner = () => {
       }
     } catch (err) {
       console.error("OTP verification failed:", err);
-      setErrors((prev) => ({
-        ...prev,
-        otp: "Invalid or expired OTP",
-      }));
+      const refusal = readRefusal(err);
+      const message = refusal.message || "Invalid or expired OTP";
+
+      // Admin: 5 wrong codes, or the 10-minute login window is over.
+      if (
+        isLogin &&
+        (refusal.code === "OTP_LOCKED" ||
+          refusal.code === "ADMIN_LOGIN_EXPIRED")
+      ) {
+        backToLogin(message);
+        return;
+      }
+
+      // e.g. "Incorrect code. 3 tries left." or
+      // "Too many wrong codes. Please request a new code."
+      setErrors((prev) => ({ ...prev, otp: message }));
       return;
     }
   };
 
   const resendOtp = async () => {
+    // The button is disabled while the timer runs; this guards a double click.
+    if (resending || resendIn > 0) return;
+
+    setResending(true);
+    setErrors((prev) => ({ ...prev, otp: "" }));
+
     try {
       const url = isLogin
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/admin/resend-otp`
         : `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/resend-otp`;
 
-      const res = await axios.post(url, { email });
+      const res = await axios.post(
+        url,
+        isLogin ? { email, otpToken } : { email },
+      );
       console.log(res?.data);
       toast(res?.data?.message);
+      setOtp("");
+      startResendTimer(res?.data?.resendAfter);
     } catch (err) {
       console.error("Failed to resend OTP:", err);
+      const refusal = readRefusal(err);
+      const message =
+        refusal.message || "Could not send a new code. Please try again.";
+
+      if (
+        isLogin &&
+        (refusal.code === "OTP_LOCKED" ||
+          refusal.code === "ADMIN_LOGIN_EXPIRED")
+      ) {
+        backToLogin(message);
+        return;
+      }
+
+      // Too early: the server says how many seconds are left, so the timer
+      // picks up from there.
+      if (typeof refusal.retryAfter === "number") {
+        startResendTimer(refusal.retryAfter);
+      }
+      setErrors((prev) => ({ ...prev, otp: message }));
+    } finally {
+      setResending(false);
     }
   };
 
@@ -287,7 +407,8 @@ const AuthPageInner = () => {
       console.error("Forgot password failed:", error.response || error);
       setErrors((prev) => ({
         ...prev,
-        forgotEmail: "Failed to send reset link",
+        forgotEmail:
+          tooManyAttemptsMessage(error) ?? "Failed to send reset link",
       }));
     }
   };
@@ -346,7 +467,9 @@ const AuthPageInner = () => {
                 />
               </Button>
 
-              <div className="flex items-center justify-between w-full">
+              {/* Resend: locked while the timer runs (one new code per minute,
+                  enforced by the server), clickable once it reaches 0:00. */}
+              <div className="flex items-center justify-between w-full rounded-lg border border-border bg-secondary/40 px-4 py-3">
                 {/* <button
                   type="button"
                   onClick={() => setShowOtp(false)}
@@ -355,12 +478,29 @@ const AuthPageInner = () => {
                   <ArrowLeft size={14} />
                   Back
                 </button> */}
+                <div
+                  role="timer"
+                  className="flex items-center gap-2 text-sm text-muted-foreground"
+                >
+                  <Timer size={16} className="shrink-0" />
+                  {resendIn > 0 ? (
+                    <span>
+                      New code available in{" "}
+                      <span className="font-mono tabular-nums font-semibold text-foreground">
+                        {formatCountdown(resendIn)}
+                      </span>
+                    </span>
+                  ) : (
+                    <span>Didn&apos;t get the code?</span>
+                  )}
+                </div>
                 <button
                   type="button"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium text-foreground hover:underline transition-colors disabled:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
                   onClick={resendOtp}
+                  disabled={resendIn > 0 || resending}
                 >
-                  Resend code
+                  {resending ? "Sending..." : "Resend code"}
                 </button>
               </div>
               {errors.general && (
