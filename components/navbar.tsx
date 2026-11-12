@@ -81,17 +81,19 @@ export default function Navbar() {
           <a
             href="/auth"
             target="_blank"
-            // rel="noopener noreferrer"
+            rel="noopener noreferrer"
             className="cursor-pointer whitespace-nowrap text-[11px] font-medium text-white/90 hover:text-white lg:text-xs xl:text-sm"
           >
             Log In
           </a>
-          <button
-            onClick={scheduleConsultation}
+          <a
+            href="/auth?mode=signup"
+            target="_blank"
+            rel="noopener noreferrer"
             className="cursor-pointer whitespace-nowrap rounded-lg bg-gradient-to-b from-zinc-100 to-zinc-300 px-3 py-2 text-[11px] font-medium text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] hover:from-white animate-fadeInUp stagger-0 lg:px-4 lg:text-xs xl:text-sm"
           >
-            <span className="cursor-pointer"> Schedule a Consultation</span>
-          </button>
+            Get Started
+          </a>
         </div>
         {/* Mobile menu toggle */}
         <button
@@ -127,19 +129,21 @@ export default function Navbar() {
             <div className="mt-2 flex flex-col gap-3 border-t border-border/60 pt-4">
               <a
                 href="/auth"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="cursor-pointer px-2 text-sm font-medium text-white/90 hover:text-white"
               >
                 Log In
               </a>
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  scheduleConsultation();
-                }}
-                className="rounded-lg bg-gradient-to-b from-zinc-100 to-zinc-300 px-4 py-2.5 text-sm font-medium text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] hover:from-white"
+              <a
+                href="/auth?mode=signup"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="rounded-lg bg-gradient-to-b from-zinc-100 to-zinc-300 px-4 py-2.5 text-center text-sm font-medium text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] hover:from-white"
               >
-                Schedule a Consultation
-              </button>
+                Get Started — Free Trial
+              </a>
             </div>
           </nav>
         </div>

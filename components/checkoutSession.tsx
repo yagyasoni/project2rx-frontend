@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { getGA4ClientId } from "@/lib/gtm";
 
 // =========================================
 // CREATE CHECKOUT SESSION
@@ -9,12 +10,12 @@ import axios from "axios";
 export const createCheckoutSession = async ({
   userId,
   email,
-  plans,
+  plan,
   referralCode,
 }: {
   userId: string;
   email: string;
-  plans: string[];
+  plan: string;
   referralCode?: string;
 }) => {
   const res = await axios.post(
@@ -22,8 +23,9 @@ export const createCheckoutSession = async ({
     {
       userId,
       email,
-      plans,
+      plan,
       referralCode: referralCode || null,
+      ga4ClientId: getGA4ClientId(),
     },
   );
 

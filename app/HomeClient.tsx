@@ -57,7 +57,7 @@ const plans = [
     name: "Base",
     price: "$99",
     period: "/month",
-    trial: "14-day free trial with coupon code",
+    trial: "14-day free trial — use code FREETRIAL14",
     description:
       "Core audit reconciliation and reporting for independent pharmacies.",
     features: [
@@ -74,7 +74,7 @@ const plans = [
     name: "Professional",
     price: "$249",
     period: "/month",
-    trial: "14-day free trial with coupon code",
+    trial: "14-day free trial — use code FREETRIAL14",
     badge: "Most Popular",
     description:
       "Everything in Base, plus real-time visibility and group reporting.",
@@ -92,7 +92,7 @@ const plans = [
     name: "Full Access",
     price: "$399",
     period: "/month",
-    trial: "14-day free trial with coupon code",
+    trial: "14-day free trial — use code FREETRIAL14",
     badge: "Best Value",
     savings: "Pays for itself with a single recovered chargeback",
     valueNote: "All premium modules included — Drug Lookup, Leads",
@@ -632,7 +632,7 @@ export default function Index() {
   const [stats, setStats] = useState([
     ["0", "+", "Verified BIN-PCN-GROUP Intelligence"],
     ["0", "+", "Audits Generated"],
-    ["0", "+", "Active Pharmacy Groups"],
+    ["4", "+", "Active Pharmacy Groups"],
     ["100", "%", "HIPAA Compliant"],
   ]);
   const currentYear = new Date().getFullYear();
@@ -704,11 +704,9 @@ export default function Index() {
 
       setStats([
         [data.master_sheet_entries, "+", "Verified BIN-PCN-GROUP Intelligence"],
-
         [data.audits_generated, "+", "Audits Generated"],
-
-        [data.active_pharmacies - 1, "+", "Active Pharmacy Groups"],
-
+        // Hard-coded until API count is accurate: 4 paying pharmacies
+        ["4", "+", "Active Pharmacy Groups"],
         ["100", "%", "HIPAA Compliant"],
       ]);
     } catch (err) {
@@ -917,7 +915,7 @@ export default function Index() {
           </nav>
           <div className="hidden items-center gap-4 md:flex lg:gap-8.5">
             <a
-              href="/auth"
+              href="https://www.auditprorx.com/auth"
               target="_blank"
               rel="noopener noreferrer"
               className="cursor-pointer text-sm font-medium text-white/90 hover:text-white"
@@ -959,7 +957,9 @@ export default function Index() {
               ))}
               <div className="mt-2 flex flex-col gap-3 border-t border-border/60 pt-4">
                 <a
-                  href="/auth"
+                  href="https://www.auditprorx.com/auth"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="cursor-pointer px-2 text-sm font-medium text-white/90 hover:text-white"
                 >
                   Log In
@@ -1033,6 +1033,12 @@ export default function Index() {
             HIPAA-compliant, built by pharmacists.
           </p>
           <div className="relative z-20 mt-7 flex w-full flex-col items-stretch justify-center gap-3 sm:mt-9 sm:w-auto sm:flex-row sm:items-center animate-fadeInUp stagger-4">
+            <Link
+              href="/auth?mode=signup"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-zinc-100 to-zinc-300 px-5 py-3 text-sm font-medium text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] transition hover:from-white sm:w-auto"
+            >
+              Start 14-day free trial <ArrowRight className="h-4 w-4" />
+            </Link>
             <a
               href={BOOKING_URL}
               onClick={(e) => {
@@ -1040,21 +1046,9 @@ export default function Index() {
                 const w = window.open(BOOKING_URL, "_blank");
                 if (w) w.opener = null;
               }}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-zinc-100 to-zinc-300 px-5 py-3 text-sm font-medium text-background shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] transition hover:from-white sm:w-auto"
-            >
-              Schedule a Consultation <ArrowRight className="h-4 w-4" />
-            </a>
-            <a
-              href="#overview"
-              onClick={(e) => {
-                e.preventDefault();
-                document
-                  .getElementById("overview")
-                  ?.scrollIntoView({ behavior: "smooth" });
-              }}
               className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-5 py-3 text-sm text-foreground transition hover:bg-surface-2 sm:w-auto"
             >
-              <Play className="h-4 w-4" /> Watch Overview
+              Schedule a Consultation
             </a>
           </div>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground animate-fadeInUp stagger-5">
@@ -1994,9 +1988,12 @@ export default function Index() {
               <span className="text-muted-foreground">
                 Showing 5 of 240 inventory reports
               </span>
-              <button className="rounded-md border border-border px-3 py-1.5">
+              <Link
+                href="/auth?mode=signup"
+                className="rounded-md border border-border px-3 py-1.5 hover:bg-surface-2 transition-colors"
+              >
                 View All Reports
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -2119,7 +2116,7 @@ export default function Index() {
               </div>
               <div className="h-8 w-px bg-border" />
               <div>
-                <div className="text-2xl font-semibold">94%</div>
+                <div className="text-2xl font-semibold">94.2%</div>
                 <div className="text-xs text-muted-foreground">
                   audit success
                 </div>
@@ -2520,7 +2517,7 @@ export default function Index() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold">
-                      Mounjaro 5mg/0.5ml s 5mg/0.5ml inj
+                      Mounjaro 5mg/0.5ml vs 5mg/0.5ml inj
                     </div>
                     <div className="font-mono text-[11px] text-muted-foreground">
                       NDC 00002-1495-80
@@ -2564,12 +2561,12 @@ export default function Index() {
                   </div>
                 </div>
               </div>
-              <a
-                href="#"
+              <Link
+                href="/auth?mode=signup"
                 className="mt-4 inline-flex text-xs text-muted-foreground hover:text-foreground animate-fadeInUp stagger-5"
               >
                 View all verified listings →
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -3078,8 +3075,9 @@ export default function Index() {
                 </ul>
 
                 <Link
-                  href="/auth"
+                  href="https://www.auditprorx.com/auth"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="mt-auto w-full block"
                 >
                   <button
@@ -3208,8 +3206,7 @@ export default function Index() {
                 </ul>
 
                 <Link
-                  href="/auth"
-                  target="_blank"
+                  href={`/auth?mode=signup&plan=${p.id}`}
                   className="mt-auto w-full block"
                 >
                   <button
