@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { SupplierProvider } from "@/context/SupplierContext";
 import InactiveAccount, { type GateState } from "@/components/inactiveAccount";
 import SupportBubble from "@/components/SupportBubble";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 // import { X } from "lucide-react"; // only used by the disabled BetaBanner below
@@ -157,7 +158,9 @@ export default function LayoutClient({
           pages carry their own lock guard, and every other action reaches the
           API, which refuses with the subscription message. */}
       <div className="contents" inert={gate !== "open" && !isPublicRoute}>
-        <SupplierProvider>{children}</SupplierProvider>
+        <ErrorBoundary>
+          <SupplierProvider>{children}</SupplierProvider>
+        </ErrorBoundary>
       </div>
       {/* Floating live-support bubble, shown only on the home page. */}
       {pathname === "/" && <SupportBubble />}

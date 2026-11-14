@@ -155,7 +155,17 @@ export default function InactiveAccount({ onGateChange }: Props) {
           subscription?.leads_access ||
           subscription?.full_access;
 
-        const newPaymentStatus = hasAccess ? "active" : "no_subscription";
+        // L27: surface real Stripe status so the paywall can show the right message
+        let newPaymentStatus: string;
+        if (hasAccess) {
+          newPaymentStatus = "active";
+        } else if (subscription?.status === "past_due") {
+          newPaymentStatus = "past_due";
+        } else if (subscription?.status === "canceled") {
+          newPaymentStatus = "canceled";
+        } else {
+          newPaymentStatus = "no_subscription";
+        }
 
         if (prevStatusRef.current === null && prevPaymentRef.current === null) {
           prevStatusRef.current = newStatus;
@@ -183,8 +193,28 @@ export default function InactiveAccount({ onGateChange }: Props) {
     };
 
     fetchAll();
-    const interval = setInterval(fetchAll, 5000);
-    return () => clearInterval(interval);
+
+    // L37: poll every 60 s, but only while the tab is visible — tabs
+    // in the background no longer send two requests every 5 seconds.
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const startPolling = () => {
+      if (!interval) interval = setInterval(fetchAll, 60000);
+    };
+    const stopPolling = () => {
+      if (interval) { clearInterval(interval); interval = null; }
+    };
+
+    const onVisibility = () =>
+      document.visibilityState === "visible" ? startPolling() : stopPolling();
+
+    document.addEventListener("visibilitychange", onVisibility);
+    startPolling();
+
+    return () => {
+      stopPolling();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   // =========================================
@@ -274,21 +304,6 @@ export default function InactiveAccount({ onGateChange }: Props) {
     }
   };
 
-  // =========================================
-  // RENEW
-  // =========================================
-
-  const renewSubscription = async () => {
-    try {
-      const userId = localStorage.getItem("userId");
-      await api.post(`/pay/renew-subscription`, { userId });
-      toast.success("Subscription renewed");
-      window.location.reload();
-    } catch (err) {
-      toast.error("Failed to renew subscription");
-    }
-  };
-
   // What the gate renders: null (app usable), the loading spinner, or one of
   // the paywall screens. Computed in one place so the layout can also be told
   // whether the app behind it must be inert.
@@ -299,6 +314,8 @@ export default function InactiveAccount({ onGateChange }: Props) {
 
     if (
       pathname === "/" ||
+      pathname === "/cancel" ||
+      pathname === "/success" ||
       pathname.startsWith("/privacy-policy") ||
       pathname.startsWith("/terms-of-service") ||
       pathname.startsWith("/cancellation-policy") ||
@@ -399,7 +416,7 @@ export default function InactiveAccount({ onGateChange }: Props) {
 
               {paymentStatus === "canceled" && status === "active" && (
                 <Button
-                  onClick={renewSubscription}
+                  onClick={() => setShowPlans(true)}
                   className="h-11 rounded-md text-sm font-medium"
                 >
                   Renew Subscription

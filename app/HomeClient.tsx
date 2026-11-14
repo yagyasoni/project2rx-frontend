@@ -3207,6 +3207,8 @@ export default function Index() {
 
                 <Link
                   href={`/auth?mode=signup&plan=${p.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="mt-auto w-full block"
                 >
                   <button
