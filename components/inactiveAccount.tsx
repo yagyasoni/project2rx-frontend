@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 
 import { toast } from "sonner";
 import api from "@/lib/api";
-import { trackEvent, getMetaCookies } from "@/lib/gtm";
+import { getMetaCookies, getGA4ClientId } from "@/lib/gtm";
 
 // =========================================
 // PLANS — 3 fixed tiers (single-select)
@@ -155,9 +155,12 @@ export default function InactiveAccount({ onGateChange }: Props) {
           subscription?.leads_access ||
           subscription?.full_access;
 
-        // No access because the last payment failed: the subscription still
-        // exists in Stripe, so the customer must fix the payment (billing
-        // page), not buy a second subscription.
+        // The paywall shows the real state of the subscription:
+        //   past_due  the last payment failed. The subscription still exists
+        //             in Stripe, so the customer must fix the payment on the
+        //             billing page, not buy a second subscription.
+        //   canceled  the subscription ended; the customer can pick a plan
+        //             and subscribe again.
         const paymentFailed =
           subscription?.status === "past_due" ||
           subscription?.status === "unpaid";
@@ -166,7 +169,9 @@ export default function InactiveAccount({ onGateChange }: Props) {
           ? "active"
           : paymentFailed
             ? "past_due"
-            : "no_subscription";
+            : subscription?.status === "canceled"
+              ? "canceled"
+              : "no_subscription";
 
         if (prevStatusRef.current === null && prevPaymentRef.current === null) {
           prevStatusRef.current = newStatus;
@@ -193,10 +198,80 @@ export default function InactiveAccount({ onGateChange }: Props) {
       }
     };
 
-    fetchAll();
-    const interval = setInterval(fetchAll, 5000);
-    return () => clearInterval(interval);
+    // How often the status is checked, while the tab is visible:
+    //   paywall showing → every 5 seconds. Someone who has just paid (or
+    //                     was just activated by the admin) is waiting to be
+    //                     let in, and the payment reaches us a few seconds
+    //                     after Stripe sends them back.
+    //   app open        → every 60 seconds.
+    // A hidden tab does not check at all; it checks once when it is shown
+    // again.
+    const WAITING_MS = 5000;
+    const OPEN_MS = 60000;
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let stopped = false;
+
+    const isWaiting = () =>
+      !(
+        prevStatusRef.current === "active" &&
+        prevPaymentRef.current === "active"
+      );
+
+    const scheduleNext = () => {
+      if (stopped || document.visibilityState !== "visible") return;
+      timer = setTimeout(
+        () => {
+          fetchAll().finally(scheduleNext);
+        },
+        isWaiting() ? WAITING_MS : OPEN_MS,
+      );
+    };
+
+    const cancelNext = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    const onVisibility = () => {
+      cancelNext();
+      if (document.visibilityState === "visible") {
+        fetchAll().finally(scheduleNext);
+      }
+    };
+
+    fetchAll().finally(scheduleNext);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      stopped = true;
+      cancelNext();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
+
+  // A plan picked on the pricing page before sign-up (…/auth?mode=signup&plan=…)
+  // is kept in localStorage by the sign-up page. When the paywall asks for a
+  // plan, open the plan screen with that plan already selected. The customer
+  // can still change it and enter a trial code. The note is cleared when
+  // checkout starts.
+  useEffect(() => {
+    if (status !== "active") return;
+    if (paymentStatus !== "no_subscription" && paymentStatus !== "canceled")
+      return;
+    let picked: string | null = null;
+    try {
+      picked = localStorage.getItem("selectedPlan");
+    } catch {
+      /* ignore */
+    }
+    if (picked && plans.some((plan) => plan.id === picked)) {
+      setSelectedPlan(picked);
+      setShowPlans(true);
+    }
+  }, [status, paymentStatus]);
 
   // =========================================
   // PLAN SELECT (single-select)
@@ -261,18 +336,20 @@ export default function InactiveAccount({ onGateChange }: Props) {
         plan: selectedPlan, // single string — matches new backend
         trialCode: couponCode || null, // grants the trial if valid
         ...getMetaCookies(), // Meta CAPI match keys, sent by the webhook
+        // GA4: lets the server-side "begin_checkout" event join this browser's
+        // session (the browser no longer sends that event itself).
+        ga4ClientId: getGA4ClientId(),
       });
+
+      try {
+        localStorage.removeItem("selectedPlan");
+      } catch {
+        /* ignore */
+      }
 
       const planPrice = Number(
         plans.find((p) => p.id === selectedPlan)?.price.replace(/[^0-9.]/g, "") ?? 0,
       );
-      trackEvent({
-        event: "begin_checkout",
-        plan_name: selectedPlan,
-        value: planPrice,
-        currency: "USD",
-        has_trial_code: !!couponCode,
-      });
       try {
         localStorage.setItem(
           "pendingCheckout",
@@ -289,21 +366,6 @@ export default function InactiveAccount({ onGateChange }: Props) {
       toast.error(
         err?.response?.data?.error || "Failed to create checkout session",
       );
-    }
-  };
-
-  // =========================================
-  // RENEW
-  // =========================================
-
-  const renewSubscription = async () => {
-    try {
-      const userId = localStorage.getItem("userId");
-      await api.post(`/pay/renew-subscription`, { userId });
-      toast.success("Subscription renewed");
-      window.location.reload();
-    } catch (err) {
-      toast.error("Failed to renew subscription");
     }
   };
 
@@ -334,6 +396,8 @@ export default function InactiveAccount({ onGateChange }: Props) {
 
     if (
       pathname === "/" ||
+      pathname === "/cancel" ||
+      pathname === "/success" ||
       pathname.startsWith("/privacy-policy") ||
       pathname.startsWith("/terms-of-service") ||
       pathname.startsWith("/cancellation-policy") ||
@@ -384,7 +448,7 @@ export default function InactiveAccount({ onGateChange }: Props) {
         "Your last payment did not go through. Please update your payment method to continue.";
     }
 
-    if (paymentStatus === "canceled") {
+    if (paymentStatus === "canceled" && status === "active") {
       title = "Subscription Canceled";
       message = "Renew your subscription to continue.";
     }
@@ -444,7 +508,7 @@ export default function InactiveAccount({ onGateChange }: Props) {
 
               {paymentStatus === "canceled" && status === "active" && (
                 <Button
-                  onClick={renewSubscription}
+                  onClick={() => setShowPlans(true)}
                   className="h-11 rounded-md text-sm font-medium"
                 >
                   Renew Subscription
@@ -738,9 +802,13 @@ export default function InactiveAccount({ onGateChange }: Props) {
                 <div style={{ height: "0.5px", background: "hsl(0 0% 20%)" }} />
 
                 <div className="flex flex-col gap-2">
+                  {/* "canceled" is here too: "Renew Subscription" opens this
+                      screen, and without it the customer had no button to
+                      pay with. A failed payment (past_due) never comes here;
+                      it goes to the billing page. */}
                   {(paymentStatus === "no_subscription" ||
                     paymentStatus === "inactive" ||
-                    paymentStatus === "past_due") &&
+                    paymentStatus === "canceled") &&
                     status === "active" && (
                       <Button
                         onClick={handleCheckout}

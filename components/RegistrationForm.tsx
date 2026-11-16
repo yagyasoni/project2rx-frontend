@@ -112,13 +112,22 @@ function FileUpload({
         </span>
         {value && (
           <button type="button"
-            onClick={(e) => { e.stopPropagation(); onChange(null); }}
+            onClick={(e) => { e.stopPropagation(); onChange(null); if (ref.current) ref.current.value = ""; }}
             className="ml-auto text-xs text-muted-foreground hover:text-destructive"
           >✕</button>
         )}
       </div>
       <input ref={ref} type="file" className="hidden"
-        onChange={(e) => onChange(e.target.files?.[0] ?? null)} />
+        accept=".pdf,.jpg,.jpeg,.png,.docx"
+        onChange={(e) => {
+          const file = e.target.files?.[0] ?? null;
+          if (file && file.size > 10 * 1024 * 1024) {
+            alert("File must be 10 MB or smaller.");
+            if (ref.current) ref.current.value = "";
+            return;
+          }
+          onChange(file);
+        }} />
     </div>
   );
 }

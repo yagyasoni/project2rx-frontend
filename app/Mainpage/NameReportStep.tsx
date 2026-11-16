@@ -44,7 +44,7 @@ const NameReportStep = ({
           },
         },
       );
-      console.log(res.data);
+
       localStorage.setItem("auditId", res.data.id);
       trackEvent({ event: "audit_started" });
       toast("success");

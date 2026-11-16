@@ -172,9 +172,9 @@
 
 "use client";
 
-import { Linkedin, Facebook, Instagram, Youtube } from "lucide-react";
+import { Facebook, Instagram, Linkedin } from "lucide-react";
 import Image from "next/image";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import "../app/landing.css";
 
 const XLogo = ({ className }: { className?: string }) => (
@@ -296,19 +296,19 @@ export default function Footer() {
               },
               {
                 Icon: Facebook,
-                href: "#",
+                href: "https://www.facebook.com/Auditprorx",
                 label: "AuditProRx on Facebook",
               },
               {
                 Icon: Instagram,
-                href: "#",
+                href: "https://www.instagram.com/auditprorx",
                 label: "AuditProRx on Instagram",
               },
-              {
-                Icon: Youtube,
-                href: "#",
-                label: "AuditProRx on YouTube",
-              },
+              // {
+              //   Icon: Youtube,
+              //   href: "#",
+              //   label: "AuditProRx on YouTube",
+              // },
             ].map(({ Icon, href, label }, i) => (
               <a
                 key={i}

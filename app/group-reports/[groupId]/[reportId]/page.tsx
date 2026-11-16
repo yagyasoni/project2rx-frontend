@@ -38,9 +38,18 @@ interface GroupReportRow {
   values: Record<string, number | null>;
 }
 
+// One column of the report. `id` is the key into row.values.
+interface PharmacyColumn {
+  id: string;
+  name: string;
+}
+
 interface ReportDetail {
   report: GroupReport;
-  pharmacies: string[];
+  // Current backend: [{ id, name }], values keyed by pharmacy id, so two
+  // pharmacies with the same name stay two columns.
+  // Older backend: ["Name", ...], values keyed by the name.
+  pharmacies: (string | PharmacyColumn)[];
   rows: GroupReportRow[];
 }
 
@@ -126,9 +135,14 @@ function GroupReportContent({
     };
   }, [groupId, reportId]);
 
-  const pharmacies = data?.pharmacies ?? [];
+  // Both shapes of the reply are read into the same list of columns.
+  const pharmacies: PharmacyColumn[] = (data?.pharmacies ?? []).map((p) =>
+    typeof p === "string"
+      ? { id: p, name: p }
+      : { id: String(p.id), name: p.name },
+  );
 
-  const isPharmacyKey = (key: string) => pharmacies.includes(key);
+  const isPharmacyKey = (key: string) => pharmacies.some((p) => p.id === key);
 
   const sortValue = (row: GroupReportRow, key: string) =>
     key === "rank" ||
@@ -172,7 +186,13 @@ function GroupReportContent({
 
   const handleDownloadCsv = () => {
     if (!data) return;
-    const header = ["Rank", "NDC", "Drug Name", "Pkg Size", ...pharmacies];
+    const header = [
+      "Rank",
+      "NDC",
+      "Drug Name",
+      "Pkg Size",
+      ...pharmacies.map((ph) => ph.name),
+    ];
     const csv = [
       header.join(","),
       ...getRows().map((r) =>
@@ -181,7 +201,7 @@ function GroupReportContent({
           r.ndc,
           r.drug_name,
           r.package_size,
-          ...pharmacies.map((ph) => r.values[ph]),
+          ...pharmacies.map((ph) => r.values[ph.id]),
         ]
           .map((v) => JSON.stringify(v ?? ""))
           .join(","),
@@ -207,7 +227,7 @@ function GroupReportContent({
   ];
   const allColumns = [
     ...baseColumns,
-    ...pharmacies.map((ph) => ({ key: ph, label: ph })),
+    ...pharmacies.map((ph) => ({ key: ph.id, label: ph.name })),
   ];
 
   const rows = getRows();

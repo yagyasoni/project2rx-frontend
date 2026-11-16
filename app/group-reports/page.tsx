@@ -506,6 +506,25 @@ export default function AuditGroupsPage() {
   };
 
   //
+  // DECLINE INVITE
+  //
+
+  const handleDeclineInvite = async (inviteId: string) => {
+    try {
+      await api.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/audit-groups/invite/decline`,
+        { invite_id: inviteId },
+      );
+
+      toast.success("Invite declined");
+
+      loadInvites(userId);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to decline invite");
+    }
+  };
+
+  //
   // LOAD MEMBERS
   //
 
@@ -1301,13 +1320,22 @@ export default function AuditGroupsPage() {
                             </div>
                           </div>
 
-                          <button
-                            onClick={() => handleAcceptInvite(invite.id)}
-                            className="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors shrink-0"
-                          >
-                            <Check className="w-4 h-4" />
-                            Accept Invite
-                          </button>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => handleDeclineInvite(invite.id)}
+                              className="flex items-center gap-2 px-5 py-3 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-semibold transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                              Decline
+                            </button>
+                            <button
+                              onClick={() => handleAcceptInvite(invite.id)}
+                              className="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors"
+                            >
+                              <Check className="w-4 h-4" />
+                              Accept Invite
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>

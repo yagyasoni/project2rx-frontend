@@ -14,7 +14,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
-import { trackEvent, newEventId, getMetaCookies } from "@/lib/gtm";
+import { trackEvent, newEventId, getMetaCookies, getGA4ClientId } from "@/lib/gtm";
 import axios from "axios";
 import { ArrowRight, Eye, EyeOff, Timer } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -61,7 +61,8 @@ const AuthPageInner = () => {
   const prefillPassword = searchParams.get("password") || "";
   const isPrefilled = searchParams.get("prefill") === "true";
 
-  const [isLogin, setIsLogin] = useState(true);
+  const modeParam = searchParams.get("mode");
+  const [isLogin, setIsLogin] = useState(modeParam !== "signup");
   const [showPassword, setShowPassword] = useState(isPrefilled); // show password if prefilled so admin can see it
   const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState(prefillPassword);
@@ -151,9 +152,6 @@ const AuthPageInner = () => {
 
     if (!isLogin) {
       if (!name) newErrors.name = "Full name is required";
-      if (!phone || phone.length < 10) {
-        newErrors.phone = "Phone number is required and it should be 10 digit";
-      }
 
       if (password && !validatePassword(password)) {
         newErrors.password =
@@ -270,6 +268,7 @@ const AuthPageInner = () => {
         email,
         otp,
         eventId,
+        clientId: getGA4ClientId(),
         ...getMetaCookies(),
         // Admin login: the password-step token the code step requires.
         // Sign-up: the password typed on the sign-up form. The server checks
@@ -280,14 +279,17 @@ const AuthPageInner = () => {
 
       if (isLogin) {
         // Admin — store tokens and go to admin dashboard
-        // localStorage.setItem("accessToken", res?.data?.accessToken);
-        // localStorage.setItem("refreshToken", res?.data?.refreshToken);
         localStorage.setItem("adminAccessToken", res?.data?.accessToken);
         localStorage.setItem("adminRefreshToken", res?.data?.refreshToken);
         localStorage.setItem("userId", res?.data?.user?.id);
         router.push("/admin");
       } else {
         // ✅ User verified
+        // Keep the plan picked on the pricing page (…/auth?mode=signup&plan=…)
+        // so the plan screen can show it selected after sign-up.
+        const planParam = searchParams.get("plan");
+        if (planParam) localStorage.setItem("selectedPlan", planParam);
+
         // The code step signs the new user in (same tokens as a normal
         // login), so the rest of sign-up calls the API as that user. An older
         // backend sends no tokens; then nothing is stored and sign-up goes on

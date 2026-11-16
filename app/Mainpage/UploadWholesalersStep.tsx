@@ -41,7 +41,9 @@ interface Wholesaler {
 
 interface UploadWholesalersStepProps {
   wholesalers: Wholesaler[];
-  setWholesalers: (wholesalers: Wholesaler[]) => void;
+  // The parent passes its useState setter, so the function form
+  // (prev => next) is allowed too.
+  setWholesalers: React.Dispatch<React.SetStateAction<Wholesaler[]>>;
   onSkip: () => void;
   onAddSupplier: () => void;
   onViewAudit: () => void;
@@ -242,15 +244,21 @@ const UploadWholesalersStep = ({
   const [drawerSearch, setDrawerSearch] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedIds, setUploadedIds] = useState<Set<string>>(new Set());
-  // Auto-populate wholesaler list from user's DB selections on mount
+  // Auto-populate wholesaler list from user's DB selections — runs once only.
+  const hasInitialized = useRef(false);
   useEffect(() => {
+    if (hasInitialized.current) return;
     if (!loading && selectedSuppliers.length > 0 && wholesalers.length === 0) {
+      hasInitialized.current = true;
       const fromDB = selectedSuppliers.map((name) => ({
         id: Math.random().toString(36).substr(2, 9),
         name,
         file: null,
       }));
       setWholesalers(fromDB);
+    } else if (!loading) {
+      // Mark as initialized even if list already has entries (came from AuditWizard state).
+      hasInitialized.current = true;
     }
   }, [selectedSuppliers, loading]);
 
@@ -426,15 +434,32 @@ const UploadWholesalersStep = ({
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0] || null;
+    // Reset so picking the same file again still fires onChange (same fix as UploadInventoryStep).
+    event.target.value = "";
+    if (!file) return;
     const wholesaler = wholesalers.find((w) => w.id === id);
-    setWholesalers(wholesalers.map((w) => (w.id === id ? { ...w, file } : w)));
+    setWholesalers((prev) => prev.map((w) => (w.id === id ? { ...w, file } : w)));
     setUploadedIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
     });
+    // Clear stale mapping immediately so the old column names are never sent
+    // with the new file while reader.onload is still in flight.
+    setWholesalerFieldMappings((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setWholesalerHeaders((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    // Close any open mapping panel for this wholesaler until the new file is parsed.
+    setShowMappingFor((cur) => (cur === id ? null : cur));
 
-    if (file && wholesaler) {
+    if (wholesaler) {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const text = (e.target?.result as string) || "";
@@ -490,6 +515,13 @@ const UploadWholesalersStep = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Clear the progress interval if the component unmounts mid-upload.
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   const handleSubmit = async () => {
     const id = localStorage.getItem("auditId");
@@ -674,6 +706,10 @@ const UploadWholesalersStep = ({
     setWholesalers(wholesalers.filter((w) => w.id !== id));
     setEdit(false);
     setEditId(null);
+    setWholesalerFieldMappings((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    setWholesalerHeaders((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    setUploadedIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
+    if (showMappingFor === id) setShowMappingFor(null);
 
     // Clear any "Previously uploaded" entry so re-adding this supplier
     // shows an empty row instead of the stale filename.
@@ -716,7 +752,7 @@ const UploadWholesalersStep = ({
 
   const uploadedCount = wholesalers.filter(
     (w) =>
-      w.file ||
+      uploadedIds.has(w.id) ||
       existingWholesalerFiles.some((f) => f.wholesaler_name === w.name),
   ).length;
 

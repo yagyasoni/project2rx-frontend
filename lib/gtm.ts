@@ -34,3 +34,19 @@ export function getMetaCookies(): { fbp?: string; fbc?: string } {
       ?.split("=")[1];
   return { fbp: read("_fbp"), fbc: read("_fbc") };
 }
+
+// GA4 client_id from the _ga cookie (e.g. "GA1.1.1234567890.1700000000").
+// Sent to the backend so Measurement Protocol events are stitched to the
+// same user session that was tracked in the browser.
+export function getGA4ClientId(): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const raw = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith("_ga="))
+    ?.split("=")[1];
+  if (!raw) return undefined;
+  // Strip the "GA1.1." prefix — the client_id is the last two segments
+  const parts = raw.split(".");
+  if (parts.length >= 4) return `${parts[2]}.${parts[3]}`;
+  return raw;
+}
