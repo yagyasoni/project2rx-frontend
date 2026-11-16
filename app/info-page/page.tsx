@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+import api from "@/lib/api";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -303,10 +304,9 @@ const PharmacyDetailsForm = () => {
       formData.append("voidedChequeFile", voidedChequeFile.file);
 
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/pharmacy`,
-        formData,
-      );
+      // Sent with the user's login: the server saves the details for the
+      // logged-in user.
+      await api.post("/auth/pharmacy", formData);
       localStorage.setItem("pharmacyName", pharmacyName);
       toast.success(
         "Details submitted successfully! Your pharmacy details have been saved.",

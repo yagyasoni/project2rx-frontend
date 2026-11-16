@@ -178,8 +178,6 @@ const AuthPageInner = () => {
           },
         );
 
-        console.log(res?.data);
-        console.log(res?.data?.user?.role);
         localStorage.setItem("role", res?.data?.user?.role);
 
         if (res?.data?.requiresOtp) {
@@ -228,8 +226,6 @@ const AuthPageInner = () => {
           { name, email, phone, password },
         );
 
-        console.log(res?.data);
-
         localStorage.setItem("userId", res?.data?.user?.id);
         localStorage.setItem("userEmail", email); // ✅ ADD THIS LINE TOO
         localStorage.setItem("signupName", name);
@@ -275,10 +271,12 @@ const AuthPageInner = () => {
         otp,
         eventId,
         ...getMetaCookies(),
-        // Admin login only: the password-step token the code step requires.
-        ...(isLogin ? { otpToken } : {}),
+        // Admin login: the password-step token the code step requires.
+        // Sign-up: the password typed on the sign-up form. The server checks
+        // it against the pending sign-up, so a code can only finish the
+        // sign-up of the person who started it.
+        ...(isLogin ? { otpToken } : { password }),
       });
-      console.log(res?.data);
 
       if (isLogin) {
         // Admin — store tokens and go to admin dashboard
@@ -290,6 +288,18 @@ const AuthPageInner = () => {
         router.push("/admin");
       } else {
         // ✅ User verified
+        // The code step signs the new user in (same tokens as a normal
+        // login), so the rest of sign-up calls the API as that user. An older
+        // backend sends no tokens; then nothing is stored and sign-up goes on
+        // as before.
+        if (res?.data?.accessToken && res?.data?.refreshToken) {
+          localStorage.setItem("accessToken", res.data.accessToken);
+          localStorage.setItem("refreshToken", res.data.refreshToken);
+          localStorage.setItem("userEmail", email);
+          if (res.data.user?.id) localStorage.setItem("userId", res.data.user.id);
+          localStorage.setItem("role", res.data.user?.role ?? "user");
+          localStorage.setItem("status", res.data.user?.status ?? "active");
+        }
         toast(res?.data?.message);
         trackEvent({ event: "sign_up", method: "email", event_id: eventId });
         router.push("/info-page");
@@ -326,6 +336,19 @@ const AuthPageInner = () => {
         return;
       }
 
+      // Sign-up: this code cannot finish the sign-up any more (the sign-up
+      // was started again with another password, or the account is already
+      // verified). Back to the form, with the reason.
+      if (
+        !isLogin &&
+        (refusal.code === "SIGNUP_MISMATCH" ||
+          refusal.code === "ALREADY_VERIFIED" ||
+          refusal.code === "ACCOUNT_NOT_FOUND")
+      ) {
+        backToLogin(message);
+        return;
+      }
+
       // e.g. "Incorrect code. 3 tries left." or
       // "Too many wrong codes. Please request a new code."
       setErrors((prev) => ({ ...prev, otp: message }));
@@ -349,7 +372,6 @@ const AuthPageInner = () => {
         url,
         isLogin ? { email, otpToken } : { email },
       );
-      console.log(res?.data);
       toast(res?.data?.message);
       setOtp("");
       startResendTimer(res?.data?.resendAfter);
@@ -401,7 +423,6 @@ const AuthPageInner = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/forgot-password`,
         { email },
       );
-      console.log(res?.data);
 
       setErrors((prev) => ({
         ...prev,

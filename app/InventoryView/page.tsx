@@ -1835,6 +1835,12 @@ ${myUser.email}`;
     setStep("sending");
     setSendError(null);
     try {
+      // The server decides who receives the email and writes its subject and
+      // text itself, from the listing (same wording as the preview above).
+      // It only uses listing_id, quantity and notes. The other four fields
+      // are ignored by the current backend; they are still sent so this page
+      // also works with a backend that has not been updated yet, and can be
+      // removed once it has.
       const res = await api.post("/api/inventory-view/connect-request", {
         listing_id: listing.id,
         seller_pharmacy_id: listing.pharmacy.id,

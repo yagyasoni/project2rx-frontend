@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import AdminLayout from "@/components/adminLayout";
 import { toast } from "sonner";
-import axios from "axios";
+import adminApi from "@/lib/adminApi";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -221,9 +221,7 @@ const SupplierMappingPage = () => {
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers`,
-        );
+        const res = await adminApi.get("/api/suppliers");
 
         setSuppliers(res.data);
 
@@ -254,8 +252,8 @@ const SupplierMappingPage = () => {
     if (!newSupplierName.trim()) return;
 
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers`,
+      const res = await adminApi.post(
+        "/api/suppliers",
         {
           name: newSupplierName.trim(),
           email: newSupplierEmail.trim(),
@@ -280,9 +278,7 @@ const SupplierMappingPage = () => {
     // if (!ok) return;
 
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers/${id}`,
-      );
+      await adminApi.delete(`/api/suppliers/${id}`);
 
       setSuppliers((prev) => prev.filter((s) => s.id !== id));
 
@@ -307,8 +303,8 @@ const SupplierMappingPage = () => {
     setActiveMenu(null);
 
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/supplier-mapping/${supplier.id}`,
+      const res = await adminApi.get(
+        `/api/supplier-mapping/${supplier.id}`,
       );
 
       const data = res.data;
@@ -384,8 +380,8 @@ const SupplierMappingPage = () => {
     });
 
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/supplier-mapping`,
+      const res = await adminApi.post(
+        "/api/supplier-mapping",
         {
           supplier_id: selectedSupplier.id,
           mappings: cleanMappings,
@@ -959,8 +955,8 @@ const SupplierMappingPage = () => {
               onClick={async () => {
                 if (!editingSupplier) return;
 
-                const res = await axios.put(
-                  `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers/${editingSupplier.id}/email`,
+                const res = await adminApi.put(
+                  `/api/suppliers/${editingSupplier.id}/email`,
                   { email: emailInput, phone_number: phoneInput },
                 );
 

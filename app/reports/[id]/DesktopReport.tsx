@@ -1033,7 +1033,7 @@ export default function DesktopReport() {
 
     Promise.all([
       userId
-        ? fetch(`${base}/api/user-suppliers/${userId}`)
+        ? authFetch(`${base}/api/user-suppliers/${userId}`)
             .then((r) => r.json())
             .catch(() => [])
         : Promise.resolve([]),

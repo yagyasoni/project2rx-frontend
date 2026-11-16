@@ -544,13 +544,28 @@ const UploadInventoryStep = ({
       writeUploadedMarker(id, "inventory", file);
       setUploadedKey(fileKey(file));
       if (file !== inventoryFile) setInventoryFile(file);
+
+      // Rows the server refused because they do not have the same number of
+      // columns as the header (their values would land in the wrong fields).
+      // The rest of the file was saved; the user is told how many were left
+      // out instead of losing them silently.
+      const skippedRows = Number(res.data?.rows?.skipped ?? 0);
+      if (skippedRows > 0) {
+        const totalRows = Number(res.data?.rows?.total ?? 0);
+        toast.warning(
+          `${skippedRows} of ${totalRows} rows were skipped because they do not have the same number of columns as the header row. Please check those rows in your file.`,
+          { duration: 15000 },
+        );
+      }
     } catch (err) {
       clearInterval(interval);
       setIsUploading(false);
       setUploadProgress(0);
       console.error("❌ Upload error:", err);
+      // The server explains a refused file in `error` (older replies: `message`).
       const message =
-        (axios.isAxiosError(err) && err.response?.data?.message) ||
+        (axios.isAxiosError(err) &&
+          (err.response?.data?.message || err.response?.data?.error)) ||
         (err instanceof Error && err.message) ||
         "Please try again.";
       toast(subscriptionMessage(err) ?? "Upload failed: " + message);

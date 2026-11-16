@@ -155,7 +155,18 @@ export default function InactiveAccount({ onGateChange }: Props) {
           subscription?.leads_access ||
           subscription?.full_access;
 
-        const newPaymentStatus = hasAccess ? "active" : "no_subscription";
+        // No access because the last payment failed: the subscription still
+        // exists in Stripe, so the customer must fix the payment (billing
+        // page), not buy a second subscription.
+        const paymentFailed =
+          subscription?.status === "past_due" ||
+          subscription?.status === "unpaid";
+
+        const newPaymentStatus = hasAccess
+          ? "active"
+          : paymentFailed
+            ? "past_due"
+            : "no_subscription";
 
         if (prevStatusRef.current === null && prevPaymentRef.current === null) {
           prevStatusRef.current = newStatus;
@@ -296,6 +307,23 @@ export default function InactiveAccount({ onGateChange }: Props) {
     }
   };
 
+  // =========================================
+  // PAYMENT PAST DUE → Stripe billing page (update the card, pay the invoice)
+  // =========================================
+
+  const openBillingPortal = async () => {
+    try {
+      const userId = localStorage.getItem("userId");
+      const res = await api.post(`/pay/update-subscription`, { userId });
+      window.location.href = res.data.url;
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.error ||
+          "Could not open the billing page. Please contact support.",
+      );
+    }
+  };
+
   // What the gate renders: null (app usable), the loading spinner, or one of
   // the paywall screens. Computed in one place so the layout can also be told
   // whether the app behind it must be inert.
@@ -350,9 +378,10 @@ export default function InactiveAccount({ onGateChange }: Props) {
       message = "Your account is currently inactive. Please contact support.";
     }
 
-    if (paymentStatus === "past_due") {
+    if (paymentStatus === "past_due" && status === "active") {
       title = "Payment Required";
-      message = "Your payment is currently past due.";
+      message =
+        "Your last payment did not go through. Please update your payment method to continue.";
     }
 
     if (paymentStatus === "canceled") {
@@ -393,8 +422,7 @@ export default function InactiveAccount({ onGateChange }: Props) {
 
             <div className="mt-6 flex flex-col gap-2">
               {(paymentStatus === "no_subscription" ||
-                paymentStatus === "inactive" ||
-                paymentStatus === "past_due") &&
+                paymentStatus === "inactive") &&
                 status === "active" && (
                   <Button
                     onClick={() => setShowPlans(true)}
@@ -403,6 +431,16 @@ export default function InactiveAccount({ onGateChange }: Props) {
                     Proceed with Payment
                   </Button>
                 )}
+
+              {paymentStatus === "past_due" && status === "active" && (
+                <Button
+                  onClick={openBillingPortal}
+                  className="h-11 rounded-md text-sm font-medium"
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Update Payment Method
+                </Button>
+              )}
 
               {paymentStatus === "canceled" && status === "active" && (
                 <Button

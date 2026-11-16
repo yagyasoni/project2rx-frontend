@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   Building2,
   CheckCircle2,
@@ -1428,9 +1428,7 @@ const SupplierStep = ({
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suppliers`
-        );
+        const res = await api.get("/api/suppliers");
         // res.data is [{ id, name }, ...] — extract just names
         const names = res.data
           .map((s: { name: string }) => s.name)
@@ -1805,12 +1803,9 @@ const AgreementsPage = () => {
       try {
         const userId = localStorage.getItem("userId");
         if (userId) {
-          await axios.post(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user-suppliers/${userId}`,
-            {
-              supplierNames: selectedSuppliers,
-            },
-          );
+          await api.post(`/api/user-suppliers/${userId}`, {
+            supplierNames: selectedSuppliers,
+          });
           console.log("✅ Suppliers saved to DB:", selectedSuppliers);
         }
       } catch (err) {
@@ -1827,9 +1822,18 @@ const AgreementsPage = () => {
       setAgreed(false);
       documentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      toast.success("All steps completed! Redirecting to login...");
-      await new Promise((r) => setTimeout(r, 1000));
-      router.push("/auth");
+      // The new user was signed in at the code step, so sign-up ends inside
+      // the app. Without a login (it expired, or the backend did not issue
+      // one) it ends at the sign-in page, as before.
+      if (localStorage.getItem("accessToken")) {
+        toast.success("All steps completed! Taking you to your account...");
+        await new Promise((r) => setTimeout(r, 1000));
+        window.location.href = "/Mainpage";
+      } else {
+        toast.success("All steps completed! Redirecting to login...");
+        await new Promise((r) => setTimeout(r, 1000));
+        router.push("/auth");
+      }
     }
     setIsSubmitting(false);
   };
