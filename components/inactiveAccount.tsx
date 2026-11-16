@@ -20,7 +20,12 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { toast } from "sonner";
-import api from "@/lib/api";
+import api, {
+  ACCOUNT_DELETED_EVENT,
+  ACCOUNT_RECHECK_EVENT,
+  isAccountDeleted,
+  signOutToSignIn,
+} from "@/lib/api";
 import { getMetaCookies, getGA4ClientId } from "@/lib/gtm";
 
 // =========================================
@@ -118,6 +123,12 @@ export default function InactiveAccount({ onGateChange }: Props) {
   const prevStatusRef = useRef<string | null>(null);
   const prevPaymentRef = useRef<string | null>(null);
 
+  // The account behind this login was deleted (an admin removed it while the
+  // user was still signed in). The login key keeps working for up to 3 hours,
+  // so without this the popup fell back to "Subscription Required".
+  const [accountGone, setAccountGone] = useState(false);
+  const accountGoneRef = useRef(false);
+
   // =========================================
   // FETCH USER + SUB STATUS
   // =========================================
@@ -126,7 +137,26 @@ export default function InactiveAccount({ onGateChange }: Props) {
     const userId = localStorage.getItem("userId");
     if (!userId) return;
 
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let stopped = false;
+
+    const cancelNext = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    // Show "Account No Longer Exists" and stop asking: nothing can change.
+    const markAccountGone = () => {
+      accountGoneRef.current = true;
+      cancelNext();
+      setAccountGone(true);
+      setLoading(false);
+    };
+
     const fetchAll = async () => {
+      if (accountGoneRef.current) return;
       try {
         const [userRes, subRes] = await Promise.all([
           api.get(`/auth/users`),
@@ -134,6 +164,16 @@ export default function InactiveAccount({ onGateChange }: Props) {
         ]);
 
         const users = userRes.data?.users || userRes.data;
+
+        // A pharmacy login always gets its own row back. An EMPTY list means
+        // there is no such account any more. (The current server says so with
+        // its own "account deleted" reply, handled in the catch below; an
+        // empty list is what the server sent before that.)
+        if (Array.isArray(users) && users.length === 0) {
+          markAccountGone();
+          return;
+        }
+
         const currentUser = users.find((u: any) => u.id === userId);
         const newStatus = currentUser?.status || null;
 
@@ -192,6 +232,10 @@ export default function InactiveAccount({ onGateChange }: Props) {
         prevStatusRef.current = newStatus;
         prevPaymentRef.current = newPaymentStatus;
       } catch (err) {
+        if (isAccountDeleted(err)) {
+          markAccountGone();
+          return;
+        }
         console.error(err);
       } finally {
         setLoading(false);
@@ -209,9 +253,6 @@ export default function InactiveAccount({ onGateChange }: Props) {
     const WAITING_MS = 5000;
     const OPEN_MS = 60000;
 
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    let stopped = false;
-
     const isWaiting = () =>
       !(
         prevStatusRef.current === "active" &&
@@ -219,20 +260,15 @@ export default function InactiveAccount({ onGateChange }: Props) {
       );
 
     const scheduleNext = () => {
-      if (stopped || document.visibilityState !== "visible") return;
+      cancelNext();
+      if (stopped || accountGoneRef.current) return;
+      if (document.visibilityState !== "visible") return;
       timer = setTimeout(
         () => {
           fetchAll().finally(scheduleNext);
         },
         isWaiting() ? WAITING_MS : OPEN_MS,
       );
-    };
-
-    const cancelNext = () => {
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
     };
 
     const onVisibility = () => {
@@ -242,13 +278,31 @@ export default function InactiveAccount({ onGateChange }: Props) {
       }
     };
 
+    // Any request on any page can be the first to learn that the account
+    // was deleted or made inactive (lib/api.ts turns those replies into
+    // these events). React at once instead of waiting for the next check.
+    const onAccountDeleted = () => markAccountGone();
+
+    let lastRecheck = 0;
+    const onAccountRecheck = () => {
+      // one page can fire many refused requests together: check once
+      if (Date.now() - lastRecheck < 2000) return;
+      lastRecheck = Date.now();
+      cancelNext();
+      fetchAll().finally(scheduleNext);
+    };
+
     fetchAll().finally(scheduleNext);
     document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener(ACCOUNT_DELETED_EVENT, onAccountDeleted);
+    window.addEventListener(ACCOUNT_RECHECK_EVENT, onAccountRecheck);
 
     return () => {
       stopped = true;
       cancelNext();
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener(ACCOUNT_DELETED_EVENT, onAccountDeleted);
+      window.removeEventListener(ACCOUNT_RECHECK_EVENT, onAccountRecheck);
     };
   }, []);
 
@@ -418,6 +472,72 @@ export default function InactiveAccount({ onGateChange }: Props) {
       pathname.startsWith("/company")
     ) {
       return null;
+    }
+
+    // =========================================
+    // ACCOUNT DELETED
+    // Comes before everything else: with no account there is nothing to
+    // pay for and nothing to activate.
+    // =========================================
+
+    if (accountGone) {
+      return (
+        <div className="fixed inset-0 z-[13000] bg-black/55 backdrop-blur-sm flex items-center justify-center px-4">
+          <div
+            role="alertdialog"
+            aria-labelledby="account-gone-title"
+            aria-describedby="account-gone-text"
+            className="w-full max-w-md border border-zinc-200 bg-white rounded-lg shadow-2xl p-7"
+          >
+            <div className="flex items-start gap-4">
+              <div className="h-11 w-11 rounded-md bg-red-50 flex items-center justify-center shrink-0">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+              </div>
+
+              <div className="flex-1">
+                <h2
+                  id="account-gone-title"
+                  className="text-[20px] font-semibold text-zinc-900"
+                >
+                  Account No Longer Exists
+                </h2>
+                <p
+                  id="account-gone-text"
+                  className="mt-1 text-sm text-zinc-500 leading-relaxed"
+                >
+                  This account has been removed. Please contact support.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-2">
+              <Button
+                className="h-11 rounded-md text-sm font-medium"
+                onClick={() => {
+                  window.open(
+                    "https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com",
+                    "_blank",
+                  );
+                }}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Contact Support
+              </Button>
+
+              {/* Clears the saved login from this browser, then opens the
+                  sign-in page. */}
+              <Button
+                variant="outline"
+                className="h-11 rounded-md border-zinc-300"
+                onClick={signOutToSignIn}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to sign in
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
     }
 
     // Profile verification is the FIRST priority. An unverified / inactive

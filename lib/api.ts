@@ -32,6 +32,47 @@ const forceClientLogout = () => {
   }
 };
 
+/** Clears the saved login from this browser and goes to the sign-in page. */
+export const signOutToSignIn = forceClientLogout;
+
+// ── What the server says about the ACCOUNT itself ────────────
+// (audit-backend src/middleware/auth.js)
+//   ACCOUNT_DELETED   the login is still valid but an admin deleted the
+//                     account. The paywall component shows "Account No
+//                     Longer Exists".
+//   ACCOUNT_INACTIVE  an admin marked the account inactive.
+// Any request can be the first to get one of these replies, so the
+// interceptor below turns them into browser events. The paywall component
+// (components/inactiveAccount.tsx) listens and reacts at once, instead of
+// waiting for its next timed check.
+export const ACCOUNT_DELETED_CODE = "ACCOUNT_DELETED";
+export const ACCOUNT_INACTIVE_CODE = "ACCOUNT_INACTIVE";
+export const ACCOUNT_DELETED_EVENT = "auditprorx:account-deleted";
+export const ACCOUNT_RECHECK_EVENT = "auditprorx:account-recheck";
+
+/** The `code` field of a refused request, or null. */
+export function refusalCode(error: unknown): string | null {
+  if (!axios.isAxiosError(error)) return null;
+  let body: unknown = error.response?.data;
+  if (typeof body === "string") {
+    // authFetch requests arrive as raw text
+    try {
+      body = JSON.parse(body);
+    } catch {
+      return null;
+    }
+  }
+  const code = (body as { code?: unknown } | null)?.code;
+  return typeof code === "string" ? code : null;
+}
+
+export const isAccountDeleted = (error: unknown): boolean =>
+  refusalCode(error) === ACCOUNT_DELETED_CODE;
+
+const announce = (eventName: string) => {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(eventName));
+};
+
 // What a signed-in user without the right plan sees wherever a page surfaces
 // the server's refusal (inline notices, toasts, alerts). The gate itself lives
 // on the backend: requireFeature answers 403 with PLAN_REFUSAL_TEXT, and the
@@ -88,6 +129,17 @@ api.interceptors.response.use(
     normalizeSubscriptionError(error);
     const originalRequest = error.config;
 
+    // The server says the account behind this login was deleted. Tell the
+    // paywall component (it shows "Account No Longer Exists") and stop here:
+    // there is no session to renew and nothing to retry.
+    const code = refusalCode(error);
+    if (code === ACCOUNT_DELETED_CODE) {
+      announce(ACCOUNT_DELETED_EVENT);
+      return Promise.reject(error);
+    }
+    // The account was marked inactive: let the paywall check the status now.
+    if (code === ACCOUNT_INACTIVE_CODE) announce(ACCOUNT_RECHECK_EVENT);
+
     // Only attempt refresh on 401 and only once
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -134,7 +186,14 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        forceClientLogout();
+        if (isAccountDeleted(refreshError)) {
+          // The session cannot be renewed because the account was deleted.
+          // Keep the page and let the popup explain it; its "Back to sign
+          // in" button clears the saved login.
+          announce(ACCOUNT_DELETED_EVENT);
+        } else {
+          forceClientLogout();
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
