@@ -117,7 +117,7 @@ export default function LayoutClient({
           Beta — This application is currently in testing. Some features may not
           work as expected.{" "}
           <a
-            href={`https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com&su=${subject}&body=${body}`}
+            href={`https://mail.google.com/mail/?view=cm&fs=1&to=support@auditprorx.com&su=${subject}&body=${body}`}
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-gray-300"

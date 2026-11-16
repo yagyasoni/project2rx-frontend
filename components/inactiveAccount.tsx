@@ -515,7 +515,7 @@ export default function InactiveAccount({ onGateChange }: Props) {
                 className="h-11 rounded-md text-sm font-medium"
                 onClick={() => {
                   window.open(
-                    "https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com",
+                    "https://mail.google.com/mail/?view=cm&fs=1&to=support@auditprorx.com",
                     "_blank",
                   );
                 }}
@@ -640,7 +640,7 @@ export default function InactiveAccount({ onGateChange }: Props) {
                 className="h-11 rounded-md border-zinc-300"
                 onClick={() => {
                   window.open(
-                    "https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com",
+                    "https://mail.google.com/mail/?view=cm&fs=1&to=support@auditprorx.com",
                     "_blank",
                   );
                 }}
@@ -963,7 +963,7 @@ export default function InactiveAccount({ onGateChange }: Props) {
                     className="h-10 rounded-lg text-sm flex items-center gap-2 hover:text-black/80 text-white"
                     onClick={() => {
                       window.open(
-                        "https://mail.google.com/mail/?view=cm&fs=1&to=drugdroprx@gmail.com",
+                        "https://mail.google.com/mail/?view=cm&fs=1&to=support@auditprorx.com",
                         "_blank",
                       );
                     }}
