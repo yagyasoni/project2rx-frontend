@@ -1022,42 +1022,32 @@ export default function DesktopReport() {
   }, [auditId, refreshTick]);
 
   // ── Wholesalers for the Total Order filter list ───────────────────────────
-  // Shows ALL selected wholesalers (chosen during audit creation), not just the
-  // ones that already have an uploaded file — union of the user's selected
-  // suppliers and any wholesaler files uploaded for this audit.
+  // Only the suppliers that have a file uploaded for THIS report, A–Z. The
+  // account's supplier list is not used: it changes whenever a new report is
+  // set up, and an older report must keep showing its own suppliers.
   useEffect(() => {
     if (!auditId) return;
     const base = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const userId =
-      typeof window !== "undefined" ? localStorage.getItem("userId") : null;
 
-    Promise.all([
-      userId
-        ? authFetch(`${base}/api/user-suppliers/${userId}`)
-            .then((r) => r.json())
-            .catch(() => [])
-        : Promise.resolve([]),
-      authFetch(`${base}/api/audits/${auditId}/wholesaler-files`)
-        .then((r) => r.json())
-        .catch(() => []),
-    ])
-      .then(([suppliers, files]) => {
-        const fromSuppliers = Array.isArray(suppliers)
-          ? suppliers.map((x: any) => x.name)
-          : [];
+    authFetch(`${base}/api/audits/${auditId}/wholesaler-files`)
+      .then((r) => r.json())
+      .then((files) => {
         const fromFiles = Array.isArray(files)
           ? files.map((x: any) => x.wholesaler_name)
           : [];
         // Dedupe case-insensitively, keeping the first occurrence's casing.
         const seen = new Set<string>();
         const names: string[] = [];
-        for (const n of [...fromSuppliers, ...fromFiles]) {
+        for (const n of fromFiles) {
           if (!n) continue;
           const key = String(n).toUpperCase();
           if (seen.has(key)) continue;
           seen.add(key);
           names.push(n);
         }
+        names.sort((a, b) =>
+          String(a).localeCompare(String(b), undefined, { sensitivity: "base" }),
+        );
         setAuditWholesalers(names);
       })
       .catch(() => setAuditWholesalers([]));

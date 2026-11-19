@@ -32,6 +32,7 @@ import {
   writeUploadedMarker,
   clearUploadedMarker,
 } from "@/lib/storedCsv";
+import { initialSupplierNames } from "@/lib/supplierRows";
 
 interface Wholesaler {
   id: string;
@@ -47,6 +48,10 @@ interface UploadWholesalersStepProps {
   onSkip: () => void;
   onAddSupplier: () => void;
   onViewAudit: () => void;
+  // True when an existing report is opened (Reports → Supplier Files or
+  // Inventory Files). Its rows then come from its own uploaded files, and
+  // adding or removing a supplier there leaves the account's list alone.
+  isEditMode?: boolean;
 }
 
 const defaultWholesalers: Wholesaler[] = [];
@@ -229,6 +234,7 @@ const UploadWholesalersStep = ({
   onSkip,
   onAddSupplier,
   onViewAudit,
+  isEditMode = false,
 }: UploadWholesalersStepProps) => {
   const {
     allSuppliers,
@@ -244,23 +250,8 @@ const UploadWholesalersStep = ({
   const [drawerSearch, setDrawerSearch] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedIds, setUploadedIds] = useState<Set<string>>(new Set());
-  // Auto-populate wholesaler list from user's DB selections — runs once only.
+  // The rows are filled once (see the effect after the file list loads).
   const hasInitialized = useRef(false);
-  useEffect(() => {
-    if (hasInitialized.current) return;
-    if (!loading && selectedSuppliers.length > 0 && wholesalers.length === 0) {
-      hasInitialized.current = true;
-      const fromDB = selectedSuppliers.map((name) => ({
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        file: null,
-      }));
-      setWholesalers(fromDB);
-    } else if (!loading) {
-      // Mark as initialized even if list already has entries (came from AuditWizard state).
-      hasInitialized.current = true;
-    }
-  }, [selectedSuppliers, loading]);
 
   const alreadyAddedNames = wholesalers.map((w) => w.name);
   const availableForDrawer = allSuppliers.filter(
@@ -282,6 +273,9 @@ const UploadWholesalersStep = ({
   const [existingWholesalerFiles, setExistingWholesalerFiles] = useState<
     { wholesaler_name: string; file_name: string }[]
   >([]);
+  // True once this report's uploaded files have been asked for (or there is
+  // no report yet), so the rows are not filled from a half-loaded list.
+  const [filesLoaded, setFilesLoaded] = useState(false);
   // Needed to build the Preview/Download URLs; null until the mount effect runs.
   const [auditId, setAuditId] = useState<string | null>(null);
   // wholesaler_name -> fileKey of the local File known to be on the server.
@@ -298,7 +292,10 @@ const UploadWholesalersStep = ({
 
   useEffect(() => {
     const storedAuditId = localStorage.getItem("auditId");
-    if (!storedAuditId) return;
+    if (!storedAuditId) {
+      setFilesLoaded(true);
+      return;
+    }
     setAuditId(storedAuditId);
     api
       .get(
@@ -324,8 +321,47 @@ const UploadWholesalersStep = ({
           setUploadedKeys(keys);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setFilesLoaded(true));
   }, []);
+
+  // Fill the supplier rows once, when this step opens with no rows yet.
+  //  • Existing report: one row per file uploaded for THIS report, so it
+  //    shows what it really has, not the account's current list.
+  //  • New report: the account's selected suppliers, as before, plus any
+  //    file already uploaded to it.
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    if (!filesLoaded) return; // wait for this report's files
+    if (!isEditMode && loading) return; // a new report also waits for the account list
+    hasInitialized.current = true;
+    if (wholesalers.length > 0) return; // rows kept by the wizard (step revisited)
+
+    const names = initialSupplierNames(
+      isEditMode,
+      selectedSuppliers,
+      existingWholesalerFiles,
+    );
+    if (names.length === 0) return;
+    setWholesalers(
+      names.map((name) => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name,
+        file: null,
+      })),
+    );
+  }, [
+    isEditMode,
+    filesLoaded,
+    loading,
+    selectedSuppliers,
+    existingWholesalerFiles,
+    wholesalers.length,
+    setWholesalers,
+  ]);
+
+  // "Loading your suppliers..." until the rows can be filled.
+  const rowsLoading = !filesLoaded || (!isEditMode && loading);
 
   const WHOLESALER_REQUIRED_FIELDS = [
     { key: "ndcNumber", label: "Ndc Number" },
@@ -723,8 +759,9 @@ const UploadWholesalersStep = ({
     });
     if (auditId) clearUploadedMarker(auditId, `wholesaler:${name}`);
 
-    // Also remove from supplier context (syncs with Settings page)
-    removeFromContext(name);
+    // A new report also updates the account's supplier list (syncs with the
+    // Settings page). An existing report changes only itself.
+    if (!isEditMode) removeFromContext(name);
 
     setIsDeleting(false);
     setDeleteTarget(null);
@@ -738,10 +775,12 @@ const UploadWholesalersStep = ({
     }));
     setWholesalers([...wholesalers, ...newItems]);
 
+    // A new report also adds them to the account's supplier list. An
+    // existing report changes only itself.
     const newNames = selectedInDrawer.filter(
       (name) => !selectedSuppliers.includes(name),
     );
-    if (newNames.length > 0) {
+    if (!isEditMode && newNames.length > 0) {
       const merged = [...selectedSuppliers, ...newNames];
       saveSuppliers(merged);
     }
@@ -796,12 +835,12 @@ const UploadWholesalersStep = ({
         </div>
 
         <div className="divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
-          {loading && wholesalers.length === 0 && (
+          {rowsLoading && wholesalers.length === 0 && (
             <div className="flex items-center justify-center py-12 text-xs text-gray-400">
               Loading your suppliers...
             </div>
           )}
-          {!loading && wholesalers.length === 0 && (
+          {!rowsLoading && wholesalers.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Building2 className="w-8 h-8 text-gray-200 mb-3" />
               <p className="text-sm font-medium text-gray-500">

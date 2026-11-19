@@ -199,6 +199,7 @@ const AuditWizard = ({
               onSkip={handleSkip}
               onAddSupplier={handleAddSupplier}
               onViewAudit={handleViewAudit}
+              isEditMode={isEditMode}
             />
           )}
         </div>
