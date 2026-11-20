@@ -81,6 +81,28 @@ const AuthPageInner = () => {
     general: "",
   });
 
+  // Sign In and Sign Up share the same fields. Switching tab starts clean:
+  // every field is emptied, the messages are cleared and the password is
+  // hidden again. Clicking the tab that is already open changes nothing.
+  const switchTab = (toLogin: boolean) => {
+    if (toLogin === isLogin) return;
+    setIsLogin(toLogin);
+    setName("");
+    setEmail("");
+    setPhone("");
+    setPassword("");
+    setShowPassword(false);
+    setErrors({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      otp: "",
+      forgotEmail: "",
+      general: "",
+    });
+  };
+
   // Admin login only: proof that the password step was passed. The server
   // returns it with the code email and refuses the code step without it.
   const [otpToken, setOtpToken] = useState<string | null>(null);
@@ -597,7 +619,7 @@ const AuthPageInner = () => {
           <div className="flex bg-secondary rounded-lg p-1 mb-8">
             <button
               type="button"
-              onClick={() => setIsLogin(true)}
+              onClick={() => switchTab(true)}
               className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${isLogin
                   ? "bg-accent text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -607,7 +629,7 @@ const AuthPageInner = () => {
             </button>
             <button
               type="button"
-              onClick={() => setIsLogin(false)}
+              onClick={() => switchTab(false)}
               className={`flex-1 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${!isLogin
                   ? "bg-accent text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
