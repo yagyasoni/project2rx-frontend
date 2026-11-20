@@ -49,8 +49,10 @@ interface UploadWholesalersStepProps {
   onAddSupplier: () => void;
   onViewAudit: () => void;
   // True when an existing report is opened (Reports → Supplier Files or
-  // Inventory Files). Its rows then come from its own uploaded files, and
-  // adding or removing a supplier there leaves the account's list alone.
+  // Inventory Files). It only matters when the server has no per-report
+  // supplier list (older server): the rows then come from the report's own
+  // uploaded files, and adding or removing a supplier there leaves the
+  // account's list alone.
   isEditMode?: boolean;
 }
 
@@ -273,8 +275,14 @@ const UploadWholesalersStep = ({
   const [existingWholesalerFiles, setExistingWholesalerFiles] = useState<
     { wholesaler_name: string; file_name: string }[]
   >([]);
-  // True once this report's uploaded files have been asked for (or there is
-  // no report yet), so the rows are not filled from a half-loaded list.
+  // This report's own supplier list, from the server. null = not loaded, or
+  // the server has no per-report list (older server): the rows then fall
+  // back to the earlier rule and nothing is saved per report.
+  const [reportSuppliers, setReportSuppliers] = useState<string[] | null>(
+    null,
+  );
+  // True once this report's list and uploaded files have been asked for (or
+  // there is no report yet), so the rows are not filled from half-loaded data.
   const [filesLoaded, setFilesLoaded] = useState(false);
   // Needed to build the Preview/Download URLs; null until the mount effect runs.
   const [auditId, setAuditId] = useState<string | null>(null);
@@ -297,7 +305,23 @@ const UploadWholesalersStep = ({
       return;
     }
     setAuditId(storedAuditId);
-    api
+
+    // The suppliers picked for THIS report. A failure leaves it null.
+    const listRequest = api
+      .get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${storedAuditId}/suppliers`,
+      )
+      .then((res) => {
+        const names = res.data?.suppliers;
+        if (Array.isArray(names))
+          setReportSuppliers(
+            names.filter((n: unknown): n is string => typeof n === "string"),
+          );
+      })
+      .catch(() => {});
+
+    // The files uploaded for this report.
+    const filesRequest = api
       .get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${storedAuditId}/wholesaler-files`,
       )
@@ -321,19 +345,22 @@ const UploadWholesalersStep = ({
           setUploadedKeys(keys);
         }
       })
-      .catch(() => {})
-      .finally(() => setFilesLoaded(true));
+      .catch(() => {});
+
+    Promise.all([listRequest, filesRequest]).finally(() =>
+      setFilesLoaded(true),
+    );
   }, []);
 
   // Fill the supplier rows once, when this step opens with no rows yet.
-  //  • Existing report: one row per file uploaded for THIS report, so it
-  //    shows what it really has, not the account's current list.
-  //  • New report: the account's selected suppliers, as before, plus any
-  //    file already uploaded to it.
+  // The rows are this report's own supplier list (a new report was given a
+  // copy of the account's list when it was created). Only when that list
+  // could not be loaded do the rows fall back to the earlier rule, which
+  // for a new report needs the account's list. See lib/supplierRows.ts.
   useEffect(() => {
     if (hasInitialized.current) return;
-    if (!filesLoaded) return; // wait for this report's files
-    if (!isEditMode && loading) return; // a new report also waits for the account list
+    if (!filesLoaded) return; // wait for this report's list and files
+    if (!reportSuppliers && !isEditMode && loading) return; // fallback needs the account list
     hasInitialized.current = true;
     if (wholesalers.length > 0) return; // rows kept by the wizard (step revisited)
 
@@ -341,6 +368,7 @@ const UploadWholesalersStep = ({
       isEditMode,
       selectedSuppliers,
       existingWholesalerFiles,
+      reportSuppliers,
     );
     if (names.length === 0) return;
     setWholesalers(
@@ -356,12 +384,37 @@ const UploadWholesalersStep = ({
     loading,
     selectedSuppliers,
     existingWholesalerFiles,
+    reportSuppliers,
     wholesalers.length,
     setWholesalers,
   ]);
 
   // "Loading your suppliers..." until the rows can be filled.
-  const rowsLoading = !filesLoaded || (!isEditMode && loading);
+  const rowsLoading =
+    !filesLoaded || (!reportSuppliers && !isEditMode && loading);
+
+  // Saves this report's own supplier list. It changes this report only: the
+  // account's list and every other report stay as they are. Nothing is sent
+  // when the server has no per-report list (reportSuppliers is null).
+  const saveReportSuppliers = (names: string[]) => {
+    const id = auditId || localStorage.getItem("auditId");
+    if (!id || reportSuppliers === null) return;
+    setReportSuppliers(names);
+    api
+      .put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${id}/suppliers`,
+        { supplierNames: names },
+      )
+      .catch((err) => {
+        console.error("Failed to save the report's suppliers:", err);
+        toast(
+          failureMessage(
+            err,
+            "Couldn't save this report's supplier list. Please try again.",
+          ),
+        );
+      });
+  };
 
   const WHOLESALER_REQUIRED_FIELDS = [
     { key: "ndcNumber", label: "Ndc Number" },
@@ -739,7 +792,8 @@ const UploadWholesalersStep = ({
     }
 
     // ── Remove from the UI once the server is in sync ──
-    setWholesalers(wholesalers.filter((w) => w.id !== id));
+    const remaining = wholesalers.filter((w) => w.id !== id);
+    setWholesalers(remaining);
     setEdit(false);
     setEditId(null);
     setWholesalerFieldMappings((prev) => { const n = { ...prev }; delete n[id]; return n; });
@@ -759,9 +813,13 @@ const UploadWholesalersStep = ({
     });
     if (auditId) clearUploadedMarker(auditId, `wholesaler:${name}`);
 
-    // A new report also updates the account's supplier list (syncs with the
-    // Settings page). An existing report changes only itself.
-    if (!isEditMode) removeFromContext(name);
+    // The removal belongs to this report only: its own list is saved and the
+    // account's supplier list is left alone. (An older server without
+    // per-report lists keeps the earlier behaviour: a new report also
+    // updates the account's list, an existing report changes only itself.)
+    if (reportSuppliers !== null)
+      saveReportSuppliers(remaining.map((w) => w.name));
+    else if (!isEditMode) removeFromContext(name);
 
     setIsDeleting(false);
     setDeleteTarget(null);
@@ -773,16 +831,20 @@ const UploadWholesalersStep = ({
       name,
       file: null,
     }));
-    setWholesalers([...wholesalers, ...newItems]);
+    const nextRows = [...wholesalers, ...newItems];
+    setWholesalers(nextRows);
 
-    // A new report also adds them to the account's supplier list. An
-    // existing report changes only itself.
-    const newNames = selectedInDrawer.filter(
-      (name) => !selectedSuppliers.includes(name),
-    );
-    if (!isEditMode && newNames.length > 0) {
-      const merged = [...selectedSuppliers, ...newNames];
-      saveSuppliers(merged);
+    if (reportSuppliers !== null) {
+      // The added suppliers belong to this report only: its own list is
+      // saved and the account's supplier list is left alone.
+      saveReportSuppliers(nextRows.map((w) => w.name));
+    } else if (!isEditMode) {
+      // Older server without per-report lists: the earlier behaviour (a new
+      // report also adds them to the account's supplier list).
+      const newNames = selectedInDrawer.filter(
+        (name) => !selectedSuppliers.includes(name),
+      );
+      if (newNames.length > 0) saveSuppliers([...selectedSuppliers, ...newNames]);
     }
 
     setSelectedInDrawer([]);

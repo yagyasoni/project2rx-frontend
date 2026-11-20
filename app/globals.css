@@ -388,9 +388,11 @@ input[type="password"]::-ms-clear {
   display: none;
 }
 
+/* Do NOT hide ::-webkit-textfield-decoration-container here. In Safari, and
+   in every browser on iPhone and iPad, that container holds the typed text
+   itself: hiding it made passwords invisible while typing on iOS. */
 input[type="password"]::-webkit-password-reveal-button,
-input[type="password"]::-webkit-credentials-auto-fill-button,
-input[type="password"]::-webkit-textfield-decoration-container {
+input[type="password"]::-webkit-credentials-auto-fill-button {
   display: none !important;
 }
 
