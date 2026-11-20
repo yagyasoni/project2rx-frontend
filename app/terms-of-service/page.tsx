@@ -200,7 +200,7 @@ const TermsOfService = () => {
 
             <div>
               <h2 className="text-lg font-semibold text-white mb-2">Contact</h2>
-              <p>For questions, contact us at: noreply@auditprorx.com</p>
+              <p>For questions, contact us at: support@auditprorx.com</p>
             </div>
           </div>
         </div>
