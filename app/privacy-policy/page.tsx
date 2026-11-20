@@ -158,7 +158,7 @@ const PrivacyPolicy = () => {
               </h2>
               <p>
                 For questions regarding this policy, please contact us at:
-                noreply@auditprorx.com
+                support@auditprorx.com
               </p>
             </div>
           </div>

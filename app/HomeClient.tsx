@@ -1,55 +1,46 @@
 "use client";
 
 import {
-  Shield,
-  Zap,
-  BarChart3,
-  FileText,
-  Clock,
-  Lock,
-  Check,
-  Search,
-  DollarSign,
-  FileSpreadsheet,
+  AlertTriangle,
   ArrowRight,
-  Home,
-  Phone,
+  BarChart3,
+  Check,
+  ChevronDown,
   CircleDollarSign,
-  ShieldCheck,
-  Monitor,
   ClipboardList,
+  Clock,
+  DollarSign,
   Download,
-  Play,
+  FileSpreadsheet,
+  FileText,
+  HelpCircle,
+  Home,
+  LifeBuoy,
+  Lock,
+  Monitor,
+  Network,
+  Phone,
+  Search,
+  SearchCode,
+  Settings2,
+  Shield,
+  ShieldCheck,
   Star,
-  Asterisk,
   TimerReset,
   User as UserIcon,
-  Twitter,
-  Linkedin,
-  Github,
-  ChevronDown,
-  X,
-  Mail,
-  HelpCircle,
-  Boxes,
-  SearchCode,
-  AlertTriangle,
-  Network,
-  Settings2,
-  LifeBuoy,
   Users,
-  Menu,
+  X
 } from "lucide-react";
 
-import { useEffect, useState } from "react";
-import axios from "axios";
-import Link from "next/link";
-import Image from "next/image";
-import "./landing.css";
-import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { BOOKING_URL } from "@/components/marketing/marketing-ui";
+import Navbar from "@/components/navbar";
 import { trackEvent } from "@/lib/gtm";
+import axios from "axios";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import "./landing.css";
 
 const plans = [
   {
@@ -122,7 +113,7 @@ const testimonials = [
     quote:
       "Managing documentation and claims has become much easier. The system is simple and very efficient.",
     initials: "IA",
-    name: "Dr. Irfan Ali",
+    name: "Dr. Irfan",
     role: "Pharmacy Owner",
     gradient: "from-cyan-300 to-cyan-500",
   },
@@ -130,7 +121,7 @@ const testimonials = [
     quote:
       "The workflow is smooth and easy to follow. It's a helpful tool for improving our overall audit process.",
     initials: "KA",
-    name: "Dr. Khilat Abbas",
+    name: "Dr. Khilat",
     role: "Pharmacy Owner",
     gradient: "from-pink-300 to-rose-400",
   },
@@ -632,7 +623,7 @@ export default function Index() {
   const [stats, setStats] = useState([
     ["0", "+", "Verified BIN-PCN-GROUP Intelligence"],
     ["0", "+", "Audits Generated"],
-    ["4", "+", "Active Pharmacy Groups"],
+    ["0", "+", "Active Pharmacies"],
     ["100", "%", "HIPAA Compliant"],
   ]);
   const currentYear = new Date().getFullYear();
@@ -705,8 +696,7 @@ export default function Index() {
       setStats([
         [data.master_sheet_entries, "+", "Verified BIN-PCN-GROUP Intelligence"],
         [data.audits_generated, "+", "Audits Generated"],
-        // Hard-coded until API count is accurate: 4 paying pharmacies
-        ["4", "+", "Active Pharmacy Groups"],
+        [data.active_pharmacies, "+", "Active Pharmacies"],
         ["100", "%", "HIPAA Compliant"],
       ]);
     } catch (err) {
@@ -1071,10 +1061,10 @@ export default function Index() {
                 <Star key={i} className="h-3.5 w-3.5 fill-foreground" />
               ))}
             </div>
-            <span>Trusted by {stats[2][0]}+ pharmacy groups</span>
+            <span>Trusted by {stats[2][0]}+ active pharmacies</span>
           </div>
 
-          <div className="mx-auto mt-16 max-w-5xl overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl animate-scaleIn stagger-6">
+          <div className="mx-auto mt-16 max-w-5xl rounded-2xl border border-border bg-surface shadow-2xl animate-scaleIn stagger-6">
             <div className="flex items-center gap-2 border-b border-border bg-surface-2 px-4 py-3">
               <div className="flex gap-1.5">
                 <span className="h-3 w-3 rounded-full bg-zinc-700" />
@@ -1179,7 +1169,7 @@ export default function Index() {
                               "Shortage",
                               "Status",
                             ].map((h) => (
-                              <th key={h} className="px-4 py-2.5">
+                              <th key={h} className="px-4 py-2.5 whitespace-nowrap">
                                 {h}
                               </th>
                             ))}
@@ -1906,56 +1896,11 @@ export default function Index() {
             </div>
             <div className="mt-2 divide-y divide-border">
               {[
-                [
-                  "00093-0150",
-                  "Amoxicillin 500mg",
-                  "1,240",
-                  "1,180",
-                  "60",
-                  "$2,840.00",
-                  "Medicaid/Commercial",
-                  "success",
-                ],
-                [
-                  "00071-0155",
-                  "Lisinopril 10mg",
-                  "850",
-                  "792",
-                  "58",
-                  "$1,950.00",
-                  "Medicare/Medicaid",
-                  "warning",
-                ],
-                [
-                  "00093-1040",
-                  "Metformin 500mg",
-                  "2,100",
-                  "2,040",
-                  "60",
-                  "$3,240.00",
-                  "Commercial",
-                  "success",
-                ],
-                [
-                  "00071-0215",
-                  "Atorvastatin 20mg",
-                  "640",
-                  "580",
-                  "60",
-                  "$2,320.00",
-                  "Medicare/Commercial",
-                  "danger",
-                ],
-                [
-                  "00093-0032",
-                  "Omeprazole 20mg",
-                  "1,120",
-                  "1,050",
-                  "70",
-                  "$1,680.00",
-                  "Medicaid",
-                  "success",
-                ],
+                ["00093-0150","Amoxicillin 500mg","1,240","1,180","60","$2,840.00","Medicaid/Commercial","success"],
+                ["00071-0155","Lisinopril 10mg","850","792","58","$1,950.00","Medicare/Medicaid","warning"],
+                ["00093-1040","Metformin 500mg","2,100","2,040","60","$3,240.00","Commercial","success"],
+                ["00071-0215","Atorvastatin 20mg","640","580","60","$2,320.00","Medicare/Commercial","danger"],
+                ["00093-0032","Omeprazole 20mg","1,120","1,050","70","$1,680.00","Medicaid","success"],
               ].map((r, idx) => (
                 <div
                   key={r[0]}
@@ -1969,15 +1914,7 @@ export default function Index() {
                   <div className="text-muted-foreground">{r[4]}</div>
                   <div className="text-foreground font-semibold">{r[5]}</div>
                   <div>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[9px] inline-block ${
-                        r[7] === "success"
-                          ? "bg-success/15 text-success"
-                          : r[7] === "warning"
-                            ? "bg-warning/15 text-warning"
-                            : "bg-danger/15 text-danger"
-                      }`}
-                    >
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] inline-block ${r[7] === "success" ? "bg-success/15 text-success" : r[7] === "warning" ? "bg-warning/15 text-warning" : "bg-danger/15 text-danger"}`}>
                       {r[6]}
                     </span>
                   </div>
@@ -2100,7 +2037,7 @@ export default function Index() {
                 </li>
               ))}
             </ul>
-            <div className="mt-9 flex flex-wrap items-center gap-6 animate-fadeInUp stagger-7">
+            <div className="mt-9 flex items-center gap-4 animate-fadeInUp stagger-7">
               <div>
                 <div className="text-2xl font-semibold">~2 min</div>
                 <div className="text-xs text-muted-foreground">
@@ -2484,20 +2421,14 @@ export default function Index() {
               </div>
             </div>
             <div className="rounded-2xl border border-border bg-surface p-6 animate-slideInRight">
-              <div className="flex items-start justify-between animate-fadeInUp stagger-0">
-                <div>
-                  <h4 className="font-semibold">Inventory Exchange</h4>
-                  <p className="text-xs text-muted-foreground">
-                    Verified surplus listings · Live
-                  </p>
+              <div className="flex flex-col gap-2 animate-fadeInUp stagger-0 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <h4 className="font-semibold whitespace-nowrap">Inventory Exchange</h4>
+                  <p className="text-xs text-muted-foreground whitespace-nowrap">Verified surplus listings · Live</p>
                 </div>
-                <div className="flex rounded-md border border-border p-0.5 text-xs">
-                  <button className="rounded bg-surface-2 px-3 py-1">
-                    Search Network
-                  </button>
-                  <button className="px-3 py-1 text-muted-foreground">
-                    My Listings
-                  </button>
+                <div className="flex w-fit shrink-0 rounded-md border border-border p-0.5 text-xs">
+                  <button className="rounded bg-surface-2 px-2.5 py-1 whitespace-nowrap">Search Network</button>
+                  <button className="px-2.5 py-1 text-muted-foreground whitespace-nowrap">My Listings</button>
                 </div>
               </div>
               {/* DSCSA compliance banner */}
@@ -2512,51 +2443,56 @@ export default function Index() {
               {/* Listing card */}
               <div className="mt-4 rounded-xl border border-border bg-surface-2/40 p-4 animate-fadeInUp stagger-2">
                 <div className="flex items-start gap-3">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface-2 text-sm font-semibold">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#2d5a3d]/15 text-sm font-bold text-[#2d5a3d]">
                     M
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold">
-                      Mounjaro 5mg/0.5ml vs 5mg/0.5ml inj
+                    <div className="text-sm font-semibold leading-tight">
+                      Mounjaro 5mg/0.5ml inj
                     </div>
-                    <div className="font-mono text-[11px] text-muted-foreground">
+                    <div className="font-mono text-[10px] text-muted-foreground mt-0.5">
                       NDC 00002-1495-80
                     </div>
                   </div>
+                  <span className="shrink-0 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-medium text-success">
+                    Active
+                  </span>
                 </div>
-                <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
+                <div className="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-surface-2/60 p-3 text-xs">
                   {[
-                    ["Available", "5"],
+                    ["Available", "5 units"],
                     ["Expiry", "Jul 2028"],
                     ["Shelf Cost", "$750.00"],
                   ].map(([label, val]) => (
-                    <div key={label}>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <div key={label} className="flex flex-col gap-0.5">
+                      <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
                         {label}
                       </div>
-                      <div className="mt-1 font-semibold">{val}</div>
+                      <div className="font-semibold text-[11px]">{val}</div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Holding Pharmacy
+                <div className="mt-3 border-t border-border pt-3 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface-2 text-[10px] font-bold">
+                      PE
                     </div>
-                    <div className="mt-0.5 flex items-center gap-1 text-xs font-semibold">
-                      Pharmacy E
-                      <ShieldCheck className="h-3 w-3 text-success" />
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      ★ 5.0 · 507 Central Ave
+                    <div>
+                      <div className="flex items-center gap-1 text-xs font-semibold">
+                        Pharmacy E
+                        <ShieldCheck className="h-3 w-3 text-success" />
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        ★ 5.0 · Verified Member
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button className="rounded-md border border-border px-2.5 py-1.5 text-[11px]">
+                    <button className="flex-1 rounded-md border border-border py-2 text-[11px] text-center hover:bg-surface-2 transition-colors">
                       View Details
                     </button>
-                    <button className="inline-flex items-center gap-1 rounded-md bg-foreground px-2.5 py-1.5 text-[11px] font-medium text-background">
-                      Send Connect Request <ArrowRight className="h-3 w-3" />
+                    <button className="flex-1 inline-flex items-center justify-center gap-1 rounded-md bg-foreground py-2 text-[11px] font-medium text-background">
+                      Send Request <ArrowRight className="h-3 w-3" />
                     </button>
                   </div>
                 </div>
@@ -2574,7 +2510,7 @@ export default function Index() {
 
       {/* LEADS */}
       <section id="leads" className="border-b border-border/60 py-16 sm:py-24">
-        <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-start gap-12 px-7 lg:grid-cols-2">
+        <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-12 px-7 lg:grid-cols-2">
           <div className="animate-slideInLeft">
             <Pill>Reimbursement Intelligence</Pill>
             <h2 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl animate-fadeInUp stagger-1">
@@ -2624,25 +2560,26 @@ export default function Index() {
             </button> */}
           </div>
           <div className="rounded-2xl border border-border bg-surface p-6 animate-slideInRight">
-            <div className="flex items-start justify-between animate-fadeInUp stagger-0">
-              <div>
-                <h4 className="font-semibold">Reimbursement Feed</h4>
-                <p className="text-xs text-muted-foreground">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 animate-fadeInUp stagger-0">
+              <div className="min-w-0">
+                <h4 className="font-semibold truncate">Reimbursement Feed</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Admin-curated · Verified · Updated daily
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1.5 text-xs text-success">
-                <span className="h-1.5 w-1.5 rounded-full bg-success" />
+              <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
+                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                 Live
               </span>
             </div>
             {/* Region filter tabs */}
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-1.5">
               {[["All", true], ["New Jersey"], ["New York"]].map(
                 ([n, a]: any, idx) => (
                   <span
                     key={n}
-                    className={`rounded-full border border-border px-3 py-1 text-xs animate-fadeInUp ${a ? "bg-surface-2 text-foreground" : "text-muted-foreground"}`}
+                    className={`rounded-full border px-3 py-1 text-xs font-medium animate-fadeInUp cursor-pointer transition-colors ${a ? "border-[#2d5a3d]/40 bg-[#2d5a3d]/10 text-[#2d5a3d]" : "border-border text-muted-foreground hover:text-foreground"}`}
                     style={{ animationDelay: `${0.1 + idx * 0.05}s` }}
                   >
                     {n}
@@ -2682,17 +2619,16 @@ export default function Index() {
                   className="rounded-xl border border-border bg-surface-2/40 p-4 animate-fadeInUp"
                   style={{ animationDelay: `${0.2 + idx * 0.1}s` }}
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="grid h-7 w-7 place-items-center rounded-full bg-surface-2 text-[10px] font-semibold">
+                  {/* Author row */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#2d5a3d]/20 text-[9px] font-bold text-[#2d5a3d]">
                       LS
                     </div>
-                    <span className="text-xs font-semibold">
-                      Lead Support Team
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      · {r.when}
-                    </span>
+                    <span className="text-xs font-semibold">Lead Support Team</span>
+                    <span className="text-[10px] text-muted-foreground ml-auto">{r.when}</span>
                   </div>
+
+                  {/* Badges */}
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Announcement
@@ -2701,29 +2637,31 @@ export default function Index() {
                       {r.region}
                     </span>
                   </div>
-                  <div className="mt-2 text-sm font-semibold">{r.title}</div>
-                  <div className="text-xs text-foreground/90">{r.drug}</div>
-                  <div className="text-[11px] text-muted-foreground">
-                    {r.sub}
-                  </div>
-                  <div className="mt-2 grid grid-cols-3 gap-2 text-[11px]">
-                    <div>
-                      <span className="text-muted-foreground">NDC: </span>
-                      <span className="font-mono">{r.ndc}</span>
+
+                  {/* Title + drug */}
+                  <div className="mt-2.5 text-sm font-semibold leading-snug">{r.title}</div>
+                  <div className="text-xs font-medium text-foreground/80 mt-0.5">{r.drug}</div>
+                  <div className="text-[11px] text-muted-foreground">{r.sub}</div>
+
+                  {/* Pricing row */}
+                  <div className="mt-3 rounded-lg bg-surface-2/60 px-3 py-2 text-[11px] flex flex-wrap items-center gap-x-4 gap-y-1">
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">NDC:</span>
+                      <span className="font-mono whitespace-nowrap">{r.ndc}</span>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">AWP: </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">AWP:</span>
                       <span className="font-semibold">{r.awp}</span>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">WAC: </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">WAC:</span>
                       <span className="font-semibold">{r.wac}</span>
                     </div>
                   </div>
-                  <p className="mt-2 text-[11px] text-muted-foreground">
-                    <span className="font-semibold text-foreground/90">
-                      Notes:{" "}
-                    </span>
+
+                  {/* Notes */}
+                  <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+                    <span className="font-semibold text-foreground/80">Notes: </span>
                     {r.notes}
                   </p>
                 </div>
@@ -2903,19 +2841,22 @@ export default function Index() {
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-surface p-6 animate-slideInRight">
-            <div className="flex items-start justify-between animate-fadeInUp stagger-0">
+            {/* Header */}
+            <div className="flex items-center justify-between gap-2 animate-fadeInUp stagger-0">
               <div>
-                <h4 className="font-semibold">AuditProRx Remote Assistance</h4>
-                <p className="text-xs text-muted-foreground">
-                  Mon – Fri · 9:00 AM – 5:00 PM EST
+                <h4 className="font-semibold whitespace-nowrap">Remote Assistance</h4>
+                <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap">
+                  Mon–Fri · 9AM–5PM EST
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2 py-1 text-xs text-success animate-pulseGlow">
+              <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-xs font-medium text-success animate-pulseGlow">
                 <span className="h-1.5 w-1.5 rounded-full bg-success" />
                 Support Online
               </span>
             </div>
-            <div className="mt-6 space-y-3">
+
+            {/* Options */}
+            <div className="mt-5 space-y-2.5">
               {[
                 [
                   Monitor,
@@ -2938,31 +2879,33 @@ export default function Index() {
               ].map(([Icon, t, d, b]: any, idx) => (
                 <div
                   key={t}
-                  className="flex items-center gap-4 rounded-xl border border-border bg-surface-2 p-4 animate-fadeInUp transition-all hover:shadow-md"
+                  className="flex items-start gap-3 rounded-xl border border-border bg-surface-2 p-4 animate-fadeInUp transition-colors hover:border-[#2d5a3d]/40 hover:bg-surface-2/80 cursor-pointer"
                   style={{ animationDelay: `${0.1 + idx * 0.1}s` }}
                 >
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-surface mt-0.5">
                     <Icon className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      {t}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold">{t}</span>
                       {b && (
-                        <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-[10px] text-muted-foreground">
+                        <span className="shrink-0 rounded-full bg-[#2d5a3d] px-2 py-0.5 text-[10px] font-semibold text-white">
                           {b}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">{d}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{d}</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground mt-1" />
                 </div>
               ))}
             </div>
-            <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground animate-fadeInUp stagger-4">
-              <Shield className="h-3.5 w-3.5" /> All sessions are encrypted,
-              HIPAA-compliant, and session-logged.
-            </p>
+
+            {/* Footer note */}
+            <div className="mt-4 flex items-start gap-2 rounded-lg bg-surface-2/50 px-3 py-2.5 text-xs text-muted-foreground animate-fadeInUp stagger-4">
+              <Shield className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <span>All sessions are encrypted, HIPAA-compliant, and session-logged.</span>
+            </div>
           </div>
         </div>
       </section>
