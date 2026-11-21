@@ -15,6 +15,8 @@ const ResetPasswordPage = () => {
     confirmPassword: "",
     general: "",
   });
+  // True once the password was changed: the message is then shown in green.
+  const [done, setDone] = useState(false);
 
   const validatePassword = (password: string) => {
     const regex =
@@ -28,6 +30,7 @@ const ResetPasswordPage = () => {
     console.log("Password reset:", { password, confirmPassword });
 
     // RESET ERRORS
+    setDone(false);
     setErrors({
       password: "",
       confirmPassword: "",
@@ -43,7 +46,7 @@ const ResetPasswordPage = () => {
 
     if (password && !validatePassword(password)) {
       newErrors.password =
-        "Min 8 chars, 1 uppercase, 1 lowercase, 1 number & 1 special char";
+        "Min 8 chars, 1 uppercase, 1 lowercase, 1 number & 1 special char (@$!%*?&#)";
     }
 
     if (password && confirmPassword && password !== confirmPassword) {
@@ -66,16 +69,23 @@ const ResetPasswordPage = () => {
       );
       console.log(res?.data);
 
+      setDone(true);
       setErrors((prev) => ({
         ...prev,
         general: res?.data?.message || "Password reset successful",
       }));
     } catch (err) {
       console.log("error");
-      setErrors((prev) => ({
-        ...prev,
-        general: "Failed to reset password",
-      }));
+      // The server's own reason when it sent one ("Invalid or expired
+      // token", the password rule); no reply at all = server not reached.
+      const sent = axios.isAxiosError(err) ? err.response?.data?.message : "";
+      const message =
+        typeof sent === "string" && sent.trim()
+          ? sent
+          : axios.isAxiosError(err) && !err.response
+            ? "Could not reach the server. Please check your connection and try again."
+            : "Failed to reset password";
+      setErrors((prev) => ({ ...prev, general: message }));
     }
   };
 
@@ -166,7 +176,9 @@ const ResetPasswordPage = () => {
               />
             </Button>
             {errors.general && (
-              <p className="text-sm text-center text-green-500">
+              <p
+                className={`text-sm text-center ${done ? "text-green-500" : "text-red-500"}`}
+              >
                 {errors.general}
               </p>
             )}
