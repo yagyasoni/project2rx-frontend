@@ -41,13 +41,21 @@ type ServerRefusal = {
 const readRefusal = (err: unknown): ServerRefusal =>
   axios.isAxiosError<ServerRefusal>(err) ? (err.response?.data ?? {}) : {};
 
-// The server's "Too many attempts. Please try again in 15 minutes." when a
-// limit was hit, otherwise null so the page shows its usual error.
-const tooManyAttemptsMessage = (err: unknown): string | null => {
-  const refusal = readRefusal(err);
-  if (refusal.code !== "RATE_LIMITED") return null;
-  return refusal.message || "Too many attempts. Please try again later.";
+// What to show when a request fails: the server's own message when it sent
+// one ("User already exists", "Email not verified", ...). With no reply at
+// all the server could not be reached. `fallback` is for a reply that
+// carries no message.
+const serverMessage = (err: unknown, fallback: string): string => {
+  const message = readRefusal(err).message;
+  if (typeof message === "string" && message.trim()) return message;
+  if (axios.isAxiosError(err) && !err.response)
+    return "Could not reach the server. Please check your connection and try again.";
+  return fallback;
 };
+
+// The same rule the server checks, with the symbols it accepts.
+const PASSWORD_RULE_TEXT =
+  "Min 8 chars, 1 uppercase, 1 lowercase, 1 number & 1 special char (@$!%*?&#)";
 
 // ─────────────────────────────────────────────────────────────
 // Inner component — reads search params
@@ -92,6 +100,7 @@ const AuthPageInner = () => {
     setPhone("");
     setPassword("");
     setShowPassword(false);
+    setNotice("");
     setErrors({
       name: "",
       email: "",
@@ -106,6 +115,10 @@ const AuthPageInner = () => {
   // Admin login only: proof that the password step was passed. The server
   // returns it with the code email and refuses the code step without it.
   const [otpToken, setOtpToken] = useState<string | null>(null);
+
+  // A success message under the form (shown in green), e.g. after the reset
+  // link was sent. Errors go in errors.general (shown in red).
+  const [notice, setNotice] = useState("");
 
   // ── Resend timer ──
   // resendAt is the moment "Resend code" unlocks; `now` ticks while the code
@@ -156,6 +169,7 @@ const AuthPageInner = () => {
     e.preventDefault();
 
     // RESET ERRORS FIRST
+    setNotice("");
     setErrors({
       name: "",
       email: "",
@@ -176,8 +190,7 @@ const AuthPageInner = () => {
       if (!name) newErrors.name = "Full name is required";
 
       if (password && !validatePassword(password)) {
-        newErrors.password =
-          "Min 8 chars, 1 uppercase, 1 lowercase, 1 number & 1 special char";
+        newErrors.password = PASSWORD_RULE_TEXT;
       }
     }
 
@@ -233,7 +246,7 @@ const AuthPageInner = () => {
 
         setErrors((prev) => ({
           ...prev,
-          general: tooManyAttemptsMessage(err) ?? "Invalid email or password",
+          general: serverMessage(err, "Invalid email or password"),
         }));
       }
     }
@@ -259,8 +272,7 @@ const AuthPageInner = () => {
 
         setErrors((prev) => ({
           ...prev,
-          general:
-            tooManyAttemptsMessage(err) ?? "Registration failed. Try again.",
+          general: serverMessage(err, "Registration failed. Try again."),
         }));
       }
     }
@@ -433,6 +445,7 @@ const AuthPageInner = () => {
       forgotEmail: "",
       general: "",
     }));
+    setNotice("");
 
     if (!email) {
       setErrors((prev) => ({
@@ -448,17 +461,13 @@ const AuthPageInner = () => {
         { email },
       );
 
-      setErrors((prev) => ({
-        ...prev,
-        general: res?.data?.message || "Reset link sent",
-      }));
+      setNotice(res?.data?.message || "Reset link sent");
       setForgot(false); // Close the modal on success
     } catch (error: any) {
       console.error("Forgot password failed:", error.response || error);
       setErrors((prev) => ({
         ...prev,
-        forgotEmail:
-          tooManyAttemptsMessage(error) ?? "Failed to send reset link",
+        forgotEmail: serverMessage(error, "Failed to send reset link"),
       }));
     }
   };
@@ -759,6 +768,9 @@ const AuthPageInner = () => {
               <p className="text-sm text-red-500 text-center">
                 {errors.general}
               </p>
+            )}
+            {notice && (
+              <p className="text-sm text-green-500 text-center">{notice}</p>
             )}
           </form>
 
