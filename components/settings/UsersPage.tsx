@@ -14,7 +14,7 @@ import {
 
 import axios from "axios";
 
-import api from "@/lib/api";
+import api, { apiErrorMessage } from "@/lib/api";
 
 import { toast } from "sonner";
 
@@ -129,7 +129,7 @@ const UsersPage = () => {
         ]);
       } catch (err) {
         console.error(err);
-        toast.error("Failed to fetch user details");
+        toast.error(apiErrorMessage(err, "Failed to fetch user details"));
       } finally {
         setLoading(false);
       }
@@ -190,7 +190,7 @@ const UsersPage = () => {
       );
     } catch (error) {
       console.error(error);
-      toast.error("Failed to load subscription");
+      toast.error(apiErrorMessage(error, "Failed to load subscription"));
     } finally {
       setSubLoading(false);
     }
@@ -321,7 +321,7 @@ const UsersPage = () => {
       await fetchSubscription();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to cancel subscription");
+      toast.error(apiErrorMessage(error, "Failed to cancel subscription"));
     }
   };
 

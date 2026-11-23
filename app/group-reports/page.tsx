@@ -34,7 +34,7 @@ import {
   ChevronsUpDown,
   Lock,
 } from "lucide-react";
-import api, { failureMessage } from "@/lib/api";
+import api, { apiErrorMessage } from "@/lib/api";
 import { toast } from "sonner";
 
 interface Group {
@@ -635,7 +635,7 @@ export default function AuditGroupsPage() {
       document.body.removeChild(a);
     } catch (err) {
       console.error("Download failed:", err);
-      toast.error(failureMessage(err, "Failed to download report"));
+      toast.error(apiErrorMessage(err, "Failed to download report"));
     }
   };
 

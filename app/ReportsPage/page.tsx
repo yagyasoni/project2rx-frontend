@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
-import api, { failureMessage } from "@/lib/api";
+import api, { apiErrorMessage } from "@/lib/api";
 import {
   Layers,
   RotateCw,
@@ -178,7 +178,7 @@ export default function ReportsPage() {
       setReportsData((prev) => prev.filter((r) => r.id !== deletingReportId));
     } catch (e) {
       console.error("Delete failed:", e);
-      alert(failureMessage(e, "Delete failed. Check backend logs."));
+      alert(apiErrorMessage(e, "Could not delete the report. Please try again."));
     } finally {
       setIsDeleting(false);
       setDeleteModal(false);
@@ -233,7 +233,7 @@ export default function ReportsPage() {
       setEditingReport(null);
     } catch (e) {
       console.error("Edit failed:", e);
-      alert(failureMessage(e, "Failed to save. Check backend logs."));
+      alert(apiErrorMessage(e, "Failed to save dates. Please try again."));
     }
   };
 
