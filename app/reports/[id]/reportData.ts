@@ -8,6 +8,7 @@
  */
 
 import { authFetch } from "@/lib/authFetch";
+import { apiErrorMessage, replyErrorMessage } from "@/lib/api";
 
 export interface InventoryRow {
   id: number;
@@ -193,5 +194,29 @@ export async function fetchReportRows(auditId: string): Promise<InventoryRow[]> 
   const res = await authFetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/${auditId}/report`,
   );
+  // A refused request ("Audit not found") used to come back as an empty list,
+  // so the page showed an empty report with no reason. Raise the server's
+  // reason; both report pages already show an empty report on a failure.
+  if (!res.ok) throw new ReportLoadError(res.status, await replyErrorMessage(res, REPORT_LOAD_FAILED));
   return normalizeReportRows(await res.json());
+}
+
+const REPORT_LOAD_FAILED = "Could not load this report. Please try again.";
+
+/** A report request the server refused; `message` is what to tell the user. */
+export class ReportLoadError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ReportLoadError";
+    this.status = status;
+  }
+}
+
+/** What to tell the user when the report could not be loaded, or null when
+ *  nothing should be said: a plan refusal (403) is left to the subscription
+ *  popup, as before. */
+export function reportLoadMessage(e: unknown): string | null {
+  if (e instanceof ReportLoadError) return e.status === 403 ? null : e.message;
+  return apiErrorMessage(e, REPORT_LOAD_FAILED);
 }

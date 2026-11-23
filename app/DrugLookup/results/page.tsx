@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { authFetch } from "@/lib/authFetch";
-import { SUBSCRIPTION_REQUIRED_MESSAGE } from "@/lib/api";
+import { SUBSCRIPTION_REQUIRED_MESSAGE, replyErrorMessage } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppSidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -198,7 +198,13 @@ function DrugLookupResultsInner() {
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/audits/drug-lookup-global?${p.toString()}`,
         );
         if (res.status === 403) throw new Error(SUBSCRIPTION_REQUIRED_MESSAGE);
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        if (!res.ok)
+          throw new Error(
+            await replyErrorMessage(
+              res,
+              "Could not load the results. Please try again.",
+            ),
+          );
         const json = await res.json();
         setData(json);
       } catch (e: any) {

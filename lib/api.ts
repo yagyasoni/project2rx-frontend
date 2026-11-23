@@ -101,6 +101,82 @@ export function subscriptionMessage(err: unknown): string | null {
 export const failureMessage = (err: unknown, fallback: string): string =>
   subscriptionMessage(err) ?? fallback;
 
+// ── The server's own reason for a failure ────────────────────
+// The backend sends a specific text when it refuses a request on purpose
+// ("Subscription is already canceled", "Incorrect admin password"). These two
+// readers hand that text to the screen. `fallback` is the screen's own text.
+//
+//   1. plan refusal            → the subscription wording (as before)
+//   2. no reply at all         → SERVER_UNREACHABLE_MESSAGE
+//   3. status 4xx or 502 with a text in `message`, `error` or `errors[0]`
+//                              → that text
+//   4. anything else           → fallback
+//
+// A 500 never shows the server's text: it can be a raw database or code
+// error. Neither reader can throw; any surprise gives the fallback.
+export const SERVER_UNREACHABLE_MESSAGE =
+  "Could not reach the server. Please check your connection and try again.";
+
+const MAX_REPLY_TEXT = 300;
+
+/** The text of a reply body, or null when it has none that may be shown. */
+export function replyText(status: number | undefined, body: unknown): string | null {
+  try {
+    if (typeof status !== "number") return null;
+    if (!((status >= 400 && status < 500) || status === 502)) return null;
+
+    let data: unknown = body;
+    if (typeof data === "string") {
+      const trimmed = data.trim();
+      if (!trimmed.startsWith("{")) return null; // an HTML error page, plain text
+      data = JSON.parse(trimmed);
+    }
+    if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+
+    const fields = data as { message?: unknown; error?: unknown; errors?: unknown };
+    const candidates: unknown[] = [
+      fields.message,
+      fields.error,
+      Array.isArray(fields.errors) ? fields.errors[0] : undefined,
+    ];
+    for (const value of candidates) {
+      if (typeof value !== "string") continue;
+      const text = value.trim();
+      if (text && text.length <= MAX_REPLY_TEXT) return text;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** For catch blocks around `api` / `adminApi` / `axios` calls. */
+export function apiErrorMessage(err: unknown, fallback: string): string {
+  try {
+    const sub = subscriptionMessage(err);
+    if (sub) return sub;
+    if (!axios.isAxiosError(err)) return fallback;
+    if (!err.response) return SERVER_UNREACHABLE_MESSAGE;
+    return replyText(err.response.status, err.response.data) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/** For `authFetch` replies, which do not throw on 4xx / 5xx: call it when
+ *  `!res.ok`. Reads a copy, so the caller can still read the body. */
+export async function replyErrorMessage(
+  res: Response,
+  fallback: string,
+): Promise<string> {
+  try {
+    const body = await res.clone().text();
+    return replyText(res.status, body) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function normalizeSubscriptionError(error: unknown) {
   if (!axios.isAxiosError(error) || error.response?.status !== 403) return;
   const res = error.response;

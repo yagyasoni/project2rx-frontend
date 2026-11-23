@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import adminApi from "@/lib/adminApi";
+import { apiErrorMessage } from "@/lib/api";
 import {
   Activity,
   AlertTriangle,
@@ -295,8 +296,8 @@ export default function AdminDashboard() {
       toast.success(
         `User marked as ${newStatus === "active" ? "Verified" : "Unverified"}`,
       );
-    } catch {
-      toast.error("Failed to update status.");
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "Failed to update status."));
     } finally {
       setStatusLoading(false);
     }
@@ -309,8 +310,10 @@ export default function AdminDashboard() {
       const res = await adminApi.get(`/auth/users`);
       const data = res.data?.users || res.data || [];
       setUsers(Array.isArray(data) ? data : []);
-    } catch {
-      setFetchError("Could not reach the API server.");
+    } catch (err) {
+      setFetchError(
+        apiErrorMessage(err, "Could not load the users. Please try again."),
+      );
       setUsers([
         {
           id: "1",
@@ -365,8 +368,10 @@ export default function AdminDashboard() {
       window.open("/Mainpage", "_blank");
       // localStorage.setItem("pharmacyName", user.pharmacyName || user.name);
       // router.push("/Mainpage");
-    } catch {
-      toast.error("Impersonation failed. Please try again.");
+    } catch (err) {
+      toast.error(
+        apiErrorMessage(err, "Impersonation failed. Please try again."),
+      );
     } finally {
       setImpersonating(null);
     }
@@ -514,7 +519,7 @@ export default function AdminDashboard() {
       setSelected(null);
       toast.success("User deleted successfully");
     } catch (err) {
-      toast.error("Failed to delete user");
+      toast.error(apiErrorMessage(err, "Failed to delete user"));
     } finally {
       setDeletingUser(false);
       setDeleteUserDialog(null);

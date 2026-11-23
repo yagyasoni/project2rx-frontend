@@ -486,9 +486,9 @@ const Spinner = () => (
 //           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
 //             AuditProRx
 //           </p>
-//           <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
+//           <SigRow label="Name" value="Mr. Irfan Ali" />
 //           <SigRow label="Title" value="CEO" />
-//           <SigRow label="Signature" value="Imtiyaz Ahmed Mulla" isSignature />
+//           <SigRow label="Signature" value="Mr. Irfan Ali" isSignature />
 //           <SigRow
 //             label="Date"
 //             value={new Date().toLocaleDateString("en-US", {
@@ -775,9 +775,9 @@ const NDAContent = ({
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
             AuditProRx
           </p>
-          <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
+          <SigRow label="Name" value="Mr. Irfan Ali" />
           <SigRow label="Title" value="CEO" />
-          <SigRow label="Signature" value="Imtiyaz Ahmed Mulla" isSignature />
+          <SigRow label="Signature" value="Irfan Ali" isSignature />
           <SigRow
             label="Date"
             value={new Date().toLocaleDateString("en-US", {
@@ -1186,9 +1186,9 @@ const WholesalerContent = () => (
 //             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
 //               AuditProRx
 //             </p>
-//             <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
+//             <SigRow label="Name" value="Mr. Irfan Ali" />
 //             <SigRow label="Title" value="CEO" />
-//             <SigRow label="Signature" value="Imtiyaz Ahmed Mulla" isSignature />
+//             <SigRow label="Signature" value="Mr. Irfan Ali" isSignature />
 //             <SigRow label="Date" value={today} />
 //           </div>
 //           <div className="rounded-xl border border-emerald-200 bg-emerald-50/30 p-4 shadow-sm">
@@ -1387,9 +1387,9 @@ const ReleaseAgreementContent = ({
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
               AuditProRx
             </p>
-            <SigRow label="Name" value="Mr. Imtiyaz Ahmed Mulla" />
+            <SigRow label="Name" value="Mr. Irfan Ali" />
             <SigRow label="Title" value="CEO" />
-            <SigRow label="Signature" value="Imtiyaz Ahmed Mulla" isSignature />
+            <SigRow label="Signature" value="Irfan Ali" isSignature />
             <SigRow label="Date" value={today} />
           </div>
 
@@ -2069,7 +2069,7 @@ const AgreementsPage = () => {
     doc.text("AuditProRx", margin + 12, y + 16);
 
     const sigRows = [
-      { label: "Name", value: "Mr. Imtiyaz Ahmed Mulla" },
+      { label: "Name", value: "Irfan Ali" },
       { label: "Title", value: "CEO" },
       { label: "Date", value: today },
     ];
@@ -2086,7 +2086,7 @@ const AgreementsPage = () => {
     doc.setFontSize(18);
     doc.setFont("helvetica", "bolditalic");
     doc.setTextColor(30, 30, 30);
-    doc.text("Imtiyaz Ahmed Mulla", margin + 12, y + 88);
+    doc.text("Irfan Ali", margin + 12, y + 88);
 
     // Pharmacy sig content
     const px = margin + sigBoxW + 28;

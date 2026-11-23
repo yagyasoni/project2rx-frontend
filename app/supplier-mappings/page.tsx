@@ -39,6 +39,7 @@ import {
 import AdminLayout from "@/components/adminLayout";
 import { toast } from "sonner";
 import adminApi from "@/lib/adminApi";
+import { apiErrorMessage } from "@/lib/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -270,6 +271,7 @@ const SupplierMappingPage = () => {
       setLoading(false);
     } catch (err) {
       console.error(err);
+      toast.error(apiErrorMessage(err, "Could not add the supplier. Please try again."));
     }
   };
 
@@ -291,6 +293,7 @@ const SupplierMappingPage = () => {
       setActiveMenu(null);
     } catch (err) {
       console.error(err);
+      toast.error(apiErrorMessage(err, "Could not delete the supplier. Please try again."));
     }
   };
 
@@ -399,6 +402,7 @@ const SupplierMappingPage = () => {
       setSelectedSupplier(null);
     } catch (err) {
       console.error(err);
+      toast.error(apiErrorMessage(err, "Could not save the mapping. Please try again."));
     }
   };
 
@@ -955,16 +959,28 @@ const SupplierMappingPage = () => {
               onClick={async () => {
                 if (!editingSupplier) return;
 
-                const res = await adminApi.put(
-                  `/api/suppliers/${editingSupplier.id}/email`,
-                  { email: emailInput, phone_number: phoneInput },
-                );
+                try {
+                  const res = await adminApi.put(
+                    `/api/suppliers/${editingSupplier.id}/email`,
+                    { email: emailInput, phone_number: phoneInput },
+                  );
 
-                setSuppliers((prev) =>
-                  prev.map((s) => (s.id === editingSupplier.id ? res.data : s)),
-                );
+                  setSuppliers((prev) =>
+                    prev.map((s) =>
+                      s.id === editingSupplier.id ? res.data : s,
+                    ),
+                  );
 
-                setEditEmailModal(false);
+                  setEditEmailModal(false);
+                } catch (err) {
+                  console.error(err);
+                  toast.error(
+                    apiErrorMessage(
+                      err,
+                      "Could not save the supplier's details. Please try again.",
+                    ),
+                  );
+                }
               }}
             >
               Save

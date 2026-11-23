@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
-import api, { failureMessage } from "@/lib/api";
+import api, { apiErrorMessage } from "@/lib/api";
 import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -478,7 +478,7 @@ const DateRangeStep = ({
       console.log(res.data);
       onContinue();
     } catch (err) {
-      toast(failureMessage(err, "Failed to save dates. Please try again."));
+      toast(apiErrorMessage(err, "Failed to save dates. Please try again."));
     }
   };
 

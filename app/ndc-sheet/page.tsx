@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import adminApi from "@/lib/adminApi";
+import { apiErrorMessage } from "@/lib/api";
 
 const STATUS_OPTIONS = ["pending", "reviewed"];
 
@@ -135,7 +136,7 @@ export default function NdcSheetPage() {
     } catch (error) {
       console.error(error);
 
-      toast.error("Update failed");
+      toast.error(apiErrorMessage(error, "Update failed"));
     }
   };
 
@@ -153,7 +154,7 @@ export default function NdcSheetPage() {
     } catch (error) {
       console.error(error);
 
-      toast.error("Delete failed");
+      toast.error(apiErrorMessage(error, "Delete failed"));
     }
   };
 

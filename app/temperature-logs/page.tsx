@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import axios from "axios";
-import api, { subscriptionMessage } from "@/lib/api";
+import api, { subscriptionMessage, apiErrorMessage } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -362,9 +362,9 @@ function TemperatureLogWorkspace({ sidebarWidth }: { sidebarWidth: number }) {
       await deleteLog(log.id);
     } catch (err) {
       console.error(err);
-      const subMessage = subscriptionMessage(err);
-      toast.error(subMessage ?? "Couldn't delete the log", {
-        description: subMessage ? undefined : "Please try again.",
+      const text = apiErrorMessage(err, "Couldn't delete the log");
+      toast.error(text, {
+        description: text === "Couldn't delete the log" ? "Please try again." : undefined,
       });
       return;
     }

@@ -5,6 +5,7 @@ import { lockGuardProps } from "@/lib/lockGuard";
 import { createPortal } from "react-dom";
 import {
   fetchReportRows,
+  reportLoadMessage,
   type InventoryRow,
 } from "./reportData";
 import AppSidebar from "@/components/Sidebar";
@@ -71,8 +72,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CommunityLinkPageCopy from "@/components/communityLink";
-import api from "@/lib/api";
+import api, { apiErrorMessage } from "@/lib/api";
 import { authFetch } from "@/lib/authFetch";
+import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1009,6 +1011,8 @@ export default function DesktopReport() {
       } catch (e) {
         console.error(e);
         setInventoryData([]);
+        const why = reportLoadMessage(e);
+        if (why) toast.error(why);
       } finally {
         if (pi) clearInterval(pi);
         setLoadingProgress(100);
@@ -1852,8 +1856,11 @@ export default function DesktopReport() {
         setOpenReport(null);
         setGroupView("reports");
       }
-    } catch {
-      // best-effort; leave the list as-is on failure
+    } catch (err) {
+      // The list is left as it is; say why the report was not deleted.
+      toast.error(
+        apiErrorMessage(err, "Could not delete the report. Please try again."),
+      );
     } finally {
       setDeletingReport(null);
     }
