@@ -70,6 +70,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import adminApi from "@/lib/adminApi";
+import { apiErrorMessage } from "@/lib/api";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
@@ -425,7 +426,7 @@ export default function PublishingPage() {
       await fetchChat(selectedPost.id.toString());
     } catch (err) {
       console.error("Send admin message error:", err);
-      toast.error("Couldn't send the message", {
+      toast.error(apiErrorMessage(err, "Couldn't send the message"), {
         description: "Please try again.",
       });
     }
@@ -459,7 +460,7 @@ export default function PublishingPage() {
       }
     } catch (err) {
       console.error("Toggle chat error:", err);
-      toast.error("Couldn't change the chat setting", {
+      toast.error(apiErrorMessage(err, "Couldn't change the chat setting"), {
         description: "Please try again.",
       });
     }
@@ -563,7 +564,7 @@ export default function PublishingPage() {
       await adminApi.delete(`/post/posts/${post.id}`);
     } catch (err) {
       console.error("Delete post error:", err);
-      toast.error("Couldn't delete the post", {
+      toast.error(apiErrorMessage(err, "Couldn't delete the post"), {
         description: "Please try again.",
       });
       return;

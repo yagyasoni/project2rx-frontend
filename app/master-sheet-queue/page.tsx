@@ -21,6 +21,7 @@ import {
 import AdminLayout from "@/components/adminLayout";
 import axios from "axios";
 import adminApi from "@/lib/adminApi";
+import { apiErrorMessage } from "@/lib/api";
 
 /* ── Static options ──────────────────────────────── */
 // const PBM_OPTIONS = [
@@ -229,8 +230,8 @@ const MasterSheetQueue = () => {
         });
       });
       toast(`Added to master sheet, BIN ${row.bin} mapped successfully.`);
-    } catch {
-      toast("Failed to add");
+    } catch (err) {
+      toast(apiErrorMessage(err, "Failed to add"));
     } finally {
       setAddingId(null);
     }
@@ -251,8 +252,8 @@ const MasterSheetQueue = () => {
       await fetchOptions();
 
       toast("PBM option added");
-    } catch {
-      toast("Failed to add PBM option");
+    } catch (err) {
+      toast(apiErrorMessage(err, "Failed to add PBM option"));
     } finally {
       setAddingPbm(false);
     }
@@ -273,8 +274,8 @@ const MasterSheetQueue = () => {
       await fetchOptions();
 
       toast("Payer type option added");
-    } catch {
-      toast("Failed to add payer type option");
+    } catch (err) {
+      toast(apiErrorMessage(err, "Failed to add payer type option"));
     } finally {
       setAddingPayerType(false);
     }
