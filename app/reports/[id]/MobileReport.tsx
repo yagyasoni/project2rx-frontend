@@ -7,7 +7,12 @@ import { Search, ArrowUpDown } from "lucide-react";
 import AppSidebar from "@/components/Sidebar";
 import Loader from "@/components/Loader";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { fetchReportRows, type InventoryRow } from "./reportData";
+import {
+  fetchReportRows,
+  reportLoadMessage,
+  type InventoryRow,
+} from "./reportData";
+import { toast } from "sonner";
 
 /**
  * Compact report view, served below 1024px (covers phone portrait, phone
@@ -82,7 +87,11 @@ export default function MobileReport() {
         setDates(auditRes);
       } catch (e) {
         console.error(e);
-        if (!cancelled) setRows([]);
+        if (!cancelled) {
+          setRows([]);
+          const why = reportLoadMessage(e);
+          if (why) toast.error(why);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }

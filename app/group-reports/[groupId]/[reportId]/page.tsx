@@ -18,7 +18,7 @@ import {
 import AppSidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Loader from "@/components/Loader";
-import api from "@/lib/api";
+import api, { apiErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -102,6 +102,8 @@ function GroupReportContent({
   const reportId = params.reportId as string;
 
   const [data, setData] = useState<ReportDetail | null>(null);
+  // The server's reason when the report could not be loaded ("Report not found").
+  const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(
@@ -122,9 +124,15 @@ function GroupReportContent({
         const res = await api.get(
           `/api/inventory-view/groups/${groupId}/reports/${reportId}`,
         );
-        if (active) setData(res.data);
-      } catch {
-        if (active) setData(null);
+        if (active) {
+          setData(res.data);
+          setLoadError("");
+        }
+      } catch (err) {
+        if (active) {
+          setData(null);
+          setLoadError(apiErrorMessage(err, ""));
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -319,6 +327,7 @@ function GroupReportContent({
             <FileText className="h-5 w-5 text-slate-400" />
           </div>
           <p className="text-sm text-slate-500">Could not load this report.</p>
+          {loadError && <p className="text-xs text-slate-400">{loadError}</p>}
         </div>
       ) : (
         <>
